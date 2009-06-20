@@ -1,0 +1,2 @@
+#!/bin/sh
+sudo ~/bin/pkgusage.tcl | sort -nr > pkgusage.log
