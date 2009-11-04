@@ -1,0 +1,29 @@
+#!/bin/sh
+export PATH=$PATH:/ffp/bin:/ffp/sbin
+LOCKFILE=/var/lock/backup-koi
+SOURCE=/
+DEST=/media/esata/Koi/
+RSYNC_CMD="rsync -av --no-whole-file --inplace --delete --stats"
+
+exit_unlock()
+{
+  if [ $1 ]; then
+    rm -f $LOCKFILE
+    return $1
+  fi
+}
+
+if [ -f $LOCKFILE ]; then
+ echo $LOCKFILE detected.
+ echo $0 already running.
+ exit 1
+fi
+touch $LOCKFILE
+
+${HOME}/bin/mount-check.sh sdc
+exit_unlock $?
+
+echo Starting sync from $SOURCE to $DEST
+${RSYNC_CMD} --include-from="${HOME}/bin/Koi/koi-rsync-backup.include" $SOURCE $DEST
+rm -f $LOCKFILE
+echo Finished.
