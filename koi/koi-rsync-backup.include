@@ -1,0 +1,7 @@
++ /boot
++ /etc
++ /opt
++ /root
++ /srv
+- /srv/tm/home
++ /var
