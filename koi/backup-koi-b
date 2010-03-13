@@ -38,7 +38,7 @@ backup_time_machine()
 if [ "$1" != "-n" ]; then
     #backup_time_machine aj
     #backup_time_machine mandy
-    backup_time_machine construct
+    backup_time_machine bullfrog
     ${HOME}/bin/koi/switch-netatalk.sh ALL
 fi
 
