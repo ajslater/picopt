@@ -1,7 +1,9 @@
 + /boot
 + /etc
++ /home
+- /home/**/Backup
 + /opt
 + /root
 + /srv
-- /srv/tm/home
+- /srv/tm/home/**/Backup
 + /var
