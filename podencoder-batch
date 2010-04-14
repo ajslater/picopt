@@ -1,7 +1,0 @@
-#!/bin/bash
-IFS=$'\n'
-EXT=$1
-ODIR=$2
-for i in `ls *$EXT`; do
-    podencoder -o "$ODIR" "$i";
-done;

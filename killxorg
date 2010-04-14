@@ -1,3 +1,0 @@
-#!/bin/sh
-sudo /etc/init.d/gdm stop
-sudo killall -9 Xorg
