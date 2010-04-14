@@ -9,8 +9,4 @@ export PATH=$PATH:/opt/local/bin
 port selfupdate
 port -d sync
 portindex
-port upgrade installed
-apt-get update
-apt-get upgrade
-#fink -q -y selfupdate
-#fink -q -y update-all
+port upgrade outdated
