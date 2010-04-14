@@ -1,3 +1,0 @@
-#!/bin/sh
-#xrandr --output DVI-I_1/analog --mode 1920x1200
-xrandr --output DVI-I_1/digital --mode 1920x1200

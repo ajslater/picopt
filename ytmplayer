@@ -1,3 +1,0 @@
-#!/bin/sh
-URL=`youtube-dl -s "$1" | grep Video | sed 's/.*found\ at\ //'`
-mplayer $URL

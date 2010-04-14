@@ -1,3 +1,0 @@
-#!/bin/sh
-xrandr --output DVI-I_1/analog --auto
-xrandr --output DVI-I_1/digital --auto
