@@ -1,8 +1,0 @@
-#!/bin/sh
-INFILE=$*
-TEMPFILE=/tmp/2amr.wav
-OUTFILE=$INFILE:r.amr
-
-sox "$INFILE" -r 8000 -w -c 1 "$TEMPFILE" trim 0 20 
-amr_encoder MR122 "$TEMPFILE" "$OUTFILE"
-rm -f "$TEMPFILE"
