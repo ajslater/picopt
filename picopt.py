@@ -69,12 +69,12 @@ def replace_ext(filename, new_ext) :
 def report_percent_saved(size_in, size_out) :
     """spits out how much space the optimazation saved"""
     if size_in <= size_out :
-        print '\boptimization didn\'t shrink the file.'
+        print('\boptimization didn\'t shrink the file.')
     else :
         percent_saved = str((1 - (float(size_out) / float(size_in))) * 100)+'%'
         size_in_kb = str(size_in / 1024)+'kB'
         size_out_kb = str(size_out / 1024)+'kB'
-        print size_in_kb, '-->', size_out_kb, 'saved', percent_saved
+        print(size_in_kb, '-->', size_out_kb, 'saved', percent_saved)
 
 
 def get_image_info(filename, options) :
@@ -85,7 +85,7 @@ def get_image_info(filename, options) :
         image_format = image.format
         sequenced = is_image_sequenced(image)
         if image_format in options.formats :
-            print filename, image.format, image.mode+' '
+            print(filename, image.format, image.mode+' ')
     except:
         bad_image = 1
         image_format = 'NONE'
@@ -126,7 +126,7 @@ def pngcrush(filename, backup_filename, options) :
     """runs the EXTERNAL program optipng on the file"""
     args = PNGCRUSH_ARGS+[backup_filename, filename]
     if options.verbose :
-        print '\tOptimizing PNG...',
+        print('\tOptimizing PNG...',)
     spawn(args)
 
     # Special cleanup, I don't know why this happens.
@@ -140,7 +140,7 @@ def jpegtran(filename, backup_filename, options) :
     """runs the EXTERNAL program jpegtran on the file"""
     args = JPEGTRAN_ARGS+[filename, backup_filename]
     if options.verbose :
-        print '\tOptimizing JPEG...',
+        print('\tOptimizing JPEG...',)
     spawn(args)
     return filename     
 
@@ -151,23 +151,23 @@ def convert_to_ext(filename, backup_filename, ext, options) :
   
     args = CONVERT_ARGS+[backup_filename, new_filename]
     if options.verbose :
-        print '\tConverting to', ext+'...',
+        print('\tConverting to', ext+'...',)
     spawn(args)
 
     if ext == JPEG_EXT or ext == PNG_EXT :
      
         # Do this quietly, so as not to fuck up the output
         if options.verbose :
-        import copy
+            import copy
             silent_options = copy.copy(options)
             silent_options.verbose = 0
         else :
-             silent_options = options
+            silent_options = options
 
         if options.verbose :
-        print "\boptimizing:",
+            print("\boptimizing:",)
         optimize_image(new_filename, silent_options)
-        print '\t',
+        print('\t',)
 
     if os.path.isfile(new_filename) and not options.backup :
         os.remove(filename)
@@ -180,15 +180,15 @@ def recover_file(backup_filename, new_filename, options) :
     well"""
     try :
         if options.verbose :
-            print '\tImage could not be optimized, so I am restoring it from backup...',
+            print('\tImage could not be optimized, so I am restoring it from backup...',)
 
         unbackedup_filename = replace_ext(backup_filename, '')
         os.remove(new_filename)
         os.rename(backup_filename, unbackedup_filename)
-    if options.verbose :
-        print '\bdone.'
-    except Exception, why:
-        print why
+        if options.verbose :
+            print('\bdone.')
+    except (Exception, why):
+        print(why)
 
 
 def is_format_selected(image_format, formats, options) :
@@ -226,7 +226,7 @@ def optimize_image(filename, options) :
     if not bad_image :
         filesize_in = os.stat(filename).st_size
         backup_filename = os.path.normpath(filename+BACKUP_EXT)
-    shutil.copy2(filename, backup_filename)
+        shutil.copy2(filename, backup_filename)
      
         if is_format_selected(image_format, [PNG_FORMAT], options) :
             new_filename = pngcrush(filename, backup_filename, options)
@@ -245,7 +245,7 @@ def optimize_image(filename, options) :
                             filesize_in, options)
    
     else :
-        print filename,'has an unrecognizable input format.'
+        print(filename,'has an unrecognizable input format.')
 
 
 def optimize_files(cwd, filter_list, options) :
@@ -262,7 +262,7 @@ def optimize_files(cwd, filter_list, options) :
             optimize_image(filename_full, options)
         else :
             if options.verbose :
-                print filename,'was not found.'
+                print(filename,'was not found.')
 
 
 def main() :
@@ -283,11 +283,4 @@ def main() :
 
 
 if __name__ == '__main__':
-    # Import Psyco if available
-    try:
-        import psyco
-        print "I'm going psyCo!"
-        psyco.full()
-    except ImportError:
-        pass
     main()
