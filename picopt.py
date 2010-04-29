@@ -1,36 +1,48 @@
-#!/usr/bin/python -OO 
+#!/usr/bin/env python
 """
 Runs pictures through image specific external optimizers
 """
+from __future__ import print_function
+from __future__ import division
+
 __revision__ = '0.2.0'
-# Need du style summary at end
-# Detect grayscale images and use flags for transorms
 
+import sys, os, optparse, shutil, subprocess
+import Image, ImageFile
 
-import os, optparse, Image, ImageFile, shutil
 PNG_EXT = '.png'
 MNG_EXT = '.mng'
 JPEG_EXT = '.jpg'
-BACKUP_EXT = '.bak'
-JPEGTRAN_ARGS = ['jpegtran', '-optimize', '-outfile']
-CONVERT_ARGS = ['convert', '-quality', '100']
-PNGCRUSH_ARGS = ['pngcrush', '-brute', '-cc', '-fix', '-l 9', '-max 524288',
-                 '-q']
+NEW_EXT = '.picopt-optimized'
+JPEGTRAN_ARGS = ['jpegtran', '-perfect', '-copy', 'all', '-optimize',
+                 '-outfile']
+OPTIPNG_ARGS = ['optipng', '-o7', '-fix', '-preserve', '-force', '-quiet']
 DU_ARGS = ['du', '--human-readable', '--summarize']
-PNG_FORMAT = 'PNG'
-GIF_FORMAT = 'GIF'
-TIFF_FORMAT = 'TIFF'
-JPEG_FORMAT = 'JPEG'
-OPTIMIZABLE_FORMATS = [PNG_FORMAT, GIF_FORMAT, JPEG_FORMAT, TIFF_FORMAT]
+LOSSLESS_FORMATS = ['PNG', 'PNM', 'GIF', 'TIFF']
+JPEG_FORMATS = ['JPEG']
+OPTIMIZABLE_FORMATS = LOSSLESS_FORMATS + JPEG_FORMATS
 FORMAT_DELIMETER = ','
 DEFAULT_FORMATS = 'ALL'
 
+def program_runs(prog) :
+    """test to see if the external programs can be run"""
+    try :
+        null = open('/dev/null')
+        subprocess.call([prog, '-h'], stdout=null, stderr=null)
+    except OSError:
+        print("couldn't run %s" % prog)
+        exit(1)
+ 
+def program_reqs() :
+    """run the external program tester on the required binaries"""
+    program_runs('optipng')
+    program_runs('jpegtran')
+
+
 def get_options_and_arguments() :
     """parses the command line"""
-    usage = "usage: %prog [options] [image files]\npicopt requires" \
-    "that (ImageMagick)convert, optiping and jpegtran-mmx be on\nthe" \
-    "path. Why? Because there's no pythonMagick in Debian and PIL" \
-    " sucks."
+    usage = "usage: %prog [options] [image files]\npicopt requires " \
+    "that optiping and jpegtran be on the path."
     parser = optparse.OptionParser(usage=usage)
     parser.add_option("-b", "--keepBackup", action="store_true", 
         dest="backup", default=0, 
@@ -51,6 +63,10 @@ def get_options_and_arguments() :
 
     (options, arguments) = parser.parse_args()
 
+    if len(arguments) == 0 :
+        parser.print_help()
+        exit(1)
+
     if options.formats == DEFAULT_FORMATS :
         options.formats = OPTIMIZABLE_FORMATS
     else :
@@ -69,48 +85,86 @@ def replace_ext(filename, new_ext) :
 
 def report_percent_saved(size_in, size_out) :
     """spits out how much space the optimazation saved"""
-    if size_in <= size_out :
-        print('\boptimization didn\'t shrink the file.')
+    size_in_kb = str(size_in / 1024)+'kiB'
+    size_out_kb = str(size_out / 1024)+'kiB'
+    percent_saved = (1 - (float(size_out) / float(size_in))) * 100
+  
+    if percent_saved == 0 :
+        result = 'Files are the same size.'
     else :
-        percent_saved = str((1 - (float(size_out) / float(size_in))) * 100)+'%'
-        size_in_kb = str(size_in / 1024)+'kB'
-        size_out_kb = str(size_out / 1024)+'kB'
-        print(size_in_kb, '-->', size_out_kb, 'saved', percent_saved)
+        if percent_saved > 0 :
+            verb = 'Saved'
+        else :
+            verb = 'WASTED'
+        result = verb+' '+str(percent_saved)
+
+    print(size_in_kb, '-->', size_out_kb+'.', result)
 
 
-def get_image_info(filename, options) :
-    """returns the image's format"""
+
+def optipng(filename, new_filename, options) :
+    """runs the EXTERNAL program optipng on the file"""
+    args = OPTIPNG_ARGS+[new_filename]
+    if options.verbose :
+        print('\tOptimizing PNG...', end='')
+        sys.stdout.flush()
+    subprocess.call(args)
+
+    return filename
+
+
+def jpegtran(filename, new_filename, options) :
+    """runs the EXTERNAL program jpegtran on the file"""
+    args = JPEGTRAN_ARGS+[new_filename, filename]
+    if options.verbose :
+        print('\tOptimizing JPEG...', end='')
+        sys.stdout.flush()
+    subprocess.call(args)
+    return filename
+
+
+def is_format_selected(image_format, formats, options) :
+    """returns a boolean indicating weather or not the image format
+    was selected by the command line options"""
+    result = image_format in formats and image_format in options.formats
+    return result
+
+def cleanup_after_optimize(filename, new_filename, options, saved):
+    """report results. replace old file with better one or discard new wasteful
+       file"""
     try :
-        image = Image.open(filename)
-        bad_image = image.verify()
-        image_format = image.format
-        sequenced = is_image_sequenced(image)
-        if image_format in options.formats :
-            print(filename, image.format, image.mode+' ')
-    except Exception :
-        bad_image = 1
-        image_format = 'NONE'
-        sequenced = 0
+        filesize_in = os.stat(filename).st_size
+        filesize_out = os.stat(new_filename).st_size
+        if options.verbose :
+            report_percent_saved(filesize_in, filesize_out)
+ 
+        if (filesize_out > 0) and (filesize_out < filesize_in) :
+            print('\tReplacing file with optimized version.')
+            rem_filename = filename+'.picopt_REMOVE'
+            os.rename(filename, rem_filename)
+            os.rename(new_filename, filename)
+            os.remove(rem_filename)
+            saved['num'] += filesize_in - filesize_out
+        else :
+            print('\tDiscarding work.')
+            os.remove(new_filename)
+    except OSError as ex:
+        print(ex)
 
-    return (bad_image, image_format, sequenced)
 
+def optimize_image(filename, image_format, options, saved) :
+    """optimizes a given image from a filename"""
+    new_filename = os.path.normpath(filename+NEW_EXT)
+    shutil.copy2(filename, new_filename)
 
-def spawn(args) :
-    """spawns a system program, should be moved to an outside lib"""
-    os.spawnvp(os.P_WAIT, args[0], args)
-
-
-def convert_to_lossless(filename, backup_filename, sequenced, options) :
-    """converts lossless images into PNG or MNG"""
-    if sequenced :
-        ext = MNG_EXT
+    if is_format_selected(image_format, LOSSLESS_FORMATS, options) :
+        optipng(filename, new_filename, options)
+    elif is_format_selected(image_format, JPEG_FORMATS, options) :
+        jpegtran(filename, new_filename, options)
     else :
-        ext = PNG_EXT
+        pass
 
-    new_filename = convert_to_ext(filename, backup_filename, ext, options)
-
-    return new_filename
-
+    cleanup_after_optimize(filename, new_filename, options, saved)
 
 def is_image_sequenced(image) :
     """determines if the image is a sequenced image"""
@@ -123,152 +177,95 @@ def is_image_sequenced(image) :
     return result
 
 
-def pngcrush(filename, backup_filename, options) :
-    """runs the EXTERNAL program optipng on the file"""
-    args = PNGCRUSH_ARGS+[backup_filename, filename]
-    if options.verbose :
-        print('\tOptimizing PNG...',)
-    spawn(args)
-
-    # Special cleanup, I don't know why this happens.
-    if os.path.isfile('pngout.png') :
-        os.remove('pngout.png')
-    
-    return filename
-
-
-def jpegtran(filename, backup_filename, options) :
-    """runs the EXTERNAL program jpegtran on the file"""
-    args = JPEGTRAN_ARGS+[filename, backup_filename]
-    if options.verbose :
-        print('\tOptimizing JPEG...',)
-    spawn(args)
-    return filename     
-
-
-def convert_to_ext(filename, backup_filename, ext, options) :
-    """converts a file to the given extention type"""
-    new_filename = replace_ext(filename, ext)
-  
-    args = CONVERT_ARGS+[backup_filename, new_filename]
-    if options.verbose :
-        print('\tConverting to', ext+'...',)
-    spawn(args)
-
-    if ext == JPEG_EXT or ext == PNG_EXT :
-     
-        # Do this quietly, so as not to fuck up the output
-        if options.verbose :
-            import copy
-            silent_options = copy.copy(options)
-            silent_options.verbose = 0
-        else :
-            silent_options = options
-
-        if options.verbose :
-            print("\boptimizing:",)
-        optimize_image(new_filename, silent_options)
-        print('\t',)
-
-    if os.path.isfile(new_filename) and not options.backup :
-        os.remove(filename)
-  
-    return new_filename
-
-
-def recover_file(backup_filename, new_filename, options) :
-    """recover the original version of a file that did not optimize 
-    well"""
+def detect_file(filename, options, saved) :
+    """decides what to do with the file"""
+    image = None
+    bad_image = 1
+    image_format = 'NONE'
+    sequenced = 0
     try :
-        if options.verbose :
-            print('\tImage could not be optimized, so I am restoring it from '\
-                    ' backup...')
+        image = Image.open(filename)
+        bad_image = image.verify()
+        image_format = image.format
+        sequenced = is_image_sequenced(image)
+    except (OSError, IOError):
+        pass
 
-        unbackedup_filename = replace_ext(backup_filename, '')
-        os.remove(new_filename)
-        os.rename(backup_filename, unbackedup_filename)
-        if options.verbose :
-            print('\bdone.')
-    except Exception as why:
-        print(why)
-
-
-def is_format_selected(image_format, formats, options) :
-    """returns a boolean indicating weather or not the image format
-    was selected by the command line options"""
-    result = image_format in formats and image_format in options.formats
-    return result
-
-def clean_up_after_optimize(new_filename, backup_filename, 
-    filesize_in, options):
-    """clean up the backups, recover from backup if optimization was bad
-    and report on how much we saved"""
-    if new_filename != -1 :
-        try :
-            filesize_out = os.stat(new_filename).st_size
-            if options.verbose :
-                report_percent_saved(filesize_in, filesize_out)
- 
-            if (filesize_out > 0) and (filesize_out < filesize_in) :
-                if not options.backup :
-                    try :
-                        os.remove(backup_filename)
-                    except OSError:
-                        pass
-            else :
-                recover_file(backup_filename, new_filename, options)
-        except OSError :
-            recover_file(backup_filename, new_filename, options)
-    
-
-def optimize_image(filename, options) :
-    """optimizes a given image from a filename"""
-    (bad_image, image_format, sequenced) = get_image_info(filename, options)
-
-    if not bad_image :
-        filesize_in = os.stat(filename).st_size
-        backup_filename = os.path.normpath(filename+BACKUP_EXT)
-        shutil.copy2(filename, backup_filename)
-     
-        if is_format_selected(image_format, [PNG_FORMAT], options) :
-            new_filename = pngcrush(filename, backup_filename, options)
-        elif is_format_selected(image_format, [JPEG_FORMAT], options) :
-            new_filename = jpegtran(filename, backup_filename, options)
-        elif is_format_selected(image_format, [GIF_FORMAT, TIFF_FORMAT],
-        options) :
-            new_filename = convert_to_lossless(filename, backup_filename,
-            sequenced, options)
-        else :
-            new_filename = -1
-            if options.verbose :
-                pass
-        
-        clean_up_after_optimize(new_filename, backup_filename,
-                            filesize_in, options)
-   
+    if image == None or bad_image or sequenced or image_format == 'NONE' :
+        print(filename, "doesn't look like an image.")
+    elif image_format in options.formats :
+        print(filename, image.format, image.mode)
+        optimize_image(filename, image_format, options, saved)
     else :
-        print(filename,'has an unrecognizable input format.')
+        print(filename, image.format, 'is not a supported image type.')
 
 
-def optimize_files(cwd, filter_list, options) :
+def optimize_files(cwd, filter_list, options, saved) :
     """sorts through a list of files, decends directories and
        calls the optimizer on the extant files"""
+
     for filename in filter_list :
         filename_full = os.path.normpath(cwd+os.sep+filename)
         if os.path.isdir(filename_full) :
             if options.recurse :
                 next_dir_list = os.listdir(filename_full)
                 next_dir_list.sort()
-                optimize_files(filename_full, next_dir_list, options)
+                optimize_files(filename_full, next_dir_list, options, saved)
         elif os.path.exists(filename_full) :
-            optimize_image(filename_full, options)
+            detect_file(filename_full, options, saved)
         else :
             if options.verbose :
                 print(filename,'was not found.')
 
 
+def humanize_bytes(num_bytes, precision=1):
+    """
+    from: 
+    http://code.activestate.com/recipes/577081-humanized-representation-of-a-number-of-num_bytes/
+    Return a humanized string representation of a number of num_bytes.
+
+    Assumes `from __future__ import division`.
+
+    >>> humanize_bytes(1)
+    '1 byte'
+    >>> humanize_bytes(1024)
+    '1.0 kB'
+    >>> humanize_bytes(1024*123)
+    '123.0 kB'
+    >>> humanize_bytes(1024*12342)
+    '12.1 MB'
+    >>> humanize_bytes(1024*12342,2)
+    '12.05 MB'
+    >>> humanize_bytes(1024*1234,2)
+    '1.21 MB'
+    >>> humanize_bytes(1024*1234*1111,2)
+    '1.31 GB'
+    >>> humanize_bytes(1024*1234*1111,1)
+    '1.3 GB'
+    """
+
+    abbrevs = (
+        (1<<50L, 'PiB'),
+        (1<<40L, 'TiB'),
+        (1<<30L, 'GiB'),
+        (1<<20L, 'MiB'),
+        (1<<10L, 'kiB'),
+        (1, 'num_bytes')
+    )
+
+    if num_bytes == 1:
+        return '1 byte'
+    for factor, suffix in abbrevs:
+        if num_bytes >= factor:
+            break
+    return '%.*f %s' % (precision, num_bytes / factor, suffix)
+
+
 def main() :
     """main"""    
+
+    program_reqs()
+
     ImageFile.MAXBLOCK = 3000000 # default is 64k
     (options, arguments) = get_options_and_arguments()   
  
@@ -280,8 +277,11 @@ def main() :
         filter_list.sort()
     else :
         filter_list = arguments
-  
-    optimize_files(cwd, filter_list, options)
+
+    saved = { 'num' : 0 }
+    optimize_files(cwd, filter_list, options, saved)
+
+    print("Saved %s" % humanize_bytes(saved['num']))
 
 
 if __name__ == '__main__':
