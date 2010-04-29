@@ -7,14 +7,15 @@ __revision__ = '0.2.0'
 # Detect grayscale images and use flags for transorms
 
 
-import os, sys, optparse, Image, ImageFile, shutil
+import os, optparse, Image, ImageFile, shutil
 PNG_EXT = '.png'
 MNG_EXT = '.mng'
 JPEG_EXT = '.jpg'
 BACKUP_EXT = '.bak'
 JPEGTRAN_ARGS = ['jpegtran', '-optimize', '-outfile']
 CONVERT_ARGS = ['convert', '-quality', '100']
-PNGCRUSH_ARGS = ['pngcrush', '-brute', '-cc', '-fix', '-l 9', '-max 524288', '-q']
+PNGCRUSH_ARGS = ['pngcrush', '-brute', '-cc', '-fix', '-l 9', '-max 524288',
+                 '-q']
 DU_ARGS = ['du', '--human-readable', '--summarize']
 PNG_FORMAT = 'PNG'
 GIF_FORMAT = 'GIF'
@@ -86,7 +87,7 @@ def get_image_info(filename, options) :
         sequenced = is_image_sequenced(image)
         if image_format in options.formats :
             print(filename, image.format, image.mode+' ')
-    except:
+    except Exception :
         bad_image = 1
         image_format = 'NONE'
         sequenced = 0
@@ -131,7 +132,7 @@ def pngcrush(filename, backup_filename, options) :
 
     # Special cleanup, I don't know why this happens.
     if os.path.isfile('pngout.png') :
-      os.remove('pngout.png')
+        os.remove('pngout.png')
     
     return filename
 
@@ -180,14 +181,15 @@ def recover_file(backup_filename, new_filename, options) :
     well"""
     try :
         if options.verbose :
-            print('\tImage could not be optimized, so I am restoring it from backup...',)
+            print('\tImage could not be optimized, so I am restoring it from '\
+                    ' backup...')
 
         unbackedup_filename = replace_ext(backup_filename, '')
         os.remove(new_filename)
         os.rename(backup_filename, unbackedup_filename)
         if options.verbose :
             print('\bdone.')
-    except (Exception, why):
+    except Exception as why:
         print(why)
 
 
@@ -208,7 +210,7 @@ def clean_up_after_optimize(new_filename, backup_filename,
                 report_percent_saved(filesize_in, filesize_out)
  
             if (filesize_out > 0) and (filesize_out < filesize_in) :
-               if not options.backup :
+                if not options.backup :
                     try :
                         os.remove(backup_filename)
                     except OSError:
