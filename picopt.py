@@ -7,21 +7,70 @@ from __future__ import division
 
 __revision__ = '0.3.0'
 #TODO: add user configurable jpegtran and optipng arguments
-#TODO: add pngout.
 
 import sys, os, optparse, shutil, subprocess
 import Image, ImageFile
 
-JPEG_EXT = '.jpg'
-NEW_EXT = '.picopt-optimized'
+REMOVE_EXT = '.picopt-remove'
+NEW_EXT = '.picopt-optimized.png'
 JPEGTRAN_ARGS = ['jpegtran', '-copy', 'all', '-optimize',
                  '-outfile']
 OPTIPNG_ARGS = ['optipng', '-o7', '-fix', '-preserve', '-force', '-quiet']
+PNGOUT_ARGS = ['pngout', '-q', '-force', '-y']
 LOSSLESS_FORMATS = ['PNG', 'PNM', 'GIF', 'TIFF']
 JPEG_FORMATS = ['JPEG']
 OPTIMIZABLE_FORMATS = LOSSLESS_FORMATS + JPEG_FORMATS
 FORMAT_DELIMETER = ','
 DEFAULT_FORMATS = 'ALL'
+
+
+def humanize_bytes(num_bytes, precision=1):
+    """
+    from: 
+    http://code.activestate.com/recipes/577081-humanized-representation-of-a-number-of-num_bytes/
+    Return a humanized string representation of a number of num_bytes.
+
+    Assumes `from __future__ import division`.
+
+    >>> humanize_bytes(1)
+    '1 byte'
+    >>> humanize_bytes(1024)
+    '1.0 kB'
+    >>> humanize_bytes(1024*123)
+    '123.0 kB'
+    >>> humanize_bytes(1024*12342)
+    '12.1 MB'
+    >>> humanize_bytes(1024*12342,2)
+    '12.05 MB'
+    >>> humanize_bytes(1024*1234,2)
+    '1.21 MB'
+    >>> humanize_bytes(1024*1234*1111,2)
+    '1.31 GB'
+    >>> humanize_bytes(1024*1234*1111,1)
+    '1.3 GB'
+    """
+
+    abbrevs = (
+        (1<<50L, 'PiB'),
+        (1<<40L, 'TiB'),
+        (1<<30L, 'GiB'),
+        (1<<20L, 'MiB'),
+        (1<<10L, 'kiB'),
+        (1, 'bytes')
+    )
+
+    if num_bytes == 0:
+        return 'no bytes'
+    if num_bytes == 1:
+        return '1 byte'
+    for factor, suffix in abbrevs:
+        if num_bytes >= factor:
+            break
+    if num_bytes < (1 << 10L) :
+        precision = 0
+
+    return '%.*f %s' % (precision, num_bytes / factor, suffix)
+
 
 def does_external_program_run(prog) :
     """test to see if the external programs can be run"""
@@ -38,11 +87,13 @@ def does_external_program_run(prog) :
 
 def program_reqs(options) :
     """run the external program tester on the required binaries"""
-    options.lossless = options.lossless and does_external_program_run('optipng')
+    options.losless = options.optipng and does_external_program_run('optipng')
+    options.pngout = options.pngout and does_external_program_run('pngout')
     options.jpeg = options.jpeg and does_external_program_run('jpegtran')
 
-    if not options.lossless and not options.jpeg :
+    if not options.optipng and not options.pngout and not options.jpeg :
         exit(1)
+
 
 def get_options_and_arguments() :
     """parses the command line"""
@@ -62,8 +113,10 @@ def get_options_and_arguments() :
     "command line")
     parser.add_option("-q", "--quiet", action="store_false", 
         dest="verbose", default=1, help="Do not display output")
-    parser.add_option("-l", "--disable_lossless", action="store_false", 
-        dest="lossless", default=1, help="Do not optimize losless images")
+    parser.add_option("-o", "--disable_optipng", action="store_false", 
+        dest="optipng", default=1, help="Do not optimize with optipng")
+    parser.add_option("-p", "--disable_pngout", action="store_false", 
+        dest="pngout", default=1, help="Do not optimize with pngout")
     parser.add_option("-j", "--disable_jpeg", action="store_false", 
         dest="jpeg", default=1, help="Do not optimize JPEGs")
     parser.add_option("-b", "--bigger", action="store_true", 
@@ -116,33 +169,40 @@ def report_percent_saved(size_in, size_out) :
 
     print(result, end='')
 
+def run_ext(args, options) :
+    """run EXTERNAL program"""
+    if options.verbose :
+        print('\tOptimizing with %s...' % args[0], end='')
+        sys.stdout.flush()
+
+    subprocess.call(args)
+
+
+def pngout(filename, new_filename, options) :
+    """runs the EXTERNAL program pngout on the file"""
+    args = PNGOUT_ARGS+[filename, new_filename]
+    run_ext(args, options)
+
 
 def optipng(filename, new_filename, options) :
     """runs the EXTERNAL program optipng on the file"""
     args = OPTIPNG_ARGS+[new_filename]
-    if options.verbose :
-        print('\tOptimizing PNG...', end='')
-        sys.stdout.flush()
-    subprocess.call(args)
-
-    return filename
+    run_ext(args, options)
 
 
 def jpegtran(filename, new_filename, options) :
     """runs the EXTERNAL program jpegtran on the file"""
     args = JPEGTRAN_ARGS+[new_filename, filename]
-    if options.verbose :
-        print('\tOptimizing JPEG...', end='')
-        sys.stdout.flush()
-    subprocess.call(args)
-    return filename
+    run_ext(args, options)
 
 
 def is_format_selected(image_format, formats, options, mode) :
     """returns a boolean indicating weather or not the image format
     was selected by the command line options"""
-    result = mode and image_format in formats and image_format in options.formats
+    result = (image_format in formats ) \
+            and (image_format in options.formats) and mode
     return result
+
 
 def cleanup_after_optimize(filename, new_filename, options, totals):
     """report results. replace old file with better one or discard new wasteful
@@ -156,7 +216,7 @@ def cleanup_after_optimize(filename, new_filename, options, totals):
         if (filesize_out > 0) and ((filesize_out < filesize_in) \
                                       or options.bigger) :
             print('Replacing file with optimized version.')
-            rem_filename = filename+'.picopt_REMOVE'
+            rem_filename = filename+REMOVE_EXT
             os.rename(filename, rem_filename)
             os.rename(new_filename, filename)
             os.remove(rem_filename)
@@ -169,21 +229,35 @@ def cleanup_after_optimize(filename, new_filename, options, totals):
         print(ex)
 
 
-def optimize_image(filename, image_format, options, totals) :
-    """optimizes a given image from a filename"""
+def optimize_image_aux(filename, options, totals, func) :
+    """this could be a decorator"""
     new_filename = os.path.normpath(filename+NEW_EXT)
     shutil.copy2(filename, new_filename)
 
+    func(filename, new_filename, options)
+
+    cleanup_after_optimize(filename, new_filename, options, totals)
+
+
+def lossless(filename, options, totals) :
+    """run EXTERNAL programs to optimize lossless formats"""
+    if options.optipng :
+        optimize_image_aux(filename, options, totals, optipng)
+    if options.pngout :
+        optimize_image_aux(filename, options, totals, pngout)
+
+
+def optimize_image(filename, image_format, options, totals) :
+    """optimizes a given image from a filename"""
     if is_format_selected(image_format, LOSSLESS_FORMATS, options,
-                          options.lossless) :
-        optipng(filename, new_filename, options)
+                          options.optipng or options.pngout) :
+        lossless(filename, options, totals)
     elif is_format_selected(image_format, JPEG_FORMATS, options, options.jpeg):
-        jpegtran(filename, new_filename, options)
+        optimize_image_aux(filename, options, totals, jpegtran)
     else :
         if options.verbose :
             print("\tFile format not selected.")
 
-    cleanup_after_optimize(filename, new_filename, options, totals)
 
 def is_image_sequenced(image) :
     """determines if the image is a sequenced image"""
@@ -237,53 +311,6 @@ def optimize_files(cwd, filter_list, options, totals) :
                 print(filename,'was not found.')
 
 
-def humanize_bytes(num_bytes, precision=1):
-    """
-    from: 
-    http://code.activestate.com/recipes/577081-humanized-representation-of-a-number-of-num_bytes/
-    Return a humanized string representation of a number of num_bytes.
-
-    Assumes `from __future__ import division`.
-
-    >>> humanize_bytes(1)
-    '1 byte'
-    >>> humanize_bytes(1024)
-    '1.0 kB'
-    >>> humanize_bytes(1024*123)
-    '123.0 kB'
-    >>> humanize_bytes(1024*12342)
-    '12.1 MB'
-    >>> humanize_bytes(1024*12342,2)
-    '12.05 MB'
-    >>> humanize_bytes(1024*1234,2)
-    '1.21 MB'
-    >>> humanize_bytes(1024*1234*1111,2)
-    '1.31 GB'
-    >>> humanize_bytes(1024*1234*1111,1)
-    '1.3 GB'
-    """
-
-    abbrevs = (
-        (1<<50L, 'PiB'),
-        (1<<40L, 'TiB'),
-        (1<<30L, 'GiB'),
-        (1<<20L, 'MiB'),
-        (1<<10L, 'kiB'),
-        (1, 'bytes')
-    )
-
-    if num_bytes == 0:
-        return 'no bytes'
-    if num_bytes == 1:
-        return '1 byte'
-    for factor, suffix in abbrevs:
-        if num_bytes >= factor:
-            break
-    if num_bytes < (1 << 10L) :
-        precision = 0
-
-    return '%.*f %s' % (precision, num_bytes / factor, suffix)
-
 def report_totals(bytes_in, bytes_out) :
     """report the total number and percent of bytes saved"""
     if bytes_in :
@@ -302,7 +329,6 @@ def main() :
 
     (options, arguments) = get_options_and_arguments()   
 
- 
     os.chdir(options.dir)
     cwd = os.getcwd()
     filter_list = arguments
