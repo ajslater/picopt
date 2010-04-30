@@ -5,8 +5,7 @@ Runs pictures through image specific external optimizers
 from __future__ import print_function
 from __future__ import division
 
-__revision__ = '0.3.0'
-#TODO: add user configurable jpegtran and optipng arguments
+__revision__ = '0.4.0'
 
 import sys, os, optparse, shutil, subprocess
 import Image, ImageFile
