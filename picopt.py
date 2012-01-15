@@ -23,6 +23,16 @@ FORMAT_DELIMETER = ','
 DEFAULT_FORMATS = 'ALL'
 
 
+ABBREVS = (
+    (1<<50L, 'PiB'),
+    (1<<40L, 'TiB'),
+    (1<<30L, 'GiB'),
+    (1<<20L, 'MiB'),
+    (1<<10L, 'kiB'),
+    (1, 'bytes')
+)
+
+
 def humanize_bytes(num_bytes, precision=1):
     """
     from: 
@@ -49,26 +59,23 @@ def humanize_bytes(num_bytes, precision=1):
     '1.3 GB'
     """
 
-    abbrevs = (
-        (1<<50L, 'PiB'),
-        (1<<40L, 'TiB'),
-        (1<<30L, 'GiB'),
-        (1<<20L, 'MiB'),
-        (1<<10L, 'kiB'),
-        (1, 'bytes')
-    )
-
     if num_bytes == 0:
         return 'no bytes'
     if num_bytes == 1:
         return '1 byte'
-    for factor, suffix in abbrevs:
+
+    factored_bytes = 0
+    factor_suffix = 'bytes'
+    for factor, suffix in ABBREVS:
         if num_bytes >= factor:
+            factored_bytes = num_bytes / factor
+            factor_suffix = suffix
             break
-    if num_bytes < (1 << 10L) :
+
+    if factored_bytes == 1 :
         precision = 0
 
-    return '%.*f %s' % (precision, num_bytes / factor, suffix)
+    return '%.*f %s' % (precision, factored_bytes, factor_suffix)
 
 
 def does_external_program_run(prog) :
