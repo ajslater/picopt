@@ -35,7 +35,7 @@ ABBREVS = (
 
 def humanize_bytes(num_bytes, precision=1):
     """
-    from: 
+    from:
     http://code.activestate.com/recipes/577081-humanized-representation-of-a-number-of-num_bytes/
     Return a humanized string representation of a number of num_bytes.
 
@@ -106,26 +106,26 @@ def get_options_and_arguments() :
     usage = "usage: %prog [options] [image files]\npicopt requires " \
     "that optiping and jpegtran be on the path."
     parser = optparse.OptionParser(usage=usage)
-    parser.add_option("-d", "--dir", action="store", dest="dir", 
-        default=os.getcwd(), 
+    parser.add_option("-d", "--dir", action="store", dest="dir",
+        default=os.getcwd(),
     help="Directory to change to before optimiziaton")
     parser.add_option("-f", "--formats", action="store", dest="formats",
-        default=DEFAULT_FORMATS, 
+        default=DEFAULT_FORMATS,
     help="Only optimize images of the specifed '" \
     +FORMAT_DELIMETER+"' delimited formats")
-    parser.add_option("-r", "--recurse", action="store_true", 
+    parser.add_option("-r", "--recurse", action="store_true",
         dest="recurse", default=0, help="Recurse down through " \
     "directories ignoring the image file arguments on the " \
     "command line")
-    parser.add_option("-q", "--quiet", action="store_false", 
+    parser.add_option("-q", "--quiet", action="store_false",
         dest="verbose", default=1, help="Do not display output")
-    parser.add_option("-o", "--disable_optipng", action="store_false", 
+    parser.add_option("-o", "--disable_optipng", action="store_false",
         dest="optipng", default=1, help="Do not optimize with optipng")
-    parser.add_option("-p", "--disable_pngout", action="store_false", 
+    parser.add_option("-p", "--disable_pngout", action="store_false",
         dest="pngout", default=1, help="Do not optimize with pngout")
-    parser.add_option("-j", "--disable_jpeg", action="store_false", 
+    parser.add_option("-j", "--disable_jpeg", action="store_false",
         dest="jpeg", default=1, help="Do not optimize JPEGs")
-    parser.add_option("-b", "--bigger", action="store_true", 
+    parser.add_option("-b", "--bigger", action="store_true",
         dest="bigger", default=0,
         help="Save optimized files that are larger than the originals")
 
@@ -160,7 +160,7 @@ def report_percent_saved(size_in, size_out) :
     print(size_in_kb, '-->', size_out_kb+'.')
 
     percent_saved = (1 - (size_out / size_in)) * 100
-  
+
     if percent_saved == 0 :
         result = '\tFiles are the same size. '
     else :
@@ -218,7 +218,7 @@ def cleanup_after_optimize(filename, new_filename, options, totals):
         filesize_out = os.stat(new_filename).st_size
         if options.verbose :
             report_percent_saved(filesize_in, filesize_out)
- 
+
         if (filesize_out > 0) and ((filesize_out < filesize_in) \
                                       or options.bigger) :
             print('Replacing file with optimized version.')
@@ -329,11 +329,11 @@ def report_totals(bytes_in, bytes_out) :
 
 
 def main() :
-    """main"""    
+    """main"""
 
     ImageFile.MAXBLOCK = 3000000 # default is 64k
 
-    (options, arguments) = get_options_and_arguments()   
+    (options, arguments) = get_options_and_arguments()
 
     os.chdir(options.dir)
     cwd = os.getcwd()
