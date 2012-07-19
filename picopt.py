@@ -222,9 +222,16 @@ def cleanup_after_optimize(filename, new_filename, options, totals):
         if (filesize_out > 0) and ((filesize_out < filesize_in) \
                                       or options.bigger) :
             print('Replacing file with optimized version.')
+            old_image_format = get_image_format(filename)
+            new_image_format = get_image_format(new_filename)
+            if old_image_format == new_image_format :
+                final_filename = filename
+            else :
+                final_filename = replace_ext(filename,
+                                             new_image_format.lower())
             rem_filename = filename+REMOVE_EXT
             os.rename(filename, rem_filename)
-            os.rename(new_filename, filename)
+            os.rename(new_filename, final_filename)
             os.remove(rem_filename)
             totals['in'] += filesize_in
             totals['out'] += filesize_out
@@ -275,9 +282,8 @@ def is_image_sequenced(image) :
 
     return result
 
-
-def detect_file(filename, options, totals) :
-    """decides what to do with the file"""
+def get_image_format(filename) :
+    """gets the image format"""
     image = None
     bad_image = 1
     image_format = 'NONE'
@@ -290,13 +296,25 @@ def detect_file(filename, options, totals) :
     except (OSError, IOError):
         pass
 
-    if image == None or bad_image or sequenced or image_format == 'NONE' :
+    if sequenced :
+        print (filename, "can't handle sequenced image")
+        image_format += ' SEQUENCED'
+    elif image == None or bad_image or image_format == 'NONE' :
         print(filename, "doesn't look like an image.")
-    elif image_format in options.formats :
-        print(filename, image.format, image.mode)
+        image_format = 'ERROR'
+    return image_format
+
+def detect_file(filename, options, totals) :
+    """decides what to do with the file"""
+    image_format = get_image_format(filename)
+
+    if image_format in options.formats :
+        print(filename, image_format) # image.mode)
         optimize_image(filename, image_format, options, totals)
+    elif image_format in ('NONE', 'ERROR') :
+        pass
     else :
-        print(filename, image.format, 'is not a supported image type.')
+        print(filename, image_format, 'is not a supported image type.')
 
 
 def optimize_files(cwd, filter_list, options, totals) :
