@@ -8,8 +8,12 @@ from __future__ import division
 __revision__ = '0.4.0'
 
 import sys
-import os, optparse, shutil, subprocess
-import Image, ImageFile
+import os
+import optparse
+import shutil
+import subprocess
+import Image
+import ImageFile
 
 REMOVE_EXT = '.picopt-remove'
 NEW_EXT = '.picopt-optimized.png'
@@ -25,11 +29,11 @@ DEFAULT_FORMATS = 'ALL'
 
 
 ABBREVS = (
-    (1<<50L, 'PiB'),
-    (1<<40L, 'TiB'),
-    (1<<30L, 'GiB'),
-    (1<<20L, 'MiB'),
-    (1<<10L, 'kiB'),
+    (1 << 50L, 'PiB'),
+    (1 << 40L, 'TiB'),
+    (1 << 30L, 'GiB'),
+    (1 << 20L, 'MiB'),
+    (1 << 10L, 'kiB'),
     (1, 'bytes')
 )
 
@@ -112,12 +116,12 @@ def get_options_and_arguments():
     help="Directory to change to before optimiziaton")
     parser.add_option("-f", "--formats", action="store", dest="formats",
         default=DEFAULT_FORMATS,
-    help="Only optimize images of the specifed '" \
-    +FORMAT_DELIMETER+"' delimited formats")
+    help="Only optimize images of the specifed '"
+            + FORMAT_DELIMETER + "' delimited formats")
     parser.add_option("-r", "--recurse", action="store_true",
-        dest="recurse", default=0, help="Recurse down through " \
-    "directories ignoring the image file arguments on the " \
-    "command line")
+        dest="recurse", default=0, help="Recurse down through "
+            "directories ignoring the image file arguments on the "
+            "command line")
     parser.add_option("-q", "--quiet", action="store_false",
         dest="verbose", default=1, help="Do not display output")
     parser.add_option("-o", "--disable_optipng", action="store_false",
@@ -150,7 +154,7 @@ def get_options_and_arguments():
 def replace_ext(filename, new_ext):
     """replaces the file extention"""
     dot_index = filename.rfind('.')
-    new_filename = filename[0:dot_index]+new_ext
+    new_filename = filename[0:dot_index] + new_ext
     return new_filename
 
 
@@ -158,7 +162,7 @@ def report_percent_saved(size_in, size_out):
     """spits out how much space the optimazation saved"""
     size_in_kb = humanize_bytes(size_in)
     size_out_kb = humanize_bytes(size_out)
-    print(size_in_kb, '-->', size_out_kb+'.')
+    print(size_in_kb, '-->', size_out_kb + '.')
 
     percent_saved = (1 - (size_out / size_in)) * 100
 
@@ -170,11 +174,12 @@ def report_percent_saved(size_in, size_out):
         else:
             verb = 'Grew by'
 
-        bytes_saved = humanize_bytes(abs(size_in-size_out))
-        result = '\t'+verb+' %.*f%s' % (2, abs(percent_saved), '%')
+        bytes_saved = humanize_bytes(abs(size_in - size_out))
+        result = '\t' + verb + ' %.*f%s' % (2, abs(percent_saved), '%')
         result += ' or %s. ' % bytes_saved
 
     print(result, end='')
+
 
 def run_ext(args, options):
     """run EXTERNAL program"""
@@ -187,26 +192,26 @@ def run_ext(args, options):
 
 def pngout(filename, new_filename, options):
     """runs the EXTERNAL program pngout on the file"""
-    args = PNGOUT_ARGS+[filename, new_filename]
+    args = PNGOUT_ARGS + [filename, new_filename]
     run_ext(args, options)
 
 
 def optipng(filename, new_filename, options):
     """runs the EXTERNAL program optipng on the file"""
-    args = OPTIPNG_ARGS+[new_filename]
+    args = OPTIPNG_ARGS + [new_filename]
     run_ext(args, options)
 
 
 def jpegtran(filename, new_filename, options):
     """runs the EXTERNAL program jpegtran on the file"""
-    args = JPEGTRAN_ARGS+[new_filename, filename]
+    args = JPEGTRAN_ARGS + [new_filename, filename]
     run_ext(args, options)
 
 
 def is_format_selected(image_format, formats, options, mode):
     """returns a boolean indicating weather or not the image format
     was selected by the command line options"""
-    result = (image_format in formats ) \
+    result = (image_format in formats) \
             and (image_format in options.formats) and mode
     return result
 
@@ -220,7 +225,7 @@ def cleanup_after_optimize(filename, new_filename, options, totals):
         if options.verbose:
             report_percent_saved(filesize_in, filesize_out)
 
-        if (filesize_out > 0) and ((filesize_out < filesize_in) \
+        if (filesize_out > 0) and ((filesize_out < filesize_in)
                                       or options.bigger):
             print('Replacing file with optimized version.')
             old_image_format = get_image_format(filename)
@@ -230,7 +235,7 @@ def cleanup_after_optimize(filename, new_filename, options, totals):
             else:
                 final_filename = replace_ext(filename,
                                              new_image_format.lower())
-            rem_filename = filename+REMOVE_EXT
+            rem_filename = filename + REMOVE_EXT
             os.rename(filename, rem_filename)
             os.rename(new_filename, final_filename)
             os.remove(rem_filename)
@@ -245,7 +250,7 @@ def cleanup_after_optimize(filename, new_filename, options, totals):
 
 def optimize_image_aux(filename, options, totals, func):
     """this could be a decorator"""
-    new_filename = os.path.normpath(filename+NEW_EXT)
+    new_filename = os.path.normpath(filename + NEW_EXT)
     shutil.copy2(filename, new_filename)
 
     func(filename, new_filename, options)
@@ -283,6 +288,7 @@ def is_image_sequenced(image):
 
     return result
 
+
 def get_image_format(filename):
     """gets the image format"""
     image = None
@@ -300,17 +306,18 @@ def get_image_format(filename):
     if sequenced:
         print (filename, "can't handle sequenced image")
         image_format += ' SEQUENCED'
-    elif image == None or bad_image or image_format == 'NONE':
+    elif image is None or bad_image or image_format == 'NONE':
         print(filename, "doesn't look like an image.")
         image_format = 'ERROR'
     return image_format
+
 
 def detect_file(filename, options, totals):
     """decides what to do with the file"""
     image_format = get_image_format(filename)
 
     if image_format in options.formats:
-        print(filename, image_format) # image.mode)
+        print(filename, image_format)  # image.mode)
         optimize_image(filename, image_format, options, totals)
     elif image_format in ('NONE', 'ERROR'):
         pass
@@ -323,7 +330,7 @@ def optimize_files(cwd, filter_list, options, totals):
        calls the optimizer on the extant files"""
 
     for filename in filter_list:
-        filename_full = os.path.normpath(cwd+os.sep+filename)
+        filename_full = os.path.normpath(cwd + os.sep + filename)
         if os.path.isdir(filename_full):
             if options.recurse:
                 next_dir_list = os.listdir(filename_full)
@@ -333,7 +340,7 @@ def optimize_files(cwd, filter_list, options, totals):
             detect_file(filename_full, options, totals)
         else:
             if options.verbose:
-                print(filename,'was not found.')
+                print(filename, 'was not found.')
 
 
 def report_totals(bytes_in, bytes_out):
