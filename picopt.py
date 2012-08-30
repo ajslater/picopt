@@ -5,7 +5,7 @@ Runs pictures through image specific external optimizers
 from __future__ import print_function
 from __future__ import division
 
-__revision__ = '0.4.0'
+__revision__ = '0.5.0'
 
 import sys
 import os
@@ -17,8 +17,10 @@ import ImageFile
 
 REMOVE_EXT = '.picopt-remove'
 NEW_EXT = '.picopt-optimized.png'
-JPEGTRAN_ARGS = ['jpegtran', '-copy', 'all', '-optimize',
-                 '-outfile']
+JPEGTRAN_OPTI_ARGS = ['jpegtran', '-copy', 'all', '-optimize',
+                      '-outfile']
+JPEGTRAN_PROG_ARGS = ['jpegtran', '-copy', 'all', '-optimize',
+                     '-outfile']
 OPTIPNG_ARGS = ['optipng', '-o7', '-fix', '-preserve', '-force', '-quiet']
 PNGOUT_ARGS = ['pngout', '-q', '-force', '-y']
 LOSSLESS_FORMATS = ['PNG', 'PNM', 'GIF', 'TIFF']
@@ -41,7 +43,8 @@ ABBREVS = (
 def humanize_bytes(num_bytes, precision=1):
     """
     from:
-    http://code.activestate.com/recipes/577081-humanized-representation-of-a-number-of-num_bytes/
+    http://code.activestate.com/recipes/
+           577081-humanized-representation-of-a-number-of-num_bytes/
     Return a humanized string representation of a number of num_bytes.
 
     Assumes `from __future__ import division`.
@@ -100,9 +103,11 @@ def program_reqs(options):
     """run the external program tester on the required binaries"""
     options.losless = options.optipng and does_external_program_run('optipng')
     options.pngout = options.pngout and does_external_program_run('pngout')
-    options.jpeg = options.jpeg and does_external_program_run('jpegtran')
+    options.jpegtran = options.jpegtran and \
+                                      does_external_program_run('jpegtran')
 
-    if not options.optipng and not options.pngout and not options.jpeg:
+    if not options.optipng and not options.pngout and not options.jpegtran:
+        print("All optimizers are not available or disabled.")
         exit(1)
 
 
@@ -129,7 +134,10 @@ def get_options_and_arguments():
     parser.add_option("-p", "--disable_pngout", action="store_false",
         dest="pngout", default=1, help="Do not optimize with pngout")
     parser.add_option("-j", "--disable_jpeg", action="store_false",
-        dest="jpeg", default=1, help="Do not optimize JPEGs")
+        dest="jpegtran", default=1, help="Do not optimize JPEGs")
+    parser.add_option("-g", "--enable_progressive", action="store_true",
+        dest="jpegtran_prog", default=0,
+        help="Try to reduce size by making progressive JPEGs")
     parser.add_option("-b", "--bigger", action="store_true",
         dest="bigger", default=0,
         help="Save optimized files that are larger than the originals")
@@ -202,9 +210,17 @@ def optipng(filename, new_filename, options):
     run_ext(args, options)
 
 
-def jpegtran(filename, new_filename, options):
-    """runs the EXTERNAL program jpegtran on the file"""
-    args = JPEGTRAN_ARGS + [new_filename, filename]
+def jpegtranopti(filename, new_filename, options):
+    """runs the EXTERNAL program jpegtran with huffman optimization
+       on the file"""
+    args = JPEGTRAN_OPTI_ARGS + [new_filename, filename]
+    run_ext(args, options)
+
+
+def jpegtranprog(filename, new_filename, options):
+    """runs the EXTERNAL program jpegtran with progressive transform
+       on the file"""
+    args = JPEGTRAN_PROG_ARGS + [new_filename, filename]
     run_ext(args, options)
 
 
@@ -266,13 +282,23 @@ def lossless(filename, options, totals):
         optimize_image_aux(filename, options, totals, pngout)
 
 
+def lossy(filename, options, totals):
+    """run EXTERNAL programs to optimize lossy formats"""
+    if options.jpegtran:
+        optimize_image_aux(filename, options, totals, jpegtranopti)
+        if options.jpegtran_prog:
+            print("\tTrying as a progressive JPEG...")
+            optimize_image_aux(filename, options, totals, jpegtranprog)
+
+
 def optimize_image(filename, image_format, options, totals):
     """optimizes a given image from a filename"""
     if is_format_selected(image_format, LOSSLESS_FORMATS, options,
                           options.optipng or options.pngout):
         lossless(filename, options, totals)
-    elif is_format_selected(image_format, JPEG_FORMATS, options, options.jpeg):
-        optimize_image_aux(filename, options, totals, jpegtran)
+    elif is_format_selected(image_format, JPEG_FORMATS, options,
+                            options.jpegtran):
+        lossy(filename, options, totals)
     else:
         if options.verbose:
             print("\tFile format not selected.")
