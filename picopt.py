@@ -27,6 +27,7 @@ JPEGTRAN_PROG_ARGS = ['jpegtran', '-copy', 'all', '-optimize',
                      '-outfile']
 JPEGRESCAN_ARGS = ['jpegrescan']
 OPTIPNG_ARGS = ['optipng', '-o6', '-fix', '-preserve', '-force', '-quiet']
+ADVPNG_ARGS = ['advpng', '-z', '-4', '-f']
 PNGOUT_ARGS = ['pngout', '-q', '-force', '-y']
 LOSSLESS_FORMATS = ['PNG', 'PNM', 'GIF', 'TIFF']
 JPEG_FORMATS = ['JPEG']
@@ -108,6 +109,7 @@ def does_external_program_run(prog):
 def program_reqs(options):
     """run the external program tester on the required binaries"""
     options.losless = options.optipng and does_external_program_run('optipng')
+    options.losless = options.advpng and does_external_program_run('advpng')
     options.pngout = options.pngout and does_external_program_run('pngout')
     options.jpegrescan = options.jpegtran and \
                                       does_external_program_run('jpegrescan')
@@ -139,6 +141,8 @@ def get_options_and_arguments():
         dest="verbose", default=1, help="Do not display output")
     parser.add_option("-o", "--disable_optipng", action="store_false",
         dest="optipng", default=1, help="Do not optimize with optipng")
+    parser.add_option("-a", "--disable_advpng", action="store_false",
+        dest="advpng", default=1, help="Do not optimize with advpng")
     parser.add_option("-p", "--disable_pngout", action="store_false",
         dest="pngout", default=1, help="Do not optimize with pngout")
     parser.add_option("-j", "--disable_jpegrescan", action="store_false",
@@ -201,18 +205,7 @@ def report_percent_saved(size_in, size_out):
 
 def run_ext(args, options):
     """run EXTERNAL program"""
-    if args[0] == 'jpegrescan':
-        stdout = subprocess.PIPE
-        end = '\n'
-    else:
-        stdout = None
-        end = ''
-
-#    if options.verbose:
-#        print('\tOptimizing with %s...' % args[0], end='')
-        sys.stdout.flush()
-
-    subprocess.call(args, stdout=stdout)
+    subprocess.call(args, stdout=subprocess.PIPE)
 
 
 def pngout(filename, new_filename, options):
@@ -224,6 +217,12 @@ def pngout(filename, new_filename, options):
 def optipng(filename, new_filename, options):
     """runs the EXTERNAL program optipng on the file"""
     args = OPTIPNG_ARGS + [new_filename]
+    run_ext(args, options)
+
+
+def advpng(filename, new_filename, options):
+    """runs the EXTERNAL program advpng on the file"""
+    args = ADVPNG_ARGS + [new_filename]
     run_ext(args, options)
 
 
@@ -261,8 +260,6 @@ def cleanup_after_optimize(filename, new_filename, options):
 
     bytes_diff = {'in': 0, 'out': 0}
     try:
-        old_image_format = get_image_format(filename)
-        print(filename, old_image_format)  # image.mode)
         filesize_in = os.stat(filename).st_size
         bytes_diff['in'] = filesize_in
         bytes_diff['out'] = filesize_in  # overwritten on succes below
@@ -273,7 +270,7 @@ def cleanup_after_optimize(filename, new_filename, options):
         if (filesize_out > 0) and ((filesize_out < filesize_in)
                                       or options.bigger):
             print('Replacing file with optimized version.')
-            #old_image_format = get_image_format(filename)
+            old_image_format = get_image_format(filename)
             new_image_format = get_image_format(new_filename)
             if old_image_format == new_image_format:
                 final_filename = filename
@@ -301,19 +298,38 @@ def optimize_image_aux(filename, options, func):
 
     func(filename, new_filename, options)
 
+    print(filename,'report for', func.__name__)
     return cleanup_after_optimize(filename, new_filename, options)
 
 
 def lossless(filename, options):
     """run EXTERNAL programs to optimize lossless formats"""
+    bytes_in = 0
     if options.optipng:
         bytes_diff = optimize_image_aux(filename, options, optipng)
+        if not bytes_in:
+            bytes_in = bytes_diff['in']
+
+    if options.advpng:
+        bytes_diff = optimize_image_aux(filename, options, advpng)
+        if not bytes_in:
+            bytes_in = bytes_diff['in']
+
     if options.pngout:
         bytes_diff = optimize_image_aux(filename, options, pngout)
-    else:
-        print('Skipping lossless file: %s', filename)
-        bytes_diff = {'in': 0, 'out': 0}
+        if not bytes_in:
+            bytes_in = bytes_diff['in']
 
+
+#    else:
+#        print('Skipping lossless file: %s', filename)
+#        bytes_diff = {'in': 0, 'out': 0}
+
+    bytes_diff['in'] = bytes_in
+
+    print(filename,'TOTAL')
+    report_percent_saved(bytes_diff['in'], bytes_diff['out'])
+    print('')
     return bytes_diff
 
 
@@ -335,6 +351,8 @@ def lossy(filename, options):
 def optimize_image(arg):
     """optimizes a given image from a filename"""
     filename, image_format, options, total_bytes_in, total_bytes_out = arg
+
+    print("Starting", filename, image_format)
 
     if is_format_selected(image_format, LOSSLESS_FORMATS, options,
                           options.optipng or options.pngout):
@@ -404,9 +422,6 @@ def optimize_files(cwd, filter_list, options, total_bytes_in,
     """sorts through a list of files, decends directories and
        calls the optimizer on the extant files"""
 
-    args_list = []
-
-    # TODO? put files in a queue and read from it as we genereate it?
     for filename in filter_list:
         filename_full = os.path.normpath(cwd + os.sep + filename)
         if os.path.isdir(filename_full):
@@ -418,16 +433,12 @@ def optimize_files(cwd, filter_list, options, total_bytes_in,
         elif os.path.exists(filename_full):
             args = detect_file(filename_full, options)
             if args:
-                print("Queueing", *args)
+                #print("Queueing", *args)
                 args += [options, total_bytes_in, total_bytes_out]
-                #pool.apply_async(optimize_image, args)
-                args_list += [args]
+                pool.apply_async(optimize_image, [args])
         else:
             if options.verbose:
                 print(filename, 'was not found.')
-
-    #print(len(args_list))
-    pool.map(optimize_image, args_list)
 
 
 def report_totals(bytes_in, bytes_out):
@@ -460,7 +471,8 @@ def main():
     optimize_files(cwd, filter_list, options, total_bytes_in,
                    total_bytes_out, pool)
 
-    multiprocessing.active_children()
+    pool.close()
+    pool.join()
 
     report_totals(total_bytes_in.get(), total_bytes_out.get())
 
