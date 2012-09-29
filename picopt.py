@@ -8,7 +8,7 @@ from __future__ import division
 __revision__ = '0.7.0'
 
 # TODO
-# add advpng support
+# fix reporting for multiprocess
 
 import os
 import optparse
@@ -319,14 +319,13 @@ def lossless(filename, options):
         if not bytes_in:
             bytes_in = bytes_diff['in']
 
-
-#    else:
-#        print('Skipping lossless file: %s', filename)
-#        bytes_diff = {'in': 0, 'out': 0}
+    if not bytes_in:
+        print('Skipping lossless file: %s', filename)
+        bytes_diff = {'in': 0, 'out': 0}
 
     bytes_diff['in'] = bytes_in
 
-    print(filename,'TOTAL')
+    print(filename, 'TOTAL')
     report_percent_saved(bytes_diff['in'], bytes_diff['out'])
     print('')
     return bytes_diff
