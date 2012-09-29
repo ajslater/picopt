@@ -9,8 +9,6 @@ __revision__ = '0.6.0'
 
 # TODO
 # add advpng support
-# add auto extrenal file path support
-# add multiprocessing
 
 import sys
 import os
@@ -19,6 +17,7 @@ import shutil
 import subprocess
 import Image
 import ImageFile
+import multiprocessing
 
 REMOVE_EXT = '.picopt-remove'
 NEW_EXT = '.picopt-optimized.png'
@@ -34,6 +33,7 @@ JPEG_FORMATS = ['JPEG']
 OPTIMIZABLE_FORMATS = LOSSLESS_FORMATS + JPEG_FORMATS
 FORMAT_DELIMETER = ','
 DEFAULT_FORMATS = 'ALL'
+PROCESSES = multiprocessing.cpu_count() + 1
 
 
 ABBREVS = (
@@ -109,6 +109,8 @@ def program_reqs(options):
     """run the external program tester on the required binaries"""
     options.losless = options.optipng and does_external_program_run('optipng')
     options.pngout = options.pngout and does_external_program_run('pngout')
+    options.jpegrescan = options.jpegtran and \
+                                      does_external_program_run('jpegrescan')
     options.jpegtran = options.jpegtran and \
                                       does_external_program_run('jpegtran')
 
@@ -178,7 +180,7 @@ def report_percent_saved(size_in, size_out):
     """spits out how much space the optimazation saved"""
     size_in_kb = humanize_bytes(size_in)
     size_out_kb = humanize_bytes(size_out)
-    print(size_in_kb, '-->', size_out_kb + '.')
+    print('\t' + size_in_kb, '-->', size_out_kb + '.')
 
     percent_saved = (1 - (size_out / size_in)) * 100
 
@@ -199,11 +201,18 @@ def report_percent_saved(size_in, size_out):
 
 def run_ext(args, options):
     """run EXTERNAL program"""
-    if options.verbose:
-        print('\tOptimizing with %s...' % args[0], end='')
+    if args[0] == 'jpegrescan':
+        stdout = subprocess.PIPE
+        end = '\n'
+    else:
+        stdout = None
+        end = ''
+
+#    if options.verbose:
+#        print('\tOptimizing with %s...' % args[0], end='')
         sys.stdout.flush()
 
-    subprocess.call(args)
+    subprocess.call(args, stdout=stdout)
 
 
 def pngout(filename, new_filename, options):
@@ -246,11 +255,17 @@ def is_format_selected(image_format, formats, options, mode):
     return result
 
 
-def cleanup_after_optimize(filename, new_filename, options, totals):
+def cleanup_after_optimize(filename, new_filename, options):
     """report results. replace old file with better one or discard new wasteful
        file"""
+
+    bytes_diff = {'in': 0, 'out': 0}
     try:
+        old_image_format = get_image_format(filename)
+        print(filename, old_image_format)  # image.mode)
         filesize_in = os.stat(filename).st_size
+        bytes_diff['in'] = filesize_in
+        bytes_diff['out'] = filesize_in  # overwritten on succes below
         filesize_out = os.stat(new_filename).st_size
         if options.verbose:
             report_percent_saved(filesize_in, filesize_out)
@@ -258,7 +273,7 @@ def cleanup_after_optimize(filename, new_filename, options, totals):
         if (filesize_out > 0) and ((filesize_out < filesize_in)
                                       or options.bigger):
             print('Replacing file with optimized version.')
-            old_image_format = get_image_format(filename)
+            #old_image_format = get_image_format(filename)
             new_image_format = get_image_format(new_filename)
             if old_image_format == new_image_format:
                 final_filename = filename
@@ -269,56 +284,71 @@ def cleanup_after_optimize(filename, new_filename, options, totals):
             os.rename(filename, rem_filename)
             os.rename(new_filename, final_filename)
             os.remove(rem_filename)
-            totals['in'] += filesize_in
-            totals['out'] += filesize_out
+            bytes_diff['out'] = filesize_out  # only on completion
         else:
             print('Discarding work.')
             os.remove(new_filename)
     except OSError as ex:
         print(ex)
 
+    return bytes_diff
 
-def optimize_image_aux(filename, options, totals, func):
+
+def optimize_image_aux(filename, options, func):
     """this could be a decorator"""
     new_filename = os.path.normpath(filename + NEW_EXT)
     shutil.copy2(filename, new_filename)
 
     func(filename, new_filename, options)
 
-    cleanup_after_optimize(filename, new_filename, options, totals)
+    return cleanup_after_optimize(filename, new_filename, options)
 
 
-def lossless(filename, options, totals):
+def lossless(filename, options):
     """run EXTERNAL programs to optimize lossless formats"""
     if options.optipng:
-        optimize_image_aux(filename, options, totals, optipng)
+        bytes_diff = optimize_image_aux(filename, options, optipng)
     if options.pngout:
-        optimize_image_aux(filename, options, totals, pngout)
+        bytes_diff = optimize_image_aux(filename, options, pngout)
+    else:
+        print('Skipping lossless file: %s', filename)
+        bytes_diff = {'in': 0, 'out': 0}
+
+    return bytes_diff
 
 
-def lossy(filename, options, totals):
+def lossy(filename, options):
     """run EXTERNAL programs to optimize lossy formats"""
     if options.jpegrescan:
-        optimize_image_aux(filename, options, totals, jpegrescan)
+        bytes_diff = optimize_image_aux(filename, options, jpegrescan)
     elif options.jpegtran_prog:
-        optimize_image_aux(filename, options, totals, jpegtranprog)
+        bytes_diff = optimize_image_aux(filename, options, jpegtranprog)
     elif options.jpegtran:
-        optimize_image_aux(filename, options, totals, jpegtranopti)
+        bytes_diff = optimize_image_aux(filename, options, jpegtranopti)
     else:
         print('Skipping jpeg file: %s', filename)
+        bytes_diff = {'in': 0, 'out': 0}
+
+    return bytes_diff
 
 
-def optimize_image(filename, image_format, options, totals):
+def optimize_image(arg):
     """optimizes a given image from a filename"""
+    filename, image_format, options, total_bytes_in, total_bytes_out = arg
+
     if is_format_selected(image_format, LOSSLESS_FORMATS, options,
                           options.optipng or options.pngout):
-        lossless(filename, options, totals)
+        bytes_diff = lossless(filename, options)
     elif is_format_selected(image_format, JPEG_FORMATS, options,
-                            options.jpegtran):
-        lossy(filename, options, totals)
+                            options.jpegrescan or options.jpegtran):
+        bytes_diff = lossy(filename, options)
     else:
         if options.verbose:
+            print(filename, image_format)  # image.mode)
             print("\tFile format not selected.")
+
+    total_bytes_in.set(total_bytes_in.get() + bytes_diff['in'])
+    total_bytes_out.set(total_bytes_out.get() + bytes_diff['out'])
 
 
 def is_image_sequenced(image):
@@ -355,35 +385,49 @@ def get_image_format(filename):
     return image_format
 
 
-def detect_file(filename, options, totals):
+def detect_file(filename, options):
     """decides what to do with the file"""
     image_format = get_image_format(filename)
 
     if image_format in options.formats:
-        print(filename, image_format)  # image.mode)
-        optimize_image(filename, image_format, options, totals)
+        return [filename, image_format]
+        #print(filename, image_format)  # image.mode)
+        #optimize_image(filename, image_format, options, totals)
     elif image_format in ('NONE', 'ERROR'):
         pass
     else:
         print(filename, image_format, 'is not a supported image type.')
 
 
-def optimize_files(cwd, filter_list, options, totals):
+def optimize_files(cwd, filter_list, options, total_bytes_in,
+                   total_bytes_out, pool):
     """sorts through a list of files, decends directories and
        calls the optimizer on the extant files"""
 
+    args_list = []
+
+    # TODO? put files in a queue and read from it as we genereate it?
     for filename in filter_list:
         filename_full = os.path.normpath(cwd + os.sep + filename)
         if os.path.isdir(filename_full):
             if options.recurse:
                 next_dir_list = os.listdir(filename_full)
                 next_dir_list.sort()
-                optimize_files(filename_full, next_dir_list, options, totals)
+                optimize_files(filename_full, next_dir_list, options,
+                    total_bytes_in, total_bytes_out, pool)
         elif os.path.exists(filename_full):
-            detect_file(filename_full, options, totals)
+            args = detect_file(filename_full, options)
+            if args:
+                print("Queueing", *args)
+                args += [options, total_bytes_in, total_bytes_out]
+                #pool.apply_async(optimize_image, args)
+                args_list += [args]
         else:
             if options.verbose:
                 print(filename, 'was not found.')
+
+    #print(len(args_list))
+    pool.map(optimize_image, args_list)
 
 
 def report_totals(bytes_in, bytes_out):
@@ -408,10 +452,17 @@ def main():
     cwd = os.getcwd()
     filter_list = arguments
 
-    totals = {'in': 0, 'out': 0}
-    optimize_files(cwd, filter_list, options, totals)
+    manager = multiprocessing.Manager()
+    total_bytes_in = manager.Value(int, 0)
+    total_bytes_out = manager.Value(int, 0)
+    pool = multiprocessing.Pool(processes=PROCESSES)
 
-    report_totals(totals['in'], totals['out'])
+    optimize_files(cwd, filter_list, options, total_bytes_in,
+                   total_bytes_out, pool)
+
+    multiprocessing.active_children()
+
+    report_totals(total_bytes_in.get(), total_bytes_out.get())
 
 
 if __name__ == '__main__':
