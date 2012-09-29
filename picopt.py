@@ -184,23 +184,23 @@ def report_percent_saved(size_in, size_out):
     """spits out how much space the optimazation saved"""
     size_in_kb = humanize_bytes(size_in)
     size_out_kb = humanize_bytes(size_out)
-    print('\t' + size_in_kb, '-->', size_out_kb + '.')
+    result = '\t' + size_in_kb + '-->'+ size_out_kb + '. '
 
     percent_saved = (1 - (size_out / size_in)) * 100
 
     if percent_saved == 0:
-        result = '\tFiles are the same size. '
+        result += 'Files are the same size. '
     else:
         if percent_saved > 0:
-            verb = 'Saved'
+            verb = 'Shrunk'
         else:
-            verb = 'Grew by'
+            verb = 'Grew'
 
         bytes_saved = humanize_bytes(abs(size_in - size_out))
-        result = '\t' + verb + ' %.*f%s' % (2, abs(percent_saved), '%')
+        result += verb + ' by %.*f%s' % (2, abs(percent_saved), '%')
         result += ' or %s. ' % bytes_saved
 
-    print(result, end='')
+    return result
 
 
 def run_ext(args, options):
@@ -265,11 +265,11 @@ def cleanup_after_optimize(filename, new_filename, options):
         bytes_diff['out'] = filesize_in  # overwritten on succes below
         filesize_out = os.stat(new_filename).st_size
         if options.verbose:
-            report_percent_saved(filesize_in, filesize_out)
+            report = report_percent_saved(filesize_in, filesize_out)
 
         if (filesize_out > 0) and ((filesize_out < filesize_in)
                                       or options.bigger):
-            print('Replacing file with optimized version.')
+            report += '\n\tReplacing file with optimized version.'
             old_image_format = get_image_format(filename)
             new_image_format = get_image_format(new_filename)
             if old_image_format == new_image_format:
@@ -283,8 +283,9 @@ def cleanup_after_optimize(filename, new_filename, options):
             os.remove(rem_filename)
             bytes_diff['out'] = filesize_out  # only on completion
         else:
-            print('Discarding work.')
+            report += '\n\tDiscarding work.'
             os.remove(new_filename)
+        print(report)
     except OSError as ex:
         print(ex)
 
@@ -326,9 +327,9 @@ def lossless(filename, options):
 
     bytes_diff['in'] = bytes_in
 
-    print(filename, 'TOTAL')
-    report_percent_saved(bytes_diff['in'], bytes_diff['out'])
-    print('')
+    report = filename + ' TOTAL:\n'
+    report += report_percent_saved(bytes_diff['in'], bytes_diff['out'])
+    print(report)
     return bytes_diff
 
 
@@ -351,7 +352,7 @@ def optimize_image(arg):
     """optimizes a given image from a filename"""
     filename, image_format, options, total_bytes_in, total_bytes_out = arg
 
-    print("Starting", filename, image_format)
+    #print(filename, image_format, "starting...")
 
     if is_format_selected(image_format, LOSSLESS_FORMATS, options,
                           options.optipng or options.pngout):
