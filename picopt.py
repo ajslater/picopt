@@ -21,7 +21,8 @@ JPEGTRAN_OPTI_ARGS = ['jpegtran', '-copy', 'all', '-optimize',
                       '-outfile']
 JPEGTRAN_PROG_ARGS = ['jpegtran', '-copy', 'all', '-optimize',
                      '-outfile']
-OPTIPNG_ARGS = ['optipng', '-o7', '-fix', '-preserve', '-force', '-quiet']
+JPEGRESCAN_ARGS = ['jpegrescan']
+OPTIPNG_ARGS = ['optipng', '-o6', '-fix', '-preserve', '-force', '-quiet']
 PNGOUT_ARGS = ['pngout', '-q', '-force', '-y']
 LOSSLESS_FORMATS = ['PNG', 'PNM', 'GIF', 'TIFF']
 JPEG_FORMATS = ['JPEG']
@@ -133,11 +134,13 @@ def get_options_and_arguments():
         dest="optipng", default=1, help="Do not optimize with optipng")
     parser.add_option("-p", "--disable_pngout", action="store_false",
         dest="pngout", default=1, help="Do not optimize with pngout")
-    parser.add_option("-j", "--disable_jpeg", action="store_false",
-        dest="jpegtran", default=1, help="Do not optimize JPEGs")
-    parser.add_option("-g", "--enable_progressive", action="store_true",
-        dest="jpegtran_prog", default=0,
-        help="Try to reduce size by making progressive JPEGs")
+    parser.add_option("-j", "--disable_jpegrescan", action="store_false",
+        dest="jpegrescan", default=1, help="Do not optimize with jpegrescan")
+    parser.add_option("-g", "--disable_progressive", action="store_false",
+        dest="jpegtran_prog", default=1,
+        help="Don't try to reduce size by making progressive JPEGs with jpegtran")
+    parser.add_option("-t", "--disable_jpegtran", action="store_false",
+        dest="jpegtran", default=1, help="Do not optimize with jpegscan")
     parser.add_option("-b", "--bigger", action="store_true",
         dest="bigger", default=0,
         help="Save optimized files that are larger than the originals")
@@ -224,6 +227,12 @@ def jpegtranprog(filename, new_filename, options):
     run_ext(args, options)
 
 
+def jpegrescan(filename, new_filename, options):
+    """runs the EXTERNAL program jpegrescan"""
+    args = JPEGRESCAN_ARGS + [filename, new_filename]
+    run_ext(args, options)
+
+
 def is_format_selected(image_format, formats, options, mode):
     """returns a boolean indicating weather or not the image format
     was selected by the command line options"""
@@ -284,11 +293,14 @@ def lossless(filename, options, totals):
 
 def lossy(filename, options, totals):
     """run EXTERNAL programs to optimize lossy formats"""
-    if options.jpegtran:
+    if options.jpegrescan:
+        optimize_image_aux(filename, options, totals, jpegrescan)
+    elif options.jpegtran_prog:
+        optimize_image_aux(filename, options, totals, jpegtranprog)
+    elif options.jpegtran:
         optimize_image_aux(filename, options, totals, jpegtranopti)
-        if options.jpegtran_prog:
-            print("\tTrying as a progressive JPEG...")
-            optimize_image_aux(filename, options, totals, jpegtranprog)
+    else:
+        print('Skipping jpeg file: %s', filename)
 
 
 def optimize_image(filename, image_format, options, totals):
