@@ -7,9 +7,6 @@ from __future__ import division
 
 __revision__ = '0.7.0'
 
-# TODO
-# fix reporting for multiprocess
-
 import os
 import optparse
 import shutil
@@ -191,70 +188,70 @@ def new_percent_saved(size_in, size_out):
     return result
 
 
-def report_percent_saved(size_in, size_out):
-    """spits out how much space the optimazation saved"""
-    size_in_kb = humanize_bytes(size_in)
-    size_out_kb = humanize_bytes(size_out)
-    result = '\t' + size_in_kb + '-->' + size_out_kb + '. '
+#def report_percent_saved(size_in, size_out):
+#    """spits out how much space the optimazation saved"""
+#    size_in_kb = humanize_bytes(size_in)
+#    size_out_kb = humanize_bytes(size_out)
+#    result = '\t' + size_in_kb + '-->' + size_out_kb + '. '
+#
+#    percent_saved = (1 - (size_out / size_in)) * 100
+#
+#    if percent_saved == 0:
+#        result += 'Files are the same size. '
+#    else:
+#        if percent_saved > 0:
+#            verb = 'Shrunk'
+#        else:
+#            verb = 'Grew'
+#
+#        bytes_saved = humanize_bytes(abs(size_in - size_out))
+#        result += verb + ' by %.*f%s' % (2, abs(percent_saved), '%')
+#        result += ' or %s. ' % bytes_saved
+#
+#    return result
 
-    percent_saved = (1 - (size_out / size_in)) * 100
 
-    if percent_saved == 0:
-        result += 'Files are the same size. '
-    else:
-        if percent_saved > 0:
-            verb = 'Shrunk'
-        else:
-            verb = 'Grew'
-
-        bytes_saved = humanize_bytes(abs(size_in - size_out))
-        result += verb + ' by %.*f%s' % (2, abs(percent_saved), '%')
-        result += ' or %s. ' % bytes_saved
-
-    return result
-
-
-def run_ext(args, options):
+def run_ext(args):
     """run EXTERNAL program"""
     subprocess.call(args, stdout=subprocess.PIPE)
 
 
-def pngout(filename, new_filename, options):
+def pngout(filename, new_filename):
     """runs the EXTERNAL program pngout on the file"""
     args = PNGOUT_ARGS + [filename, new_filename]
-    run_ext(args, options)
+    run_ext(args)
 
 
-def optipng(filename, new_filename, options):
+def optipng(filename, new_filename):
     """runs the EXTERNAL program optipng on the file"""
     args = OPTIPNG_ARGS + [new_filename]
-    run_ext(args, options)
+    run_ext(args)
 
 
-def advpng(filename, new_filename, options):
+def advpng(filename, new_filename):
     """runs the EXTERNAL program advpng on the file"""
     args = ADVPNG_ARGS + [new_filename]
-    run_ext(args, options)
+    run_ext(args)
 
 
-def jpegtranopti(filename, new_filename, options):
+def jpegtranopti(filename, new_filename):
     """runs the EXTERNAL program jpegtran with huffman optimization
        on the file"""
     args = JPEGTRAN_OPTI_ARGS + [new_filename, filename]
-    run_ext(args, options)
+    run_ext(args)
 
 
-def jpegtranprog(filename, new_filename, options):
+def jpegtranprog(filename, new_filename):
     """runs the EXTERNAL program jpegtran with progressive transform
        on the file"""
     args = JPEGTRAN_PROG_ARGS + [new_filename, filename]
-    run_ext(args, options)
+    run_ext(args)
 
 
-def jpegrescan(filename, new_filename, options):
+def jpegrescan(filename, new_filename):
     """runs the EXTERNAL program jpegrescan"""
     args = JPEGRESCAN_ARGS + [filename, new_filename]
-    run_ext(args, options)
+    run_ext(args)
 
 
 def is_format_selected(image_format, formats, options, mode):
@@ -275,12 +272,9 @@ def cleanup_after_optimize(filename, new_filename, options):
         bytes_diff['in'] = filesize_in
         bytes_diff['out'] = filesize_in  # overwritten on succes below
         filesize_out = os.stat(new_filename).st_size
-#        if options.verbose:
-#            report = report_percent_saved(filesize_in, filesize_out)
 
         if (filesize_out > 0) and ((filesize_out < filesize_in)
                                       or options.bigger):
-#            report += '\n\tReplacing file with optimized version.'
             old_image_format = get_image_format(filename)
             new_image_format = get_image_format(new_filename)
             if old_image_format == new_image_format:
@@ -294,9 +288,7 @@ def cleanup_after_optimize(filename, new_filename, options):
             os.remove(rem_filename)
             bytes_diff['out'] = filesize_out  # only on completion
         else:
-#            report += '\n\tDiscarding work.'
             os.remove(new_filename)
-       # print(report)
     except OSError as ex:
         print(ex)
 
@@ -308,7 +300,7 @@ def optimize_image_aux(filename, options, func):
     new_filename = os.path.normpath(filename + NEW_EXT)
     shutil.copy2(filename, new_filename)
 
-    func(filename, new_filename, options)
+    func(filename, new_filename)
 
     bytes_diff = cleanup_after_optimize(filename, new_filename, options)
     percent = new_percent_saved(bytes_diff['in'], bytes_diff['out'])
@@ -450,8 +442,7 @@ def detect_file(filename, options):
         print(filename, image_format, 'is not a supported image type.')
 
 
-def optimize_files(cwd, filter_list, options, total_bytes_in,
-                   total_bytes_out, pool):
+def optimize_files(cwd, filter_list, options, multiproc):
     """sorts through a list of files, decends directories and
        calls the optimizer on the extant files"""
 
@@ -462,13 +453,13 @@ def optimize_files(cwd, filter_list, options, total_bytes_in,
                 next_dir_list = os.listdir(filename_full)
                 next_dir_list.sort()
                 optimize_files(filename_full, next_dir_list, options,
-                    total_bytes_in, total_bytes_out, pool)
+                               multiproc)
         elif os.path.exists(filename_full):
             args = detect_file(filename_full, options)
             if args:
                 #print("Queueing", *args)
-                args += [options, total_bytes_in, total_bytes_out]
-                pool.apply_async(optimize_image, [args])
+                args += [options, multiproc['in'], multiproc['out']]
+                multiproc['pool'].apply_async(optimize_image, [args])
         else:
             if options.verbose:
                 print(filename, 'was not found.')
@@ -501,8 +492,9 @@ def main():
     total_bytes_out = manager.Value(int, 0)
     pool = multiprocessing.Pool(processes=PROCESSES)
 
-    optimize_files(cwd, filter_list, options, total_bytes_in,
-                   total_bytes_out, pool)
+    multiproc = {'pool': pool, 'in': total_bytes_in, 'out': total_bytes_out}
+
+    optimize_files(cwd, filter_list, options, multiproc)
 
     pool.close()
     pool.join()
