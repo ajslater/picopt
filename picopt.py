@@ -5,7 +5,12 @@ Runs pictures through image specific external optimizers
 from __future__ import print_function
 from __future__ import division
 
-__revision__ = '0.5.0'
+__revision__ = '0.6.0'
+
+# TODO
+# add advpng support
+# add auto extrenal file path support
+# add multiprocessing
 
 import sys
 import os
