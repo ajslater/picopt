@@ -148,7 +148,8 @@ def get_options_and_arguments():
         dest="jpegrescan", default=1, help="Do not optimize with jpegrescan")
     parser.add_option("-g", "--disable_progressive", action="store_false",
         dest="jpegtran_prog", default=1,
-        help="Don't try to reduce size by making progressive JPEGs with jpegtran")
+        help="Don't try to reduce size by making progressive JPEGs with "
+             "jpegtran")
     parser.add_option("-t", "--disable_jpegtran", action="store_false",
         dest="jpegtran", default=1, help="Do not optimize with jpegscan")
     parser.add_option("-b", "--bigger", action="store_true",
@@ -297,7 +298,7 @@ def optimize_image_aux(filename, options, func):
 
     func(filename, new_filename, options)
 
-    print(filename,'report for', func.__name__)
+    print(filename, 'report for', func.__name__)
     return cleanup_after_optimize(filename, new_filename, options)
 
 
