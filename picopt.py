@@ -7,6 +7,7 @@ from __future__ import division
 
 __revision__ = '0.7.0'
 
+import sys
 import os
 import optparse
 import shutil
@@ -32,13 +33,15 @@ FORMAT_DELIMETER = ','
 DEFAULT_FORMATS = 'ALL'
 PROCESSES = multiprocessing.cpu_count() + 1
 
+if sys.version > '3':
+    long = int
 
 ABBREVS = (
-    (1 << 50L, 'PiB'),
-    (1 << 40L, 'TiB'),
-    (1 << 30L, 'GiB'),
-    (1 << 20L, 'MiB'),
-    (1 << 10L, 'kiB'),
+    (1 << long(50), 'PiB'),
+    (1 << long(40), 'TiB'),
+    (1 << long(30), 'GiB'),
+    (1 << long(20), 'MiB'),
+    (1 << long(10), 'kiB'),
     (1, 'bytes')
 )
 
