@@ -176,8 +176,8 @@ def get_options_and_arguments():
 
 def replace_ext(filename, new_ext):
     """replaces the file extention"""
-    dot_index = filename.rfind('.')
-    new_filename = filename[0:dot_index] + new_ext
+    filename_base, old_ext = os.path.splitext(filename)
+    new_filename = '{}.{}'.format(filename_base, new_ext)
     return new_filename
 
 
