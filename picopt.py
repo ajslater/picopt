@@ -107,15 +107,19 @@ def does_external_program_run(prog):
 
 def program_reqs(options):
     """run the external program tester on the required binaries"""
-    options.losless = options.optipng and does_external_program_run('optipng')
-    options.losless = options.advpng and does_external_program_run('advpng')
+    options.optipng = options.optipng and does_external_program_run('optipng')
+    options.advpng = options.advpng and does_external_program_run('advpng')
     options.pngout = options.pngout and does_external_program_run('pngout')
+    lossless = options.optipng or options.advpng or options.pngout
+
     options.jpegrescan = options.jpegtran and \
                          does_external_program_run('jpegrescan')
     options.jpegtran = options.jpegtran and \
                        does_external_program_run('jpegtran')
 
-    if not options.optipng and not options.pngout and not options.jpegtran:
+    lossy = options.jpegrescan or options.jpegtran
+
+    if not lossless and not lossy:
         print("All optimizers are not available or disabled.")
         exit(1)
 
