@@ -21,7 +21,7 @@ NEW_EXT = '.picopt-optimized.png'
 JPEGTRAN_OPTI_ARGS = ['jpegtran', '-copy', 'all', '-optimize',
                       '-outfile']
 JPEGTRAN_PROG_ARGS = ['jpegtran', '-copy', 'all', '-optimize',
-                     '-outfile']
+                      '-outfile']
 JPEGRESCAN_ARGS = ['jpegrescan']
 OPTIPNG_ARGS = ['optipng', '-o6', '-fix', '-preserve', '-force', '-quiet']
 ADVPNG_ARGS = ['advpng', '-z', '-4', '-f']
@@ -111,9 +111,9 @@ def program_reqs(options):
     options.losless = options.advpng and does_external_program_run('advpng')
     options.pngout = options.pngout and does_external_program_run('pngout')
     options.jpegrescan = options.jpegtran and \
-                                      does_external_program_run('jpegrescan')
+                         does_external_program_run('jpegrescan')
     options.jpegtran = options.jpegtran and \
-                                      does_external_program_run('jpegtran')
+                       does_external_program_run('jpegtran')
 
     if not options.optipng and not options.pngout and not options.jpegtran:
         print("All optimizers are not available or disabled.")
@@ -261,8 +261,8 @@ def jpegrescan(filename, new_filename):
 def is_format_selected(image_format, formats, options, mode):
     """returns a boolean indicating weather or not the image format
     was selected by the command line options"""
-    result = (image_format in formats) \
-            and (image_format in options.formats) and mode
+    result = (image_format in formats) and \
+             (image_format in options.formats) and mode
     return result
 
 
@@ -278,7 +278,7 @@ def cleanup_after_optimize(filename, new_filename, options):
         filesize_out = os.stat(new_filename).st_size
 
         if (filesize_out > 0) and ((filesize_out < filesize_in)
-                                      or options.bigger):
+                                   or options.bigger):
             old_image_format = get_image_format(filename)
             new_image_format = get_image_format(new_filename)
             if old_image_format == new_image_format:
