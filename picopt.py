@@ -5,7 +5,7 @@ Runs pictures through image specific external optimizers
 from __future__ import print_function
 from __future__ import division
 
-__revision__ = '0.7.0'
+__revision__ = '0.7.1'
 
 import sys
 import os
