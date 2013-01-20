@@ -9,7 +9,7 @@ setup(name='picopt',
       description='Optimize image files with external tools',
       author='AJ Slater',
       author_email='aj@slater.net',
-      url='http://www.python.org/sigs/',
+      url='http://github.com/ajslater/picopt/',
       py_modules=['picopt'],
       requires=['Image', 'ImageFile']
       )
