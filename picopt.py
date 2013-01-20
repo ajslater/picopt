@@ -32,6 +32,7 @@ OPTIMIZABLE_FORMATS = LOSSLESS_FORMATS + JPEG_FORMATS
 FORMAT_DELIMETER = ','
 DEFAULT_FORMATS = 'ALL'
 PROCESSES = multiprocessing.cpu_count() + 1
+PROGRAMS = ('optipng', 'advpng', 'pngout', 'jpegrescan', 'jpegtran')
 
 if sys.version > '3':
     long = int
@@ -107,16 +108,12 @@ def does_external_program_run(prog):
 
 def program_reqs(options):
     """run the external program tester on the required binaries"""
-    options.optipng = options.optipng and does_external_program_run('optipng')
-    options.advpng = options.advpng and does_external_program_run('advpng')
-    options.pngout = options.pngout and does_external_program_run('pngout')
+    for program_name in PROGRAMS:
+        val = getattr(options, program_name) \
+            and does_external_program_run(program_name)
+        setattr(options, program_name, val)
+
     lossless = options.optipng or options.advpng or options.pngout
-
-    options.jpegrescan = options.jpegtran and \
-                         does_external_program_run('jpegrescan')
-    options.jpegtran = options.jpegtran and \
-                       does_external_program_run('jpegtran')
-
     lossy = options.jpegrescan or options.jpegtran
 
     if not lossless and not lossy:
@@ -127,39 +124,46 @@ def program_reqs(options):
 def get_options_and_arguments():
     """parses the command line"""
     usage = "usage: %prog [options] [image files]\npicopt uses " \
-    "optiping, advpng, pngout, jpegrescan and jpegtran be if they are " \
-    "on the path."
+        "optiping, advpng, pngout, jpegrescan and jpegtran be if they are " \
+        "on the path."
     parser = optparse.OptionParser(usage=usage)
     parser.add_option("-d", "--dir", action="store", dest="dir",
-        default=os.getcwd(),
-    help="Directory to change to before optimiziaton")
+                      default=os.getcwd(),
+                      help="Directory to change to before optimiziaton")
     parser.add_option("-f", "--formats", action="store", dest="formats",
-        default=DEFAULT_FORMATS,
-    help="Only optimize images of the specifed '"
-            + FORMAT_DELIMETER + "' delimited formats")
+                      default=DEFAULT_FORMATS,
+                      help="Only optimize images of the specifed '"
+                           + FORMAT_DELIMETER + "' delimited formats")
     parser.add_option("-r", "--recurse", action="store_true",
-        dest="recurse", default=0, help="Recurse down through "
-            "directories ignoring the image file arguments on the "
-            "command line")
+                      dest="recurse", default=0,
+                      help="Recurse down through directories ignoring the"
+                           "image file arguments on the command line")
     parser.add_option("-q", "--quiet", action="store_false",
-        dest="verbose", default=1, help="Do not display output")
+                      dest="verbose", default=1,
+                      help="Do not display output")
     parser.add_option("-o", "--disable_optipng", action="store_false",
-        dest="optipng", default=1, help="Do not optimize with optipng")
+                      dest="optipng", default=1,
+                      help="Do not optimize with optipng")
     parser.add_option("-a", "--disable_advpng", action="store_false",
-        dest="advpng", default=1, help="Do not optimize with advpng")
+                      dest="advpng", default=1,
+                      help="Do not optimize with advpng")
     parser.add_option("-p", "--disable_pngout", action="store_false",
-        dest="pngout", default=1, help="Do not optimize with pngout")
+                      dest="pngout", default=1,
+                      help="Do not optimize with pngout")
     parser.add_option("-j", "--disable_jpegrescan", action="store_false",
-        dest="jpegrescan", default=1, help="Do not optimize with jpegrescan")
+                      dest="jpegrescan", default=1,
+                      help="Do not optimize with jpegrescan")
     parser.add_option("-g", "--disable_progressive", action="store_false",
-        dest="jpegtran_prog", default=1,
-        help="Don't try to reduce size by making progressive JPEGs with "
-             "jpegtran")
+                      dest="jpegtran_prog", default=1,
+                      help="Don't try to reduce size by making "
+                      "progressive JPEGs with jpegtran")
     parser.add_option("-t", "--disable_jpegtran", action="store_false",
-        dest="jpegtran", default=1, help="Do not optimize with jpegscan")
+                      dest="jpegtran", default=1,
+                      help="Do not optimize with jpegscan")
     parser.add_option("-b", "--bigger", action="store_true",
-        dest="bigger", default=0,
-        help="Save optimized files that are larger than the originals")
+                      dest="bigger", default=0,
+                      help="Save optimized files that are larger than "
+                           "the originals")
 
     (options, arguments) = parser.parse_args()
 
