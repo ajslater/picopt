@@ -113,10 +113,10 @@ def program_reqs(options):
             and does_external_program_run(program_name)
         setattr(options, program_name, val)
 
-    lossless = options.optipng or options.advpng or options.pngout
-    lossy = options.jpegrescan or options.jpegtran
+    do_lossless = options.optipng or options.advpng or options.pngout
+    do_lossy = options.jpegrescan or options.jpegtran
 
-    if not lossless and not lossy:
+    if not do_lossless and not do_lossy:
         print("All optimizers are not available or disabled.")
         exit(1)
 
@@ -190,7 +190,7 @@ def get_options_and_arguments():
 
 def replace_ext(filename, new_ext):
     """replaces the file extention"""
-    filename_base, old_ext = os.path.splitext(filename)
+    filename_base = os.path.splitext(filename)[0]
     new_filename = '{}.{}'.format(filename_base, new_ext)
     return new_filename
 
