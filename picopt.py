@@ -164,6 +164,9 @@ def get_options_and_arguments():
                       dest="bigger", default=0,
                       help="Save optimized files that are larger than "
                            "the originals")
+    parser.add_option("-n", "--noop", action="store_true",
+                      dest="test", default=0,
+                      help="Do not replace files with optimized versions")
 
     (options, arguments) = parser.parse_args()
 
@@ -295,9 +298,13 @@ def cleanup_after_optimize(filename, new_filename, options):
                 final_filename = replace_ext(filename,
                                              new_image_format.lower())
             rem_filename = filename + REMOVE_EXT
-            os.rename(filename, rem_filename)
-            os.rename(new_filename, final_filename)
-            os.remove(rem_filename)
+            if not options.test:
+                os.rename(filename, rem_filename)
+                os.rename(new_filename, final_filename)
+                os.remove(rem_filename)
+            else:
+                os.remove(new_filename)
+
             bytes_diff['out'] = filesize_out  # only on completion
         else:
             os.remove(new_filename)
@@ -397,10 +404,13 @@ def optimize_image(arg):
         report += total
     else:
         report += '0%'
+    if options.test:
+        report += ' could be saved.'
     tools_report = ', '.join(report_list)
     if tools_report:
         report += '\n\t' + tools_report
     print(report)
+
 
     total_bytes_in.set(total_bytes_in.get() + bytes_diff['in'])
     total_bytes_out.set(total_bytes_out.get() + bytes_diff['out'])
@@ -477,13 +487,20 @@ def optimize_files(cwd, filter_list, options, multiproc):
                 print(filename, 'was not found.')
 
 
-def report_totals(bytes_in, bytes_out):
+def report_totals(bytes_in, bytes_out, options):
     """report the total number and percent of bytes saved"""
     if bytes_in:
         bytes_saved = bytes_in - bytes_out
         percent_bytes_saved = bytes_saved / bytes_in * 100
-        print("Saved %s or %.*f%s" % (humanize_bytes(bytes_saved), 2,
-                                      percent_bytes_saved, '%'))
+        if options.test:
+            msg = "Could save"
+        else:
+            msg = "Saved"
+        msg += " a total of %s or %.*f%s"
+        print(msg % (humanize_bytes(bytes_saved), 2,
+                     percent_bytes_saved, '%'))
+        if options.test:
+            print("Test run did not change any files.")
     else:
         print("Didn't optimize any files.")
 
@@ -511,7 +528,7 @@ def main():
     pool.close()
     pool.join()
 
-    report_totals(total_bytes_in.get(), total_bytes_out.get())
+    report_totals(total_bytes_in.get(), total_bytes_out.get(), options)
 
 
 if __name__ == '__main__':
