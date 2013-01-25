@@ -167,6 +167,9 @@ def get_options_and_arguments():
     parser.add_option("-n", "--noop", action="store_true",
                       dest="test", default=0,
                       help="Do not replace files with optimized versions")
+    parser.add_option("-l", "--list", action="store_true",
+                      dest="list_only", default=0,
+                      help="Only list files picopt would touch")
 
     (options, arguments) = parser.parse_args()
 
@@ -290,8 +293,8 @@ def cleanup_after_optimize(filename, new_filename, options):
 
         if (filesize_out > 0) and ((filesize_out < filesize_in)
                                    or options.bigger):
-            old_image_format = get_image_format(filename)
-            new_image_format = get_image_format(new_filename)
+            old_image_format = get_image_format(filename, options)
+            new_image_format = get_image_format(new_filename, options)
             if old_image_format == new_image_format:
                 final_filename = filename
             else:
@@ -426,7 +429,7 @@ def is_image_sequenced(image):
     return result
 
 
-def get_image_format(filename):
+def get_image_format(filename, options):
     """gets the image format"""
     image = None
     bad_image = 1
@@ -441,17 +444,19 @@ def get_image_format(filename):
         pass
 
     if sequenced:
-        print (filename, "can't handle sequenced image")
+        if options.verbose and not options.list_only:
+            print (filename, "can't handle sequenced image")
         image_format += ' SEQUENCED'
     elif image is None or bad_image or image_format == 'NONE':
-        print(filename, "doesn't look like an image.")
+        if options.verbose and not options.list_only:
+            print(filename, "doesn't look like an image.")
         image_format = 'ERROR'
     return image_format
 
 
 def detect_file(filename, options):
     """decides what to do with the file"""
-    image_format = get_image_format(filename)
+    image_format = get_image_format(filename, options)
 
     if image_format in options.formats:
         return [filename, image_format]
@@ -460,7 +465,8 @@ def detect_file(filename, options):
     elif image_format in ('NONE', 'ERROR'):
         pass
     else:
-        print(filename, image_format, 'is not a supported image type.')
+        if options.verbose and not options.list_only:
+            print(filename, image_format, 'is not a supported image type.')
 
 
 def optimize_files(cwd, filter_list, options, multiproc):
@@ -478,6 +484,9 @@ def optimize_files(cwd, filter_list, options, multiproc):
         elif os.path.exists(filename_full):
             args = detect_file(filename_full, options)
             if args:
+                if options.list_only:
+                    print("%s : %s" % (args[0], args[1]))
+                    continue
                 #print("Queueing", *args)
                 args += [options, multiproc['in'], multiproc['out']]
                 multiproc['pool'].apply_async(optimize_image, [args])
