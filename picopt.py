@@ -411,7 +411,6 @@ def optimize_image(arg):
         report += '\n\t' + tools_report
     print(report)
 
-
     total_bytes_in.set(total_bytes_in.get() + bytes_diff['in'])
     total_bytes_out.set(total_bytes_out.get() + bytes_diff['out'])
 
