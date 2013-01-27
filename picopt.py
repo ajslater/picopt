@@ -125,7 +125,7 @@ def program_reqs(options):
 def get_options_and_arguments():
     """parses the command line"""
     usage = "usage: %prog [options] [image files]\npicopt uses " \
-        "optiping, advpng, pngout, jpegrescan and jpegtran be if they are " \
+        "optiping, advpng, pngout, jpegrescan and jpegtran if they are " \
         "on the path."
     parser = optparse.OptionParser(usage=usage)
     parser.add_option("-d", "--dir", action="store", dest="dir",
