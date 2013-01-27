@@ -93,14 +93,15 @@ def humanize_bytes(num_bytes, precision=1):
     return '%.*f %s' % (precision, factored_bytes, factor_suffix)
 
 
-def does_external_program_run(prog):
+def does_external_program_run(prog, options):
     """test to see if the external programs can be run"""
     try:
         null = open('/dev/null')
         subprocess.call([prog, '-h'], stdout=null, stderr=null)
         result = True
     except OSError:
-        print("couldn't run %s" % prog)
+        if options.verbose:
+            print("couldn't run %s" % prog)
         result = False
 
     return result
@@ -110,7 +111,7 @@ def program_reqs(options):
     """run the external program tester on the required binaries"""
     for program_name in PROGRAMS:
         val = getattr(options, program_name) \
-            and does_external_program_run(program_name)
+            and does_external_program_run(program_name, options)
         setattr(options, program_name, val)
 
     do_lossless = options.optipng or options.advpng or options.pngout
