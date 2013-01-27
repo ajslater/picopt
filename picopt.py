@@ -5,7 +5,7 @@ Runs pictures through image specific external optimizers
 from __future__ import print_function
 from __future__ import division
 
-__version__ = '0.7.2'
+__version__ = '0.8.0'
 
 import sys
 import os
@@ -24,7 +24,7 @@ JPEGTRAN_PROG_ARGS = ['jpegtran', '-copy', 'all', '-optimize',
                       '-progressive', '-outfile']
 JPEGRESCAN_ARGS = ['jpegrescan']
 OPTIPNG_ARGS = ['optipng', '-o6', '-fix', '-preserve', '-force', '-quiet']
-ADVPNG_ARGS = ['advpng', '-z', '-4', '-f']
+#ADVPNG_ARGS = ['advpng', '-z', '-4', '-f']
 PNGOUT_ARGS = ['pngout', '-q', '-force', '-y']
 LOSSLESS_FORMATS = ['PNG', 'PNM', 'GIF', 'TIFF']
 JPEG_FORMATS = ['JPEG']
@@ -32,7 +32,8 @@ OPTIMIZABLE_FORMATS = LOSSLESS_FORMATS + JPEG_FORMATS
 FORMAT_DELIMETER = ','
 DEFAULT_FORMATS = 'ALL'
 PROCESSES = multiprocessing.cpu_count() + 1
-PROGRAMS = ('optipng', 'advpng', 'pngout', 'jpegrescan', 'jpegtran')
+PROGRAMS = ('optipng', 'pngout', 'jpegrescan', 'jpegtran')
+            #'advpng',
 
 if sys.version > '3':
     long = int
@@ -114,7 +115,8 @@ def program_reqs(options):
             and does_external_program_run(program_name, options)
         setattr(options, program_name, val)
 
-    do_lossless = options.optipng or options.advpng or options.pngout
+    do_lossless = options.optipng or options.pngout
+                  # or options.advpng
     do_lossy = options.jpegrescan or options.jpegtran
 
     if not do_lossless and not do_lossy:
@@ -125,7 +127,7 @@ def program_reqs(options):
 def get_options_and_arguments():
     """parses the command line"""
     usage = "usage: %prog [options] [image files]\npicopt uses " \
-        "optiping, advpng, pngout, jpegrescan and jpegtran if they are " \
+        "optiping, pngout, jpegrescan and jpegtran if they are " \
         "on the path."
     parser = optparse.OptionParser(usage=usage)
     parser.add_option("-d", "--dir", action="store", dest="dir",
@@ -145,9 +147,9 @@ def get_options_and_arguments():
     parser.add_option("-o", "--disable_optipng", action="store_false",
                       dest="optipng", default=1,
                       help="Do not optimize with optipng")
-    parser.add_option("-a", "--disable_advpng", action="store_false",
-                      dest="advpng", default=1,
-                      help="Do not optimize with advpng")
+#    parser.add_option("-a", "--disable_advpng", action="store_false",
+#                      dest="advpng", default=1,
+#                      help="Do not optimize with advpng")
     parser.add_option("-p", "--disable_pngout", action="store_false",
                       dest="pngout", default=1,
                       help="Do not optimize with pngout")
@@ -247,10 +249,10 @@ def optipng(filename, new_filename):
     run_ext(args)
 
 
-def advpng(filename, new_filename):
-    """runs the EXTERNAL program advpng on the file"""
-    args = ADVPNG_ARGS + [new_filename]
-    run_ext(args)
+#def advpng(filename, new_filename):
+#    """runs the EXTERNAL program advpng on the file"""
+#    args = ADVPNG_ARGS + [new_filename]
+#    run_ext(args)
 
 
 def jpegtranopti(filename, new_filename):
@@ -345,12 +347,12 @@ def lossless(filename, options):
         if not bytes_in:
             bytes_in = bytes_diff['in']
 
-    if options.advpng:
-        bytes_diff, rep = optimize_image_aux(filename, options, advpng)
-        if rep:
-            report_list += [rep]
-        if not bytes_in:
-            bytes_in = bytes_diff['in']
+#    if options.advpng:
+#        bytes_diff, rep = optimize_image_aux(filename, options, advpng)
+#        if rep:
+#            report_list += [rep]
+#        if not bytes_in:
+#            bytes_in = bytes_diff['in']
 
     if options.pngout:
         bytes_diff, rep = optimize_image_aux(filename, options, pngout)
