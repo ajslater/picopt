@@ -21,7 +21,7 @@ NEW_EXT = '.picopt-optimized.png'
 JPEGTRAN_OPTI_ARGS = ['jpegtran', '-copy', 'all', '-optimize',
                       '-outfile']
 JPEGTRAN_PROG_ARGS = ['jpegtran', '-copy', 'all', '-optimize',
-                      '-outfile']
+                      '-progressive', '-outfile']
 JPEGRESCAN_ARGS = ['jpegrescan']
 OPTIPNG_ARGS = ['optipng', '-o6', '-fix', '-preserve', '-force', '-quiet']
 ADVPNG_ARGS = ['advpng', '-z', '-4', '-f']
