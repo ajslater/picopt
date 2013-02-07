@@ -162,7 +162,7 @@ def get_options_and_arguments():
                       "progressive JPEGs with jpegtran")
     parser.add_option("-t", "--disable_jpegtran", action="store_false",
                       dest="jpegtran", default=1,
-                      help="Do not optimize with jpegscan")
+                      help="Do not optimize with jpegtran")
     parser.add_option("-b", "--bigger", action="store_true",
                       dest="bigger", default=0,
                       help="Save optimized files that are larger than "
