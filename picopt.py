@@ -201,8 +201,8 @@ def replace_ext(filename, new_ext):
 def new_percent_saved(size_in, size_out):
     """spits out how much space the optimazation saved"""
     percent_saved = (1 - (size_out / size_in)) * 100
-    if percent_saved <= 0:
-        return ''
+    #if percent_saved <= 0:
+    #    return ''
 
     size_saved_kb = humanize_bytes(size_in - size_out)
     result = '%.*f%s (%s)' % (2, percent_saved, '%', size_saved_kb)
@@ -329,7 +329,7 @@ def optimize_image_aux(filename, options, func):
 
     bytes_diff = cleanup_after_optimize(filename, new_filename, options)
     percent = new_percent_saved(bytes_diff['in'], bytes_diff['out'])
-    if percent:
+    if percent != 0:
         report = '%s: %s' % (func.__name__, percent)
     else:
         report = ''
@@ -503,13 +503,24 @@ def report_totals(bytes_in, bytes_out, options):
     if bytes_in:
         bytes_saved = bytes_in - bytes_out
         percent_bytes_saved = bytes_saved / bytes_in * 100
+        msg = ''
         if options.test:
-            msg = "Could save"
+            if percent_bytes_saved > 0:
+                msg += "Could save"
+            elif percent_bytes_saved == 0:
+                msg += "Could even out for"
+            else:
+                msg += "Could lose"
         else:
-            msg = "Saved"
-        msg += " a total of %s or %.*f%s"
-        print(msg % (humanize_bytes(bytes_saved), 2,
-                     percent_bytes_saved, '%'))
+            if percent_bytes_saved > 0:
+                msg += "Saved"
+            elif percent_bytes_saved == 0:
+                msg += "Evened out"
+            else:
+                msg = "Lost"
+        msg += " a total of %s or %.*f%s" % (humanize_bytes(bytes_saved),
+                                             2, percent_bytes_saved, '%')
+        print(msg)
         if options.test:
             print("Test run did not change any files.")
     else:
