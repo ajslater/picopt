@@ -32,14 +32,14 @@ JPEGRESCAN_ARGS = ['jpegrescan']
 OPTIPNG_ARGS = ['optipng', '-o6', '-fix', '-preserve', '-force', '-quiet']
 #ADVPNG_ARGS = ['advpng', '-z', '-4', '-f']
 PNGOUT_ARGS = ['pngout', '-q', '-force', '-y']
-LOSSLESS_FORMATS = ['PNG', 'PNM', 'GIF', 'TIFF']
-JPEG_FORMATS = ['JPEG']
+LOSSLESS_FORMATS = set(('PNG', 'PNM', 'GIF', 'TIFF'))
+JPEG_FORMATS = set(('JPEG'))
 CBR_EXT = '.cbr'
 CBZ_EXT = '.cbz'
 CBZ_FORMAT = 'CBZ'
 CBR_FORMAT = 'CBR'
-COMIC_FORMATS = [CBZ_FORMAT, CBR_FORMAT]
-OPTIMIZABLE_FORMATS = LOSSLESS_FORMATS + JPEG_FORMATS + COMIC_FORMATS
+COMIC_FORMATS = set((CBZ_FORMAT, CBR_FORMAT))
+OPTIMIZABLE_FORMATS = LOSSLESS_FORMATS | JPEG_FORMATS | COMIC_FORMATS
 FORMAT_DELIMETER = ','
 DEFAULT_FORMATS = 'ALL'
 PROGRAMS = ('optipng', 'pngout', 'jpegrescan', 'jpegtran')
@@ -292,8 +292,8 @@ def jpegrescan(filename, new_filename):
 def is_format_selected(image_format, formats, options, mode):
     """returns a boolean indicating weather or not the image format
     was selected by the command line options"""
-    result = (image_format in formats) and \
-             (image_format in options.formats) and mode
+    intersection = formats & options.formats
+    result = (image_format in intersection) and mode
     return result
 
 
@@ -566,7 +566,6 @@ def get_image_format(filename, options):
     elif image is None or bad_image or image_format == 'NONE':
         image_format = 'ERROR'
         filename_ext = os.path.splitext(filename)[-1].lower()
-        print(filename_ext)
         if filename_ext == CBZ_EXT and zipfile.is_zipfile(filename):
             image_format = CBZ_FORMAT
         elif filename_ext == CBR_EXT and rarfile.is_rarfile(filename):
