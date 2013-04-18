@@ -5,19 +5,25 @@ Runs pictures through image specific external optimizers
 from __future__ import print_function
 from __future__ import division
 
-__version__ = '0.8.0'
+__version__ = '0.9.0'
 
 import sys
 import os
 import optparse
 import shutil
 import subprocess
+import multiprocessing
+import copy
+import zipfile
+
 import Image
 import ImageFile
-import multiprocessing
+import rarfile
 
 REMOVE_EXT = '.picopt-remove'
 NEW_EXT = '.picopt-optimized.png'
+ARCHIVE_TMP_DIR_TEMPLATE = 'PICOPT_TMP_%s'
+NEW_ARCHIVE_SUFFIX = '.picopt-optimized.cbz'
 JPEGTRAN_OPTI_ARGS = ['jpegtran', '-copy', 'all', '-optimize',
                       '-outfile']
 JPEGTRAN_PROG_ARGS = ['jpegtran', '-copy', 'all', '-optimize',
@@ -28,13 +34,16 @@ OPTIPNG_ARGS = ['optipng', '-o6', '-fix', '-preserve', '-force', '-quiet']
 PNGOUT_ARGS = ['pngout', '-q', '-force', '-y']
 LOSSLESS_FORMATS = ['PNG', 'PNM', 'GIF', 'TIFF']
 JPEG_FORMATS = ['JPEG']
-OPTIMIZABLE_FORMATS = LOSSLESS_FORMATS + JPEG_FORMATS
+CBR_EXT = 'cbr'
+CBZ_EXT = 'cbz'
+CBZ_FORMAT = 'CBZ'
+CBR_FORMAT = 'CBR'
+COMIC_FORMATS = [CBZ_FORMAT, CBR_FORMAT]
+OPTIMIZABLE_FORMATS = LOSSLESS_FORMATS + JPEG_FORMATS + COMIC_FORMATS
 FORMAT_DELIMETER = ','
 DEFAULT_FORMATS = 'ALL'
-PROCESSES = multiprocessing.cpu_count() + 1
 PROGRAMS = ('optipng', 'pngout', 'jpegrescan', 'jpegtran')
             #'advpng',
-
 if sys.version > '3':
     long = int
 
@@ -119,7 +128,9 @@ def program_reqs(options):
                   # or options.advpng
     do_lossy = options.jpegrescan or options.jpegtran
 
-    if not do_lossless and not do_lossy:
+    do_comics = options.comics
+
+    if not do_lossless and not do_lossy and not do_comics:
         print("All optimizers are not available or disabled.")
         exit(1)
 
@@ -173,6 +184,9 @@ def get_options_and_arguments():
     parser.add_option("-l", "--list", action="store_true",
                       dest="list_only", default=0,
                       help="Only list files picopt would touch")
+    parser.add_option("-c", "--comics", action="store_true",
+                      dest="comics", default=0,
+                      help="Also optimize comic book archives (cbz & cbr)")
 
     (options, arguments) = parser.parse_args()
 
@@ -362,7 +376,7 @@ def lossless(filename, options):
             bytes_in = bytes_diff['in']
 
     if not bytes_in:
-        print('Skipping lossless file: %s', filename)
+        report_list += ['Skipping lossless file: %s' % filename]
         bytes_diff = {'in': 0, 'out': 0}
 
     bytes_diff['in'] = bytes_in
@@ -379,7 +393,7 @@ def lossy(filename, options):
     elif options.jpegtran:
         bytes_diff, rep = optimize_image_aux(filename, options, jpegtranopti)
     else:
-        print('Skipping jpeg file: %s', filename)
+        rep = ['Skipping jpeg file: %s' % filename]
         bytes_diff = {'in': 0, 'out': 0}
 
     report_list = [rep]
@@ -387,9 +401,98 @@ def lossy(filename, options):
     return bytes_diff, report_list
 
 
+def comic_archive(filename, image_format, multiproc, options):
+    """ Optimize comic archives like cbz and cbr
+        Convert to cbz
+        This is done in the main process and farms out its image optimizers
+        to other processes in the pool.
+        """
+    #TODO: break into functions
+
+    if not options.comics:
+        report = ['Skipping archive file: %s' % filename]
+        report_list = [report]
+        bytes_diff = {'in': 0, 'out': 0}
+        return (bytes_diff, report_list)
+
+    # create the tmpdir
+    tmp_dir = ARCHIVE_TMP_DIR_TEMPLATE % filename
+    if os.path.isdir(tmp_dir):
+        shutil.rmtree(tmp_dir)
+    os.mkdir(tmp_dir)
+
+    # extract archvie into the tmpdir
+    if image_format == CBZ_FORMAT:
+        with zipfile.ZipFile(filename, 'r') as zf:
+            zf.extractall(tmp_dir)
+    elif image_format == CBR_FORMAT:
+        with rarfile.RarFile(filename, 'r') as rf:
+            rf.extractall(tmp_dir)
+    else:
+        report = '%s %s is not a good format' % (filename, image_format)
+        report_list = [report]
+        bytes_diff = {'in': 0, 'out': 0}
+        return (bytes_diff, report_list)
+
+    # optimize the extracted tmpdir
+    cwd = os.path.dirname(filename)
+    if options.recurse:
+        archive_options = options
+    else:
+        archive_options = copy.deepcopy(options)
+        archive_options.recurse = True
+
+    # go get this directory.
+    multiproc['archive_sets'][filename] = set()
+    optimize_files(cwd, [tmp_dir], archive_options, multiproc,
+                   filename, comic_archive_callback)
+
+    return (None, None)
+
+
+def comic_archive_callback(filename, multiproc, options):
+    """called back by every optimization inside a comic archive.
+       when they're all done it creates the new archive and cleans up.
+    """
+    tmp_dir = ARCHIVE_TMP_DIR_TEMPLATE % filename
+    if len(multiproc['archive_sets'][tmp_dir]):
+        return
+
+    #archive into new filename
+    new_filename = replace_ext(filename, NEW_ARCHIVE_SUFFIX)
+
+    with zipfile.ZipFile(new_filename, 'w',
+                         compression=zipfile.ZIP_DEFLATED) as new_zf:
+        root_len = len(os.path.abspath(tmp_dir))
+        for root, dirs, files in os.walk(tmp_dir):
+            archive_root = os.path.abspath(root)[root_len:]
+            for f in files:
+                fullpath = os.path.join(root, f)
+                archive_name = os.path.join(archive_root, f)
+                print('.', end='')
+                new_zf.write(fullpath, archive_name, zipfile.ZIP_DEFLATED)
+    # Cleanup tmpdir
+    if os.path.isdir(tmp_dir):
+        shutil.rmtree(tmp_dir)
+
+    bytes_diff = cleanup_after_optimize(filename, new_filename,
+                                        options)
+    percent = new_percent_saved(bytes_diff['in'], bytes_diff['out'])
+    if percent != 0:
+        report = '%s: %s' % (CBZ_FORMAT, percent)
+    else:
+        report = ''
+
+    report_list = [report]
+
+    optimize_accounting(filename, bytes_diff, report_list,
+                        multiproc['in'], multiproc['out'], options)
+
+
 def optimize_image(arg):
     """optimizes a given image from a filename"""
-    filename, image_format, options, total_bytes_in, total_bytes_out = arg
+    filename, image_format, options, total_bytes_in, total_bytes_out, \
+        multiproc, archive_set_key = arg
 
     #print(filename, image_format, "starting...")
 
@@ -404,6 +507,16 @@ def optimize_image(arg):
             print(filename, image_format)  # image.mode)
             print("\tFile format not selected.")
 
+    optimize_accounting(filename, bytes_diff, report_list, total_bytes_in,
+                        total_bytes_out, options)
+
+    if archive_set_key:
+        multiproc['archive_sets'][archive_set_key].remove(filename)
+        return (archive_set_key, multiproc, options)
+
+
+def optimize_accounting(filename, bytes_diff, report_list, total_bytes_in,
+                        total_bytes_out, options):
     report = filename + ': '
     total = new_percent_saved(bytes_diff['in'], bytes_diff['out'])
     if total:
@@ -451,9 +564,14 @@ def get_image_format(filename, options):
             print (filename, "can't handle sequenced image")
         image_format += ' SEQUENCED'
     elif image is None or bad_image or image_format == 'NONE':
-        if options.verbose and not options.list_only:
-            print(filename, "doesn't look like an image.")
         image_format = 'ERROR'
+        filename_ext = os.path.splitext(filename)[-1].lower()
+        if filename_ext == CBZ_EXT and zipfile.is_zipfile(filename):
+            image_format = CBZ_FORMAT
+        elif filename_ext == CBR_EXT and rarfile.is_rarfile(filename):
+            image_format = CBR_FORMAT
+        elif options.verbose and not options.list_only:
+            print(filename, "doesn't look like an image or comic archive.")
     return image_format
 
 
@@ -462,17 +580,20 @@ def detect_file(filename, options):
     image_format = get_image_format(filename, options)
 
     if image_format in options.formats:
-        return [filename, image_format]
+        return image_format
         #print(filename, image_format)  # image.mode)
         #optimize_image(filename, image_format, options, totals)
-    elif image_format in ('NONE', 'ERROR'):
-        pass
-    else:
-        if options.verbose and not options.list_only:
-            print(filename, image_format, 'is not a supported image type.')
+
+    if image_format in ('NONE', 'ERROR'):
+        return
+
+    if options.verbose and not options.list_only:
+        print(filename, image_format, 'is not a supported image or '
+                                      'comic archive type.')
 
 
-def optimize_files(cwd, filter_list, options, multiproc):
+def optimize_files(cwd, filter_list, options, multiproc,
+                   archive_set_key=None, callback=None):
     """sorts through a list of files, decends directories and
        calls the optimizer on the extant files"""
 
@@ -485,15 +606,37 @@ def optimize_files(cwd, filter_list, options, multiproc):
                 optimize_files(filename_full, next_dir_list, options,
                                multiproc)
         elif os.path.exists(filename_full):
-            args = detect_file(filename_full, options)
-            if args:
+            image_format = detect_file(filename_full, options)
+            if image_format:
                 if options.list_only:
-                    print("%s : %s" % (args[0], args[1]))
-                    continue
-                #print("Queueing", *args)
-                args += [options, multiproc['in'], multiproc['out']]
-                multiproc['pool'].apply_async(optimize_image, [args])
-        else:
+                    print("%s : %s" % (filename, image_format))
+                elif is_format_selected(image_format, COMIC_FORMATS,
+                                        options, options.comics):
+                    bytes_diff, report_list = comic_archive(filename,
+                                                            image_format,
+                                                            multiproc,
+                                                            options)
+                    if bytes_diff and report_list:
+                        optimize_accounting(filename, bytes_diff,
+                                            report_list,
+                                            multiproc.total_bytes_in,
+                                            multiproc.total_bytes_out,
+                                            options)
+                else:
+                    if archive_set_key:
+                        archive_sets = multiproc['archive_sets']
+                        archive_set = archive_sets[archive_set_key]
+                        archive_set.add(filename)
+                        callback = comic_archive_callback
+                    else:
+                        archive_set = None
+                        callback = None
+                    args = [filename, image_format, options,
+                            multiproc['in'], multiproc['out'],
+                            archive_set_key]
+                    multiproc['pool'].apply_async(optimize_image, [args],
+                                                  callback=callback)
+    else:
             if options.verbose:
                 print(filename, 'was not found.')
 
@@ -541,9 +684,12 @@ def main():
     manager = multiprocessing.Manager()
     total_bytes_in = manager.Value(int, 0)
     total_bytes_out = manager.Value(int, 0)
-    pool = multiprocessing.Pool(processes=PROCESSES)
+    archive_sets = manager.dict()
+    pool = multiprocessing.Pool()
 
-    multiproc = {'pool': pool, 'in': total_bytes_in, 'out': total_bytes_out}
+    #TODO: make this a namedtuple
+    multiproc = {'pool': pool, 'in': total_bytes_in, 'out': total_bytes_out,
+                 'archive_sets': archive_sets}
 
     optimize_files(cwd, filter_list, options, multiproc)
 
