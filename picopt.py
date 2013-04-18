@@ -34,8 +34,8 @@ OPTIPNG_ARGS = ['optipng', '-o6', '-fix', '-preserve', '-force', '-quiet']
 PNGOUT_ARGS = ['pngout', '-q', '-force', '-y']
 LOSSLESS_FORMATS = ['PNG', 'PNM', 'GIF', 'TIFF']
 JPEG_FORMATS = ['JPEG']
-CBR_EXT = 'cbr'
-CBZ_EXT = 'cbz'
+CBR_EXT = '.cbr'
+CBZ_EXT = '.cbz'
 CBZ_FORMAT = 'CBZ'
 CBR_FORMAT = 'CBR'
 COMIC_FORMATS = [CBZ_FORMAT, CBR_FORMAT]
@@ -566,6 +566,7 @@ def get_image_format(filename, options):
     elif image is None or bad_image or image_format == 'NONE':
         image_format = 'ERROR'
         filename_ext = os.path.splitext(filename)[-1].lower()
+        print(filename_ext)
         if filename_ext == CBZ_EXT and zipfile.is_zipfile(filename):
             image_format = CBZ_FORMAT
         elif filename_ext == CBR_EXT and rarfile.is_rarfile(filename):
