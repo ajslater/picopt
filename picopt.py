@@ -452,12 +452,14 @@ def comic_archive(filename, image_format, multiproc, options):
     return (None, None)
 
 
-def comic_archive_callback(filename, multiproc, options):
+def comic_archive_callback(args):
     """called back by every optimization inside a comic archive.
        when they're all done it creates the new archive and cleans up.
     """
+    filename, archive_set, total_bytes_in, total_bytes_out, options = args
+
     tmp_dir = ARCHIVE_TMP_DIR_TEMPLATE % filename
-    if len(multiproc['archive_sets'][tmp_dir]):
+    if len(archive_set):
         return
 
     #archive into new filename
@@ -488,13 +490,13 @@ def comic_archive_callback(filename, multiproc, options):
     report_list = [report]
 
     optimize_accounting(filename, bytes_diff, report_list,
-                        multiproc['in'], multiproc['out'], options)
+                        total_bytes_in, total_bytes_out, options)
 
 
 def optimize_image(arg):
     """optimizes a given image from a filename"""
     filename, image_format, options, total_bytes_in, total_bytes_out, \
-        multiproc, archive_set_key = arg
+        archive_set, archive_set_key = arg
 
     #print(filename, image_format, "starting...")
 
@@ -513,8 +515,9 @@ def optimize_image(arg):
                         total_bytes_out, options)
 
     if archive_set_key:
-        multiproc['archive_sets'][archive_set_key].remove(filename)
-        return (archive_set_key, multiproc, options)
+        archive_set.remove(filename)
+        return (filename, archive_set, total_bytes_in, total_bytes_out,
+                options)
 
 
 def optimize_accounting(filename, bytes_diff, report_list, total_bytes_in,
@@ -598,8 +601,8 @@ def optimize_files(cwd, filter_list, options, multiproc,
                    archive_set_key=None, callback=None):
     """sorts through a list of files, decends directories and
        calls the optimizer on the extant files"""
+    #TODO handle empty comic archives
 
-    print(filter_list)
     for filename in filter_list:
         filename_full = os.path.normpath(cwd + os.sep + filename)
         if os.path.isdir(filename_full):
@@ -636,11 +639,14 @@ def optimize_files(cwd, filter_list, options, multiproc,
                         callback = None
                     args = [filename, image_format, options,
                             multiproc['in'], multiproc['out'],
-                            archive_set_key]
-                    multiproc['pool'].apply_async(optimize_image, [args],
+                            archive_set, archive_set_key]
+
+                    multiproc['pool'].apply_async(optimize_image,
+                                                  args=(args,),
                                                   callback=callback)
         elif options.verbose:
             print(filename, 'was not found.')
+
 
 
 def report_totals(bytes_in, bytes_out, options):
