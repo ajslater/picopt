@@ -436,6 +436,8 @@ def comic_archive(filename, image_format, multiproc, options):
 
     # optimize the extracted tmpdir
     cwd = os.path.dirname(filename)
+    if not cwd:
+        cwd = '.'
     if options.recurse:
         archive_options = options
     else:
@@ -597,6 +599,7 @@ def optimize_files(cwd, filter_list, options, multiproc,
     """sorts through a list of files, decends directories and
        calls the optimizer on the extant files"""
 
+    print(filter_list)
     for filename in filter_list:
         filename_full = os.path.normpath(cwd + os.sep + filename)
         if os.path.isdir(filename_full):
@@ -636,8 +639,7 @@ def optimize_files(cwd, filter_list, options, multiproc,
                             archive_set_key]
                     multiproc['pool'].apply_async(optimize_image, [args],
                                                   callback=callback)
-    else:
-        if options.verbose:
+        elif options.verbose:
             print(filename, 'was not found.')
 
 
