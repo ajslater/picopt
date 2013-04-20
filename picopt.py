@@ -401,6 +401,51 @@ def lossy(filename, options):
     return bytes_diff, report_list
 
 
+def comic_archive_callback(args):
+    """called back by every optimization inside a comic archive.
+       when they're all done it creates the new archive and cleans up.
+    """
+    print('aaa')
+    filename, archive_set, total_bytes_in, total_bytes_out, options = args
+    print(archive_set)
+
+    if len(archive_set):
+        return
+    print('Avast!')
+
+    tmp_dir = ARCHIVE_TMP_DIR_TEMPLATE % filename
+
+    #archive into new filename
+    new_filename = replace_ext(filename, NEW_ARCHIVE_SUFFIX)
+
+    with zipfile.ZipFile(new_filename, 'w',
+                         compression=zipfile.ZIP_DEFLATED) as new_zf:
+        root_len = len(os.path.abspath(tmp_dir))
+        for root, dirs, files in os.walk(tmp_dir):
+            archive_root = os.path.abspath(root)[root_len:]
+            for f in files:
+                fullpath = os.path.join(root, f)
+                archive_name = os.path.join(archive_root, f)
+                print('.', end='')
+                new_zf.write(fullpath, archive_name, zipfile.ZIP_DEFLATED)
+    # Cleanup tmpdir
+    if os.path.isdir(tmp_dir):
+        shutil.rmtree(tmp_dir)
+
+    bytes_diff = cleanup_after_optimize(filename, new_filename,
+                                        options)
+    percent = new_percent_saved(bytes_diff['in'], bytes_diff['out'])
+    if percent != 0:
+        report = '%s: %s' % (CBZ_FORMAT, percent)
+    else:
+        report = ''
+
+    report_list = [report]
+
+    optimize_accounting(filename, bytes_diff, report_list,
+                        total_bytes_in, total_bytes_out, options)
+
+
 def comic_archive(filename, image_format, multiproc, options):
     """ Optimize comic archives like cbz and cbr
         Convert to cbz
@@ -450,51 +495,6 @@ def comic_archive(filename, image_format, multiproc, options):
                    filename, comic_archive_callback)
 
     return (None, None)
-
-
-def comic_archive_callback(args):
-    """called back by every optimization inside a comic archive.
-       when they're all done it creates the new archive and cleans up.
-    """
-    print('aaa')
-    filename, archive_set, total_bytes_in, total_bytes_out, options = args
-    print(archive_set)
-
-    if len(archive_set):
-        return
-    print('Avast!')
-
-    tmp_dir = ARCHIVE_TMP_DIR_TEMPLATE % filename
-
-    #archive into new filename
-    new_filename = replace_ext(filename, NEW_ARCHIVE_SUFFIX)
-
-    with zipfile.ZipFile(new_filename, 'w',
-                         compression=zipfile.ZIP_DEFLATED) as new_zf:
-        root_len = len(os.path.abspath(tmp_dir))
-        for root, dirs, files in os.walk(tmp_dir):
-            archive_root = os.path.abspath(root)[root_len:]
-            for f in files:
-                fullpath = os.path.join(root, f)
-                archive_name = os.path.join(archive_root, f)
-                print('.', end='')
-                new_zf.write(fullpath, archive_name, zipfile.ZIP_DEFLATED)
-    # Cleanup tmpdir
-    if os.path.isdir(tmp_dir):
-        shutil.rmtree(tmp_dir)
-
-    bytes_diff = cleanup_after_optimize(filename, new_filename,
-                                        options)
-    percent = new_percent_saved(bytes_diff['in'], bytes_diff['out'])
-    if percent != 0:
-        report = '%s: %s' % (CBZ_FORMAT, percent)
-    else:
-        report = ''
-
-    report_list = [report]
-
-    optimize_accounting(filename, bytes_diff, report_list,
-                        total_bytes_in, total_bytes_out, options)
 
 
 def optimize_image(arg):
