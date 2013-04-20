@@ -456,11 +456,15 @@ def comic_archive_callback(args):
     """called back by every optimization inside a comic archive.
        when they're all done it creates the new archive and cleans up.
     """
+    print('aaa')
     filename, archive_set, total_bytes_in, total_bytes_out, options = args
+    print(archive_set)
 
-    tmp_dir = ARCHIVE_TMP_DIR_TEMPLATE % filename
     if len(archive_set):
         return
+    print('Avast!')
+
+    tmp_dir = ARCHIVE_TMP_DIR_TEMPLATE % filename
 
     #archive into new filename
     new_filename = replace_ext(filename, NEW_ARCHIVE_SUFFIX)
@@ -633,10 +637,8 @@ def optimize_files(cwd, filter_list, options, multiproc,
                         archive_sets = multiproc['archive_sets']
                         archive_set = archive_sets[archive_set_key]
                         archive_set.add(filename)
-                        callback = comic_archive_callback
                     else:
                         archive_set = None
-                        callback = None
                     args = [filename_full, image_format, options,
                             multiproc['in'], multiproc['out'],
                             archive_set, archive_set_key]
