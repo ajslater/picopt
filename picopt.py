@@ -610,7 +610,7 @@ def optimize_files(cwd, filter_list, options, multiproc,
                 next_dir_list = os.listdir(filename_full)
                 next_dir_list.sort()
                 optimize_files(filename_full, next_dir_list, options,
-                               multiproc)
+                               multiproc, archive_set_key, callback)
         elif os.path.exists(filename_full):
             image_format = detect_file(filename_full, options)
             if image_format:
@@ -637,10 +637,9 @@ def optimize_files(cwd, filter_list, options, multiproc,
                     else:
                         archive_set = None
                         callback = None
-                    args = [filename, image_format, options,
+                    args = [filename_full, image_format, options,
                             multiproc['in'], multiproc['out'],
                             archive_set, archive_set_key]
-
                     multiproc['pool'].apply_async(optimize_image,
                                                   args=(args,),
                                                   callback=callback)
