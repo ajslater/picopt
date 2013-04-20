@@ -649,7 +649,6 @@ def optimize_files(cwd, filter_list, options, multiproc,
             print(filename, 'was not found.')
 
 
-
 def report_totals(bytes_in, bytes_out, options):
     """report the total number and percent of bytes saved"""
     if bytes_in:
