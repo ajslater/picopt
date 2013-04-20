@@ -33,7 +33,7 @@ OPTIPNG_ARGS = ['optipng', '-o6', '-fix', '-preserve', '-force', '-quiet']
 #ADVPNG_ARGS = ['advpng', '-z', '-4', '-f']
 PNGOUT_ARGS = ['pngout', '-q', '-force', '-y']
 LOSSLESS_FORMATS = set(('PNG', 'PNM', 'GIF', 'TIFF'))
-JPEG_FORMATS = set(('JPEG'))
+JPEG_FORMATS = set(['JPEG'])
 CBR_EXT = '.cbr'
 CBZ_EXT = '.cbz'
 CBZ_FORMAT = 'CBZ'
@@ -637,8 +637,8 @@ def optimize_files(cwd, filter_list, options, multiproc,
                     multiproc['pool'].apply_async(optimize_image, [args],
                                                   callback=callback)
     else:
-            if options.verbose:
-                print(filename, 'was not found.')
+        if options.verbose:
+            print(filename, 'was not found.')
 
 
 def report_totals(bytes_in, bytes_out, options):
