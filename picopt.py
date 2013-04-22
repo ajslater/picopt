@@ -406,11 +406,12 @@ def get_tmp_dir(filename):
     return os.path.join(head, ARCHIVE_TMP_DIR_TEMPLATE % tail)
 
 
-def comic_archive_compress(filename, total_bytes_in, total_bytes_out,
-                           options):
+def comic_archive_compress(args):
     """called back by every optimization inside a comic archive.
        when they're all done it creates the new archive and cleans up.
     """
+
+    filename, total_bytes_in, total_bytes_out, options = args
 
     tmp_dir = get_tmp_dir(filename)
 
@@ -618,15 +619,18 @@ def optimize_files(cwd, filter_list, options, multiproc):
                     #XXX hackish
                     # closing and recreateing the pool for every comic
                     # is not ideal
-                    pool = multiproc['pool']
-                    pool.close()
-                    pool.join()
+                    old_pool = multiproc['pool']
+                    old_pool.close()
+                    old_pool.join()
 
-                    multiproc['pool'] = multiprocessing.Pool()
+                    new_pool = multiprocessing.Pool()
+                    multiproc['pool'] = new_pool
 
                     # TODO: launch this expensive op as a thread now
-                    comic_archive_compress(filename_full, multiproc['in'],
-                                           multiproc['out'], options)
+                    args = (filename_full, multiproc['in'],
+                            multiproc['out'], options)
+                    new_pool.apply_async(comic_archive_compress,
+                                         args=(args,))
 
                 else:
                     args = [filename_full, image_format, options,
