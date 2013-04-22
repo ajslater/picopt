@@ -406,12 +406,11 @@ def get_tmp_dir(filename):
     return os.path.join(head, ARCHIVE_TMP_DIR_TEMPLATE % tail)
 
 
-# TODO: undict args
-def comic_archive_compress(args):
+def comic_archive_compress(filename, total_bytes_in, total_bytes_out,
+                           options):
     """called back by every optimization inside a comic archive.
        when they're all done it creates the new archive and cleans up.
     """
-    filename, total_bytes_in, total_bytes_out, options = args
 
     tmp_dir = get_tmp_dir(filename)
 
@@ -479,31 +478,7 @@ def comic_archive(filename, image_format, multiproc, options):
         bytes_diff = {'in': 0, 'out': 0}
         return (bytes_diff, report_list)
 
-    # optimize the extracted tmpdir
-    cwd = os.path.dirname(filename)
-    if not cwd:
-        cwd = '.'
-    if options.recurse:
-        archive_options = options
-    else:
-        archive_options = copy.deepcopy(options)
-        archive_options.recurse = True
-
-    tmp_dir_basename = os.path.basename(tmp_dir)
-    optimize_files(cwd, [tmp_dir_basename], archive_options, multiproc)
-
-    #XXX hackish
-    pool = multiproc['pool']
-    pool.close()
-    pool.join()
-
-    compress_args = (filename, multiproc['in'], multiproc['out'], options)
-    comic_archive_compress(compress_args)
-
-    #XXX hackish
-    multiproc['pool'] = multiprocessing.Pool()
-
-    return (None, None)
+    return os.path.basename(tmp_dir)
 
 
 def optimize_image(arg):
@@ -624,16 +599,35 @@ def optimize_files(cwd, filter_list, options, multiproc):
                     print("%s : %s" % (filename, image_format))
                 elif is_format_selected(image_format, COMIC_FORMATS,
                                         options, options.comics):
-                    bytes_diff, report_list = comic_archive(filename_full,
-                                                            image_format,
-                                                            multiproc,
-                                                            options)
-                    if bytes_diff and report_list:
-                        optimize_accounting(filename, bytes_diff,
-                                            report_list,
-                                            multiproc.total_bytes_in,
-                                            multiproc.total_bytes_out,
-                                            options)
+                    tmp_dir_basename = comic_archive(filename_full,
+                                                     image_format,
+                                                     multiproc, options)
+                    # optimize the extracted tmpdir
+                    #cwd = os.path.dirname(filename)
+                    #if not cwd:
+                    #    cwd = '.'
+                    if options.recurse:
+                        archive_options = options
+                    else:
+                        archive_options = copy.deepcopy(options)
+                        archive_options.recurse = True
+
+                    optimize_files(cwd, [tmp_dir_basename],
+                                   archive_options, multiproc)
+
+                    #XXX hackish
+                    # closing and recreateing the pool for every comic
+                    # is not ideal
+                    pool = multiproc['pool']
+                    pool.close()
+                    pool.join()
+
+                    multiproc['pool'] = multiprocessing.Pool()
+
+                    # TODO: launch this expensive op as a thread now
+                    comic_archive_compress(filename_full, multiproc['in'],
+                                           multiproc['out'], options)
+
                 else:
                     args = [filename_full, image_format, options,
                             multiproc['in'], multiproc['out']]
