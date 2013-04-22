@@ -401,7 +401,8 @@ def lossy(filename, options):
     return bytes_diff, report_list
 
 
-def get_tmp_dir(filename):
+def get_archive_tmp_dir(filename):
+    """ get the name of the working dir to use for this filename"""
     head, tail = os.path.split(filename)
     return os.path.join(head, ARCHIVE_TMP_DIR_TEMPLATE % tail)
 
@@ -413,24 +414,28 @@ def comic_archive_compress(args):
 
     filename, total_bytes_in, total_bytes_out, options = args
 
-    tmp_dir = get_tmp_dir(filename)
+    tmp_dir = get_archive_tmp_dir(filename)
 
     #archive into new filename
     new_filename = replace_ext(filename, NEW_ARCHIVE_SUFFIX)
 
+    print('\tRezipping %s', new_filename, end='')
     with zipfile.ZipFile(new_filename, 'w',
                          compression=zipfile.ZIP_DEFLATED) as new_zf:
         root_len = len(os.path.abspath(tmp_dir))
         for root, dirs, files in os.walk(tmp_dir):
             archive_root = os.path.abspath(root)[root_len:]
-            for f in files:
-                fullpath = os.path.join(root, f)
-                archive_name = os.path.join(archive_root, f)
+            for fname in files:
+                fullpath = os.path.join(root, fname)
+                archive_name = os.path.join(archive_root, fname)
                 print('.', end='')
                 new_zf.write(fullpath, archive_name, zipfile.ZIP_DEFLATED)
+
     # Cleanup tmpdir
     if os.path.isdir(tmp_dir):
+        print('.', end='')
         shutil.rmtree(tmp_dir)
+    print('done.')
 
     bytes_diff = cleanup_after_optimize(filename, new_filename,
                                         options)
@@ -440,13 +445,11 @@ def comic_archive_compress(args):
     else:
         report = ''
 
-    report_list = [report]
-
-    optimize_accounting(filename, bytes_diff, report_list,
+    optimize_accounting(filename, bytes_diff, [report],
                         total_bytes_in, total_bytes_out, options)
 
 
-def comic_archive_uncompress(filename, image_format, multiproc, options):
+def comic_archive_uncompress(filename, image_format, options):
     """ Optimize comic archives like cbz and cbr
         Convert to cbz
         This is done in the main process and farms out its image optimizers
@@ -461,18 +464,18 @@ def comic_archive_uncompress(filename, image_format, multiproc, options):
         return (bytes_diff, report_list)
 
     # create the tmpdir
-    tmp_dir = get_tmp_dir(filename)
+    tmp_dir = get_archive_tmp_dir(filename)
     if os.path.isdir(tmp_dir):
         shutil.rmtree(tmp_dir)
     os.mkdir(tmp_dir)
 
     # extract archvie into the tmpdir
     if image_format == CBZ_FORMAT:
-        with zipfile.ZipFile(filename, 'r') as zf:
-            zf.extractall(tmp_dir)
+        with zipfile.ZipFile(filename, 'r') as zfile:
+            zfile.extractall(tmp_dir)
     elif image_format == CBR_FORMAT:
-        with rarfile.RarFile(filename, 'r') as rf:
-            rf.extractall(tmp_dir)
+        with rarfile.RarFile(filename, 'r') as rfile:
+            rfile.extractall(tmp_dir)
     else:
         report = '%s %s is not a good format' % (filename, image_format)
         report_list = [report]
@@ -505,6 +508,7 @@ def optimize_image(arg):
 
 def optimize_accounting(filename, bytes_diff, report_list, total_bytes_in,
                         total_bytes_out, options):
+    """record the percent saved, print it and add it to the totals"""
     report = filename + ': '
     total = new_percent_saved(bytes_diff['in'], bytes_diff['out'])
     if total:
@@ -516,10 +520,11 @@ def optimize_accounting(filename, bytes_diff, report_list, total_bytes_in,
     tools_report = ', '.join(report_list)
     if tools_report:
         report += '\n\t' + tools_report
-    print(report)
 
     total_bytes_in.set(total_bytes_in.get() + bytes_diff['in'])
     total_bytes_out.set(total_bytes_out.get() + bytes_diff['out'])
+
+    print(report)
 
 
 def is_image_sequenced(image):
@@ -602,7 +607,7 @@ def optimize_files(cwd, filter_list, options, multiproc):
                                         options, options.comics):
                     # comic archive
                     tmp_dir_basename = comic_archive_uncompress(
-                        filename_full, image_format, multiproc, options)
+                        filename_full, image_format, options)
 
                     # recurse into comic archive even if flag not set
                     if options.recurse:
@@ -670,17 +675,6 @@ def report_totals(bytes_in, bytes_out, options):
         print("Didn't optimize any files.")
 
 
-#XXX doesn't need to stand alone
-def create_multiproc():
-    manager = multiprocessing.Manager()
-    total_bytes_in = manager.Value(int, 0)
-    total_bytes_out = manager.Value(int, 0)
-    pool = multiprocessing.Pool()
-
-    #TODO: make this a namedtuple
-    return {'pool': pool, 'in': total_bytes_in, 'out': total_bytes_out}
-
-
 def main():
     """main"""
     #TODO make the relevant parts of this call as a library
@@ -693,7 +687,13 @@ def main():
     cwd = os.getcwd()
     filter_list = arguments
 
-    multiproc = create_multiproc()
+    manager = multiprocessing.Manager()
+    total_bytes_in = manager.Value(int, 0)
+    total_bytes_out = manager.Value(int, 0)
+    pool = multiprocessing.Pool()
+
+    #TODO: make this a namedtuple
+    multiproc = {'pool': pool, 'in': total_bytes_in, 'out': total_bytes_out}
 
     optimize_files(cwd, filter_list, options, multiproc)
 
