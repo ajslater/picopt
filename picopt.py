@@ -450,12 +450,8 @@ def comic_archive_compress(args):
 
 
 def comic_archive_uncompress(filename, image_format, options):
-    """ Optimize comic archives like cbz and cbr
-        Convert to cbz
-        This is done in the main process and farms out its image optimizers
-        to other processes in the pool.
-        """
-    #TODO: break into functions
+    """ uncompress comic archives and return the name of the working
+        directory we uncompressed into """
 
     if not options.comics:
         report = ['Skipping archive file: %s' % filename]
@@ -692,7 +688,6 @@ def main():
     total_bytes_out = manager.Value(int, 0)
     pool = multiprocessing.Pool()
 
-    #TODO: make this a namedtuple
     multiproc = {'pool': pool, 'in': total_bytes_in, 'out': total_bytes_out}
 
     optimize_files(cwd, filter_list, options, multiproc)
