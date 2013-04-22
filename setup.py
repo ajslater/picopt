@@ -4,6 +4,9 @@ from picopt import __version__ as version
 
 use_setuptools()
 
+with open('requirements.txt') as rfile:
+        required = rfile.read().splitlines()
+
 setup(name='picopt',
       version=version,
       description='Optimize image files with external tools',
@@ -11,5 +14,5 @@ setup(name='picopt',
       author_email='aj@slater.net',
       url='http://github.com/ajslater/picopt/',
       py_modules=['picopt'],
-      requires=['Image', 'ImageFile']
+      requires=required
       )
