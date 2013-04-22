@@ -14,5 +14,5 @@ setup(name='picopt',
       author_email='aj@slater.net',
       url='http://github.com/ajslater/picopt/',
       py_modules=['picopt'],
-      requires=required
+      install_requires=required
       )
