@@ -446,7 +446,7 @@ def comic_archive_compress(args):
                         total_bytes_in, total_bytes_out, options)
 
 
-def comic_archive(filename, image_format, multiproc, options):
+def comic_archive_uncompress(filename, image_format, multiproc, options):
     """ Optimize comic archives like cbz and cbr
         Convert to cbz
         This is done in the main process and farms out its image optimizers
@@ -600,9 +600,8 @@ def optimize_files(cwd, filter_list, options, multiproc):
                     print("%s : %s" % (filename, image_format))
                 elif is_format_selected(image_format, COMIC_FORMATS,
                                         options, options.comics):
-                    tmp_dir_basename = comic_archive(filename_full,
-                                                     image_format,
-                                                     multiproc, options)
+                    tmp_dir_basename = comic_archive_uncompress(
+                        filename_full, image_format, multiproc, options)
                     # optimize the extracted tmpdir
                     #cwd = os.path.dirname(filename)
                     #if not cwd:
