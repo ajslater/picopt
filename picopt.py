@@ -401,19 +401,19 @@ def lossy(filename, options):
     return bytes_diff, report_list
 
 
-def comic_archive_callback(args):
+def get_tmp_dir(filename):
+    head, tail = os.path.split(filename)
+    return os.path.join(head, ARCHIVE_TMP_DIR_TEMPLATE % tail)
+
+
+# TODO: undict args
+def comic_archive_compress(args):
     """called back by every optimization inside a comic archive.
        when they're all done it creates the new archive and cleans up.
     """
-    print('aaa')
-    filename, archive_set, total_bytes_in, total_bytes_out, options = args
-    print(archive_set)
+    filename, total_bytes_in, total_bytes_out, options = args
 
-    if len(archive_set):
-        return
-    print('Avast!')
-
-    tmp_dir = ARCHIVE_TMP_DIR_TEMPLATE % filename
+    tmp_dir = get_tmp_dir(filename)
 
     #archive into new filename
     new_filename = replace_ext(filename, NEW_ARCHIVE_SUFFIX)
@@ -461,7 +461,7 @@ def comic_archive(filename, image_format, multiproc, options):
         return (bytes_diff, report_list)
 
     # create the tmpdir
-    tmp_dir = ARCHIVE_TMP_DIR_TEMPLATE % filename
+    tmp_dir = get_tmp_dir(filename)
     if os.path.isdir(tmp_dir):
         shutil.rmtree(tmp_dir)
     os.mkdir(tmp_dir)
@@ -489,18 +489,26 @@ def comic_archive(filename, image_format, multiproc, options):
         archive_options = copy.deepcopy(options)
         archive_options.recurse = True
 
-    # go get this directory.
-    multiproc['archive_sets'][filename] = set()
-    optimize_files(cwd, [tmp_dir], archive_options, multiproc,
-                   filename, comic_archive_callback)
+    tmp_dir_basename = os.path.basename(tmp_dir)
+    optimize_files(cwd, [tmp_dir_basename], archive_options, multiproc)
+
+    #XXX hackish
+    pool = multiproc['pool']
+    pool.close()
+    pool.join()
+
+    compress_args = (filename, multiproc['in'], multiproc['out'], options)
+    comic_archive_compress(compress_args)
+
+    #XXX hackish
+    multiproc['pool'] = multiprocessing.Pool()
 
     return (None, None)
 
 
 def optimize_image(arg):
     """optimizes a given image from a filename"""
-    filename, image_format, options, total_bytes_in, total_bytes_out, \
-        archive_set, archive_set_key = arg
+    filename, image_format, options, total_bytes_in, total_bytes_out = arg
 
     #print(filename, image_format, "starting...")
 
@@ -517,11 +525,6 @@ def optimize_image(arg):
 
     optimize_accounting(filename, bytes_diff, report_list, total_bytes_in,
                         total_bytes_out, options)
-
-    if archive_set_key:
-        archive_set.remove(filename)
-        return (filename, archive_set, total_bytes_in, total_bytes_out,
-                options)
 
 
 def optimize_accounting(filename, bytes_diff, report_list, total_bytes_in,
@@ -601,8 +604,7 @@ def detect_file(filename, options):
                                       'comic archive type.')
 
 
-def optimize_files(cwd, filter_list, options, multiproc,
-                   archive_set_key=None, callback=None):
+def optimize_files(cwd, filter_list, options, multiproc):
     """sorts through a list of files, decends directories and
        calls the optimizer on the extant files"""
     #TODO handle empty comic archives
@@ -614,7 +616,7 @@ def optimize_files(cwd, filter_list, options, multiproc,
                 next_dir_list = os.listdir(filename_full)
                 next_dir_list.sort()
                 optimize_files(filename_full, next_dir_list, options,
-                               multiproc, archive_set_key, callback)
+                               multiproc)
         elif os.path.exists(filename_full):
             image_format = detect_file(filename_full, options)
             if image_format:
@@ -622,7 +624,7 @@ def optimize_files(cwd, filter_list, options, multiproc,
                     print("%s : %s" % (filename, image_format))
                 elif is_format_selected(image_format, COMIC_FORMATS,
                                         options, options.comics):
-                    bytes_diff, report_list = comic_archive(filename,
+                    bytes_diff, report_list = comic_archive(filename_full,
                                                             image_format,
                                                             multiproc,
                                                             options)
@@ -633,18 +635,10 @@ def optimize_files(cwd, filter_list, options, multiproc,
                                             multiproc.total_bytes_out,
                                             options)
                 else:
-                    if archive_set_key:
-                        archive_sets = multiproc['archive_sets']
-                        archive_set = archive_sets[archive_set_key]
-                        archive_set.add(filename)
-                    else:
-                        archive_set = None
                     args = [filename_full, image_format, options,
-                            multiproc['in'], multiproc['out'],
-                            archive_set, archive_set_key]
+                            multiproc['in'], multiproc['out']]
                     multiproc['pool'].apply_async(optimize_image,
-                                                  args=(args,),
-                                                  callback=callback)
+                                                  args=(args,))
         elif options.verbose:
             print(filename, 'was not found.')
 
@@ -678,8 +672,20 @@ def report_totals(bytes_in, bytes_out, options):
         print("Didn't optimize any files.")
 
 
+#XXX doesn't need to stand alone
+def create_multiproc():
+    manager = multiprocessing.Manager()
+    total_bytes_in = manager.Value(int, 0)
+    total_bytes_out = manager.Value(int, 0)
+    pool = multiprocessing.Pool()
+
+    #TODO: make this a namedtuple
+    return {'pool': pool, 'in': total_bytes_in, 'out': total_bytes_out}
+
+
 def main():
     """main"""
+    #TODO make the relevant parts of this call as a library
 
     ImageFile.MAXBLOCK = 3000000  # default is 64k
 
@@ -689,22 +695,15 @@ def main():
     cwd = os.getcwd()
     filter_list = arguments
 
-    manager = multiprocessing.Manager()
-    total_bytes_in = manager.Value(int, 0)
-    total_bytes_out = manager.Value(int, 0)
-    archive_sets = manager.dict()
-    pool = multiprocessing.Pool()
-
-    #TODO: make this a namedtuple
-    multiproc = {'pool': pool, 'in': total_bytes_in, 'out': total_bytes_out,
-                 'archive_sets': archive_sets}
+    multiproc = create_multiproc()
 
     optimize_files(cwd, filter_list, options, multiproc)
 
+    pool = multiproc['pool']
     pool.close()
     pool.join()
 
-    report_totals(total_bytes_in.get(), total_bytes_out.get(), options)
+    report_totals(multiproc['in'].get(), multiproc['out'].get(), options)
 
 
 if __name__ == '__main__':
