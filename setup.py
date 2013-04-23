@@ -7,12 +7,15 @@ use_setuptools()
 with open('requirements.txt') as rfile:
         required = rfile.read().splitlines()
 
-setup(name='picopt',
-      version='0.9.0',
-      description='Optimize image files with external tools',
-      author='AJ Slater',
-      author_email='aj@slater.net',
-      url='http://github.com/ajslater/picopt/',
-      py_modules=['picopt'],
-      requires=required
-      )
+setup(
+    name='picopt',
+    version='0.9.0',
+    description='Optimize image files and comic archives with external tools',
+    author='AJ Slater',
+    author_email='aj@slater.net',
+    url='http://github.com/ajslater/picopt/',
+    py_modules=['picopt'],
+    requires=required,
+    scripts=['picopt.py'],
+    long_description=open('README.md').read(),
+)
