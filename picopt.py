@@ -23,7 +23,7 @@ import rarfile
 REMOVE_EXT = '.picopt-remove'
 NEW_EXT = '.picopt-optimized.png'
 ARCHIVE_TMP_DIR_TEMPLATE = 'PICOPT_TMP_%s'
-NEW_ARCHIVE_SUFFIX = '.picopt-optimized.cbz'
+NEW_ARCHIVE_SUFFIX = 'picopt-optimized.cbz'
 JPEGTRAN_OPTI_ARGS = ['jpegtran', '-copy', 'all', '-optimize',
                       '-outfile']
 JPEGTRAN_PROG_ARGS = ['jpegtran', '-copy', 'all', '-optimize',
