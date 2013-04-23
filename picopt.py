@@ -32,7 +32,7 @@ JPEGRESCAN_ARGS = ['jpegrescan']
 OPTIPNG_ARGS = ['optipng', '-o6', '-fix', '-preserve', '-force', '-quiet']
 #ADVPNG_ARGS = ['advpng', '-z', '-4', '-f']
 PNGOUT_ARGS = ['pngout', '-q', '-force', '-y']
-LOSSLESS_FORMATS = set(('PNG', 'PNM', 'GIF', 'TIFF'))
+LOSSLESS_FORMATS = set(('PNG', 'PNM', 'GIF', 'TIFF', 'BMP'))
 JPEG_FORMATS = set(['JPEG'])
 CBR_EXT = '.cbr'
 CBZ_EXT = '.cbz'
@@ -215,8 +215,6 @@ def replace_ext(filename, new_ext):
 def new_percent_saved(size_in, size_out):
     """spits out how much space the optimazation saved"""
     percent_saved = (1 - (size_out / size_in)) * 100
-    #if percent_saved <= 0:
-    #    return ''
 
     size_saved_kb = humanize_bytes(size_in - size_out)
     result = '%.*f%s (%s)' % (2, percent_saved, '%', size_saved_kb)
@@ -570,8 +568,6 @@ def detect_file(filename, options):
 
     if image_format in options.formats:
         return image_format
-        #print(filename, image_format)  # image.mode)
-        #optimize_image(filename, image_format, options, totals)
 
     if image_format in ('NONE', 'ERROR'):
         return
