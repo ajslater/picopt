@@ -5,7 +5,7 @@ Runs pictures through image specific external optimizers
 from __future__ import print_function
 from __future__ import division
 
-__version__ = '0.9.1'
+__version__ = '0.9.2'
 
 import sys
 import os
@@ -411,22 +411,27 @@ def lossy(filename, options):
 
 def optimize_image(arg):
     """optimizes a given image from a filename"""
-    filename, image_format, options, total_bytes_in, total_bytes_out = arg
+    try:
+        filename, image_format, options, total_bytes_in, total_bytes_out = arg
 
-    #print(filename, image_format, "starting...")
+        #print(filename, image_format, "starting...")
 
-    if is_format_selected(image_format, LOSSLESS_FORMATS, options,
-                          options.optipng or options.pngout):
-        bytes_diff, report_list, final_filename = lossless(filename, options)
-    elif is_format_selected(image_format, JPEG_FORMATS, options,
-                            options.jpegrescan or options.jpegtran):
-        bytes_diff, report_list, final_filename = lossy(filename, options)
-    elif options.verbose:
-        print(filename, image_format)  # image.mode)
-        print("\tFile format not selected.")
+        if is_format_selected(image_format, LOSSLESS_FORMATS, options,
+                              options.optipng or options.pngout):
+            bytes_diff, report_list, final_filename = lossless(
+                filename, options)
+        elif is_format_selected(image_format, JPEG_FORMATS, options,
+                                options.jpegrescan or options.jpegtran):
+            bytes_diff, report_list, final_filename = lossy(filename, options)
+        elif options.verbose:
+            print(filename, image_format)  # image.mode)
+            print("\tFile format not selected.")
 
-    optimize_accounting(final_filename, bytes_diff, report_list,
-                        total_bytes_in, total_bytes_out, options)
+        optimize_accounting(final_filename, bytes_diff, report_list,
+                            total_bytes_in, total_bytes_out, options)
+    except Exception as exc:
+        print(exc)
+        raise exc
 
 
 def optimize_accounting(filename, bytes_diff, report_list, total_bytes_in,
@@ -517,41 +522,45 @@ def comic_archive_compress(args):
        when they're all done it creates the new archive and cleans up.
     """
 
-    filename, total_bytes_in, total_bytes_out, options = args
+    try:
+        filename, total_bytes_in, total_bytes_out, options = args
 
-    tmp_dir = get_archive_tmp_dir(filename)
+        tmp_dir = get_archive_tmp_dir(filename)
 
-    #archive into new filename
-    new_filename = replace_ext(filename, NEW_ARCHIVE_SUFFIX)
+        #archive into new filename
+        new_filename = replace_ext(filename, NEW_ARCHIVE_SUFFIX)
 
-    print('Rezipping', end='')
-    with zipfile.ZipFile(new_filename, 'w',
-                         compression=zipfile.ZIP_DEFLATED) as new_zf:
-        root_len = len(os.path.abspath(tmp_dir))
-        for root, dirs, files in os.walk(tmp_dir):
-            archive_root = os.path.abspath(root)[root_len:]
-            for fname in files:
-                fullpath = os.path.join(root, fname)
-                archive_name = os.path.join(archive_root, fname)
-                print('.', end='')
-                new_zf.write(fullpath, archive_name, zipfile.ZIP_DEFLATED)
+        print('Rezipping', end='')
+        with zipfile.ZipFile(new_filename, 'w',
+                             compression=zipfile.ZIP_DEFLATED) as new_zf:
+            root_len = len(os.path.abspath(tmp_dir))
+            for root, dirs, files in os.walk(tmp_dir):
+                archive_root = os.path.abspath(root)[root_len:]
+                for fname in files:
+                    fullpath = os.path.join(root, fname)
+                    archive_name = os.path.join(archive_root, fname)
+                    print('.', end='')
+                    new_zf.write(fullpath, archive_name, zipfile.ZIP_DEFLATED)
 
-    # Cleanup tmpdir
-    if os.path.isdir(tmp_dir):
-        print('.', end='')
-        shutil.rmtree(tmp_dir)
-    print('done.')
+        # Cleanup tmpdir
+        if os.path.isdir(tmp_dir):
+            print('.', end='')
+            shutil.rmtree(tmp_dir)
+        print('done.')
 
-    bytes_diff, final_filename = cleanup_after_optimize(
-        filename, new_filename, options)
-    percent = new_percent_saved(bytes_diff['in'], bytes_diff['out'])
-    if percent != 0:
-        report = '%s: %s' % (os.path.basename(final_filename), percent)
-    else:
-        report = ''
+        bytes_diff, final_filename = cleanup_after_optimize(
+            filename, new_filename, options)
+        percent = new_percent_saved(bytes_diff['in'], bytes_diff['out'])
+        if percent != 0:
+            report = '%s: %s' % (os.path.basename(final_filename), percent)
+        else:
+            report = ''
 
-    optimize_accounting(final_filename, bytes_diff, [report],
-                        total_bytes_in, total_bytes_out, options)
+        optimize_accounting(final_filename, bytes_diff, [report],
+                            total_bytes_in, total_bytes_out, options)
+    except Exception as exc:
+        print(exc)
+        raise exc
 
 
 def comic_archive_uncompress(filename, image_format, options):
