@@ -5,7 +5,7 @@ Runs pictures through image specific external optimizers
 from __future__ import print_function
 from __future__ import division
 
-__version__ = '0.9.2'
+__version__ = '0.9.3'
 
 import sys
 import os
@@ -581,10 +581,10 @@ def comic_archive_uncompress(filename, image_format, options):
 
     # extract archvie into the tmpdir
     if image_format == CBZ_FORMAT:
-        with zipfile.ZipFile(filename, 'r') as zfile:
+        with zipfile.ZipFile(filename, 'r', crc_check=False) as zfile:
             zfile.extractall(tmp_dir)
     elif image_format == CBR_FORMAT:
-        with rarfile.RarFile(filename, 'r') as rfile:
+        with rarfile.RarFile(filename, 'r', crc_check=False) as rfile:
             rfile.extractall(tmp_dir)
     else:
         report = '%s %s is not a good format' % (filename, image_format)
