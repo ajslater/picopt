@@ -419,7 +419,7 @@ def comic_archive_compress(args):
     #archive into new filename
     new_filename = replace_ext(filename, NEW_ARCHIVE_SUFFIX)
 
-    print('\tRezipping %s', new_filename, end='')
+    print('Rezipping', end='')
     with zipfile.ZipFile(new_filename, 'w',
                          compression=zipfile.ZIP_DEFLATED) as new_zf:
         root_len = len(os.path.abspath(tmp_dir))
