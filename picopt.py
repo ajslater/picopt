@@ -491,10 +491,9 @@ def optimize_image(arg):
     elif is_format_selected(image_format, JPEG_FORMATS, options,
                             options.jpegrescan or options.jpegtran):
         bytes_diff, report_list = lossy(filename, options)
-    else:
-        if options.verbose:
-            print(filename, image_format)  # image.mode)
-            print("\tFile format not selected.")
+    elif options.verbose:
+        print(filename, image_format)  # image.mode)
+        print("\tFile format not selected.")
 
     optimize_accounting(filename, bytes_diff, report_list, total_bytes_in,
                         total_bytes_out, options)
