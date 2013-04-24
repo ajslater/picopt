@@ -5,7 +5,7 @@ Runs pictures through image specific external optimizers
 from __future__ import print_function
 from __future__ import division
 
-__version__ = '0.9.3'
+__version__ = '0.9.4'
 
 import sys
 import os
@@ -15,6 +15,7 @@ import subprocess
 import multiprocessing
 import copy
 import zipfile
+import traceback
 
 import Image
 import ImageFile
@@ -415,6 +416,7 @@ def optimize_image(arg):
         filename, image_format, options, total_bytes_in, total_bytes_out = arg
 
         #print(filename, image_format, "starting...")
+        final_filename = filename
 
         if is_format_selected(image_format, LOSSLESS_FORMATS, options,
                               options.optipng or options.pngout):
@@ -431,6 +433,7 @@ def optimize_image(arg):
                             total_bytes_in, total_bytes_out, options)
     except Exception as exc:
         print(exc)
+        traceback.print_exc(exc)
         raise exc
 
 
@@ -560,6 +563,7 @@ def comic_archive_compress(args):
                             total_bytes_in, total_bytes_out, options)
     except Exception as exc:
         print(exc)
+        traceback.print_exc(exc)
         raise exc
 
 
