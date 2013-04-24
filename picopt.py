@@ -416,7 +416,6 @@ def optimize_image(arg):
         filename, image_format, options, total_bytes_in, total_bytes_out = arg
 
         #print(filename, image_format, "starting...")
-        final_filename = filename
 
         if is_format_selected(image_format, LOSSLESS_FORMATS, options,
                               options.optipng or options.pngout):
@@ -425,9 +424,11 @@ def optimize_image(arg):
         elif is_format_selected(image_format, JPEG_FORMATS, options,
                                 options.jpegrescan or options.jpegtran):
             bytes_diff, report_list, final_filename = lossy(filename, options)
-        elif options.verbose:
-            print(filename, image_format)  # image.mode)
-            print("\tFile format not selected.")
+        else:
+            if options.verbose:
+                print(filename, image_format)  # image.mode)
+                print("\tFile format not selected.")
+            return
 
         optimize_accounting(final_filename, bytes_diff, report_list,
                             total_bytes_in, total_bytes_out, options)
