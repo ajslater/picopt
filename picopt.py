@@ -586,10 +586,10 @@ def comic_archive_uncompress(filename, image_format, options):
 
     # extract archvie into the tmpdir
     if image_format == CBZ_FORMAT:
-        with zipfile.ZipFile(filename, 'r', crc_check=False) as zfile:
+        with zipfile.ZipFile(filename, 'r') as zfile:
             zfile.extractall(tmp_dir)
     elif image_format == CBR_FORMAT:
-        with rarfile.RarFile(filename, 'r', crc_check=False) as rfile:
+        with rarfile.RarFile(filename, 'r') as rfile:
             rfile.extractall(tmp_dir)
     else:
         report = '%s %s is not a good format' % (filename, image_format)
