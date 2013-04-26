@@ -354,6 +354,9 @@ def lossless(filename, options):
     bytes_in = 0
     report_list = []
     final_filename = filename
+
+    #TODO: encapsulate each if as a function
+    #      see if i can reuse it with lossy too
     if options.optipng:
         bytes_diff, rep, final_filename = optimize_image_aux(
             final_filename, options, optipng)
@@ -370,11 +373,8 @@ def lossless(filename, options):
 #            bytes_in = bytes_diff['in']
 
     if options.pngout:
-        try:
-            bytes_diff, rep, final_filename = optimize_image_aux(
-                final_filename, options, pngout)
-        except Exception as ex:
-            print(ex)
+        bytes_diff, rep, final_filename = optimize_image_aux(
+            final_filename, options, pngout)
         if rep:
             report_list += [rep]
         if not bytes_in:
@@ -534,7 +534,7 @@ def comic_archive_compress(args):
         #archive into new filename
         new_filename = replace_ext(filename, NEW_ARCHIVE_SUFFIX)
 
-        print('Rezipping', end='')
+        print('Rezipping archive', end='')
         with zipfile.ZipFile(new_filename, 'w',
                              compression=zipfile.ZIP_DEFLATED) as new_zf:
             root_len = len(os.path.abspath(tmp_dir))
@@ -554,13 +554,8 @@ def comic_archive_compress(args):
 
         bytes_diff, final_filename = cleanup_after_optimize(
             filename, new_filename, options)
-        percent = new_percent_saved(bytes_diff['in'], bytes_diff['out'])
-        if percent != 0:
-            report = '%s: %s' % (os.path.basename(final_filename), percent)
-        else:
-            report = ''
 
-        optimize_accounting(final_filename, bytes_diff, [report],
+        optimize_accounting(final_filename, bytes_diff, [''],
                             total_bytes_in, total_bytes_out, options)
     except Exception as exc:
         print(exc)
