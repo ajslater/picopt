@@ -37,6 +37,7 @@ LOSSLESS_FORMATS = set(('PNG', 'PNM', 'GIF', 'TIFF', 'BMP'))
 JPEG_FORMATS = set(['JPEG'])
 CBR_EXT = '.cbr'
 CBZ_EXT = '.cbz'
+COMIC_EXTS = set((CBR_EXT, CBZ_EXT))
 CBZ_FORMAT = 'CBZ'
 CBR_FORMAT = 'CBR'
 COMIC_FORMATS = set((CBZ_FORMAT, CBR_FORMAT))
@@ -462,9 +463,9 @@ def is_image_sequenced(image):
     """determines if the image is a sequenced image"""
     try:
         image.seek(1)
-        result = 1
+        result = True
     except EOFError:
-        result = 0
+        result = False
 
     return result
 
@@ -474,7 +475,7 @@ def get_image_format(filename, options):
     image = None
     bad_image = 1
     image_format = 'NONE'
-    sequenced = 0
+    sequenced = False
     try:
         image = Image.open(filename)
         bad_image = image.verify()
@@ -484,17 +485,17 @@ def get_image_format(filename, options):
         pass
 
     if sequenced:
-        if options.verbose and not options.list_only:
-            print (filename, "can't handle sequenced image")
         image_format += ' SEQUENCED'
     elif image is None or bad_image or image_format == 'NONE':
         image_format = 'ERROR'
         filename_ext = os.path.splitext(filename)[-1].lower()
-        if filename_ext == CBZ_EXT and zipfile.is_zipfile(filename):
-            image_format = CBZ_FORMAT
-        elif filename_ext == CBR_EXT and rarfile.is_rarfile(filename):
-            image_format = CBR_FORMAT
-        elif options.verbose and not options.list_only:
+        if filename_ext in COMIC_EXTS:
+            if zipfile.is_zipfile(filename):
+                image_format = CBZ_FORMAT
+            elif rarfile.is_rarfile(filename):
+                image_format = CBR_FORMAT
+        if image_format == 'ERROR' and options.verbose and \
+                not options.list_only:
             print(filename, "doesn't look like an image or comic archive.")
     return image_format
 
