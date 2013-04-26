@@ -304,10 +304,9 @@ def cleanup_after_optimize(filename, new_filename, options):
     final_filename = filename
     try:
         filesize_in = os.stat(filename).st_size
+        filesize_out = os.stat(new_filename).st_size
         bytes_diff['in'] = filesize_in
         bytes_diff['out'] = filesize_in  # overwritten on succes below
-        filesize_out = os.stat(new_filename).st_size
-
         if (filesize_out > 0) and ((filesize_out < filesize_in)
                                    or options.bigger):
             old_image_format = get_image_format(filename, options)
@@ -332,15 +331,16 @@ def cleanup_after_optimize(filename, new_filename, options):
     return bytes_diff, final_filename
 
 
-def optimize_image_aux(filename, options, func):
+def optimize_image_external(filename, options, func):
     """this could be a decorator"""
     new_filename = os.path.normpath(filename + NEW_EXT)
     shutil.copy2(filename, new_filename)
 
     func(filename, new_filename)
 
-    bytes_diff, final_filename = cleanup_after_optimize(
-        filename, new_filename, options)
+    bytes_diff, final_filename = cleanup_after_optimize(filename,
+                                                        new_filename,
+                                                        options)
     percent = new_percent_saved(bytes_diff['in'], bytes_diff['out'])
     if percent != 0:
         report = '%s: %s' % (func.__name__, percent)
@@ -349,42 +349,41 @@ def optimize_image_aux(filename, options, func):
     return (bytes_diff, report, final_filename)
 
 
+def image_pipeline(program_flag, bytes_in, report_list, filename, options,
+                   func):
+    if not program_flag:
+        return bytes_in, report_list, filename
+
+    bytes_diff, rep, final_filename = optimize_image_external(
+        filename, options, func)
+    if rep:
+        report_list += [rep]
+    if bytes_in > 0:
+        bytes_diff['in'] = bytes_in
+
+    return bytes_diff, report_list, final_filename
+
+
 def lossless(filename, options):
     """run EXTERNAL programs to optimize lossless formats"""
-    bytes_in = 0
+    bytes_diff = {'in': 0, 'out': 0}
     report_list = []
     final_filename = filename
 
-    #TODO: encapsulate each if as a function
-    #      see if i can reuse it with lossy too
-    if options.optipng:
-        bytes_diff, rep, final_filename = optimize_image_aux(
-            final_filename, options, optipng)
-        if rep:
-            report_list += [rep]
-        if not bytes_in:
-            bytes_in = bytes_diff['in']
+    bytes_diff, report_list, final_filename = image_pipeline(
+        options.optipng, bytes_diff['in'], report_list, final_filename,
+        options, optipng)
 
-#    if options.advpng:
-#        bytes_diff, rep = optimize_image_aux(filename, options, advpng)
-#        if rep:
-#            report_list += [rep]
-#        if not bytes_in:
-#            bytes_in = bytes_diff['in']
+#    bytes_in, report_list, final_filename = image_pipeline(
+#        options.advpng, bytes_in, report_list, final_filename, options,
+#        advpng)
 
-    if options.pngout:
-        bytes_diff, rep, final_filename = optimize_image_aux(
-            final_filename, options, pngout)
-        if rep:
-            report_list += [rep]
-        if not bytes_in:
-            bytes_in = bytes_diff['in']
+    bytes_diff, report_list, final_filename = image_pipeline(
+        options.pngout, bytes_diff['in'], report_list, final_filename,
+        options, pngout)
 
-    if not bytes_in:
+    if not bytes_diff['in']:
         report_list += ['Skipping lossless file: %s' % final_filename]
-        bytes_diff = {'in': 0, 'out': 0}
-
-    bytes_diff['in'] = bytes_in
 
     return bytes_diff, report_list, final_filename
 
@@ -393,13 +392,13 @@ def lossy(filename, options):
     """run EXTERNAL programs to optimize lossy formats"""
     final_filename = filename
     if options.jpegrescan:
-        bytes_diff, rep, final_filename = optimize_image_aux(
+        bytes_diff, rep, final_filename = optimize_image_external(
             final_filename, options, jpegrescan)
     elif options.jpegtran_prog:
-        bytes_diff, rep, final_filename = optimize_image_aux(
+        bytes_diff, rep, final_filename = optimize_image_external(
             final_filename, options, jpegtranprog)
     elif options.jpegtran:
-        bytes_diff, rep, final_filename = optimize_image_aux(
+        bytes_diff, rep, final_filename = optimize_image_external(
             final_filename, options, jpegtranopti)
     else:
         rep = ['Skipping jpeg file: %s' % filename]
@@ -552,8 +551,9 @@ def comic_archive_compress(args):
             shutil.rmtree(tmp_dir)
         print('done.')
 
-        bytes_diff, final_filename = cleanup_after_optimize(
-            filename, new_filename, options)
+        bytes_diff, final_filename = cleanup_after_optimize(filename,
+                                                            new_filename,
+                                                            options)
 
         optimize_accounting(final_filename, bytes_diff, [''],
                             total_bytes_in, total_bytes_out, options)
