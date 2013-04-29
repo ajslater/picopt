@@ -9,7 +9,7 @@ with open('requirements.txt') as rfile:
 
 setup(
     name='picopt',
-    version='0.9.4',
+    version='0.9.5',
     description='Optimize image files and comic archives with external tools',
     author='AJ Slater',
     author_email='aj@slater.net',

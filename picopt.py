@@ -5,7 +5,7 @@ Runs pictures through image specific external optimizers
 from __future__ import print_function
 from __future__ import division
 
-__version__ = '0.9.4'
+__version__ = '0.9.5'
 
 import sys
 import os
@@ -33,6 +33,7 @@ JPEGRESCAN_ARGS = ['jpegrescan']
 OPTIPNG_ARGS = ['optipng', '-o6', '-fix', '-preserve', '-force', '-quiet']
 #ADVPNG_ARGS = ['advpng', '-z', '-4', '-f']
 PNGOUT_ARGS = ['pngout', '-q', '-force', '-y']
+GIFSICLE_ARGS = ['gifsicle', '--optimize=3', '--batch']
 LOSSLESS_FORMATS = set(('PNG', 'PNM', 'GIF', 'TIFF', 'BMP'))
 JPEG_FORMATS = set(['JPEG'])
 CBR_EXT = '.cbr'
@@ -41,10 +42,13 @@ COMIC_EXTS = set((CBR_EXT, CBZ_EXT))
 CBZ_FORMAT = 'CBZ'
 CBR_FORMAT = 'CBR'
 COMIC_FORMATS = set((CBZ_FORMAT, CBR_FORMAT))
-OPTIMIZABLE_FORMATS = LOSSLESS_FORMATS | JPEG_FORMATS | COMIC_FORMATS
+SEQUENCED_TEMPLATE= '%s SEQUENCED'
+ANIMATED_GIF_FORMATS = set([SEQUENCED_TEMPLATE % 'GIF'])
+OPTIMIZABLE_FORMATS = LOSSLESS_FORMATS | JPEG_FORMATS | COMIC_FORMATS | \
+    ANIMATED_GIF_FORMATS
 FORMAT_DELIMETER = ','
 DEFAULT_FORMATS = 'ALL'
-PROGRAMS = ('optipng', 'pngout', 'jpegrescan', 'jpegtran')
+PROGRAMS = ('optipng', 'pngout', 'jpegrescan', 'jpegtran', 'gifsicle')
             #'advpng',
 if sys.version > '3':
     long = int
@@ -169,7 +173,7 @@ def get_options_and_arguments():
     parser.add_option("-j", "--disable_jpegrescan", action="store_false",
                       dest="jpegrescan", default=1,
                       help="Do not optimize with jpegrescan")
-    parser.add_option("-g", "--disable_progressive", action="store_false",
+    parser.add_option("-e", "--disable_progressive", action="store_false",
                       dest="jpegtran_prog", default=1,
                       help="Don't try to reduce size by making "
                       "progressive JPEGs with jpegtran")
@@ -189,6 +193,9 @@ def get_options_and_arguments():
     parser.add_option("-c", "--comics", action="store_true",
                       dest="comics", default=0,
                       help="Also optimize comic book archives (cbz & cbr)")
+    parser.add_option("-g", "--disable_gifsicle", action="store_false",
+                      dest="gifsicle", default=1,
+                      help="disable optimizing animated GIFs")
 
     (options, arguments) = parser.parse_args()
 
@@ -267,6 +274,11 @@ def optipng(filename, new_filename):
 #    """runs the EXTERNAL program advpng on the file"""
 #    args = ADVPNG_ARGS + [new_filename]
 #    run_ext(args)
+
+def gifsicle(filename, new_filename):
+    """runs the EXTERNAL program gifsicle"""
+    args = GIFSICLE_ARGS + [new_filename]
+    run_ext(args)
 
 
 def jpegtranopti(filename, new_filename):
@@ -365,6 +377,20 @@ def image_pipeline(program_flag, bytes_in, report_list, filename, options,
     return bytes_diff, report_list, final_filename
 
 
+def animated_gif(filename, options):
+    """run EXTERNAL programs to optimize animated gifs"""
+    if options.gifsicle:
+        bytes_diff, rep, final_filename = optimize_image_external(
+            filename, options, gifsicle)
+    else:
+        rep = ['Skipping animated GIF: %s' % filename]
+        bytes_diff = {'in': 0, 'out': 0}
+
+    report_list = [rep]
+
+    return bytes_diff, report_list, final_filename
+
+
 def lossless(filename, options):
     """run EXTERNAL programs to optimize lossless formats"""
     bytes_diff = {'in': 0, 'out': 0}
@@ -424,6 +450,11 @@ def optimize_image(arg):
         elif is_format_selected(image_format, JPEG_FORMATS, options,
                                 options.jpegrescan or options.jpegtran):
             bytes_diff, report_list, final_filename = lossy(filename, options)
+        elif is_format_selected(image_format, ANIMATED_GIF_FORMATS, options,
+                                options.gifsicle):
+            bytes_diff, report_list, final_filename = animated_gif(
+                filename, options)
+
         else:
             if options.verbose:
                 print(filename, image_format)  # image.mode)
@@ -485,7 +516,7 @@ def get_image_format(filename, options):
         pass
 
     if sequenced:
-        image_format += ' SEQUENCED'
+        image_format = SEQUENCED_TEMPLATE % image_format
     elif image is None or bad_image or image_format == 'NONE':
         image_format = 'ERROR'
         filename_ext = os.path.splitext(filename)[-1].lower()
