@@ -196,8 +196,15 @@ def get_options_and_arguments():
     parser.add_option("-g", "--disable_gifsicle", action="store_false",
                       dest="gifsicle", default=1,
                       help="disable optimizing animated GIFs")
+    parser.add_option("-v", "--version", action="store_true",
+                      dest="version", default=0,
+                      help="display the version number")
 
     (options, arguments) = parser.parse_args()
+
+    if options.version:
+        print('version', __version__)
+        exit(0)
 
     if len(arguments) == 0:
         parser.print_help()
