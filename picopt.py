@@ -143,9 +143,9 @@ def program_reqs(options):
 
 def get_options_and_arguments():
     """parses the command line"""
-    usage = "usage: %prog [options] [image files]\npicopt uses " \
-        "optiping, pngout, jpegrescan and jpegtran if they are " \
-        "on the path."
+    usage = "%prog [options] [image files]\nversion "+__version__ + \
+        "\npicopt uses optiping, pngout, gifsicle, jpegrescan and " \
+        "jpegtran if they are on the path."
     parser = optparse.OptionParser(usage=usage)
     parser.add_option("-d", "--dir", action="store", dest="dir",
                       default=os.getcwd(),
