@@ -37,3 +37,8 @@ Installation
     pip install .
 
     picopt.py -h
+
+# Alternatives
+
+[imageoptim](https://code.google.com/p/imageoptim/) is an OS X GUI optimizezer. It integrates the various optimization programs so you don't have to install them separately. Does not handle animated gifs or comic book archives. Its drag'n'drop UI is pretty nice. It also has AdvPNG support which I've disabled in picopt because I've never seen it provide any advantage.
+
