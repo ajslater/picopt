@@ -1,7 +1,7 @@
 picopt
 ======
 
-A multi format recursive image optimizer that uses external tools.
+A multi-format, recursive, multiprocessor aware, command line image optimizer utility that uses external tools to do the optimizing.
 
 Picopt uncompresses, optimizes and rezips [comic book archive files](https://en.wikipedia.org/wiki/Comic_book_archive). Be aware that CBR rar archives will be rezipped into CBZs instead of CBR.
 
