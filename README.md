@@ -3,8 +3,6 @@ picopt
 
 A multi-format, recursive, multiprocessor aware, command line image optimizer utility that uses external tools to do the optimizing.
 
-Picopt uncompresses, optimizes and rezips [comic book archive files](https://en.wikipedia.org/wiki/Comic_book_archive). Be aware that CBR rar archives will be rezipped into CBZs instead of CBR.
-
 Picopt depends on Python [PIL](http://www.pythonware.com/products/pil/) to identify files and [rarfile](https://pypi.python.org/pypi/rarfile) to open CBRs.
 
 To optimize JPEG images. Picopt needs either [jpegrescan](https://github.com/kud/jpegrescan) or [jpegtran](http://jpegclub.org/jpegtran/) on the path. jpegrescan is preferred.
@@ -12,6 +10,9 @@ To optimize JPEG images. Picopt needs either [jpegrescan](https://github.com/kud
 To optimize lossless images like PNG, PNM, GIF, TIFF and BMP, picopt requires either [optipng](http://optipng.sourceforge.net/) or [pngout](http://advsys.net/ken/utils.htm) be on the path. optipng provides the most advantage, but best results are acheived by using both utilities.
 
 Animated GIFs are optimized with [gifsicle](http://www.lcdf.org/gifsicle/) if it is available.
+
+Picopt uncompresses, optimizes and rezips [comic book archive files](https://en.wikipedia.org/wiki/Comic_book_archive). Be aware that CBR rar archives will be rezipped into CBZs instead of CBR.
+
 
 Installation
 ------------
@@ -38,6 +39,37 @@ Installation
     pip install .
 
     picopt.py -h
+
+Usage
+-----
+Optimize files:
+
+    picopt.py *.jpg
+
+Optimize files and recurse directories:
+
+    picotpy.py -r *
+
+Optimize files and recurse directories AND optimize comic book archives:
+
+    picopt.py -rc *
+
+Optimize files, but not lossless files:
+
+    picopt.py -op *
+
+Optimize files, but not jpegs:
+
+    picopt.py -jt *
+
+Optimize files, but not animated gifs:
+
+    picopt.py -g *
+
+Just list files picopt.py would try to optimize:
+
+    picopt.py -l *
+
 
 Alternatives
 ------------
