@@ -2,7 +2,8 @@ picopt
 ======
 
 A multi format recursive image optimizer that uses external tools.
-Picopt also uncompresses, optimizes and rezips [comic book archive files](https://en.wikipedia.org/wiki/Comic_book_archive).
+
+Picopt uncompresses, optimizes and rezips [comic book archive files](https://en.wikipedia.org/wiki/Comic_book_archive). Be aware that CBR rar archives will be rezipped into CBZs instead of CBR.
 
 Picopt depends on Python [PIL](http://www.pythonware.com/products/pil/) to identify files and [rarfile](https://pypi.python.org/pypi/rarfile) to open CBRs.
 
@@ -39,6 +40,6 @@ Installation
     picopt.py -h
 
 Alternatives
-============
+------------
 
-[imageoptim](https://code.google.com/p/imageoptim/) is an OS X GUI optimizer. It integrates the various optimization programs so you don't have to install them separately. It does not handle animated gifs or comic book archives. Its drag'n'drop UI is pretty nice. It also has AdvPNG support which I've disabled in picopt because I've never seen it provide any advantage.
+[imageoptim](https://code.google.com/p/imageoptim/) is an OS X GUI optimizer. It integrates the various optimization programs so you don't have to install them separately. It does not handle animated gifs or comic book archives. Its drag'n'drop UI is pretty nice. It also has AdvPNG support which I've disabled in picopt because I've never seen it provide any advantage. It has no command line UI but there is an [open feature request](https://code.google.com/p/imageoptim/issues/detail?can=2&start=0&num=100&q=&colspec=ID%20Type%20Status%20Priority%20Milestone%20Owner%20Summary%20Stars&groupby=&sort=&id=39).
