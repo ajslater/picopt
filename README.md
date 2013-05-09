@@ -7,7 +7,7 @@ Picopt depends on Python [PIL](http://www.pythonware.com/products/pil/) to ident
 
 To optimize JPEG images. Picopt needs either [jpegrescan](https://github.com/kud/jpegrescan) or [jpegtran](http://jpegclub.org/jpegtran/) on the path. jpegrescan is preferred.
 
-To optimize lossless images like PNG, PNM, GIF, TIFF and BMP, picopt requires either [optipng](http://optipng.sourceforge.net/) or [pngout](http://advsys.net/ken/utils.htm) be on the path. optipng provides the most advantage, but best results are acheived by using both utilities.
+To optimize lossless images like PNG, PNM, GIF, TIFF and BMP, picopt requires either [optipng](http://optipng.sourceforge.net/), [advpng](http://advancemame.sourceforge.net/doc-advpng.html) or [pngout](http://advsys.net/ken/utils.htm) be on the path. optipng provides the most advantage, but best results are acheived by using both utilities. advpng support is disabled by default and must be explicitly enabled on the command line.
 
 Animated GIFs are optimized with [gifsicle](http://www.lcdf.org/gifsicle/) if it is available.
 

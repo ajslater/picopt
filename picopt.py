@@ -5,7 +5,7 @@ Runs pictures through image specific external optimizers
 from __future__ import print_function
 from __future__ import division
 
-__version__ = '0.9.5'
+from version import __version__
 
 import sys
 import os
@@ -31,7 +31,7 @@ JPEGTRAN_PROG_ARGS = ['jpegtran', '-copy', 'all', '-optimize',
                       '-progressive', '-outfile']
 JPEGRESCAN_ARGS = ['jpegrescan']
 OPTIPNG_ARGS = ['optipng', '-o6', '-fix', '-preserve', '-force', '-quiet']
-#ADVPNG_ARGS = ['advpng', '-z', '-4', '-f']
+ADVPNG_ARGS = ['advpng', '-z', '-4', '-f']
 PNGOUT_ARGS = ['pngout', '-q', '-force', '-y']
 GIFSICLE_ARGS = ['gifsicle', '--optimize=3', '--batch']
 LOSSLESS_FORMATS = set(('PNG', 'PNM', 'GIF', 'TIFF', 'BMP'))
@@ -42,14 +42,14 @@ COMIC_EXTS = set((CBR_EXT, CBZ_EXT))
 CBZ_FORMAT = 'CBZ'
 CBR_FORMAT = 'CBR'
 COMIC_FORMATS = set((CBZ_FORMAT, CBR_FORMAT))
-SEQUENCED_TEMPLATE= '%s SEQUENCED'
+SEQUENCED_TEMPLATE = '%s SEQUENCED'
 ANIMATED_GIF_FORMATS = set([SEQUENCED_TEMPLATE % 'GIF'])
 OPTIMIZABLE_FORMATS = LOSSLESS_FORMATS | JPEG_FORMATS | COMIC_FORMATS | \
     ANIMATED_GIF_FORMATS
 FORMAT_DELIMETER = ','
 DEFAULT_FORMATS = 'ALL'
-PROGRAMS = ('optipng', 'pngout', 'jpegrescan', 'jpegtran', 'gifsicle')
-            #'advpng',
+PROGRAMS = ('optipng', 'pngout', 'jpegrescan', 'jpegtran', 'gifsicle',
+            'advpng')
 if sys.version > '3':
     long = int
 
@@ -130,8 +130,7 @@ def program_reqs(options):
             and does_external_program_run(program_name, options)
         setattr(options, program_name, val)
 
-    do_lossless = options.optipng or options.pngout
-                  # or options.advpng
+    do_lossless = options.optipng or options.pngout or options.advpng
     do_lossy = options.jpegrescan or options.jpegtran
 
     do_comics = options.comics
@@ -164,9 +163,9 @@ def get_options_and_arguments():
     parser.add_option("-o", "--disable_optipng", action="store_false",
                       dest="optipng", default=1,
                       help="Do not optimize with optipng")
-#    parser.add_option("-a", "--disable_advpng", action="store_false",
-#                      dest="advpng", default=1,
-#                      help="Do not optimize with advpng")
+    parser.add_option("-a", "--enable_advpng", action="store_true",
+                      dest="advpng", default=0,
+                      help="Optimize with advpng (disabled by default)")
     parser.add_option("-p", "--disable_pngout", action="store_false",
                       dest="pngout", default=1,
                       help="Do not optimize with pngout")
@@ -277,10 +276,11 @@ def optipng(filename, new_filename):
     run_ext(args)
 
 
-#def advpng(filename, new_filename):
-#    """runs the EXTERNAL program advpng on the file"""
-#    args = ADVPNG_ARGS + [new_filename]
-#    run_ext(args)
+def advpng(filename, new_filename):
+    """runs the EXTERNAL program advpng on the file"""
+    args = ADVPNG_ARGS + [new_filename]
+    run_ext(args)
+
 
 def gifsicle(filename, new_filename):
     """runs the EXTERNAL program gifsicle"""
@@ -408,9 +408,9 @@ def lossless(filename, options):
         options.optipng, bytes_diff['in'], report_list, final_filename,
         options, optipng)
 
-#    bytes_in, report_list, final_filename = image_pipeline(
-#        options.advpng, bytes_in, report_list, final_filename, options,
-#        advpng)
+    bytes_in, report_list, final_filename = image_pipeline(
+        options.advpng, bytes_diff['in'], report_list, final_filename,
+        options, advpng)
 
     bytes_diff, report_list, final_filename = image_pipeline(
         options.pngout, bytes_diff['in'], report_list, final_filename,
