@@ -5,8 +5,6 @@ Runs pictures through image specific external optimizers
 from __future__ import print_function
 from __future__ import division
 
-from version import __version__
-
 import sys
 import os
 import optparse
@@ -20,6 +18,8 @@ import traceback
 import Image
 import ImageFile
 import rarfile
+
+__version__ = '0.9.7'
 
 REMOVE_EXT = '.picopt-remove'
 NEW_EXT = '.picopt-optimized.png'
