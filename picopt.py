@@ -45,7 +45,7 @@ CBZ_FORMAT = 'CBZ'
 CBR_FORMAT = 'CBR'
 COMIC_FORMATS = set((CBZ_FORMAT, CBR_FORMAT))
 SEQUENCED_TEMPLATE = '%s SEQUENCED'
-ANIMATED_GIF_FORMATS = set([SEQUENCED_TEMPLATE % 'GIF'])
+GIF_FORMATS = set([SEQUENCED_TEMPLATE % 'GIF', 'GIF'])
 FORMAT_DELIMETER = ','
 DEFAULT_FORMATS = 'ALL'
 PROGRAMS = ('optipng', 'pngout', 'jpegrescan', 'jpegtran', 'gifsicle',
@@ -222,7 +222,7 @@ def get_options_and_arguments():
 
     if options.formats == DEFAULT_FORMATS:
         options.formats = options.lossless_formats | JPEG_FORMATS | \
-                          COMIC_FORMATS | ANIMATED_GIF_FORMATS
+                          COMIC_FORMATS | GIF_FORMATS
     else:
         options.formats = options.formats.split(FORMAT_DELIMETER)
     arguments.sort()
@@ -395,7 +395,7 @@ def image_pipeline(program_flag, bytes_in, report_list, filename, options,
     return bytes_diff, report_list, final_filename
 
 
-def animated_gif(filename, options):
+def optimize_gif(filename, options):
     """run EXTERNAL programs to optimize animated gifs"""
     if options.gifsicle:
         bytes_diff, rep, final_filename = optimize_image_external(
@@ -468,9 +468,9 @@ def optimize_image(arg):
         elif is_format_selected(image_format, JPEG_FORMATS, options,
                                 options.jpegrescan or options.jpegtran):
             bytes_diff, report_list, final_filename = optimize_jpeg(filename, options)
-        elif is_format_selected(image_format, ANIMATED_GIF_FORMATS, options,
+        elif is_format_selected(image_format, GIF_FORMATS, options,
                                 options.gifsicle):
-            bytes_diff, report_list, final_filename = animated_gif(
+            bytes_diff, report_list, final_filename = optimize_gif(
                 filename, options)
 
         else:
