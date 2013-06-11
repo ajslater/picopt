@@ -34,8 +34,9 @@ OPTIPNG_ARGS = ['optipng', '-o6', '-fix', '-preserve', '-force', '-quiet']
 ADVPNG_ARGS = ['advpng', '-z', '-4', '-f']
 PNGOUT_ARGS = ['pngout', '-q', '-force', '-y']
 GIFSICLE_ARGS = ['gifsicle', '--optimize=3', '--batch']
-LOSSLESS_FORMATS = set(('PNG', 'PNM', 'GIF', 'TIFF', 'BMP'))
 PNG_FORMATS = set(['PNG'])
+GIF_FORMATS = set(['GIF'])
+LOSSLESS_FORMATS = set(('PNM', 'TIFF', 'BMP')) | PNG_FORMATS | GIF_FORMATS
 JPEG_FORMATS = set(['JPEG'])
 CBR_EXT = '.cbr'
 CBZ_EXT = '.cbz'
@@ -129,12 +130,12 @@ def program_reqs(options):
             and does_external_program_run(program_name, options)
         setattr(options, program_name, val)
 
-    do_lossless = options.optipng or options.pngout or options.advpng
+    do_png = options.optipng or options.pngout or options.advpng
     do_jpeg = options.jpegrescan or options.jpegtran
 
     do_comics = options.comics
 
-    if not do_lossless and not do_jpeg and not do_comics:
+    if not do_png and not do_jpeg and not do_comics:
         print("All optimizers are not available or disabled.")
         exit(1)
 
@@ -408,8 +409,8 @@ def animated_gif(filename, options):
     return bytes_diff, report_list, final_filename
 
 
-def lossless(filename, options):
-    """run EXTERNAL programs to optimize lossless formats"""
+def optimize_png(filename, options):
+    """run EXTERNAL programs to optimize lossless formats to PNGs"""
     bytes_diff = {'in': 0, 'out': 0}
     report_list = []
     final_filename = filename
@@ -427,7 +428,7 @@ def lossless(filename, options):
         options, pngout)
 
     if not bytes_diff['in']:
-        report_list += ['Skipping lossless file: %s' % final_filename]
+        report_list += ['Skipping PNG file: %s' % final_filename]
 
     return bytes_diff, report_list, final_filename
 
@@ -445,7 +446,7 @@ def optimize_jpeg(filename, options):
         bytes_diff, rep, final_filename = optimize_image_external(
             final_filename, options, jpegtranopti)
     else:
-        rep = ['Skipping jpeg file: %s' % filename]
+        rep = ['Skipping JPEG file: %s' % filename]
         bytes_diff = {'in': 0, 'out': 0}
 
     report_list = [rep]
@@ -462,7 +463,7 @@ def optimize_image(arg):
 
         if is_format_selected(image_format, options.lossless_formats,
                               options, options.optipng or options.pngout):
-            bytes_diff, report_list, final_filename = lossless(
+            bytes_diff, report_list, final_filename = optimize_png(
                 filename, options)
         elif is_format_selected(image_format, JPEG_FORMATS, options,
                                 options.jpegrescan or options.jpegtran):
