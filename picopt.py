@@ -455,7 +455,8 @@ def optimize_image(arg):
                 filename, options)
         elif is_format_selected(image_format, JPEG_FORMATS, options,
                                 options.jpegrescan or options.jpegtran):
-            bytes_diff, report_list, final_filename = optimize_jpeg(filename, options)
+            bytes_diff, report_list, final_filename = optimize_jpeg(
+                filename, options)
         elif is_format_selected(image_format, GIF_FORMATS, options,
                                 options.gifsicle):
             # this captures still GIFs too if not caught above
