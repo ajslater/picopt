@@ -40,8 +40,7 @@ GIFSICLE_ARGS = ['gifsicle', '--optimize=3', '--batch']
 PNG_FORMATS = set(['PNG'])
 SEQUENCED_TEMPLATE = '%s SEQUENCED'
 GIF_FORMATS = set([SEQUENCED_TEMPLATE % 'GIF', 'GIF'])
-PNG_CONVERTABLE_FORMATS = set(('PNM', 'TIFF', 'BMP')) | PNG_FORMATS | \
-                          GIF_FORMATS
+PNG_CONVERTABLE_FORMATS = set(('PNM', 'TIFF', 'BMP', 'GIF')) | PNG_FORMATS
 JPEG_FORMATS = set(['JPEG'])
 CBR_EXT = '.cbr'
 CBZ_EXT = '.cbz'
