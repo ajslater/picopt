@@ -130,11 +130,11 @@ def program_reqs(options):
         setattr(options, program_name, val)
 
     do_lossless = options.optipng or options.pngout or options.advpng
-    do_lossy = options.jpegrescan or options.jpegtran
+    do_jpeg = options.jpegrescan or options.jpegtran
 
     do_comics = options.comics
 
-    if not do_lossless and not do_lossy and not do_comics:
+    if not do_lossless and not do_jpeg and not do_comics:
         print("All optimizers are not available or disabled.")
         exit(1)
 
@@ -414,7 +414,6 @@ def lossless(filename, options):
     report_list = []
     final_filename = filename
 
-
     bytes_diff, report_list, final_filename = image_pipeline(
         options.optipng, bytes_diff['in'], report_list, final_filename,
         options, optipng)
@@ -433,8 +432,8 @@ def lossless(filename, options):
     return bytes_diff, report_list, final_filename
 
 
-def lossy(filename, options):
-    """run EXTERNAL programs to optimize lossy formats"""
+def optimize_jpeg(filename, options):
+    """run EXTERNAL programs to optimize jpeg formats"""
     final_filename = filename
     if options.jpegrescan:
         bytes_diff, rep, final_filename = optimize_image_external(
@@ -461,14 +460,13 @@ def optimize_image(arg):
 
         #print(filename, image_format, "starting...")
 
-
         if is_format_selected(image_format, options.lossless_formats,
                               options, options.optipng or options.pngout):
             bytes_diff, report_list, final_filename = lossless(
                 filename, options)
         elif is_format_selected(image_format, JPEG_FORMATS, options,
                                 options.jpegrescan or options.jpegtran):
-            bytes_diff, report_list, final_filename = lossy(filename, options)
+            bytes_diff, report_list, final_filename = optimize_jpeg(filename, options)
         elif is_format_selected(image_format, ANIMATED_GIF_FORMATS, options,
                                 options.gifsicle):
             bytes_diff, report_list, final_filename = animated_gif(
