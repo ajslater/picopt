@@ -383,22 +383,6 @@ def optimize_image_external(filename, options, func):
     return (bytes_diff, report, final_filename)
 
 
-def image_pipeline(program_flag, bytes_in, report_list, filename, options,
-                   func):
-    if not program_flag:
-        bytes_diff = { 'in' : bytes_in, 'out' : bytes_in }
-        return bytes_diff, report_list, filename
-
-    bytes_diff, rep, final_filename = optimize_image_external(
-        filename, options, func)
-    if rep:
-        report_list += [rep]
-    if bytes_in > 0:
-        bytes_diff['in'] = bytes_in
-
-    return bytes_diff, report_list, final_filename
-
-
 def optimize_gif(filename, options):
     """run EXTERNAL programs to optimize animated gifs"""
     if options.gifsicle:
@@ -415,24 +399,25 @@ def optimize_gif(filename, options):
 
 def optimize_png(filename, options):
     """run EXTERNAL programs to optimize lossless formats to PNGs"""
-    bytes_diff = {'in': 0, 'out': 0}
+    bytes_diff = None
     report_list = []
     final_filename = filename
 
-    bytes_diff, report_list, final_filename = image_pipeline(
-        options.optipng, bytes_diff['in'], report_list, final_filename,
-        options, optipng)
+    filesize_in = os.stat(filename).st_size
 
-    bytes_diff, report_list, final_filename = image_pipeline(
-        options.advpng, bytes_diff['in'], report_list, final_filename,
-        options, advpng)
+    for ext_prog in ('optipng', 'advpng', 'pngout'):
+        if not getattr(options, ext_prog) :
+            continue
+        bytes_diff, rep, final_filename = optimize_image_external(
+            final_filename, options, globals()[ext_prog])
+        if rep:
+            report_list += [rep]
 
-    bytes_diff, report_list, final_filename = image_pipeline(
-        options.pngout, bytes_diff['in'], report_list, final_filename,
-        options, pngout)
-
-    if not bytes_diff['in']:
+    if bytes_diff is not None:
+        bytes_diff['in'] = filesize_in
+    else:
         report_list += ['Skipping PNG file: %s' % final_filename]
+        bytes_diff = {'in': 0, 'out': 0}
 
     return bytes_diff, report_list, final_filename
 
