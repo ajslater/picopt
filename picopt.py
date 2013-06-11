@@ -215,7 +215,7 @@ def get_options_and_arguments():
     program_reqs(options)
 
     if options.convert_types:
-        options.lossless_formats_ = LOSSLESS_FORMATS
+        options.lossless_formats = LOSSLESS_FORMATS
     else:
         options.lossless_formats = PNG_FORMATS
 
@@ -381,7 +381,8 @@ def optimize_image_external(filename, options, func):
 def image_pipeline(program_flag, bytes_in, report_list, filename, options,
                    func):
     if not program_flag:
-        return bytes_in, report_list, filename
+        bytes_diff = { 'in' : bytes_in, 'out' : bytes_in }
+        return bytes_diff, report_list, filename
 
     bytes_diff, rep, final_filename = optimize_image_external(
         filename, options, func)
@@ -418,7 +419,7 @@ def lossless(filename, options):
         options.optipng, bytes_diff['in'], report_list, final_filename,
         options, optipng)
 
-    bytes_in, report_list, final_filename = image_pipeline(
+    bytes_diff, report_list, final_filename = image_pipeline(
         options.advpng, bytes_diff['in'], report_list, final_filename,
         options, advpng)
 
