@@ -19,7 +19,7 @@ import Image
 import ImageFile
 import rarfile
 
-__version__ = '0.9.8'
+__version__ = '0.9.9'
 
 # Extensions
 REMOVE_EXT = '.picopt-remove'
