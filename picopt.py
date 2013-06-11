@@ -21,10 +21,12 @@ import rarfile
 
 __version__ = '0.9.8'
 
+# Extensions
 REMOVE_EXT = '.picopt-remove'
 NEW_EXT = '.picopt-optimized.png'
 ARCHIVE_TMP_DIR_TEMPLATE = 'PICOPT_TMP_%s'
 NEW_ARCHIVE_SUFFIX = 'picopt-optimized.cbz'
+# Program args
 JPEGTRAN_OPTI_ARGS = ['jpegtran', '-copy', 'all', '-optimize',
                       '-outfile']
 JPEGTRAN_PROG_ARGS = ['jpegtran', '-copy', 'all', '-optimize',
@@ -34,9 +36,12 @@ OPTIPNG_ARGS = ['optipng', '-o6', '-fix', '-preserve', '-force', '-quiet']
 ADVPNG_ARGS = ['advpng', '-z', '-4', '-f']
 PNGOUT_ARGS = ['pngout', '-q', '-force', '-y']
 GIFSICLE_ARGS = ['gifsicle', '--optimize=3', '--batch']
+# Formats
 PNG_FORMATS = set(['PNG'])
-GIF_FORMATS = set(['GIF'])
-LOSSLESS_FORMATS = set(('PNM', 'TIFF', 'BMP')) | PNG_FORMATS | GIF_FORMATS
+SEQUENCED_TEMPLATE = '%s SEQUENCED'
+GIF_FORMATS = set([SEQUENCED_TEMPLATE % 'GIF', 'GIF'])
+PNG_CONVERTABLE_FORMATS = set(('PNM', 'TIFF', 'BMP')) | PNG_FORMATS | \
+                          GIF_FORMATS
 JPEG_FORMATS = set(['JPEG'])
 CBR_EXT = '.cbr'
 CBZ_EXT = '.cbz'
@@ -44,10 +49,9 @@ COMIC_EXTS = set((CBR_EXT, CBZ_EXT))
 CBZ_FORMAT = 'CBZ'
 CBR_FORMAT = 'CBR'
 COMIC_FORMATS = set((CBZ_FORMAT, CBR_FORMAT))
-SEQUENCED_TEMPLATE = '%s SEQUENCED'
-GIF_FORMATS = set([SEQUENCED_TEMPLATE % 'GIF', 'GIF'])
 FORMAT_DELIMETER = ','
 DEFAULT_FORMATS = 'ALL'
+# Programs
 PROGRAMS = ('optipng', 'pngout', 'jpegrescan', 'jpegtran', 'gifsicle',
             'advpng')
 if sys.version > '3':
@@ -216,12 +220,12 @@ def get_options_and_arguments():
     program_reqs(options)
 
     if options.convert_types:
-        options.lossless_formats = LOSSLESS_FORMATS
+        options.to_png_formats = PNG_CONVERTABLE_FORMATS
     else:
-        options.lossless_formats = PNG_FORMATS
+        options.to_png_formats = PNG_FORMATS
 
     if options.formats == DEFAULT_FORMATS:
-        options.formats = options.lossless_formats | JPEG_FORMATS | \
+        options.formats = options.to_png_formats | JPEG_FORMATS | \
                           COMIC_FORMATS | GIF_FORMATS
     else:
         options.formats = options.formats.split(FORMAT_DELIMETER)
@@ -461,7 +465,7 @@ def optimize_image(arg):
 
         #print(filename, image_format, "starting...")
 
-        if is_format_selected(image_format, options.lossless_formats,
+        if is_format_selected(image_format, options.to_png_formats,
                               options, options.optipng or options.pngout):
             bytes_diff, report_list, final_filename = optimize_png(
                 filename, options)
@@ -470,6 +474,7 @@ def optimize_image(arg):
             bytes_diff, report_list, final_filename = optimize_jpeg(filename, options)
         elif is_format_selected(image_format, GIF_FORMATS, options,
                                 options.gifsicle):
+            # this captures still GIFs too if not caught above
             bytes_diff, report_list, final_filename = optimize_gif(
                 filename, options)
 
