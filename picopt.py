@@ -19,7 +19,7 @@ import Image
 import ImageFile
 import rarfile
 
-__version__ = '0.9.7'
+__version__ = '0.9.8'
 
 REMOVE_EXT = '.picopt-remove'
 NEW_EXT = '.picopt-optimized.png'
@@ -35,6 +35,7 @@ ADVPNG_ARGS = ['advpng', '-z', '-4', '-f']
 PNGOUT_ARGS = ['pngout', '-q', '-force', '-y']
 GIFSICLE_ARGS = ['gifsicle', '--optimize=3', '--batch']
 LOSSLESS_FORMATS = set(('PNG', 'PNM', 'GIF', 'TIFF', 'BMP'))
+PNG_FORMATS = set(['PNG'])
 JPEG_FORMATS = set(['JPEG'])
 CBR_EXT = '.cbr'
 CBZ_EXT = '.cbz'
@@ -44,8 +45,6 @@ CBR_FORMAT = 'CBR'
 COMIC_FORMATS = set((CBZ_FORMAT, CBR_FORMAT))
 SEQUENCED_TEMPLATE = '%s SEQUENCED'
 ANIMATED_GIF_FORMATS = set([SEQUENCED_TEMPLATE % 'GIF'])
-OPTIMIZABLE_FORMATS = LOSSLESS_FORMATS | JPEG_FORMATS | COMIC_FORMATS | \
-    ANIMATED_GIF_FORMATS
 FORMAT_DELIMETER = ','
 DEFAULT_FORMATS = 'ALL'
 PROGRAMS = ('optipng', 'pngout', 'jpegrescan', 'jpegtran', 'gifsicle',
@@ -195,6 +194,10 @@ def get_options_and_arguments():
     parser.add_option("-g", "--disable_gifsicle", action="store_false",
                       dest="gifsicle", default=1,
                       help="disable optimizing animated GIFs")
+    parser.add_option("-C", "--disable_convert_type", action="store_false",
+                      dest="convert_types", default=1,
+                      help="Do not convert other lossless formats like "
+                           "GIFs and TIFFs to PNGs when optimizing")
     parser.add_option("-v", "--version", action="store_true",
                       dest="version", default=0,
                       help="display the version number")
@@ -211,8 +214,14 @@ def get_options_and_arguments():
 
     program_reqs(options)
 
+    if options.convert_types:
+        options.lossless_formats_ = LOSSLESS_FORMATS
+    else:
+        options.lossless_formats = PNG_FORMATS
+
     if options.formats == DEFAULT_FORMATS:
-        options.formats = OPTIMIZABLE_FORMATS
+        options.formats = options.lossless_formats | JPEG_FORMATS | \
+                          COMIC_FORMATS | ANIMATED_GIF_FORMATS
     else:
         options.formats = options.formats.split(FORMAT_DELIMETER)
     arguments.sort()
@@ -404,6 +413,7 @@ def lossless(filename, options):
     report_list = []
     final_filename = filename
 
+
     bytes_diff, report_list, final_filename = image_pipeline(
         options.optipng, bytes_diff['in'], report_list, final_filename,
         options, optipng)
@@ -450,8 +460,9 @@ def optimize_image(arg):
 
         #print(filename, image_format, "starting...")
 
-        if is_format_selected(image_format, LOSSLESS_FORMATS, options,
-                              options.optipng or options.pngout):
+
+        if is_format_selected(image_format, options.lossless_formats,
+                              options, options.optipng or options.pngout):
             bytes_diff, report_list, final_filename = lossless(
                 filename, options)
         elif is_format_selected(image_format, JPEG_FORMATS, options,
@@ -549,7 +560,7 @@ def detect_file(filename, options):
         return
 
     if options.verbose and not options.list_only:
-        print(filename, image_format, 'is not a supported image or '
+        print(filename, image_format, 'is not a enabled image or '
                                       'comic archive type.')
 
 
