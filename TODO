@@ -1,14 +1,6 @@
-Tests would be great:
+Test each option.
+More formal tests.
 
-each image type alone, gifs, tiffs, bmps, etc.
-each external program alone
-
-cbr with mixed content
-cbz with mixed content
-
-cbr/ with cbr recursive
-
-trees with all the above
-
-already optimized pngs, jpegs, cbzs
-
+only optimize if modified after time option.
+optionally leave a .picopt_done file in recursive mode
+    gets read for a only optimize if modified after time.
