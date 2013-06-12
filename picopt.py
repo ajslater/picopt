@@ -202,6 +202,9 @@ def get_options_and_arguments():
                       dest="convert_types", default=1,
                       help="Do not convert other lossless formats like "
                            "GIFs and TIFFs to PNGs when optimizing")
+    parser.add_option("-S", "--disable_follow_symlinks", action="store_false",
+                      dest="follow_symlinks", default=1,
+                      help="disable following symlinks for files and directories")
     parser.add_option("-v", "--version", action="store_true",
                       dest="version", default=0,
                       help="display the version number")
@@ -247,29 +250,6 @@ def new_percent_saved(size_in, size_out):
     size_saved_kb = humanize_bytes(size_in - size_out)
     result = '%.*f%s (%s)' % (2, percent_saved, '%', size_saved_kb)
     return result
-
-
-#def report_percent_saved(size_in, size_out):
-#    """spits out how much space the optimazation saved"""
-#    size_in_kb = humanize_bytes(size_in)
-#    size_out_kb = humanize_bytes(size_out)
-#    result = '\t' + size_in_kb + '-->' + size_out_kb + '. '
-#
-#    percent_saved = (1 - (size_out / size_in)) * 100
-#
-#    if percent_saved == 0:
-#        result += 'Files are the same size. '
-#    else:
-#        if percent_saved > 0:
-#            verb = 'Shrunk'
-#        else:
-#            verb = 'Grew'
-#
-#        bytes_saved = humanize_bytes(abs(size_in - size_out))
-#        result += verb + ' by %.*f%s' % (2, abs(percent_saved), '%')
-#        result += ' or %s. ' % bytes_saved
-#
-#    return result
 
 
 def run_ext(args):
@@ -641,7 +621,9 @@ def optimize_files(cwd, filter_list, options, multiproc):
 
     for filename in filter_list:
         filename_full = os.path.normpath(cwd + os.sep + filename)
-        if os.path.isdir(filename_full):
+        if not options.follow_symlinks and os.path.islink(filename_full):
+            continue
+        elif os.path.isdir(filename_full):
             if options.recurse:
                 next_dir_list = os.listdir(filename_full)
                 next_dir_list.sort()
