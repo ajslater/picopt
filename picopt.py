@@ -14,6 +14,8 @@ import multiprocessing
 import copy
 import zipfile
 import traceback
+import dateutil.parser
+import datetime
 
 import Image
 import ImageFile
@@ -205,6 +207,9 @@ def get_options_and_arguments():
     parser.add_option("-S", "--disable_follow_symlinks", action="store_false",
                       dest="follow_symlinks", default=1,
                       help="disable following symlinks for files and directories")
+    parser.add_option("-D", "--optimize_after", action="store",
+                      dest="optimize_after", default=None,
+                      help="only optimize files after the specified timestamp")
     parser.add_option("-v", "--version", action="store_true",
                       dest="version", default=0,
                       help="display the version number")
@@ -231,6 +236,16 @@ def get_options_and_arguments():
                           COMIC_FORMATS | GIF_FORMATS
     else:
         options.formats = options.formats.split(FORMAT_DELIMETER)
+
+    if options.optimize_after is not None:
+        try:
+            options.optimize_after = dateutil.parser.parse(
+                options.optimize_after)
+        except Exception as ex:
+            print(ex)
+            print('Could not parse date to optimize after.')
+            exit(1)
+
     arguments.sort()
 
     return (options, arguments)
@@ -618,6 +633,7 @@ def comic_archive_uncompress(filename, image_format, options):
 def optimize_files(cwd, filter_list, options, multiproc):
     """sorts through a list of files, decends directories and
        calls the optimizer on the extant files"""
+    #TODO: this function is too big
 
     for filename in filter_list:
         filename_full = os.path.normpath(cwd + os.sep + filename)
@@ -630,6 +646,11 @@ def optimize_files(cwd, filter_list, options, multiproc):
                 optimize_files(filename_full, next_dir_list, options,
                                multiproc)
         elif os.path.exists(filename_full):
+            if options.optimize_after is not None:
+                mtime = os.stat(filename_full).st_mtime
+                modified_date = datetime.datetime.fromtimestamp(mtime)
+                if modified_date <= options.optimize_after:
+                    continue
             image_format = detect_file(filename_full, options)
             if image_format:
                 if options.list_only:

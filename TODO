@@ -1,6 +1,5 @@
 Test each option.
 More formal tests.
 
-only optimize if modified after time option.
 optionally leave a .picopt_done file in recursive mode
     gets read for a only optimize if modified after time.
