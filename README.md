@@ -70,6 +70,10 @@ Just list files picopt.py would try to optimize:
 
     picopt.py -l *
 
+Optimize everything in my iPhoto library, but only after the last time i did this, skipping symlinks to avoid massive amounts of duplicate work. Also don't convert lossless files to PNGs because that would confuse iPhoto:
+
+    picopt.py -rSC -D '2013 June 1 14:00' 'Pictures/iPhoto Library'
+
 
 Alternatives
 ------------
