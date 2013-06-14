@@ -1,2 +1,3 @@
 PIL
 rarfile
+python-dateutil
