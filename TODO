@@ -3,3 +3,6 @@ More formal tests.
 
 optionally leave a .picopt_done file in recursive mode
     gets read for a only optimize if modified after time.
+
+jpegoptim?
+better packaging
