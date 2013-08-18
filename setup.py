@@ -1,6 +1,6 @@
 from distutils.core import setup
 from ez_setup import use_setuptools
-from version import __version__
+from picopt import __version__
 
 use_setuptools()
 
@@ -15,7 +15,7 @@ setup(
     author_email='aj@slater.net',
     url='http://github.com/ajslater/picopt/',
     py_modules=['picopt'],
-    requires=required,
+    install_requires=required,
     scripts=['picopt.py'],
     long_description=open('README.md').read(),
 )
