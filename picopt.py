@@ -655,15 +655,17 @@ def record_timestamp(pathname_full, options):
     """Record the timestamp of running in a dotfile"""
     if options.test or options.list_only or not options.record_timestamp:
         return
-
-    if not options.follow_symlinks and os.path.islink(pathname_full):
+    elif not options.follow_symlinks and os.path.islink(pathname_full):
         return
     elif not os.path.isdir(pathname_full):
         return
 
     record_filename_full = os.path.join(pathname_full, RECORD_FILENAME)
-    with open(record_filename_full, 'w'):
-        os.utime(record_filename_full, None)
+    try:
+        with open(record_filename_full, 'w'):
+            os.utime(record_filename_full, None)
+    except IOError as ex:
+        print("Could not set timestamp in %s" % pathname_full)
 
 
 def optimize_files(cwd, filter_list, options, multiproc):
@@ -673,7 +675,7 @@ def optimize_files(cwd, filter_list, options, multiproc):
     optimize_after = get_optimize_after(cwd, options)
 
     for filename in filter_list:
-        filename_full = os.path.normpath(cwd + os.sep + filename)
+        filename_full = os.path.normpath(os.path.join(cwd, filename))
         if not options.follow_symlinks and os.path.islink(filename_full):
             continue
         elif os.path.isdir(filename_full):
@@ -702,6 +704,8 @@ def optimize_files(cwd, filter_list, options, multiproc):
                 pass
         elif os.path.exists(filename_full):
             # Optimize file
+            if os.path.basename(filename_full) == RECORD_FILENAME:
+                continue
             if optimize_after is not None:
                 mtime = os.stat(filename_full).st_mtime
                 if mtime <= optimize_after:
