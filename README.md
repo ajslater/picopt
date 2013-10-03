@@ -70,12 +70,12 @@ Just list files picopt.py would try to optimize:
 
     picopt.py -l *
 
-Optimize everything in my iPhoto library, but only after the last time i did this, skipping symlinks to avoid massive amounts of duplicate work. Also don't convert lossless files to PNGs because that would confuse iPhoto:
+Optimize everything in my iPhoto library, but only after the last time i did this, skipping symlinks to avoid massive amounts of duplicate work. Don't convert lossless files to PNGs because that would confuse iPhoto. Also drop a timestamp file so I don't have to remeber the last time I did this:
 
-    picopt.py -rSC -D '2013 June 1 14:00' 'Pictures/iPhoto Library'
+    picopt.py -rSCT -D '2013 June 1 14:00' 'Pictures/iPhoto Library'
 
 
 Alternatives
 ------------
 
-[imageoptim](http://imageoptim.com/) is an OS X GUI optimizer. It integrates the various optimization programs so you don't have to install them separately. It does not handle comic book archives. Its drag'n'drop UI is pretty nice. It also has AdvPNG support which I've disabled in picopt because I've never seen it provide any advantage. It has no command line UI but there is an [open feature request](https://code.google.com/p/imageoptim/issues/detail?can=2&start=0&num=100&q=&colspec=ID%20Type%20Status%20Priority%20Milestone%20Owner%20Summary%20Stars&groupby=&sort=&id=39).
+[imageoptim](http://imageoptim.com/) is an OS X GUI optimizer. It integrates the various optimization programs so you don't have to install them separately. It does not handle comic book archives. Its drag'n'drop UI is pretty nice. It also has AdvPNG support which I've disabled in picopt because I've never seen it provide any advantage. Command line usage is possible with [an external program](https://code.google.com/p/imageoptim/issues/detail?can=2&start=0&num=100&q=&colspec=ID%20Type%20Status%20Priority%20Milestone%20Owner%20Summary%20Stars&groupby=&sort=&id=39).
