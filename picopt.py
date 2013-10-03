@@ -15,7 +15,6 @@ import copy
 import zipfile
 import traceback
 import dateutil.parser
-import datetime
 import time
 
 import Image
@@ -208,13 +207,16 @@ def get_options_and_arguments():
                            "GIFs and TIFFs to PNGs when optimizing")
     parser.add_option("-S", "--disable_follow_symlinks", action="store_false",
                       dest="follow_symlinks", default=1,
-                      help="disable following symlinks for files and directories")
+                      help="disable following symlinks for files and "
+                           "directories")
     parser.add_option("-D", "--optimize_after", action="store",
                       dest="optimize_after", default=None,
-                      help="only optimize files after the specified timestamp")
-    parser.add_option("-R", "--record_date", action="store_true",
-                      dest="record_date", default=0,
-                      help="Store the date of the optimization in a directory local dotfile.")
+                      help="only optimize files after the specified "
+                           "timestamp. Supercedes -T")
+    parser.add_option("-T", "--record_timestamp", action="store_true",
+                      dest="record_timestamp", default=0,
+                      help="Store the time of the optimization in a "
+                           "directory local dotfile.")
     parser.add_option("-v", "--version", action="store_true",
                       dest="version", default=0,
                       help="display the version number")
@@ -636,6 +638,8 @@ def comic_archive_uncompress(filename, image_format, options):
 
 
 def get_optimize_after(dirname_full, options):
+    """Get the date we might need to optimize after.
+       Either from a dotfile or a command line option"""
     if options.optimize_after is not None:
         return options.optimize_after
 
@@ -647,8 +651,9 @@ def get_optimize_after(dirname_full, options):
     return None
 
 
-def record_date(pathname_full, options):
-    if options.test or options.list_only or not options.record_date:
+def record_timestamp(pathname_full, options):
+    """Record the timestamp of running in a dotfile"""
+    if options.test or options.list_only or not options.record_timestamp:
         return
 
     if not options.follow_symlinks and os.path.islink(pathname_full):
@@ -657,7 +662,7 @@ def record_date(pathname_full, options):
         return
 
     record_filename_full = os.path.join(pathname_full, RECORD_FILENAME)
-    with open(record_filename_full, 'w') as record_file:
+    with open(record_filename_full, 'w'):
         os.utime(record_filename_full, None)
 
 
@@ -677,13 +682,12 @@ def optimize_files(cwd, filter_list, options, multiproc):
                 next_dir_list.sort()
                 optimize_files(filename_full, next_dir_list, options,
                                multiproc)
-                record_date(filename_full, options)
+                record_timestamp(filename_full, options)
             else:
                 pass
         elif os.path.exists(filename_full):
             if optimize_after is not None:
                 mtime = os.stat(filename_full).st_mtime
-                #modified_date = datetime.datetime.fromtimestamp(mtime)
                 if mtime <= optimize_after:
                     continue
             image_format = detect_file(filename_full, options)
