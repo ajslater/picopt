@@ -537,7 +537,7 @@ def get_image_format(filename, options):
                 image_format = CBR_FORMAT
         if image_format == 'ERROR' and options.verbose and \
                 not options.list_only:
-            print(filename, "doesn't look like an image or comic archive.")
+            #print(filename, "doesn't look like an image or comic archive.")
     return image_format
 
 
