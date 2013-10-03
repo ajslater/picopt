@@ -16,12 +16,13 @@ import zipfile
 import traceback
 import dateutil.parser
 import datetime
+import time
 
 import Image
 import ImageFile
 import rarfile
 
-__version__ = '0.9.11'
+__version__ = '0.10.0'
 
 # Extensions
 REMOVE_EXT = '.picopt-remove'
@@ -55,6 +56,7 @@ DEFAULT_FORMATS = 'ALL'
 # Programs
 PROGRAMS = ('optipng', 'pngout', 'jpegrescan', 'jpegtran', 'gifsicle',
             'advpng')
+RECORD_FILENAME = '.picopt_timestamp'
 if sys.version > '3':
     long = int
 
@@ -210,6 +212,9 @@ def get_options_and_arguments():
     parser.add_option("-D", "--optimize_after", action="store",
                       dest="optimize_after", default=None,
                       help="only optimize files after the specified timestamp")
+    parser.add_option("-R", "--record_date", action="store_true",
+                      dest="record_date", default=0,
+                      help="Store the date of the optimization in a directory local dotfile.")
     parser.add_option("-v", "--version", action="store_true",
                       dest="version", default=0,
                       help="display the version number")
@@ -239,8 +244,8 @@ def get_options_and_arguments():
 
     if options.optimize_after is not None:
         try:
-            options.optimize_after = dateutil.parser.parse(
-                options.optimize_after)
+            after_dt = dateutil.parser.parse(options.optimize_after)
+            options.optimize_after = time.mktime(after_dt.timetuple())
         except Exception as ex:
             print(ex)
             print('Could not parse date to optimize after.')
@@ -630,10 +635,37 @@ def comic_archive_uncompress(filename, image_format, options):
     return os.path.basename(tmp_dir)
 
 
+def get_optimize_after(dirname_full, options):
+    if options.optimize_after is not None:
+        return options.optimize_after
+
+    record_filename = os.path.join(dirname_full, RECORD_FILENAME)
+
+    if os.path.exists(record_filename):
+        return os.stat(record_filename).st_mtime
+
+    return None
+
+
+def record_date(pathname_full, options):
+    if options.test or options.list_only or not options.record_date:
+        return
+
+    if not options.follow_symlinks and os.path.islink(pathname_full):
+        return
+    elif not os.path.isdir(pathname_full):
+        return
+
+    record_filename_full = os.path.join(pathname_full, RECORD_FILENAME)
+    with open(record_filename_full, 'w') as record_file:
+        os.utime(record_filename_full, None)
+
+
 def optimize_files(cwd, filter_list, options, multiproc):
     """sorts through a list of files, decends directories and
        calls the optimizer on the extant files"""
     #TODO: this function is too big
+    optimize_after = get_optimize_after(cwd, options)
 
     for filename in filter_list:
         filename_full = os.path.normpath(cwd + os.sep + filename)
@@ -645,11 +677,14 @@ def optimize_files(cwd, filter_list, options, multiproc):
                 next_dir_list.sort()
                 optimize_files(filename_full, next_dir_list, options,
                                multiproc)
+                record_date(filename_full, options)
+            else:
+                pass
         elif os.path.exists(filename_full):
-            if options.optimize_after is not None:
+            if optimize_after is not None:
                 mtime = os.stat(filename_full).st_mtime
-                modified_date = datetime.datetime.fromtimestamp(mtime)
-                if modified_date <= options.optimize_after:
+                #modified_date = datetime.datetime.fromtimestamp(mtime)
+                if mtime <= optimize_after:
                     continue
             image_format = detect_file(filename_full, options)
             if image_format:
@@ -724,6 +759,7 @@ def report_totals(bytes_in, bytes_out, options):
         print(msg)
         if options.test:
             print("Test run did not change any files.")
+
     else:
         print("Didn't optimize any files.")
 
