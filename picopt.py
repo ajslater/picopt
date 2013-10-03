@@ -535,9 +535,10 @@ def get_image_format(filename, options):
                 image_format = CBZ_FORMAT
             elif rarfile.is_rarfile(filename):
                 image_format = CBR_FORMAT
-        if image_format == 'ERROR' and options.verbose and \
-                not options.list_only:
-            #print(filename, "doesn't look like an image or comic archive.")
+        #TODO levels of verbosity
+#        if image_format == 'ERROR' and options.verbose and \
+#                not options.list_only:
+#            print(filename, "doesn't look like an image or comic archive.")
     return image_format
 
 
@@ -637,11 +638,14 @@ def comic_archive_uncompress(filename, image_format, options):
     return os.path.basename(tmp_dir)
 
 
-def get_timestamp(dirname_full):
+def get_timestamp(dirname_full, remove):
     record_filename = os.path.join(dirname_full, RECORD_FILENAME)
 
     if os.path.exists(record_filename):
-        return os.stat(record_filename).st_mtime
+        mtime = os.stat(record_filename).st_mtime
+        if remove:
+            os.remove(record_filename)
+        return mtime
 
     return None
 
@@ -649,7 +653,7 @@ def get_timestamp(dirname_full):
 def get_parent_timestamp(full_pathname, mtime):
     parent_pathname = os.path.dirname(full_pathname)
 
-    mtime = max(get_timestamp(parent_pathname), mtime)
+    mtime = max(get_timestamp(parent_pathname, False), mtime)
 
     if parent_pathname == os.path.dirname(parent_pathname):
         return mtime
@@ -687,11 +691,13 @@ def optimize_files(cwd, filter_list, options, multiproc, optimize_after,
         if not looked_up:
             optimize_after = get_parent_timestamp(cwd, optimize_after)
             looked_up = True
-        optimize_after = max(get_timestamp(cwd), optimize_after)
+        optimize_after = max(get_timestamp(cwd, True), optimize_after)
 
     for filename in filter_list:
         filename_full = os.path.normpath(os.path.join(cwd, filename))
         if not options.follow_symlinks and os.path.islink(filename_full):
+           continue
+        elif os.path.basename(filename_full) == RECORD_FILENAME:
             continue
         elif os.path.isdir(filename_full):
             # Optimize dir
@@ -706,8 +712,6 @@ def optimize_files(cwd, filter_list, options, multiproc, optimize_after,
                 pass
         elif os.path.exists(filename_full):
             # Optimize file
-            if os.path.basename(filename_full) == RECORD_FILENAME:
-                continue
             if optimize_after is not None:
                 mtime = os.stat(filename_full).st_mtime
                 if mtime <= optimize_after:

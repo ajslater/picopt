@@ -1,4 +1,6 @@
 Fix timestamps in absolute paths delivered on the command line
+options to dump locations of picopt timestamps
+levels of verbosity
 
 Test each option.
 More formal tests.
