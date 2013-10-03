@@ -637,18 +637,24 @@ def comic_archive_uncompress(filename, image_format, options):
     return os.path.basename(tmp_dir)
 
 
-def get_optimize_after(dirname_full, options):
-    """Get the date we might need to optimize after.
-       Either from a dotfile or a command line option"""
-    if options.optimize_after is not None:
-        return options.optimize_after
-
+def get_timestamp(dirname_full):
     record_filename = os.path.join(dirname_full, RECORD_FILENAME)
 
     if os.path.exists(record_filename):
         return os.stat(record_filename).st_mtime
 
     return None
+
+
+def get_parent_timestamp(full_pathname, mtime):
+    parent_pathname = os.path.dirname(full_pathname)
+
+    mtime = max(get_timestamp(parent_pathname), mtime)
+
+    if parent_pathname == os.path.dirname(parent_pathname):
+        return mtime
+
+    return get_parent_timestamp(parent_pathname, mtime)
 
 
 def record_timestamp(pathname_full, options):
@@ -668,11 +674,20 @@ def record_timestamp(pathname_full, options):
         print("Could not set timestamp in %s" % pathname_full)
 
 
-def optimize_files(cwd, filter_list, options, multiproc):
+def optimize_files(cwd, filter_list, options, multiproc, optimize_after,
+                   looked_up):
     """sorts through a list of files, decends directories and
        calls the optimizer on the extant files"""
     #TODO: this function is too big
-    optimize_after = get_optimize_after(cwd, options)
+
+    # Figure out the mtime to check against
+    if options.optimize_after is not None:
+        optimize_after = options.optimize_after
+    else:
+        if not looked_up:
+            optimize_after = get_parent_timestamp(cwd, optimize_after)
+            looked_up = True
+        optimize_after = max(get_timestamp(cwd), optimize_after)
 
     for filename in filter_list:
         filename_full = os.path.normpath(os.path.join(cwd, filename))
@@ -684,22 +699,9 @@ def optimize_files(cwd, filter_list, options, multiproc):
                 next_dir_list = os.listdir(filename_full)
                 next_dir_list.sort()
                 optimize_files(filename_full, next_dir_list, options,
-                               multiproc)
-                # XXX hackish
-                # closing and recreating the pool for every dir
-                # is not ideal but it lets me make sure all files
-                # are done optimizing before i apply timestamps or
-                # recompress
-                old_pool = multiproc['pool']
-                old_pool.close()
-                old_pool.join()
-
-                new_pool = multiprocessing.Pool()
-                multiproc['pool'] = new_pool
-
-                # Importat for comics that this not be done async
+                               multiproc, optimize_after, looked_up)
+                    # Importat for comics that this not be done async
                 # so the recompression doesn't happen before the record
-                record_timestamp(filename_full, options)
             else:
                 pass
         elif os.path.exists(filename_full):
@@ -730,12 +732,29 @@ def optimize_files(cwd, filter_list, options, multiproc):
 
                     # optimize contents of comic archive
                     optimize_files(cwd, [tmp_dir_basename],
-                                   archive_options, multiproc)
+                                   archive_options, multiproc,
+                                   optimize_after, looked_up)
+
+                    # XXX hackish
+                    # closing and recreating the pool for every dir
+                    # is not ideal but it lets me make sure all files
+                    # are done optimizing before i apply timestamps or
+                    # recompress
+                    # TODO: abstract this into a separate function for
+                    #       directories to repool after?
+                    # XXX Find a better solution where i don't recreate 
+                    # the pool
+                    old_pool = multiproc['pool']
+                    old_pool.close()
+                    old_pool.join()
+
+                    new_pool = multiprocessing.Pool()
+                    multiproc['pool'] = new_pool
 
                     args = (filename_full, multiproc['in'],
                             multiproc['out'], options)
-                    multiproc['pool'].apply_async(comic_archive_compress,
-                                                  args=(args,))
+                    new_pool.apply_async(comic_archive_compress,
+                                         args=(args,))
                 else:
                     # regular image
                     args = [filename_full, image_format, options,
@@ -795,11 +814,13 @@ def main():
 
     multiproc = {'pool': pool, 'in': total_bytes_in, 'out': total_bytes_out}
 
-    optimize_files(cwd, filter_list, options, multiproc)
+    optimize_files(cwd, filter_list, options, multiproc, None, False)
 
     pool = multiproc['pool']
     pool.close()
     pool.join()
+
+    record_timestamp(cwd, options)
 
     report_totals(multiproc['in'].get(), multiproc['out'].get(), options)
 
