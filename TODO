@@ -1,5 +1,4 @@
-stop dropping dotfiles everywhere. look up.
-    in which case, move the repool stuff back out of directories.
+Fix timestamps in absolute paths delivered on the command line
 
 Test each option.
 More formal tests.
