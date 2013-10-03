@@ -13,6 +13,7 @@ Animated GIFs are optimized with [gifsicle](http://www.lcdf.org/gifsicle/) if it
 
 Picopt uncompresses, optimizes and rezips [comic book archive files](https://en.wikipedia.org/wiki/Comic_book_archive). Be aware that CBR rar archives will be rezipped into CBZs instead of CBR.
 
+Picopt allows you to drop picopt timestamps at the root of your recursive optimization trees so you don't have to remember which files to optimize or when you last optimized.
 
 Installation
 ------------
