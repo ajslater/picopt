@@ -677,15 +677,31 @@ def optimize_files(cwd, filter_list, options, multiproc):
         if not options.follow_symlinks and os.path.islink(filename_full):
             continue
         elif os.path.isdir(filename_full):
+            # Optimize dir
             if options.recurse:
                 next_dir_list = os.listdir(filename_full)
                 next_dir_list.sort()
                 optimize_files(filename_full, next_dir_list, options,
                                multiproc)
+                # XXX hackish
+                # closing and recreating the pool for every dir
+                # is not ideal but it lets me make sure all files
+                # are done optimizing before i apply timestamps or
+                # recompress
+                old_pool = multiproc['pool']
+                old_pool.close()
+                old_pool.join()
+
+                new_pool = multiprocessing.Pool()
+                multiproc['pool'] = new_pool
+
+                # Importat for comics that this not be done async
+                # so the recompression doesn't happen before the record
                 record_timestamp(filename_full, options)
             else:
                 pass
         elif os.path.exists(filename_full):
+            # Optimize file
             if optimize_after is not None:
                 mtime = os.stat(filename_full).st_mtime
                 if mtime <= optimize_after:
@@ -697,7 +713,7 @@ def optimize_files(cwd, filter_list, options, multiproc):
                     print("%s : %s" % (filename, image_format))
                 elif is_format_selected(image_format, COMIC_FORMATS,
                                         options, options.comics):
-                    # comic archive
+                    # optimize comic archive
                     tmp_dir_basename = comic_archive_uncompress(
                         filename_full, image_format, options)
 
@@ -712,22 +728,10 @@ def optimize_files(cwd, filter_list, options, multiproc):
                     optimize_files(cwd, [tmp_dir_basename],
                                    archive_options, multiproc)
 
-                    #XXX hackish
-                    # closing and recreating the pool for every comic
-                    # is not ideal but it lets me make sure all files
-                    # are done optimizing before i recompress
-                    old_pool = multiproc['pool']
-                    old_pool.close()
-                    old_pool.join()
-
-                    new_pool = multiprocessing.Pool()
-                    multiproc['pool'] = new_pool
-
                     args = (filename_full, multiproc['in'],
                             multiproc['out'], options)
-                    new_pool.apply_async(comic_archive_compress,
-                                         args=(args,))
-
+                    multiproc['pool'].apply_async(comic_archive_compress,
+                                                  args=(args,))
                 else:
                     # regular image
                     args = [filename_full, image_format, options,

@@ -1,3 +1,7 @@
+timestamp is being written before some files are done optimizing
+solution: close out directories like with comics
+also: merge comic pool code with regular directory code
+
 Test each option.
 More formal tests.
 
