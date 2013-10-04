@@ -844,7 +844,7 @@ def main():
     pool.close()
     pool.join()
 
-    if options.record_timestamp:
+    if options.record_timestamp and options.recurse:
         for filename in filter_list:
             if os.path.isdir(filename):
                 record_timestamp(filename, options)
