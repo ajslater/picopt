@@ -344,8 +344,8 @@ def cleanup_after_optimize(filename, new_filename, options):
         bytes_diff['out'] = filesize_in  # overwritten on succes below
         if (filesize_out > 0) and ((filesize_out < filesize_in)
                                    or options.bigger):
-            old_image_format = get_image_format(filename, options)
-            new_image_format = get_image_format(new_filename, options)
+            old_image_format = get_image_format(filename)
+            new_image_format = get_image_format(new_filename)
             if old_image_format != new_image_format:
                 final_filename = replace_ext(filename,
                                              new_image_format.lower())
@@ -511,7 +511,7 @@ def is_image_sequenced(image):
     return result
 
 
-def get_image_format(filename, options):
+def get_image_format(filename):
     """gets the image format"""
     image = None
     bad_image = 1
@@ -544,7 +544,7 @@ def get_image_format(filename, options):
 
 def detect_file(filename, options):
     """decides what to do with the file"""
-    image_format = get_image_format(filename, options)
+    image_format = get_image_format(filename)
 
     if image_format in options.formats:
         return image_format
@@ -638,27 +638,32 @@ def comic_archive_uncompress(filename, image_format, options):
     return os.path.basename(tmp_dir)
 
 
-def get_timestamp(dirname_full, remove):
+def get_timestamp(dirname_full, remove, options):
+    """ get the timestamp from the timestamp file and optionally remove it
+        if we're going to write another one.
+    """
     record_filename = os.path.join(dirname_full, RECORD_FILENAME)
 
     if os.path.exists(record_filename):
         mtime = os.stat(record_filename).st_mtime
-        if remove:
+        if options.record_timestamp and remove:
             os.remove(record_filename)
         return mtime
 
     return None
 
 
-def get_parent_timestamp(full_pathname, mtime):
+def get_parent_timestamp(full_pathname, mtime, options):
+    """ get the timestamps up the directory tree because they affect
+        every subdirectory """
     parent_pathname = os.path.dirname(full_pathname)
 
-    mtime = max(get_timestamp(parent_pathname, False), mtime)
+    mtime = max(get_timestamp(parent_pathname, False, options), mtime)
 
     if parent_pathname == os.path.dirname(parent_pathname):
         return mtime
 
-    return get_parent_timestamp(parent_pathname, mtime)
+    return get_parent_timestamp(parent_pathname, mtime, options)
 
 
 def record_timestamp(pathname_full, options):
@@ -674,19 +679,21 @@ def record_timestamp(pathname_full, options):
     try:
         with open(record_filename_full, 'w'):
             os.utime(record_filename_full, None)
-    except IOError as ex:
+    except IOError:
         print("Could not set timestamp in %s" % pathname_full)
 
 def get_optimize_after(current_path, looked_up, optimize_after, options):
-    # Figure out the mtime to check against
+    """ Figure out the which mtime to check against and if we look up
+        return that we've looked up too"""
     if options.optimize_after is not None:
         optimize_after = options.optimize_after
     else:
         if not looked_up:
             optimize_after = get_parent_timestamp(current_path,
-                                                  optimize_after)
+                                                  optimize_after,
+                                                  options)
             looked_up = True
-        optimize_after = max(get_timestamp(current_path, True),
+        optimize_after = max(get_timestamp(current_path, True, options),
                              optimize_after)
     return optimize_after, looked_up
 
@@ -695,7 +702,6 @@ def optimize_files(cwd, filter_list, options, multiproc, optimize_after,
                    looked_up):
     """sorts through a list of files, decends directories and
        calls the optimizer on the extant files"""
-    #TODO: refactor to use os.walk()?
     #TODO: this function is too big
 
     optimize_after, looked_up = get_optimize_after(cwd, looked_up,
@@ -766,7 +772,7 @@ def optimize_files(cwd, filter_list, options, multiproc, optimize_after,
                     # recompress
                     # TODO: abstract this into a separate function for
                     #       directories to repool after?
-                    # XXX Find a better solution where i don't recreate 
+                    # XXX Find a better solution where i don't recreate
                     # the pool
                     old_pool = multiproc['pool']
                     old_pool.close()
