@@ -23,11 +23,13 @@ import rarfile
 
 __version__ = '0.11.0'
 
+PROGRAM_NAME = 'picopt'
+
 # Extensions
-REMOVE_EXT = '.picopt-remove'
-NEW_EXT = '.picopt-optimized.png'
-ARCHIVE_TMP_DIR_TEMPLATE = 'PICOPT_TMP_%s'
-NEW_ARCHIVE_SUFFIX = 'picopt-optimized.cbz'
+REMOVE_EXT = '.%s-remove' % PROGRAM_NAME
+NEW_EXT = '.%s-optimized.png' % PROGRAM_NAME
+ARCHIVE_TMP_DIR_TEMPLATE = PROGRAM_NAME+'_tmp_%s'
+NEW_ARCHIVE_SUFFIX = '%s-optimized.cbz' % PROGRAM_NAME
 # Program args
 JPEGTRAN_OPTI_ARGS = ['jpegtran', '-copy', 'all', '-optimize',
                       '-outfile']
@@ -55,7 +57,7 @@ DEFAULT_FORMATS = 'ALL'
 # Programs
 PROGRAMS = ('optipng', 'pngout', 'jpegrescan', 'jpegtran', 'gifsicle',
             'advpng')
-RECORD_FILENAME = '.picopt_timestamp'
+RECORD_FILENAME = '.%s_timestamp' % PROGRAM_NAME
 if sys.version > '3':
     long = int
 
@@ -148,9 +150,10 @@ def program_reqs(options):
 
 def get_options_and_arguments():
     """parses the command line"""
-    usage = "%prog [options] [image files]\nversion "+__version__ + \
-        "\npicopt uses optiping, pngout, gifsicle, jpegrescan and " \
-        "jpegtran if they are on the path."
+    usage = "%prog [options] [image files]\n"
+    usage += "version %s\n" % __version__
+    usage += "Uses optiping, pngout, gifsicle, jpegrescan and "
+    usage += "jpegtran if they are on the path."
     parser = optparse.OptionParser(usage=usage)
     parser.add_option("-d", "--dir", action="store", dest="dir",
                       default=os.getcwd(),
@@ -194,7 +197,7 @@ def get_options_and_arguments():
                       help="Do not replace files with optimized versions")
     parser.add_option("-l", "--list", action="store_true",
                       dest="list_only", default=0,
-                      help="Only list files picopt would touch")
+                      help="Only list files that would be optimized")
     parser.add_option("-c", "--comics", action="store_true",
                       dest="comics", default=0,
                       help="Also optimize comic book archives (cbz & cbr)")
