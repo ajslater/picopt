@@ -215,8 +215,8 @@ def get_options_and_arguments():
                            "timestamp. Supercedes -T")
     parser.add_option("-T", "--record_timestamp", action="store_true",
                       dest="record_timestamp", default=0,
-                      help="Store the time of the optimization in a "
-                           "directory local dotfile.")
+                      help="Store the time of the optimization of full "
+                           "directories in directory local dotfiles.")
     parser.add_option("-v", "--version", action="store_true",
                       dest="version", default=0,
                       help="display the version number")
@@ -677,26 +677,46 @@ def record_timestamp(pathname_full, options):
     except IOError as ex:
         print("Could not set timestamp in %s" % pathname_full)
 
-
-def optimize_files(cwd, filter_list, options, multiproc, optimize_after,
-                   looked_up):
-    """sorts through a list of files, decends directories and
-       calls the optimizer on the extant files"""
-    #TODO: this function is too big
-
+def get_optimize_after(current_path, looked_up, optimize_after, options):
     # Figure out the mtime to check against
     if options.optimize_after is not None:
         optimize_after = options.optimize_after
     else:
         if not looked_up:
-            optimize_after = get_parent_timestamp(cwd, optimize_after)
+            optimize_after = get_parent_timestamp(current_path,
+                                                  optimize_after)
             looked_up = True
-        optimize_after = max(get_timestamp(cwd, True), optimize_after)
+        optimize_after = max(get_timestamp(current_path, True),
+                             optimize_after)
+    return optimize_after, looked_up
 
+
+def optimize_files(cwd, filter_list, options, multiproc, optimize_after,
+                   looked_up):
+    """sorts through a list of files, decends directories and
+       calls the optimizer on the extant files"""
+    #TODO: refactor to use os.walk()?
+    #TODO: this function is too big
+
+    optimize_after, looked_up = get_optimize_after(cwd, looked_up,
+                                                   optimize_after,
+                                                   options)
     for filename in filter_list:
-        filename_full = os.path.normpath(os.path.join(cwd, filename))
+        # create an absolute path
+        if os.path.isabs(filename):
+            # this should only happen with the command line args
+            filename_full = filename
+            abs_dir = os.path.dirname(filename_full)
+            iter_optimize_after, iter_looked_up = get_optimize_after(
+                abs_dir, False, None, options)
+        else:
+            filename_full = os.path.join(cwd, filename)
+            iter_optimize_after = optimize_after
+            iter_looked_up = looked_up
+        filename_full = os.path.normpath(filename_full)
+
         if not options.follow_symlinks and os.path.islink(filename_full):
-           continue
+            continue
         elif os.path.basename(filename_full) == RECORD_FILENAME:
             continue
         elif os.path.isdir(filename_full):
@@ -705,16 +725,15 @@ def optimize_files(cwd, filter_list, options, multiproc, optimize_after,
                 next_dir_list = os.listdir(filename_full)
                 next_dir_list.sort()
                 optimize_files(filename_full, next_dir_list, options,
-                               multiproc, optimize_after, looked_up)
-                    # Importat for comics that this not be done async
-                # so the recompression doesn't happen before the record
+                               multiproc, iter_optimize_after,
+                               iter_looked_up)
             else:
                 pass
         elif os.path.exists(filename_full):
             # Optimize file
-            if optimize_after is not None:
+            if iter_optimize_after is not None:
                 mtime = os.stat(filename_full).st_mtime
-                if mtime <= optimize_after:
+                if mtime <= iter_optimize_after:
                     continue
             image_format = detect_file(filename_full, options)
             if image_format:
@@ -735,9 +754,10 @@ def optimize_files(cwd, filter_list, options, multiproc, optimize_after,
                         archive_options.recurse = True
 
                     # optimize contents of comic archive
-                    optimize_files(cwd, [tmp_dir_basename],
+                    dirname = os.path.dirname(filename_full)
+                    optimize_files(dirname, [tmp_dir_basename],
                                    archive_options, multiproc,
-                                   optimize_after, looked_up)
+                                   iter_optimize_after, iter_looked_up)
 
                     # XXX hackish
                     # closing and recreating the pool for every dir
@@ -766,7 +786,7 @@ def optimize_files(cwd, filter_list, options, multiproc, optimize_after,
                     multiproc['pool'].apply_async(optimize_image,
                                                   args=(args,))
         elif options.verbose:
-            print(filename, 'was not found.')
+            print(filename_full, 'was not found.')
 
 
 def report_totals(bytes_in, bytes_out, options):
@@ -824,7 +844,10 @@ def main():
     pool.close()
     pool.join()
 
-    record_timestamp(cwd, options)
+    if options.record_timestamp:
+        for filename in filter_list:
+            if os.path.isdir(filename):
+                record_timestamp(filename, options)
 
     report_totals(multiproc['in'].get(), multiproc['out'].get(), options)
 
