@@ -1,4 +1,7 @@
-Fix timestamps in absolute paths delivered on the command line
+break up that horrendus optimize_files function
+    maybe use os.walk()?
+
+move program name into unified variable
 options to dump locations of picopt timestamps
 levels of verbosity
 
@@ -7,5 +10,3 @@ More formal tests.
 
 jpegoptim?
 better packaging
-
-move program name into unified variable
