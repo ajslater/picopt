@@ -152,8 +152,8 @@ def get_options_and_arguments():
     """parses the command line"""
     usage = "%prog [options] [image files]\n"
     usage += "version %s\n" % __version__
-    usage += "Uses optiping, pngout, gifsicle, jpegrescan and "
-    usage += "jpegtran if they are on the path."
+    usage += "Uses optiping, pngout, gifsicle, jpegrescan and " \
+             "jpegtran if they are on the path."
     parser = optparse.OptionParser(usage=usage)
     parser.add_option("-d", "--dir", action="store", dest="dir",
                       default=os.getcwd(),
@@ -700,26 +700,8 @@ def get_optimize_after(current_path, look_up, optimize_after, options):
     return optimize_after
 
 
-#XXX unused
-"""
-def get_full_filename(cwd, filename, options, optimize_after, looked_up):
-    # create an absolute path
-    if os.path.isabs(filename):
-        # this should only happen with the command line args
-        filename_full = filename
-        abs_dir = os.path.dirname(filename_full)
-        optimize_after, looked_up = get_optimize_after(
-            abs_dir, False, None, options)
-    else:
-        filename_full = os.path.join(cwd, filename)
-        optimize_after = optimize_after
-        looked_up = looked_up
-    filename_full = os.path.normpath(filename_full)
-    return optimize_after, looked_up, filename_full
-"""
-
 def optimize_dir(filename_full, options, multiproc, optimize_after):
-    # Optimize dir
+    """ Recursively optimize a directory """
     if not options.recurse:
         return
     next_dir_list = os.listdir(filename_full)
@@ -732,7 +714,7 @@ def optimize_dir(filename_full, options, multiproc, optimize_after):
 
 def optimize_comic_archive(filename_full, image_format, options, multiproc,
                           optimize_after):
-    # optimize comic archive
+    """ Optimize a comic archive """
     tmp_dir_basename = comic_archive_uncompress(filename_full,
                                                 image_format, options)
     # recurse into comic archive even if flag not set
@@ -752,10 +734,6 @@ def optimize_comic_archive(filename_full, image_format, options, multiproc,
     # is not ideal but it lets me make sure all files
     # are done optimizing before i apply timestamps or
     # recompress
-    # TODO: abstract this into a separate function for
-    #       directories to repool after?
-    # XXX Find a better solution where i don't recreate
-    # the pool
     old_pool = multiproc['pool']
     old_pool.close()
     old_pool.join()
@@ -770,7 +748,7 @@ def optimize_comic_archive(filename_full, image_format, options, multiproc,
 
 
 def optimize_file(filename_full, options, multiproc, optimize_after):
-    # Optimize file
+    """ Optimize an individual file """
     if optimize_after is not None:
         mtime = os.stat(filename_full).st_mtime
         if mtime <= optimize_after:
@@ -846,6 +824,7 @@ def report_totals(bytes_in, bytes_out, options):
     else:
         print("Didn't optimize any files.")
 
+
 def main():
     """main"""
     #TODO make the relevant parts of this call as a library
@@ -866,20 +845,18 @@ def main():
     pool = multiprocessing.Pool()
 
     multiproc = {'pool': pool, 'in': total_bytes_in, 'out': total_bytes_out}
-
-    # First level special stuff
-    #TODO remove looked up stuff from main loop
-
-    #XXX looked_up never used
-    cwd_files = set()
     record_dirs = set()
+    cwd_files = set()
+
+    # Optimize
     for filename in filter_list:
 
         if options.recurse and os.path.isdir(filename):
+            # dirs to put timestamps in later
             record_dirs.add(filename)
 
         if os.path.isabs(filename):
-            # this should only happen with the command line args
+            # optimize absolute paths on the command line
             abs_dir = os.path.dirname(filename)
             optimize_after = get_optimize_after(abs_dir, True, None,
                                                 options)
@@ -889,15 +866,16 @@ def main():
             cwd_files.add(filename)
 
     if len(cwd_files):
+        # optimize cwd files
         optimize_after = get_optimize_after(cwd, True, None, options)
         optimize_files(cwd, cwd_files, options, multiproc, optimize_after)
 
 
-    # Finish up
     pool = multiproc['pool']
     pool.close()
     pool.join()
 
+    # Finish up
     for filename in record_dirs:
         record_timestamp(filename, options)
 
