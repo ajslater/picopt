@@ -701,99 +701,122 @@ def get_optimize_after(current_path, looked_up, optimize_after, options):
     return optimize_after, looked_up
 
 
+def get_full_filename(cwd, filename, options, optimize_after, looked_up):
+    # create an absolute path
+    if os.path.isabs(filename):
+        # this should only happen with the command line args
+        filename_full = filename
+        abs_dir = os.path.dirname(filename_full)
+        iter_optimize_after, iter_looked_up = get_optimize_after(
+            abs_dir, False, None, options)
+    else:
+        filename_full = os.path.join(cwd, filename)
+        iter_optimize_after = optimize_after
+        iter_looked_up = looked_up
+    filename_full = os.path.normpath(filename_full)
+    return iter_optimize_after, iter_looked_up, filename_full
+
+
+def optimize_dir(filename_full, options, multiproc, iter_optimize_after,
+                 iter_looked_up):
+    # Optimize dir
+    if not options.recurse:
+        return
+    next_dir_list = os.listdir(filename_full)
+    next_dir_list.sort()
+    optimize_files(filename_full, next_dir_list, options, multiproc,
+                   iter_optimize_after, iter_looked_up)
+
+
+def optimze_comic_archive(filename_full, image_format, options, multiproc,
+                          iter_optimize_after, iter_looked_up):
+        # optimize comic archive
+    tmp_dir_basename = comic_archive_uncompress(filename_full,
+                                                image_format, options)
+    # recurse into comic archive even if flag not set
+    if options.recurse:
+        archive_options = options
+    else:
+        archive_options = copy.deepcopy(options)
+        archive_options.recurse = True
+
+    # optimize contents of comic archive
+    dirname = os.path.dirname(filename_full)
+    optimize_files(dirname, [tmp_dir_basename], archive_options,
+                   multiproc, iter_optimize_after, iter_looked_up)
+
+    # XXX hackish
+    # closing and recreating the pool for every dir
+    # is not ideal but it lets me make sure all files
+    # are done optimizing before i apply timestamps or
+    # recompress
+    # TODO: abstract this into a separate function for
+    #       directories to repool after?
+    # XXX Find a better solution where i don't recreate
+    # the pool
+    old_pool = multiproc['pool']
+    old_pool.close()
+    old_pool.join()
+
+    new_pool = multiprocessing.Pool()
+    multiproc['pool'] = new_pool
+
+    args = (filename_full, multiproc['in'],
+            multiproc['out'], options)
+    new_pool.apply_async(comic_archive_compress,
+                            args=(args,))
+
+
+def optimize_file(filename_full, options, multiproc, iter_optimize_after,
+                  iter_looked_up):
+    # Optimize file
+    if iter_optimize_after is not None:
+        mtime = os.stat(filename_full).st_mtime
+        if mtime <= iter_optimize_after:
+            return
+
+    image_format = detect_file(filename_full, options)
+    if not image_format:
+        return
+
+    if options.list_only:
+        # list only
+        print("%s : %s" % (filename_full, image_format))
+    elif is_format_selected(image_format, COMIC_FORMATS,
+                            options, options.comics):
+        optimze_comic_archive(filename_full, image_format, options,
+                              multiproc, iter_optimize_after,
+                              iter_looked_up)
+    else:
+        # regular image
+        args = [filename_full, image_format, options,
+                multiproc['in'], multiproc['out']]
+        multiproc['pool'].apply_async(optimize_image,
+                                        args=(args,))
+
+
 def optimize_files(cwd, filter_list, options, multiproc, optimize_after,
                    looked_up):
     """sorts through a list of files, decends directories and
        calls the optimizer on the extant files"""
-    #TODO: this function is too big
 
     optimize_after, looked_up = get_optimize_after(cwd, looked_up,
                                                    optimize_after,
                                                    options)
     for filename in filter_list:
-        # create an absolute path
-        if os.path.isabs(filename):
-            # this should only happen with the command line args
-            filename_full = filename
-            abs_dir = os.path.dirname(filename_full)
-            iter_optimize_after, iter_looked_up = get_optimize_after(
-                abs_dir, False, None, options)
-        else:
-            filename_full = os.path.join(cwd, filename)
-            iter_optimize_after = optimize_after
-            iter_looked_up = looked_up
-        filename_full = os.path.normpath(filename_full)
+        iter_optimize_after, iter_looked_up, filename_full = get_full_filename(
+                cwd, filename, options, optimize_after, looked_up)
 
         if not options.follow_symlinks and os.path.islink(filename_full):
             continue
         elif os.path.basename(filename_full) == RECORD_FILENAME:
             continue
         elif os.path.isdir(filename_full):
-            # Optimize dir
-            if options.recurse:
-                next_dir_list = os.listdir(filename_full)
-                next_dir_list.sort()
-                optimize_files(filename_full, next_dir_list, options,
-                               multiproc, iter_optimize_after,
-                               iter_looked_up)
-            else:
-                pass
+            optimize_dir(filename_full, options, multiproc,
+                         iter_optimize_after, iter_looked_up)
         elif os.path.exists(filename_full):
-            # Optimize file
-            if iter_optimize_after is not None:
-                mtime = os.stat(filename_full).st_mtime
-                if mtime <= iter_optimize_after:
-                    continue
-            image_format = detect_file(filename_full, options)
-            if image_format:
-                if options.list_only:
-                    # list only
-                    print("%s : %s" % (filename, image_format))
-                elif is_format_selected(image_format, COMIC_FORMATS,
-                                        options, options.comics):
-                    # optimize comic archive
-                    tmp_dir_basename = comic_archive_uncompress(
-                        filename_full, image_format, options)
-
-                    # recurse into comic archive even if flag not set
-                    if options.recurse:
-                        archive_options = options
-                    else:
-                        archive_options = copy.deepcopy(options)
-                        archive_options.recurse = True
-
-                    # optimize contents of comic archive
-                    dirname = os.path.dirname(filename_full)
-                    optimize_files(dirname, [tmp_dir_basename],
-                                   archive_options, multiproc,
-                                   iter_optimize_after, iter_looked_up)
-
-                    # XXX hackish
-                    # closing and recreating the pool for every dir
-                    # is not ideal but it lets me make sure all files
-                    # are done optimizing before i apply timestamps or
-                    # recompress
-                    # TODO: abstract this into a separate function for
-                    #       directories to repool after?
-                    # XXX Find a better solution where i don't recreate
-                    # the pool
-                    old_pool = multiproc['pool']
-                    old_pool.close()
-                    old_pool.join()
-
-                    new_pool = multiprocessing.Pool()
-                    multiproc['pool'] = new_pool
-
-                    args = (filename_full, multiproc['in'],
-                            multiproc['out'], options)
-                    new_pool.apply_async(comic_archive_compress,
-                                         args=(args,))
-                else:
-                    # regular image
-                    args = [filename_full, image_format, options,
-                            multiproc['in'], multiproc['out']]
-                    multiproc['pool'].apply_async(optimize_image,
-                                                  args=(args,))
+            optimize_file(filename_full, options, multiproc,
+                          iter_optimize_after, iter_looked_up)
         elif options.verbose:
             print(filename_full, 'was not found.')
 
