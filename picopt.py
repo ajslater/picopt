@@ -685,52 +685,54 @@ def record_timestamp(pathname_full, options):
     except IOError:
         print("Could not set timestamp in %s" % pathname_full)
 
-def get_optimize_after(current_path, looked_up, optimize_after, options):
+def get_optimize_after(current_path, look_up, optimize_after, options):
     """ Figure out the which mtime to check against and if we look up
         return that we've looked up too"""
     if options.optimize_after is not None:
         optimize_after = options.optimize_after
     else:
-        if not looked_up:
+        if look_up:
             optimize_after = get_parent_timestamp(current_path,
                                                   optimize_after,
                                                   options)
-            looked_up = True
         optimize_after = max(get_timestamp(current_path, True, options),
                              optimize_after)
-    return optimize_after, looked_up
+    return optimize_after
 
 
+#XXX unused
+"""
 def get_full_filename(cwd, filename, options, optimize_after, looked_up):
     # create an absolute path
     if os.path.isabs(filename):
         # this should only happen with the command line args
         filename_full = filename
         abs_dir = os.path.dirname(filename_full)
-        iter_optimize_after, iter_looked_up = get_optimize_after(
+        optimize_after, looked_up = get_optimize_after(
             abs_dir, False, None, options)
     else:
         filename_full = os.path.join(cwd, filename)
-        iter_optimize_after = optimize_after
-        iter_looked_up = looked_up
+        optimize_after = optimize_after
+        looked_up = looked_up
     filename_full = os.path.normpath(filename_full)
-    return iter_optimize_after, iter_looked_up, filename_full
+    return optimize_after, looked_up, filename_full
+"""
 
-
-def optimize_dir(filename_full, options, multiproc, iter_optimize_after,
-                 iter_looked_up):
+def optimize_dir(filename_full, options, multiproc, optimize_after):
     # Optimize dir
     if not options.recurse:
         return
     next_dir_list = os.listdir(filename_full)
     next_dir_list.sort()
+    optimize_after = get_optimize_after(filename_full, False,
+                                        optimize_after, options)
     optimize_files(filename_full, next_dir_list, options, multiproc,
-                   iter_optimize_after, iter_looked_up)
+                   optimize_after)
 
 
-def optimze_comic_archive(filename_full, image_format, options, multiproc,
-                          iter_optimize_after, iter_looked_up):
-        # optimize comic archive
+def optimize_comic_archive(filename_full, image_format, options, multiproc,
+                          optimize_after):
+    # optimize comic archive
     tmp_dir_basename = comic_archive_uncompress(filename_full,
                                                 image_format, options)
     # recurse into comic archive even if flag not set
@@ -743,7 +745,7 @@ def optimze_comic_archive(filename_full, image_format, options, multiproc,
     # optimize contents of comic archive
     dirname = os.path.dirname(filename_full)
     optimize_files(dirname, [tmp_dir_basename], archive_options,
-                   multiproc, iter_optimize_after, iter_looked_up)
+                   multiproc, optimize_after)
 
     # XXX hackish
     # closing and recreating the pool for every dir
@@ -767,12 +769,11 @@ def optimze_comic_archive(filename_full, image_format, options, multiproc,
                             args=(args,))
 
 
-def optimize_file(filename_full, options, multiproc, iter_optimize_after,
-                  iter_looked_up):
+def optimize_file(filename_full, options, multiproc, optimize_after):
     # Optimize file
-    if iter_optimize_after is not None:
+    if optimize_after is not None:
         mtime = os.stat(filename_full).st_mtime
-        if mtime <= iter_optimize_after:
+        if mtime <= optimize_after:
             return
 
     image_format = detect_file(filename_full, options)
@@ -784,28 +785,23 @@ def optimize_file(filename_full, options, multiproc, iter_optimize_after,
         print("%s : %s" % (filename_full, image_format))
     elif is_format_selected(image_format, COMIC_FORMATS,
                             options, options.comics):
-        optimze_comic_archive(filename_full, image_format, options,
-                              multiproc, iter_optimize_after,
-                              iter_looked_up)
+        optimize_comic_archive(filename_full, image_format, options,
+                               multiproc, optimize_after)
     else:
         # regular image
         args = [filename_full, image_format, options,
                 multiproc['in'], multiproc['out']]
-        multiproc['pool'].apply_async(optimize_image,
-                                        args=(args,))
+        multiproc['pool'].apply_async(optimize_image, args=(args,))
 
 
-def optimize_files(cwd, filter_list, options, multiproc, optimize_after,
-                   looked_up):
+def optimize_files(cwd, filter_list, options, multiproc, optimize_after):
     """sorts through a list of files, decends directories and
        calls the optimizer on the extant files"""
 
-    optimize_after, looked_up = get_optimize_after(cwd, looked_up,
-                                                   optimize_after,
-                                                   options)
     for filename in filter_list:
-        iter_optimize_after, iter_looked_up, filename_full = get_full_filename(
-                cwd, filename, options, optimize_after, looked_up)
+
+        filename_full = os.path.join(cwd, filename)
+        filename_full = os.path.normpath(filename_full)
 
         if not options.follow_symlinks and os.path.islink(filename_full):
             continue
@@ -813,10 +809,10 @@ def optimize_files(cwd, filter_list, options, multiproc, optimize_after,
             continue
         elif os.path.isdir(filename_full):
             optimize_dir(filename_full, options, multiproc,
-                         iter_optimize_after, iter_looked_up)
+                         optimize_after)
         elif os.path.exists(filename_full):
             optimize_file(filename_full, options, multiproc,
-                          iter_optimize_after, iter_looked_up)
+                          optimize_after)
         elif options.verbose:
             print(filename_full, 'was not found.')
 
@@ -850,18 +846,19 @@ def report_totals(bytes_in, bytes_out, options):
     else:
         print("Didn't optimize any files.")
 
-
 def main():
     """main"""
     #TODO make the relevant parts of this call as a library
 
+
+    # Init
     ImageFile.MAXBLOCK = 3000000  # default is 64k
 
     (options, arguments) = get_options_and_arguments()
 
     os.chdir(options.dir)
     cwd = os.getcwd()
-    filter_list = arguments
+    filter_list = set(arguments)
 
     manager = multiprocessing.Manager()
     total_bytes_in = manager.Value(int, 0)
@@ -870,16 +867,39 @@ def main():
 
     multiproc = {'pool': pool, 'in': total_bytes_in, 'out': total_bytes_out}
 
-    optimize_files(cwd, filter_list, options, multiproc, None, False)
+    # First level special stuff
+    #TODO remove looked up stuff from main loop
 
+    #XXX looked_up never used
+    cwd_files = set()
+    record_dirs = set()
+    for filename in filter_list:
+
+        if options.recurse and os.path.isdir(filename):
+            record_dirs.add(filename)
+
+        if os.path.isabs(filename):
+            # this should only happen with the command line args
+            abs_dir = os.path.dirname(filename)
+            optimize_after = get_optimize_after(abs_dir, True, None,
+                                                options)
+            optimize_files(abs_dir, [filename], options, multiproc,
+                           optimize_after)
+        else:
+            cwd_files.add(filename)
+
+    if len(cwd_files):
+        optimize_after = get_optimize_after(cwd, True, None, options)
+        optimize_files(cwd, cwd_files, options, multiproc, optimize_after)
+
+
+    # Finish up
     pool = multiproc['pool']
     pool.close()
     pool.join()
 
-    if options.record_timestamp and options.recurse:
-        for filename in filter_list:
-            if os.path.isdir(filename):
-                record_timestamp(filename, options)
+    for filename in record_dirs:
+        record_timestamp(filename, options)
 
     report_totals(multiproc['in'].get(), multiproc['out'].get(), options)
 
