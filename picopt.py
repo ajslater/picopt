@@ -21,7 +21,7 @@ import Image
 import ImageFile
 import rarfile
 
-__version__ = '0.11.0'
+__version__ = '0.11.1'
 
 PROGRAM_NAME = 'picopt'
 
