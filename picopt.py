@@ -730,7 +730,8 @@ def optimize_comic_archive(filename_full, image_format, options, multiproc,
                                 archive_options, multiproc,
                                 optimize_after)
 
-    #
+    # I'd like to stuff this waiting into the compression process,
+    # but process results don't serialize. :(
     for result in result_set:
         result.wait()
 
