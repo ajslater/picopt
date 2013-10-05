@@ -21,7 +21,7 @@ import Image
 import ImageFile
 import rarfile
 
-__version__ = '0.11.1'
+__version__ = '0.11.2'
 
 PROGRAM_NAME = 'picopt'
 
@@ -708,8 +708,8 @@ def optimize_dir(filename_full, options, multiproc, optimize_after):
     next_dir_list.sort()
     optimize_after = get_optimize_after(filename_full, False,
                                         optimize_after, options)
-    optimize_files(filename_full, next_dir_list, options, multiproc,
-                   optimize_after)
+    return optimize_files(filename_full, next_dir_list, options,
+                          multiproc, optimize_after)
 
 
 def optimize_comic_archive(filename_full, image_format, options, multiproc,
@@ -726,25 +726,17 @@ def optimize_comic_archive(filename_full, image_format, options, multiproc,
 
     # optimize contents of comic archive
     dirname = os.path.dirname(filename_full)
-    optimize_files(dirname, [tmp_dir_basename], archive_options,
-                   multiproc, optimize_after)
+    result_set = optimize_files(dirname, [tmp_dir_basename],
+                                archive_options, multiproc,
+                                optimize_after)
 
-    # XXX hackish
-    # closing and recreating the pool for every dir
-    # is not ideal but it lets me make sure all files
-    # are done optimizing before i apply timestamps or
-    # recompress
-    old_pool = multiproc['pool']
-    old_pool.close()
-    old_pool.join()
+    #
+    for result in result_set:
+        result.wait()
 
-    new_pool = multiprocessing.Pool()
-    multiproc['pool'] = new_pool
-
-    args = (filename_full, multiproc['in'],
-            multiproc['out'], options)
-    new_pool.apply_async(comic_archive_compress,
-                            args=(args,))
+    pool = multiproc['pool']
+    args = (filename_full, multiproc['in'], multiproc['out'], options)
+    return pool.apply_async(comic_archive_compress, args=(args,))
 
 
 def optimize_file(filename_full, options, multiproc, optimize_after):
@@ -763,19 +755,20 @@ def optimize_file(filename_full, options, multiproc, optimize_after):
         print("%s : %s" % (filename_full, image_format))
     elif is_format_selected(image_format, COMIC_FORMATS,
                             options, options.comics):
-        optimize_comic_archive(filename_full, image_format, options,
-                               multiproc, optimize_after)
+        return optimize_comic_archive(filename_full, image_format,
+                                      options, multiproc, optimize_after)
     else:
         # regular image
         args = [filename_full, image_format, options,
                 multiproc['in'], multiproc['out']]
-        multiproc['pool'].apply_async(optimize_image, args=(args,))
+        return multiproc['pool'].apply_async(optimize_image, args=(args,))
 
 
 def optimize_files(cwd, filter_list, options, multiproc, optimize_after):
     """sorts through a list of files, decends directories and
        calls the optimizer on the extant files"""
 
+    result_set = set()
     for filename in filter_list:
 
         filename_full = os.path.join(cwd, filename)
@@ -786,13 +779,17 @@ def optimize_files(cwd, filter_list, options, multiproc, optimize_after):
         elif os.path.basename(filename_full) == RECORD_FILENAME:
             continue
         elif os.path.isdir(filename_full):
-            optimize_dir(filename_full, options, multiproc,
+            results = optimize_dir(filename_full, options, multiproc,
                          optimize_after)
+            result_set = result_set.union(results)
         elif os.path.exists(filename_full):
-            optimize_file(filename_full, options, multiproc,
+            result = optimize_file(filename_full, options, multiproc,
                           optimize_after)
+            if result:
+                result_set.add(result)
         elif options.verbose:
             print(filename_full, 'was not found.')
+    return result_set
 
 
 def report_totals(bytes_in, bytes_out, options):
@@ -860,8 +857,9 @@ def main():
             abs_dir = os.path.dirname(filename)
             optimize_after = get_optimize_after(abs_dir, True, None,
                                                 options)
-            optimize_files(abs_dir, [filename], options, multiproc,
-                           optimize_after)
+            optimize_files(abs_dir, [filename], options,
+                           multiproc, optimize_after)
+
         else:
             cwd_files.add(filename)
 
