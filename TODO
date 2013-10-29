@@ -1,7 +1,5 @@
-break up that horrendus optimize_files function
-    maybe use os.walk()?
+maybe use os.walk()?
 
-options to dump locations of picopt timestamps
 levels of verbosity
 
 Test each option.
