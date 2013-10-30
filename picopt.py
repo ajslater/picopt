@@ -17,11 +17,15 @@ import traceback
 import dateutil.parser
 import time
 
-import Image
-import ImageFile
 import rarfile
+try:
+    from PIL import Image
+    from PIL import ImageFile
+except ImportError:
+    import Image
+    import ImageFile
 
-__version__ = '0.11.2'
+__version__ = '0.11.3'
 
 PROGRAM_NAME = 'picopt'
 
