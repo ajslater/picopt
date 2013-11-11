@@ -7,7 +7,7 @@ from __future__ import division
 
 import sys
 import os
-import optparse
+import argparse
 import shutil
 import subprocess
 import multiprocessing
@@ -152,117 +152,109 @@ def program_reqs(options):
         exit(1)
 
 
-def get_options_and_arguments():
+def get_arguments():
     """parses the command line"""
-    usage = "%prog [options] [image files]\n"
+    usage = "%(prog)s [options] [image files]\n"
     usage += "version %s\n" % __version__
     usage += "Uses optiping, pngout, gifsicle, jpegrescan and " \
              "jpegtran if they are on the path."
-    parser = optparse.OptionParser(usage=usage)
-    parser.add_option("-d", "--dir", action="store", dest="dir",
-                      default=os.getcwd(),
-                      help="Directory to change to before optimiziaton")
-    parser.add_option("-f", "--formats", action="store", dest="formats",
-                      default=DEFAULT_FORMATS,
-                      help="Only optimize images of the specifed '"
-                           + FORMAT_DELIMETER + "' delimited formats")
-    parser.add_option("-r", "--recurse", action="store_true",
-                      dest="recurse", default=0,
-                      help="Recurse down through directories ignoring the"
-                           "image file arguments on the command line")
-    parser.add_option("-q", "--quiet", action="store_false",
-                      dest="verbose", default=1,
-                      help="Do not display output")
-    parser.add_option("-o", "--disable_optipng", action="store_false",
-                      dest="optipng", default=1,
-                      help="Do not optimize with optipng")
-    parser.add_option("-a", "--enable_advpng", action="store_true",
-                      dest="advpng", default=0,
-                      help="Optimize with advpng (disabled by default)")
-    parser.add_option("-p", "--disable_pngout", action="store_false",
-                      dest="pngout", default=1,
-                      help="Do not optimize with pngout")
-    parser.add_option("-j", "--disable_jpegrescan", action="store_false",
-                      dest="jpegrescan", default=1,
-                      help="Do not optimize with jpegrescan")
-    parser.add_option("-e", "--disable_progressive", action="store_false",
-                      dest="jpegtran_prog", default=1,
-                      help="Don't try to reduce size by making "
-                      "progressive JPEGs with jpegtran")
-    parser.add_option("-t", "--disable_jpegtran", action="store_false",
-                      dest="jpegtran", default=1,
-                      help="Do not optimize with jpegtran")
-    parser.add_option("-b", "--bigger", action="store_true",
-                      dest="bigger", default=0,
-                      help="Save optimized files that are larger than "
-                           "the originals")
-    parser.add_option("-n", "--noop", action="store_true",
-                      dest="test", default=0,
-                      help="Do not replace files with optimized versions")
-    parser.add_option("-l", "--list", action="store_true",
-                      dest="list_only", default=0,
-                      help="Only list files that would be optimized")
-    parser.add_option("-c", "--comics", action="store_true",
-                      dest="comics", default=0,
-                      help="Also optimize comic book archives (cbz & cbr)")
-    parser.add_option("-g", "--disable_gifsicle", action="store_false",
-                      dest="gifsicle", default=1,
-                      help="disable optimizing animated GIFs")
-    parser.add_option("-C", "--disable_convert_type", action="store_false",
-                      dest="convert_types", default=1,
-                      help="Do not convert other lossless formats like "
-                           "GIFs and TIFFs to PNGs when optimizing")
-    parser.add_option("-S", "--disable_follow_symlinks", action="store_false",
-                      dest="follow_symlinks", default=1,
-                      help="disable following symlinks for files and "
+    parser = argparse.ArgumentParser(usage=usage)
+    parser.add_argument("-d", "--dir", action="store", dest="dir",
+                        default=os.getcwd(),
+                        help="Directory to change to before optimiziaton")
+    parser.add_argument("-f", "--formats", action="store", dest="formats",
+                        default=DEFAULT_FORMATS,
+                        help="Only optimize images of the specifed '"
+                             + FORMAT_DELIMETER + "' delimited formats")
+    parser.add_argument("-r", "--recurse", action="store_true",
+                        dest="recurse", default=0,
+                        help="Recurse down through directories ignoring the"
+                             "image file arguments on the command line")
+    parser.add_argument("-q", "--quiet", action="store_false",
+                        dest="verbose", default=1,
+                        help="Do not display output")
+    parser.add_argument("-o", "--disable_optipng", action="store_false",
+                        dest="optipng", default=1,
+                        help="Do not optimize with optipng")
+    parser.add_argument("-a", "--enable_advpng", action="store_true",
+                        dest="advpng", default=0,
+                        help="Optimize with advpng (disabled by default)")
+    parser.add_argument("-p", "--disable_pngout", action="store_false",
+                        dest="pngout", default=1,
+                        help="Do not optimize with pngout")
+    parser.add_argument("-j", "--disable_jpegrescan", action="store_false",
+                        dest="jpegrescan", default=1,
+                        help="Do not optimize with jpegrescan")
+    parser.add_argument("-e", "--disable_progressive", action="store_false",
+                        dest="jpegtran_prog", default=1,
+                        help="Don't try to reduce size by making "
+                        "progressive JPEGs with jpegtran")
+    parser.add_argument("-t", "--disable_jpegtran", action="store_false",
+                        dest="jpegtran", default=1,
+                        help="Do not optimize with jpegtran")
+    parser.add_argument("-b", "--bigger", action="store_true",
+                        dest="bigger", default=0,
+                        help="Save optimized files that are larger than "
+                             "the originals")
+    parser.add_argument("-n", "--noop", action="store_true",
+                        dest="test", default=0,
+                        help="Do not replace files with optimized versions")
+    parser.add_argument("-l", "--list", action="store_true",
+                        dest="list_only", default=0,
+                        help="Only list files that would be optimized")
+    parser.add_argument("-c", "--comics", action="store_true",
+                        dest="comics", default=0,
+                        help="Also optimize comic book archives (cbz & cbr)")
+    parser.add_argument("-g", "--disable_gifsicle", action="store_false",
+                        dest="gifsicle", default=1,
+                        help="disable optimizing animated GIFs")
+    parser.add_argument("-C", "--disable_convert_type", action="store_false",
+                        dest="convert_types", default=1,
+                        help="Do not convert other lossless formats like "
+                             "GIFs and TIFFs to PNGs when optimizing")
+    parser.add_argument("-S", "--disable_follow_symlinks", action="store_false",
+                        dest="follow_symlinks", default=1,
+                        help="disable following symlinks for files and "
                            "directories")
-    parser.add_option("-D", "--optimize_after", action="store",
-                      dest="optimize_after", default=None,
-                      help="only optimize files after the specified "
-                           "timestamp. Supercedes -T")
-    parser.add_option("-T", "--record_timestamp", action="store_true",
-                      dest="record_timestamp", default=0,
-                      help="Store the time of the optimization of full "
-                           "directories in directory local dotfiles.")
-    parser.add_option("-v", "--version", action="store_true",
-                      dest="version", default=0,
-                      help="display the version number")
+    parser.add_argument("-D", "--optimize_after", action="store",
+                        dest="optimize_after", default=None,
+                        help="only optimize files after the specified "
+                             "timestamp. Supercedes -T")
+    parser.add_argument("-T", "--record_timestamp", action="store_true",
+                        dest="record_timestamp", default=0,
+                        help="Store the time of the optimization of full "
+                             "directories in directory local dotfiles.")
+    parser.add_argument("-v", "--version", action="version",
+                        version=__version__,
+                        help="display the version number")
+    parser.add_argument("paths", metavar="path", type=str, nargs="+",
+                        help="File or directory paths to optimize")
 
-    (options, arguments) = parser.parse_args()
+    arguments = parser.parse_args()
 
-    if options.version:
-        print('version', __version__)
-        exit(0)
+    program_reqs(arguments)
 
-    if len(arguments) == 0:
-        parser.print_help()
-        exit(1)
-
-    program_reqs(options)
-
-    if options.convert_types:
-        options.to_png_formats = PNG_CONVERTABLE_FORMATS
+    if arguments.convert_types:
+        arguments.to_png_formats = PNG_CONVERTABLE_FORMATS
     else:
-        options.to_png_formats = PNG_FORMATS
+        arguments.to_png_formats = PNG_FORMATS
 
-    if options.formats == DEFAULT_FORMATS:
-        options.formats = options.to_png_formats | JPEG_FORMATS | \
-                          COMIC_FORMATS | GIF_FORMATS
+    if arguments.formats == DEFAULT_FORMATS:
+        arguments.formats = arguments.to_png_formats | JPEG_FORMATS | \
+                            COMIC_FORMATS | GIF_FORMATS
     else:
-        options.formats = options.formats.split(FORMAT_DELIMETER)
+        arguments.formats = arguments.formats.split(FORMAT_DELIMETER)
 
-    if options.optimize_after is not None:
+    if arguments.optimize_after is not None:
         try:
-            after_dt = dateutil.parser.parse(options.optimize_after)
-            options.optimize_after = time.mktime(after_dt.timetuple())
+            after_dt = dateutil.parser.parse(arguments.optimize_after)
+            arguments.optimize_after = time.mktime(after_dt.timetuple())
         except Exception as ex:
             print(ex)
             print('Could not parse date to optimize after.')
             exit(1)
 
-    arguments.sort()
-
-    return (options, arguments)
+    return arguments
 
 
 def replace_ext(filename, new_ext):
@@ -835,11 +827,11 @@ def main():
     # Init
     ImageFile.MAXBLOCK = 3000000  # default is 64k
 
-    (options, arguments) = get_options_and_arguments()
+    arguments = get_arguments()
 
-    os.chdir(options.dir)
+    os.chdir(arguments.dir)
     cwd = os.getcwd()
-    filter_list = set(arguments)
+    filter_list = set(arguments.paths)
 
     manager = multiprocessing.Manager()
     total_bytes_in = manager.Value(int, 0)
@@ -853,7 +845,7 @@ def main():
     # Optimize
     for filename in filter_list:
 
-        if options.recurse and os.path.isdir(filename):
+        if arguments.recurse and os.path.isdir(filename):
             # dirs to put timestamps in later
             record_dirs.add(filename)
 
@@ -861,8 +853,8 @@ def main():
             # optimize absolute paths on the command line
             abs_dir = os.path.dirname(filename)
             optimize_after = get_optimize_after(abs_dir, True, None,
-                                                options)
-            optimize_files(abs_dir, [filename], options,
+                                                arguments)
+            optimize_files(abs_dir, [filename], arguments,
                            multiproc, optimize_after)
 
         else:
@@ -870,9 +862,8 @@ def main():
 
     if len(cwd_files):
         # optimize cwd files
-        optimize_after = get_optimize_after(cwd, True, None, options)
-        optimize_files(cwd, cwd_files, options, multiproc, optimize_after)
-
+        optimize_after = get_optimize_after(cwd, True, None, arguments)
+        optimize_files(cwd, cwd_files, arguments, multiproc, optimize_after)
 
     pool = multiproc['pool']
     pool.close()
@@ -880,9 +871,10 @@ def main():
 
     # Finish up
     for filename in record_dirs:
-        record_timestamp(filename, options)
+        record_timestamp(filename, arguments)
 
-    report_totals(multiproc['in'].get(), multiproc['out'].get(), options)
+    report_totals(multiproc['in'].get(), multiproc['out'].get(),
+                  arguments)
 
 
 if __name__ == '__main__':
