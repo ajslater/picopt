@@ -154,11 +154,10 @@ def program_reqs(options):
 
 def get_arguments():
     """parses the command line"""
-    usage = "%(prog)s [options] [image files]\n"
-    usage += "version %s\n" % __version__
-    usage += "Uses optiping, pngout, gifsicle, jpegrescan and " \
-             "jpegtran if they are on the path."
-    parser = argparse.ArgumentParser(usage=usage)
+    usage = "%(prog)s [options] [image files]"
+    programs_str = ', '.join(PROGRAMS[:-1])+' and '+PROGRAMS[-1]
+    description = "Uses "+programs_str+" if they are on the path."
+    parser = argparse.ArgumentParser(usage=usage, description=description)
     parser.add_argument("-d", "--dir", action="store", dest="dir",
                         default=os.getcwd(),
                         help="Directory to change to before optimiziaton")
@@ -208,8 +207,8 @@ def get_arguments():
     parser.add_argument("-g", "--disable_gifsicle", action="store_false",
                         dest="gifsicle", default=1,
                         help="disable optimizing animated GIFs")
-    parser.add_argument("-C", "--disable_convert_type", action="store_false",
-                        dest="convert_types", default=1,
+    parser.add_argument("-C", "--disable_convert_type", action="store_const",
+                        dest="to_png_formats", const=PNG_CONVERTABLE_FORMATS, default=PNG_FORMATS,
                         help="Do not convert other lossless formats like "
                              "GIFs and TIFFs to PNGs when optimizing")
     parser.add_argument("-S", "--disable_follow_symlinks", action="store_false",
@@ -234,14 +233,9 @@ def get_arguments():
 
     program_reqs(arguments)
 
-    if arguments.convert_types:
-        arguments.to_png_formats = PNG_CONVERTABLE_FORMATS
-    else:
-        arguments.to_png_formats = PNG_FORMATS
-
     if arguments.formats == DEFAULT_FORMATS:
-        arguments.formats = arguments.to_png_formats | JPEG_FORMATS | \
-                            COMIC_FORMATS | GIF_FORMATS
+        extra_formats = JPEG_FORMATS | COMIC_FORMATS | GIF_FORMATS
+        arguments.formats = arguments.to_png_formats | extra_formats
     else:
         arguments.formats = arguments.formats.split(FORMAT_DELIMETER)
 
