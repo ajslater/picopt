@@ -63,14 +63,16 @@ PROGRAMS = ('optipng', 'pngout', 'jpegrescan', 'jpegtran', 'gifsicle',
             'advpng')
 RECORD_FILENAME = '.%s_timestamp' % PROGRAM_NAME
 if sys.version > '3':
-    long = int
+    LongInt = int
+else:
+    LongInt = long
 
 ABBREVS = (
-    (1 << long(50), 'PiB'),
-    (1 << long(40), 'TiB'),
-    (1 << long(30), 'GiB'),
-    (1 << long(20), 'MiB'),
-    (1 << long(10), 'kiB'),
+    (1 << LongInt(50), 'PiB'),
+    (1 << LongInt(40), 'TiB'),
+    (1 << LongInt(30), 'GiB'),
+    (1 << LongInt(20), 'MiB'),
+    (1 << LongInt(10), 'kiB'),
     (1, 'bytes')
 )
 
@@ -208,13 +210,15 @@ def get_arguments():
                         dest="gifsicle", default=1,
                         help="disable optimizing animated GIFs")
     parser.add_argument("-C", "--disable_convert_type", action="store_const",
-                        dest="to_png_formats", const=PNG_CONVERTABLE_FORMATS, default=PNG_FORMATS,
+                        dest="to_png_formats",
+                        const=PNG_CONVERTABLE_FORMATS, default=PNG_FORMATS,
                         help="Do not convert other lossless formats like "
                              "GIFs and TIFFs to PNGs when optimizing")
-    parser.add_argument("-S", "--disable_follow_symlinks", action="store_false",
+    parser.add_argument("-S", "--disable_follow_symlinks",
+                              action="store_false",
                         dest="follow_symlinks", default=1,
                         help="disable following symlinks for files and "
-                           "directories")
+                             "directories")
     parser.add_argument("-D", "--optimize_after", action="store",
                         dest="optimize_after", default=None,
                         help="only optimize files after the specified "
@@ -400,7 +404,7 @@ def optimize_png(filename, options):
     filesize_in = os.stat(filename).st_size
 
     for ext_prog in ('optipng', 'advpng', 'pngout'):
-        if not getattr(options, ext_prog) :
+        if not getattr(options, ext_prog):
             continue
         bytes_diff, rep, final_filename = optimize_image_external(
             final_filename, options, globals()[ext_prog])
@@ -675,6 +679,7 @@ def record_timestamp(pathname_full, options):
     except IOError:
         print("Could not set timestamp in %s" % pathname_full)
 
+
 def get_optimize_after(current_path, look_up, optimize_after, options):
     """ Figure out the which mtime to check against and if we look up
         return that we've looked up too"""
@@ -703,7 +708,7 @@ def optimize_dir(filename_full, options, multiproc, optimize_after):
 
 
 def optimize_comic_archive(filename_full, image_format, options, multiproc,
-                          optimize_after):
+                           optimize_after):
     """ Optimize a comic archive """
     tmp_dir_basename = comic_archive_uncompress(filename_full,
                                                 image_format, options)
@@ -771,11 +776,11 @@ def optimize_files(cwd, filter_list, options, multiproc, optimize_after):
             continue
         elif os.path.isdir(filename_full):
             results = optimize_dir(filename_full, options, multiproc,
-                         optimize_after)
+                                   optimize_after)
             result_set = result_set.union(results)
         elif os.path.exists(filename_full):
             result = optimize_file(filename_full, options, multiproc,
-                          optimize_after)
+                                   optimize_after)
             if result:
                 result_set.add(result)
         elif options.verbose:
@@ -816,7 +821,6 @@ def report_totals(bytes_in, bytes_out, options):
 def main():
     """main"""
     #TODO make the relevant parts of this call as a library
-
 
     # Init
     ImageFile.MAXBLOCK = 3000000  # default is 64k
