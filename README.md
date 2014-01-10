@@ -78,8 +78,7 @@ Optimize everything in my iPhoto library, but only after the last time i did thi
 Packaged For
 ------------
 
-#### Arch Linux:
-    https://aur.archlinux.org/packages/picopt/
+* [Arch Linux](https://aur.archlinux.org/packages/picopt/)
 
 
 Alternatives
