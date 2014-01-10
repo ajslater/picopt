@@ -75,6 +75,12 @@ Optimize everything in my iPhoto library, but only after the last time i did thi
 
     picopt.py -rSCT -D '2013 June 1 14:00' 'Pictures/iPhoto Library'
 
+Packaged For
+------------
+
+#### Arch Linux:
+    https://aur.archlinux.org/packages/picopt/
+
 
 Alternatives
 ------------
