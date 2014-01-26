@@ -237,6 +237,8 @@ def get_arguments():
 
     program_reqs(arguments)
 
+    arguments.paths = set(arguments.paths)
+
     if arguments.formats == DEFAULT_FORMATS:
         extra_formats = JPEG_FORMATS | COMIC_FORMATS | GIF_FORMATS
         arguments.formats = arguments.to_png_formats | extra_formats
@@ -316,7 +318,8 @@ def jpegtranprog(filename, new_filename):
 
 def jpegrescan(filename, new_filename):
     """runs the EXTERNAL program jpegrescan"""
-    args = JPEGRESCAN_ARGS + [filename, new_filename]
+    args = JPEGRESCAN_ARGS
+    args += [filename, new_filename]
     run_ext(args)
 
 
@@ -829,7 +832,6 @@ def main():
 
     os.chdir(arguments.dir)
     cwd = os.getcwd()
-    filter_list = set(arguments.paths)
 
     manager = multiprocessing.Manager()
     total_bytes_in = manager.Value(int, 0)
@@ -841,7 +843,7 @@ def main():
     cwd_files = set()
 
     # Optimize
-    for filename in filter_list:
+    for filename in arguments.paths:
 
         if arguments.recurse and os.path.isdir(filename):
             # dirs to put timestamps in later
