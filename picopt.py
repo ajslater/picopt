@@ -123,31 +123,31 @@ def humanize_bytes(num_bytes, precision=1):
     return '%.*f %s' % (precision, factored_bytes, factor_suffix)
 
 
-def does_external_program_run(prog, options):
+def does_external_program_run(prog, arguments):
     """test to see if the external programs can be run"""
     try:
         null = open('/dev/null')
         subprocess.call([prog, '-h'], stdout=null, stderr=null)
         result = True
     except OSError:
-        if options.verbose:
+        if arguments.verbose:
             print("couldn't run %s" % prog)
         result = False
 
     return result
 
 
-def program_reqs(options):
+def program_reqs(arguments):
     """run the external program tester on the required binaries"""
     for program_name in PROGRAMS:
-        val = getattr(options, program_name) \
-            and does_external_program_run(program_name, options)
-        setattr(options, program_name, val)
+        val = getattr(arguments, program_name) \
+            and does_external_program_run(program_name, arguments)
+        setattr(arguments, program_name, val)
 
-    do_png = options.optipng or options.pngout or options.advpng
-    do_jpeg = options.jpegrescan or options.jpegtran
+    do_png = arguments.optipng or arguments.pngout or arguments.advpng
+    do_jpeg = arguments.jpegrescan or arguments.jpegtran
 
-    do_comics = options.comics
+    do_comics = arguments.comics
 
     if not do_png and not do_jpeg and not do_comics:
         print("All optimizers are not available or disabled.")
@@ -156,7 +156,7 @@ def program_reqs(options):
 
 def get_arguments():
     """parses the command line"""
-    usage = "%(prog)s [options] [image files]"
+    usage = "%(prog)s [arguments] [image files]"
     programs_str = ', '.join(PROGRAMS[:-1])+' and '+PROGRAMS[-1]
     description = "Uses "+programs_str+" if they are on the path."
     parser = argparse.ArgumentParser(usage=usage, description=description)
@@ -323,15 +323,15 @@ def jpegrescan(filename, new_filename):
     run_ext(args)
 
 
-def is_format_selected(image_format, formats, options, mode):
+def is_format_selected(image_format, formats, arguments, mode):
     """returns a boolean indicating weather or not the image format
-    was selected by the command line options"""
-    intersection = formats & options.formats
+    was selected by the command line arguments"""
+    intersection = formats & arguments.formats
     result = (image_format in intersection) and mode
     return result
 
 
-def cleanup_after_optimize(filename, new_filename, options):
+def cleanup_after_optimize(filename, new_filename, arguments):
     """report results. replace old file with better one or discard new wasteful
        file"""
 
@@ -343,14 +343,14 @@ def cleanup_after_optimize(filename, new_filename, options):
         bytes_diff['in'] = filesize_in
         bytes_diff['out'] = filesize_in  # overwritten on succes below
         if (filesize_out > 0) and ((filesize_out < filesize_in)
-                                   or options.bigger):
+                                   or arguments.bigger):
             old_image_format = get_image_format(filename)
             new_image_format = get_image_format(new_filename)
             if old_image_format != new_image_format:
                 final_filename = replace_ext(filename,
                                              new_image_format.lower())
             rem_filename = filename + REMOVE_EXT
-            if not options.test:
+            if not arguments.test:
                 os.rename(filename, rem_filename)
                 os.rename(new_filename, final_filename)
                 os.remove(rem_filename)
@@ -366,7 +366,7 @@ def cleanup_after_optimize(filename, new_filename, options):
     return bytes_diff, final_filename
 
 
-def optimize_image_external(filename, options, func):
+def optimize_image_external(filename, arguments, func):
     """this could be a decorator"""
     new_filename = os.path.normpath(filename + NEW_EXT)
     shutil.copy2(filename, new_filename)
@@ -375,7 +375,7 @@ def optimize_image_external(filename, options, func):
 
     bytes_diff, final_filename = cleanup_after_optimize(filename,
                                                         new_filename,
-                                                        options)
+                                                        arguments)
     percent = new_percent_saved(bytes_diff['in'], bytes_diff['out'])
     if percent != 0:
         report = '%s: %s' % (func.__name__, percent)
@@ -384,11 +384,11 @@ def optimize_image_external(filename, options, func):
     return (bytes_diff, report, final_filename)
 
 
-def optimize_gif(filename, options):
+def optimize_gif(filename, arguments):
     """run EXTERNAL programs to optimize animated gifs"""
-    if options.gifsicle:
+    if arguments.gifsicle:
         bytes_diff, rep, final_filename = optimize_image_external(
-            filename, options, gifsicle)
+            filename, arguments, gifsicle)
     else:
         rep = ['Skipping animated GIF: %s' % filename]
         bytes_diff = {'in': 0, 'out': 0}
@@ -398,7 +398,7 @@ def optimize_gif(filename, options):
     return bytes_diff, report_list, final_filename
 
 
-def optimize_png(filename, options):
+def optimize_png(filename, arguments):
     """run EXTERNAL programs to optimize lossless formats to PNGs"""
     bytes_diff = None
     report_list = []
@@ -407,10 +407,10 @@ def optimize_png(filename, options):
     filesize_in = os.stat(filename).st_size
 
     for ext_prog in ('optipng', 'advpng', 'pngout'):
-        if not getattr(options, ext_prog):
+        if not getattr(arguments, ext_prog):
             continue
         bytes_diff, rep, final_filename = optimize_image_external(
-            final_filename, options, globals()[ext_prog])
+            final_filename, arguments, globals()[ext_prog])
         if rep:
             report_list += [rep]
 
@@ -423,18 +423,18 @@ def optimize_png(filename, options):
     return bytes_diff, report_list, final_filename
 
 
-def optimize_jpeg(filename, options):
+def optimize_jpeg(filename, arguments):
     """run EXTERNAL programs to optimize jpeg formats"""
     final_filename = filename
-    if options.jpegrescan:
+    if arguments.jpegrescan:
         bytes_diff, rep, final_filename = optimize_image_external(
-            final_filename, options, jpegrescan)
-    elif options.jpegtran_prog:
+            final_filename, arguments, jpegrescan)
+    elif arguments.jpegtran_prog:
         bytes_diff, rep, final_filename = optimize_image_external(
-            final_filename, options, jpegtranprog)
-    elif options.jpegtran:
+            final_filename, arguments, jpegtranprog)
+    elif arguments.jpegtran:
         bytes_diff, rep, final_filename = optimize_image_external(
-            final_filename, options, jpegtranopti)
+            final_filename, arguments, jpegtranopti)
     else:
         rep = ['Skipping JPEG file: %s' % filename]
         bytes_diff = {'in': 0, 'out': 0}
@@ -447,32 +447,32 @@ def optimize_jpeg(filename, options):
 def optimize_image(arg):
     """optimizes a given image from a filename"""
     try:
-        filename, image_format, options, total_bytes_in, total_bytes_out = arg
+        filename, image_format, arguments, total_bytes_in, total_bytes_out = arg
 
         #print(filename, image_format, "starting...")
 
-        if is_format_selected(image_format, options.to_png_formats,
-                              options, options.optipng or options.pngout):
+        if is_format_selected(image_format, arguments.to_png_formats,
+                              arguments, arguments.optipng or arguments.pngout):
             bytes_diff, report_list, final_filename = optimize_png(
-                filename, options)
-        elif is_format_selected(image_format, JPEG_FORMATS, options,
-                                options.jpegrescan or options.jpegtran):
+                filename, arguments)
+        elif is_format_selected(image_format, JPEG_FORMATS, arguments,
+                                arguments.jpegrescan or arguments.jpegtran):
             bytes_diff, report_list, final_filename = optimize_jpeg(
-                filename, options)
-        elif is_format_selected(image_format, GIF_FORMATS, options,
-                                options.gifsicle):
+                filename, arguments)
+        elif is_format_selected(image_format, GIF_FORMATS, arguments,
+                                arguments.gifsicle):
             # this captures still GIFs too if not caught above
             bytes_diff, report_list, final_filename = optimize_gif(
-                filename, options)
+                filename, arguments)
 
         else:
-            if options.verbose:
+            if arguments.verbose:
                 print(filename, image_format)  # image.mode)
                 print("\tFile format not selected.")
             return
 
         optimize_accounting(final_filename, bytes_diff, report_list,
-                            total_bytes_in, total_bytes_out, options)
+                            total_bytes_in, total_bytes_out, arguments)
     except Exception as exc:
         print(exc)
         traceback.print_exc(exc)
@@ -480,7 +480,7 @@ def optimize_image(arg):
 
 
 def optimize_accounting(filename, bytes_diff, report_list, total_bytes_in,
-                        total_bytes_out, options):
+                        total_bytes_out, arguments):
     """record the percent saved, print it and add it to the totals"""
     report = filename + ': '
     total = new_percent_saved(bytes_diff['in'], bytes_diff['out'])
@@ -488,7 +488,7 @@ def optimize_accounting(filename, bytes_diff, report_list, total_bytes_in,
         report += total
     else:
         report += '0%'
-    if options.test:
+    if arguments.test:
         report += ' could be saved.'
     tools_report = ', '.join(report_list)
     if tools_report:
@@ -536,23 +536,23 @@ def get_image_format(filename):
             elif rarfile.is_rarfile(filename):
                 image_format = CBR_FORMAT
         #TODO levels of verbosity
-#        if image_format == 'ERROR' and options.verbose and \
-#                not options.list_only:
+#        if image_format == 'ERROR' and arguments.verbose and \
+#                not arguments.list_only:
 #            print(filename, "doesn't look like an image or comic archive.")
     return image_format
 
 
-def detect_file(filename, options):
+def detect_file(filename, arguments):
     """decides what to do with the file"""
     image_format = get_image_format(filename)
 
-    if image_format in options.formats:
+    if image_format in arguments.formats:
         return image_format
 
     if image_format in ('NONE', 'ERROR'):
         return
 
-    if options.verbose and not options.list_only:
+    if arguments.verbose and not arguments.list_only:
         print(filename, image_format, 'is not a enabled image or '
                                       'comic archive type.')
 
@@ -569,7 +569,7 @@ def comic_archive_compress(args):
     """
 
     try:
-        filename, total_bytes_in, total_bytes_out, options = args
+        filename, total_bytes_in, total_bytes_out, arguments = args
 
         tmp_dir = get_archive_tmp_dir(filename)
 
@@ -596,21 +596,21 @@ def comic_archive_compress(args):
 
         bytes_diff, final_filename = cleanup_after_optimize(filename,
                                                             new_filename,
-                                                            options)
+                                                            arguments)
 
         optimize_accounting(final_filename, bytes_diff, [''],
-                            total_bytes_in, total_bytes_out, options)
+                            total_bytes_in, total_bytes_out, arguments)
     except Exception as exc:
         print(exc)
         traceback.print_exc(exc)
         raise exc
 
 
-def comic_archive_uncompress(filename, image_format, options):
+def comic_archive_uncompress(filename, image_format, arguments):
     """ uncompress comic archives and return the name of the working
         directory we uncompressed into """
 
-    if not options.comics:
+    if not arguments.comics:
         report = ['Skipping archive file: %s' % filename]
         report_list = [report]
         bytes_diff = {'in': 0, 'out': 0}
@@ -638,7 +638,7 @@ def comic_archive_uncompress(filename, image_format, options):
     return os.path.basename(tmp_dir)
 
 
-def get_timestamp(dirname_full, remove, options):
+def get_timestamp(dirname_full, remove, arguments):
     """ get the timestamp from the timestamp file and optionally remove it
         if we're going to write another one.
     """
@@ -646,31 +646,31 @@ def get_timestamp(dirname_full, remove, options):
 
     if os.path.exists(record_filename):
         mtime = os.stat(record_filename).st_mtime
-        if options.record_timestamp and remove:
+        if arguments.record_timestamp and remove:
             os.remove(record_filename)
         return mtime
 
     return None
 
 
-def get_parent_timestamp(full_pathname, mtime, options):
+def get_parent_timestamp(full_pathname, mtime, arguments):
     """ get the timestamps up the directory tree because they affect
         every subdirectory """
     parent_pathname = os.path.dirname(full_pathname)
 
-    mtime = max(get_timestamp(parent_pathname, False, options), mtime)
+    mtime = max(get_timestamp(parent_pathname, False, arguments), mtime)
 
     if parent_pathname == os.path.dirname(parent_pathname):
         return mtime
 
-    return get_parent_timestamp(parent_pathname, mtime, options)
+    return get_parent_timestamp(parent_pathname, mtime, arguments)
 
 
-def record_timestamp(pathname_full, options):
+def record_timestamp(pathname_full, arguments):
     """Record the timestamp of running in a dotfile"""
-    if options.test or options.list_only or not options.record_timestamp:
+    if arguments.test or arguments.list_only or not arguments.record_timestamp:
         return
-    elif not options.follow_symlinks and os.path.islink(pathname_full):
+    elif not arguments.follow_symlinks and os.path.islink(pathname_full):
         return
     elif not os.path.isdir(pathname_full):
         return
@@ -683,49 +683,49 @@ def record_timestamp(pathname_full, options):
         print("Could not set timestamp in %s" % pathname_full)
 
 
-def get_optimize_after(current_path, look_up, optimize_after, options):
+def get_optimize_after(current_path, look_up, optimize_after, arguments):
     """ Figure out the which mtime to check against and if we look up
         return that we've looked up too"""
-    if options.optimize_after is not None:
-        optimize_after = options.optimize_after
+    if arguments.optimize_after is not None:
+        optimize_after = arguments.optimize_after
     else:
         if look_up:
             optimize_after = get_parent_timestamp(current_path,
                                                   optimize_after,
-                                                  options)
-        optimize_after = max(get_timestamp(current_path, True, options),
+                                                  arguments)
+        optimize_after = max(get_timestamp(current_path, True, arguments),
                              optimize_after)
     return optimize_after
 
 
-def optimize_dir(filename_full, options, multiproc, optimize_after):
+def optimize_dir(filename_full, arguments, multiproc, optimize_after):
     """ Recursively optimize a directory """
-    if not options.recurse:
+    if not arguments.recurse:
         return
     next_dir_list = os.listdir(filename_full)
     next_dir_list.sort()
     optimize_after = get_optimize_after(filename_full, False,
-                                        optimize_after, options)
-    return optimize_files(filename_full, next_dir_list, options,
+                                        optimize_after, arguments)
+    return optimize_files(filename_full, next_dir_list, arguments,
                           multiproc, optimize_after)
 
 
-def optimize_comic_archive(filename_full, image_format, options, multiproc,
+def optimize_comic_archive(filename_full, image_format, arguments, multiproc,
                            optimize_after):
     """ Optimize a comic archive """
     tmp_dir_basename = comic_archive_uncompress(filename_full,
-                                                image_format, options)
+                                                image_format, arguments)
     # recurse into comic archive even if flag not set
-    if options.recurse:
-        archive_options = options
+    if arguments.recurse:
+        archive_arguments = arguments
     else:
-        archive_options = copy.deepcopy(options)
-        archive_options.recurse = True
+        archive_arguments = copy.deepcopy(arguments)
+        archive_arguments.recurse = True
 
     # optimize contents of comic archive
     dirname = os.path.dirname(filename_full)
     result_set = optimize_files(dirname, [tmp_dir_basename],
-                                archive_options, multiproc,
+                                archive_arguments, multiproc,
                                 optimize_after)
 
     # I'd like to stuff this waiting into the compression process,
@@ -734,36 +734,36 @@ def optimize_comic_archive(filename_full, image_format, options, multiproc,
         result.wait()
 
     pool = multiproc['pool']
-    args = (filename_full, multiproc['in'], multiproc['out'], options)
+    args = (filename_full, multiproc['in'], multiproc['out'], arguments)
     return pool.apply_async(comic_archive_compress, args=(args,))
 
 
-def optimize_file(filename_full, options, multiproc, optimize_after):
+def optimize_file(filename_full, arguments, multiproc, optimize_after):
     """ Optimize an individual file """
     if optimize_after is not None:
         mtime = os.stat(filename_full).st_mtime
         if mtime <= optimize_after:
             return
 
-    image_format = detect_file(filename_full, options)
+    image_format = detect_file(filename_full, arguments)
     if not image_format:
         return
 
-    if options.list_only:
+    if arguments.list_only:
         # list only
         print("%s : %s" % (filename_full, image_format))
     elif is_format_selected(image_format, COMIC_FORMATS,
-                            options, options.comics):
+                            arguments, arguments.comics):
         return optimize_comic_archive(filename_full, image_format,
-                                      options, multiproc, optimize_after)
+                                      arguments, multiproc, optimize_after)
     else:
         # regular image
-        args = [filename_full, image_format, options,
+        args = [filename_full, image_format, arguments,
                 multiproc['in'], multiproc['out']]
         return multiproc['pool'].apply_async(optimize_image, args=(args,))
 
 
-def optimize_files(cwd, filter_list, options, multiproc, optimize_after):
+def optimize_files(cwd, filter_list, arguments, multiproc, optimize_after):
     """sorts through a list of files, decends directories and
        calls the optimizer on the extant files"""
 
@@ -773,31 +773,31 @@ def optimize_files(cwd, filter_list, options, multiproc, optimize_after):
         filename_full = os.path.join(cwd, filename)
         filename_full = os.path.normpath(filename_full)
 
-        if not options.follow_symlinks and os.path.islink(filename_full):
+        if not arguments.follow_symlinks and os.path.islink(filename_full):
             continue
         elif os.path.basename(filename_full) == RECORD_FILENAME:
             continue
         elif os.path.isdir(filename_full):
-            results = optimize_dir(filename_full, options, multiproc,
+            results = optimize_dir(filename_full, arguments, multiproc,
                                    optimize_after)
             result_set = result_set.union(results)
         elif os.path.exists(filename_full):
-            result = optimize_file(filename_full, options, multiproc,
+            result = optimize_file(filename_full, arguments, multiproc,
                                    optimize_after)
             if result:
                 result_set.add(result)
-        elif options.verbose:
+        elif arguments.verbose:
             print(filename_full, 'was not found.')
     return result_set
 
 
-def report_totals(bytes_in, bytes_out, options):
+def report_totals(bytes_in, bytes_out, arguments):
     """report the total number and percent of bytes saved"""
     if bytes_in:
         bytes_saved = bytes_in - bytes_out
         percent_bytes_saved = bytes_saved / bytes_in * 100
         msg = ''
-        if options.test:
+        if arguments.test:
             if percent_bytes_saved > 0:
                 msg += "Could save"
             elif percent_bytes_saved == 0:
@@ -814,7 +814,7 @@ def report_totals(bytes_in, bytes_out, options):
         msg += " a total of %s or %.*f%s" % (humanize_bytes(bytes_saved),
                                              2, percent_bytes_saved, '%')
         print(msg)
-        if options.test:
+        if arguments.test:
             print("Test run did not change any files.")
 
     else:
