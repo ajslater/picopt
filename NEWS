@@ -1,5 +1,6 @@
-* Add destroy metatdata option at the suggestion of Alex Roe.
-* Added multithreaded jpegrescan operation when picopt isn't optimizing enough files at onece to use up all the cores itself. At the suggestion of Alex Roe.
+v0.12.0
+* Added multithreaded jpegrescan operation when picopt isn't using up all the cores at the suggestion of Alex Roe.
+* Added destroy metatdata option at the suggestion of Alex Roe.
 
 v0.11.4
 * Added to ArchLinux by Alex Roe.
