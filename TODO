@@ -10,7 +10,6 @@ More formal tests.
 better packaging?
 register with pypi?
 
-enable multithreaded options for one file only case
-option for stripping exif & thumbs from comics
+clean up options with capitals for disable and lowercase for enable
 
 libpicopt with a seperate cli

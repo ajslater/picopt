@@ -35,10 +35,7 @@ NEW_EXT = '.%s-optimized.png' % PROGRAM_NAME
 ARCHIVE_TMP_DIR_TEMPLATE = PROGRAM_NAME+'_tmp_%s'
 NEW_ARCHIVE_SUFFIX = '%s-optimized.cbz' % PROGRAM_NAME
 # Program args
-JPEGTRAN_OPTI_ARGS = ['jpegtran', '-copy', 'all', '-optimize',
-                      '-outfile']
-JPEGTRAN_PROG_ARGS = ['jpegtran', '-copy', 'all', '-optimize',
-                      '-progressive', '-outfile']
+JPEGTRAN_ARGS = ['jpegtran', '-optimize']
 JPEGRESCAN_ARGS = ['jpegrescan']
 OPTIPNG_ARGS = ['optipng', '-o6', '-fix', '-preserve', '-force', '-quiet']
 ADVPNG_ARGS = ['advpng', '-z', '-4', '-f']
@@ -230,6 +227,9 @@ def get_arguments():
     parser.add_argument("-v", "--version", action="version",
                         version=__version__,
                         help="display the version number")
+    parser.add_argument("-m", "--destroy_metadata", action="store_true",
+                        dest="destroy_metadata", default=0,
+                        help="*Destroy* metadata like EXIF and JFIF")
     parser.add_argument("paths", metavar="path", type=str, nargs="+",
                         help="File or directory paths to optimize")
 
@@ -315,18 +315,17 @@ def gifsicle(filename, new_filename, arguments):
     run_ext(args)
 
 
-def jpegtranopti(filename, new_filename, arguments):
-    """runs the EXTERNAL program jpegtran with huffman optimization
-       on the file"""
-    args = JPEGTRAN_OPTI_ARGS + [new_filename, filename]
-    run_ext(args)
-
-
-def jpegtranprog(filename, new_filename, arguments):
-    """runs the EXTERNAL program jpegtran with progressive transform
-       on the file"""
-    args = JPEGTRAN_PROG_ARGS + [new_filename, filename]
-    run_ext(args)
+def jpegtran(filename, new_filename, arguments):
+    """create argument list for jpegtran"""
+    args = copy.copy(JPEGTRAN_ARGS)
+    if arguments.destroy_metadata:
+        args += ["-copy", "none"]
+    else:
+        args += ["-copy", "all"]
+    if arguments.jpegtran_prog:
+        args += ["-progressive"]
+    args += ['-outfile']
+    args += [new_filename, filename]
 
 
 def jpegrescan(filename, new_filename, arguments):
@@ -334,6 +333,8 @@ def jpegrescan(filename, new_filename, arguments):
     args = copy.copy(JPEGRESCAN_ARGS)
     if arguments.jpegrescan_multithread:
         args += ['-t']
+    if arguments.destroy_metadata:
+        args += ['-s']
     args += [filename, new_filename]
     run_ext(args)
 
@@ -444,12 +445,9 @@ def optimize_jpeg(filename, arguments):
     if arguments.jpegrescan:
         bytes_diff, rep, final_filename = optimize_image_external(
             final_filename, arguments, jpegrescan)
-    elif arguments.jpegtran_prog:
+    elif arguments.jpegtran_prog or arguments.jpegtran:
         bytes_diff, rep, final_filename = optimize_image_external(
-            final_filename, arguments, jpegtranprog)
-    elif arguments.jpegtran:
-        bytes_diff, rep, final_filename = optimize_image_external(
-            final_filename, arguments, jpegtranopti)
+            final_filename, arguments, jpegtran)
     else:
         rep = ['Skipping JPEG file: %s' % filename]
         bytes_diff = {'in': 0, 'out': 0}
