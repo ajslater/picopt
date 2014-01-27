@@ -312,6 +312,8 @@ def advpng(filename, new_filename, arguments):
 def gifsicle(filename, new_filename, arguments):
     """runs the EXTERNAL program gifsicle"""
     args = GIFSICLE_ARGS + [new_filename]
+    if arguments.verbose:
+        print("You should really convert animated GIFS to HTML5 video")
     run_ext(args)
 
 
