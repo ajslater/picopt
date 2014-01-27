@@ -1,15 +1,16 @@
-optimize mulitproc waiting for comics
+Options:
+    clean up options with capitals for disable and lowercase for enable
+    levels of verbosity
 
-maybe use os.walk()?
+Architecture:
+    libpicopt with a seperate cli
 
-levels of verbosity
+Tests:
+    Test each option.
+    More formal tests.
 
-Test each option.
-More formal tests.
-
-better packaging?
-register with pypi?
-
-clean up options with capitals for disable and lowercase for enable
-
-libpicopt with a seperate cli
+Packaging:
+    Better packaging?
+    Register with pypi?
+    Add to Homebrew
+    Add to Debian
