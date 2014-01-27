@@ -254,6 +254,19 @@ def get_arguments():
             print('Could not parse date to optimize after.')
             exit(1)
 
+    # Make a rough guess about weather or not to invoke multithreding
+    # jpegrtan '-t' uses three threads
+    # one off multithread switch bcaseu this is the only one right now
+    files_in_paths = 0
+    non_file_in_paths = False
+    for filename in arguments.paths:
+        if os.path.isfile(filename):
+            files_in_paths += 1
+        else:
+            non_file_in_paths = True
+    arguments.jpegrescan_multithread = not non_file_in_paths and \
+        multiprocessing.cpu_count() - (files_in_paths*3) > -1
+
     return arguments
 
 
@@ -278,47 +291,49 @@ def run_ext(args):
     subprocess.call(args, stdout=subprocess.PIPE)
 
 
-def pngout(filename, new_filename):
+def pngout(filename, new_filename, arguments):
     """runs the EXTERNAL program pngout on the file"""
     args = PNGOUT_ARGS + [filename, new_filename]
     run_ext(args)
 
 
-def optipng(filename, new_filename):
+def optipng(filename, new_filename, arguments):
     """runs the EXTERNAL program optipng on the file"""
     args = OPTIPNG_ARGS + [new_filename]
     run_ext(args)
 
 
-def advpng(filename, new_filename):
+def advpng(filename, new_filename, arguments):
     """runs the EXTERNAL program advpng on the file"""
     args = ADVPNG_ARGS + [new_filename]
     run_ext(args)
 
 
-def gifsicle(filename, new_filename):
+def gifsicle(filename, new_filename, arguments):
     """runs the EXTERNAL program gifsicle"""
     args = GIFSICLE_ARGS + [new_filename]
     run_ext(args)
 
 
-def jpegtranopti(filename, new_filename):
+def jpegtranopti(filename, new_filename, arguments):
     """runs the EXTERNAL program jpegtran with huffman optimization
        on the file"""
     args = JPEGTRAN_OPTI_ARGS + [new_filename, filename]
     run_ext(args)
 
 
-def jpegtranprog(filename, new_filename):
+def jpegtranprog(filename, new_filename, arguments):
     """runs the EXTERNAL program jpegtran with progressive transform
        on the file"""
     args = JPEGTRAN_PROG_ARGS + [new_filename, filename]
     run_ext(args)
 
 
-def jpegrescan(filename, new_filename):
+def jpegrescan(filename, new_filename, arguments):
     """runs the EXTERNAL program jpegrescan"""
-    args = JPEGRESCAN_ARGS
+    args = copy.copy(JPEGRESCAN_ARGS)
+    if arguments.jpegrescan_multithread:
+        args += ['-t']
     args += [filename, new_filename]
     run_ext(args)
 
@@ -371,7 +386,7 @@ def optimize_image_external(filename, arguments, func):
     new_filename = os.path.normpath(filename + NEW_EXT)
     shutil.copy2(filename, new_filename)
 
-    func(filename, new_filename)
+    func(filename, new_filename, arguments)
 
     bytes_diff, final_filename = cleanup_after_optimize(filename,
                                                         new_filename,
