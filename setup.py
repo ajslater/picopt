@@ -5,18 +5,15 @@ https://hynek.me/articles/sharing-your-labor-of-love-pypi-quick-and-dirty/
 from setuptools import setup
 from pip.req import parse_requirements
 
-__version__ = "0.12.1.4"
+__version__ = "0.13.0"
 README_FILENAME = "README.md"
 REQUIREMENTS_FILENAME = "requirements.txt"
-
 
 with open(README_FILENAME, 'r') as readme_file:
     LONG_DESCRIPTION = readme_file.read()
 
 INSTALL_REQS = parse_requirements(REQUIREMENTS_FILENAME)
 REQ_LIST = [str(ir.req) for ir in INSTALL_REQS]
-
-print 'Setup for picopt version "%s"' % __version__
 
 setup(
     name='picopt',

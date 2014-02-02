@@ -25,7 +25,7 @@ except ImportError:
     import Image
     import ImageFile
 
-__version__ = '0.12.1.4'
+__version__ = '0.13.0'
 
 PROGRAM_NAME = 'picopt'
 
