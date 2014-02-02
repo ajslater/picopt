@@ -25,7 +25,7 @@ except ImportError:
     import Image
     import ImageFile
 
-__version__ = '0.12.0'
+__version__ = '0.12.0.1'
 
 PROGRAM_NAME = 'picopt'
 
@@ -716,7 +716,7 @@ def get_optimize_after(current_path, look_up, optimize_after, arguments):
 def optimize_dir(filename_full, arguments, multiproc, optimize_after):
     """ Recursively optimize a directory """
     if not arguments.recurse:
-        return
+        return set()
     next_dir_list = os.listdir(filename_full)
     next_dir_list.sort()
     optimize_after = get_optimize_after(filename_full, False,
