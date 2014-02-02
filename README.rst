@@ -134,16 +134,6 @@ Packaged For
 
 -  `Arch Linux`_
 
-.. _PIL: http://www.pythonware.com/products/pil/
-.. _rarfile: https://pypi.python.org/pypi/rarfile
-.. _jpegrescan: https://github.com/kud/jpegrescan
-.. _jpegtran: http://jpegclub.org/jpegtran/
-.. _optipng: http://optipng.sourceforge.net/
-.. _advpng: http://advancemame.sourceforge.net/doc-advpng.html
-.. _pngout: http://advsys.net/ken/utils.htm
-.. _gifsicle: http://www.lcdf.org/gifsicle/
-.. _comic book archive files: https://en.wikipedia.org/wiki/Comic_book_archive
-.. _Arch Linux: https://aur.archlinux.org/packages/picopt/
 Alternatives
 ------------
 
@@ -154,5 +144,15 @@ It also has AdvPNG support which I've disabled in picopt because I've
 never seen it provide any advantage. Command line usage is possible with
 `an external program`_.
 
+.. _PIL: http://www.pythonware.com/products/pil/
+.. _rarfile: https://pypi.python.org/pypi/rarfile
+.. _jpegrescan: https://github.com/kud/jpegrescan
+.. _jpegtran: http://jpegclub.org/jpegtran/
+.. _optipng: http://optipng.sourceforge.net/
+.. _advpng: http://advancemame.sourceforge.net/doc-advpng.html
+.. _pngout: http://advsys.net/ken/utils.htm
+.. _gifsicle: http://www.lcdf.org/gifsicle/
+.. _comic book archive files: https://en.wikipedia.org/wiki/Comic_book_archive
+.. _Arch Linux: https://aur.archlinux.org/packages/picopt/
 .. _imageoptim: http://imageoptim.com/
 .. _an external program: https://code.google.com/p/imageoptim/issues/detail?can=2&start=0&num=100&q=&colspec=ID%20Type%20Status%20Priority%20Milestone%20Owner%20Summary%20Stars&groupby=&sort=&id=39
