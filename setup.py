@@ -3,11 +3,8 @@ Reference:
 https://hynek.me/articles/sharing-your-labor-of-love-pypi-quick-and-dirty/
 """
 from distutils.core import setup
-#from ez_setup import use_setuptools
 from pip.req import parse_requirements
 from picopt import __version__
-
-#use_setuptools()
 
 INSTALL_REQS = parse_requirements('requirements.txt')
 REQ_LIST = [str(ir.req) for ir in INSTALL_REQS]
