@@ -6,7 +6,7 @@ from setuptools import setup
 from pip.req import parse_requirements
 
 __version__ = "0.13.1"
-README_FILENAME = "README.md"
+README_FILENAME = "README.rst"
 REQUIREMENTS_FILENAME = "requirements.txt"
 
 with open(README_FILENAME, 'r') as readme_file:
@@ -29,7 +29,7 @@ setup(
             'picopt = picopt:main'
         ]
     },
-    long_description=open('README.md').read(),
+    long_description=LONG_DESCRIPTION,
     license="GPLv2",
     classifiers=[
         'Development Status :: 5 - Production/Stable',

@@ -32,52 +32,51 @@ Installation
     git clone git@github.com:kud/jpegrescan.git
     ln -s jpegrescan/jpegrescan /usr/local/bin/jpegrescan
 
+### Dependancies
+#### Debian / Ubuntu
+    apt-get install python-imaging
+
 ### Picopt
-    git clone git@github.com:ajslater/picopt.git
-    cd picopt
-
-    pip install -r requirements.txt
-    pip install .
-
-    picopt.py -h
+    pip install picopt
 
 Usage
 -----
 Optimize files:
 
-    picopt.py *.jpg
+    picopt *.jpg
 
 Optimize files and recurse directories:
 
-    picotpy.py -r *
+    picotpt -r *
 
 Optimize files and recurse directories AND optimize comic book archives:
 
-    picopt.py -rc *
+    picopt -rc *
 
 Optimize files, but not lossless files:
 
-    picopt.py -op *
+    picopt -op *
 
 Optimize files, but not jpegs:
 
-    picopt.py -jt *
+    picopt -jt *
 
 Optimize files, but not animated gifs:
 
-    picopt.py -g *
+    picopt -g *
 
 Just list files picopt.py would try to optimize:
 
-    picopt.py -l *
+    picopt -l *
 
 Optimize everything in my iPhoto library, but only after the last time i did this, skipping symlinks to avoid massive amounts of duplicate work. Don't convert lossless files to PNGs because that would confuse iPhoto. Also drop a timestamp file so I don't have to remeber the last time I did this:
 
-    picopt.py -rSCT -D '2013 June 1 14:00' 'Pictures/iPhoto Library'
+    picopt -rSCT -D '2013 June 1 14:00' 'Pictures/iPhoto Library'
 
 Packaged For
 ------------
 
+* [PyPI](https://pypi.python.org/pypi/picopt/0.13.1)
 * [Arch Linux](https://aur.archlinux.org/packages/picopt/)
 
 
