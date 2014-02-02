@@ -1,1 +1,1 @@
-include LICENSE NEWS README.md requirements.txt
+include LICENSE NEWS README.md README.rst requirements.txt VERSION
