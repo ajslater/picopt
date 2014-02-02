@@ -25,7 +25,11 @@ except ImportError:
     import Image
     import ImageFile
 
-__version__ = '0.12.0.1'
+VERSION_FILENAME = "VERSION"
+
+THIS_DIRNAME, THIS_FILENAME = os.path.split(os.path.abspath(sys.argv[0]))
+with open(os.path.join(THIS_DIRNAME, VERSION_FILENAME), 'r') as version_file:
+    __version__ = version_file.read().rstrip('\n')
 
 PROGRAM_NAME = 'picopt'
 
