@@ -5,12 +5,10 @@ https://hynek.me/articles/sharing-your-labor-of-love-pypi-quick-and-dirty/
 from setuptools import setup
 from pip.req import parse_requirements
 
-VERSION_FILENAME = "VERSION"
+__version__ = "0.12.1.4"
 README_FILENAME = "README.md"
 REQUIREMENTS_FILENAME = "requirements.txt"
 
-with open(VERSION_FILENAME, 'r') as version_file:
-    __version__ = version_file.read().rstrip('\n')
 
 with open(README_FILENAME, 'r') as readme_file:
     LONG_DESCRIPTION = readme_file.read()
@@ -29,7 +27,11 @@ setup(
     url='https://github.com/ajslater/picopt/',
     py_modules=['picopt'],
     install_requires=REQ_LIST,
-    scripts=['picopt.py'],
+    entry_points={
+        'console_scripts': [
+            'picopt = picopt:main'
+        ]
+    },
     long_description=open('README.md').read(),
     license="GPLv2",
     classifiers=[
