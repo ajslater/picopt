@@ -5,7 +5,7 @@ https://hynek.me/articles/sharing-your-labor-of-love-pypi-quick-and-dirty/
 from setuptools import setup
 from pip.req import parse_requirements
 
-__version__ = "0.13.1"
+__version__ = "0.13.2"
 README_FILENAME = "README.rst"
 REQUIREMENTS_FILENAME = "requirements.txt"
 
