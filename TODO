@@ -6,8 +6,8 @@ Options:
     levels of verbosity
 
 Tests:
-    Test each option.
     More formal tests.
+    Test each option.
 
 Formats:
     Compressing images inside PDFs would be cool, but difficult due to non-standard image formats and lack of easy PDF exploders/bundlers.
