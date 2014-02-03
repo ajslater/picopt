@@ -109,19 +109,19 @@ Optimize files, but not lossless files:
 
 ::
 
-    picopt -op *
+    picopt -OPG *
 
 Optimize files, but not jpegs:
 
 ::
 
-    picopt -jt *
+    picopt -JT *
 
 Optimize files, but not animated gifs:
 
 ::
 
-    picopt -g *
+    picopt -G *
 
 Just list files picopt.py would try to optimize:
 
@@ -137,7 +137,7 @@ did this:
 
 ::
 
-    picopt -rSCT -D '2013 June 1 14:00' 'Pictures/iPhoto Library'
+    picopt -rSYt -D '2013 June 1 14:00' 'Pictures/iPhoto Library'
 
 Packaged For
 ------------

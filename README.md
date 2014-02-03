@@ -55,15 +55,15 @@ Optimize files and recurse directories AND optimize comic book archives:
 
 Optimize files, but not lossless files:
 
-    picopt -op *
+    picopt -OPG *
 
 Optimize files, but not jpegs:
 
-    picopt -jt *
+    picopt -JT *
 
 Optimize files, but not animated gifs:
 
-    picopt -g *
+    picopt -G *
 
 Just list files picopt.py would try to optimize:
 
@@ -71,7 +71,7 @@ Just list files picopt.py would try to optimize:
 
 Optimize everything in my iPhoto library, but only after the last time i did this, skipping symlinks to avoid massive amounts of duplicate work. Don't convert lossless files to PNGs because that would confuse iPhoto. Also drop a timestamp file so I don't have to remeber the last time I did this:
 
-    picopt -rSCT -D '2013 June 1 14:00' 'Pictures/iPhoto Library'
+    picopt -rSYt -D '2013 June 1 14:00' 'Pictures/iPhoto Library'
 
 Packaged For
 ------------
