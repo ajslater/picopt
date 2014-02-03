@@ -2,6 +2,9 @@ v1.0.0
 * Packaging for PyPI
 * Internal changes to make picopt more modular and library friendly
 * CHANGED COMMAND LINE ARGUMENT LETTERS! WATCH OUT!
+* Added verbosity setting
+* Truncated relative and in-archive path names for readibiliy
+* Nag about animated gifs less
 
 
 v0.12.0.1
