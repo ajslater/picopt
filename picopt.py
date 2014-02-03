@@ -171,11 +171,11 @@ def get_arguments():
                         help="Recurse down through directories ignoring the"
                              "image file arguments on the command line")
     parser.add_argument("-v", "--verbose", action="count",
-                        dest="verbose", default=1,
+                        dest="verbose", default=0,
                         help="Display more output. -v (default) and -vv "
                              "(noisy)")
-    parser.add_argument("-Q", "--quiet", action="store_false",
-                        dest="verbose", default=1,
+    parser.add_argument("-Q", "--quiet", action="store_const",
+                        dest="verbose", const=-1,
                         help="Display little to no output")
     parser.add_argument("-a", "--enable_advpng", action="store_true",
                         dest="advpng", default=0,
@@ -257,6 +257,7 @@ def process_arguments(arguments):
     """ Recomputer special cases for input arguments """
     program_reqs(arguments)
 
+    arguments.verbose += 1
     arguments.paths = set(arguments.paths)
     arguments.archive_name = None
 
