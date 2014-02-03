@@ -842,7 +842,8 @@ def optimize_files_after(path, arguments, file_list, multiproc):
         and then optimize them.
     """
     optimize_after = get_optimize_after(path, True, None, arguments)
-    optimize_files(path, file_list, arguments, multiproc, optimize_after)
+    return optimize_files(path, file_list, arguments, multiproc,
+                          optimize_after)
 
 
 def optimize_all_files(multiproc, arguments):
@@ -857,6 +858,7 @@ def optimize_all_files(multiproc, arguments):
     # Init records
     record_dirs = set()
     cwd_files = set()
+    full_result_set = set()
 
     for filename in arguments.paths:
         # Record dirs to put timestamps in later
@@ -870,16 +872,28 @@ def optimize_all_files(multiproc, arguments):
         if os.path.isabs(filename):
             #FIXME: this needs to get ../ relative links too i think
             abs_dir = os.path.dirname(filename)
-            optimize_files_after(abs_dir, arguments, [filename], multiproc)
+            result_set = optimize_files_after(abs_dir, arguments,
+                                              [filename], multiproc)
+            full_result_set.add(result_set)
         else:
             cwd_files.add(filename)
 
     # Optimize non-absolute paths with an optimize after computed from
     # the current directory
     if len(cwd_files):
-        optimize_files_after(cwd, arguments, cwd_files, multiproc)
+        result_set = optimize_files_after(cwd, arguments, cwd_files,
+                                          multiproc)
+        full_result_set.add(result_set)
 
-    return record_dirs
+    # Wait for all files to finish compressing
+    for result in full_result_set:
+        result.wait()
+
+    # Write timestamps
+    pool = multiproc['pool']
+    for filename in record_dirs:
+        args = (filename, arguments)
+        pool.apply_async(record_timestamp, args=(args,))
 
 
 def run_main(raw_arguments):
@@ -896,18 +910,14 @@ def run_main(raw_arguments):
     multiproc = {'pool': pool, 'in': total_bytes_in, 'out': total_bytes_out}
 
     # Optimize Files
-    record_dirs = optimize_all_files(multiproc, arguments)
+    optimize_all_files(multiproc, arguments)
 
     # Shut down multiprocessing
     pool = multiproc['pool']
     pool.close()
     pool.join()
 
-    # Finish up
-    #TODO: make this multiprocessing?
-    for filename in record_dirs:
-        record_timestamp(filename, arguments)
-
+    # Finish by reporting totals
     report_totals(multiproc['in'].get(), multiproc['out'].get(),
                   arguments)
 
