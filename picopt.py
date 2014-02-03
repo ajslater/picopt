@@ -866,25 +866,23 @@ def optimize_all_files(multiproc, arguments):
         if arguments.recurse and os.path.isdir(filename):
             record_dirs.add(filename)
 
-        # Optimize all apsolute paths on the command line with an optimize
-        #   after path computed from the absolute directory path they
-        # reside in.
+        # Optimize all filenames that are not immediate descendants of
+        #   the cwd and compute their optimize-after times individually.
         #   Otherwise add the files to the list to do next
-        if os.path.isabs(filename):
-            #FIXME: this needs to get ../ relative links too i think
-            abs_dir = os.path.dirname(filename)
-            result_set = optimize_files_after(abs_dir, arguments,
-                                              [filename], multiproc)
-            full_result_set.add(result_set)
+        path_dn, path_fn = os.path.split(os.path.realpath(filename))
+        if path_dn != cwd:
+            result_set = optimize_files_after(path_dn, arguments,
+                                              [path_fn], multiproc)
+            full_result_set.union(result_set)
         else:
-            cwd_files.add(filename)
+            cwd_files.add(path_fn)
 
-    # Optimize non-absolute paths with an optimize after computed from
+    # Optimize immediate descendants with optimize after computed from
     # the current directory
     if len(cwd_files):
         result_set = optimize_files_after(cwd, arguments, cwd_files,
                                           multiproc)
-        full_result_set.add(result_set)
+        full_result_set.union(result_set)
 
     # Wait for all files to finish compressing
     for result in full_result_set:
