@@ -16,8 +16,9 @@ import zipfile
 import traceback
 import dateutil.parser
 import time
-
 import rarfile
+from collections import namedtuple
+
 try:
     from PIL import Image
 except ImportError:
@@ -70,6 +71,11 @@ ABBREVS = (
     (1 << LongInt(10), 'kiB'),
     (1, 'bytes')
 )
+
+ReportStats = namedtuple('ReportStats', ['final_filename', 'bytes_diff',
+                                         'report_list'])
+ExtArgs = namedtuple('ImageFilenames', ['old_filename', 'new_filename',
+                                        'arguments'])
 
 
 def humanize_bytes(num_bytes, precision=1):
@@ -278,8 +284,10 @@ def replace_ext(filename, new_ext):
     return new_filename
 
 
-def new_percent_saved(size_in, size_out):
-    """spits out how much space the optimazation saved"""
+def new_percent_saved(report_stats):
+    """spits out how much space the optimization saved"""
+    size_in = report_stats.bytes_diff['in']
+    size_out = report_stats.bytes_diff['out']
     percent_saved = (1 - (size_out / size_in)) * 100
 
     size_saved_kb = humanize_bytes(size_in - size_out)
@@ -383,7 +391,7 @@ def cleanup_after_optimize(filename, new_filename, arguments):
     except OSError as ex:
         print(ex)
 
-    return bytes_diff, final_filename
+    return ReportStats._make([final_filename, bytes_diff, ['']])
 
 
 def optimize_image_external(filename, arguments, func):
@@ -393,35 +401,32 @@ def optimize_image_external(filename, arguments, func):
 
     func(filename, new_filename, arguments)
 
-    bytes_diff, final_filename = cleanup_after_optimize(filename,
-                                                        new_filename,
-                                                        arguments)
-    percent = new_percent_saved(bytes_diff['in'], bytes_diff['out'])
+    report_stats = cleanup_after_optimize(filename, new_filename, arguments)
+    percent = new_percent_saved(report_stats)
     if percent != 0:
         report = '%s: %s' % (func.__name__, percent)
     else:
         report = ''
-    return (bytes_diff, report, final_filename)
+    report_stats.report_list.append(report)
+
+    return report_stats
 
 
 def optimize_gif(filename, arguments):
     """run EXTERNAL programs to optimize animated gifs"""
     if arguments.gifsicle:
-        bytes_diff, rep, final_filename = optimize_image_external(
-            filename, arguments, gifsicle)
+        report_stats = optimize_image_external(filename, arguments,
+                                               gifsicle)
     else:
         rep = ['Skipping animated GIF: %s' % filename]
         bytes_diff = {'in': 0, 'out': 0}
+        report_stats = ReportStats._make([filename, bytes_diff, [rep]])
 
-    report_list = [rep]
-
-    return bytes_diff, report_list, final_filename
+    return report_stats
 
 
 def optimize_png(filename, arguments):
     """run EXTERNAL programs to optimize lossless formats to PNGs"""
-    bytes_diff = None
-    report_list = []
     final_filename = filename
 
     filesize_in = os.stat(filename).st_size
@@ -429,90 +434,84 @@ def optimize_png(filename, arguments):
     for ext_prog in ('optipng', 'advpng', 'pngout'):
         if not getattr(arguments, ext_prog):
             continue
-        bytes_diff, rep, final_filename = optimize_image_external(
+        report_stats = optimize_image_external(
             final_filename, arguments, globals()[ext_prog])
-        if rep:
-            report_list += [rep]
 
-    if bytes_diff is not None:
-        bytes_diff['in'] = filesize_in
+    if report_stats.bytes_diff is not None:
+        report_stats.bytes_diff['in'] = filesize_in
     else:
-        report_list += ['Skipping PNG file: %s' % final_filename]
-        bytes_diff = {'in': 0, 'out': 0}
+        report_stats.report_list.append('Skipping PNG file: %s' %
+                                        report_stats.final_filename)
+        report_stats.bytes_diff = {'in': 0, 'out': 0}
 
-    return bytes_diff, report_list, final_filename
+    return report_stats
 
 
 def optimize_jpeg(filename, arguments):
     """run EXTERNAL programs to optimize jpeg formats"""
     final_filename = filename
     if arguments.jpegrescan:
-        bytes_diff, rep, final_filename = optimize_image_external(
+        report_stats = optimize_image_external(
             final_filename, arguments, jpegrescan)
     elif arguments.jpegtran_prog or arguments.jpegtran:
-        bytes_diff, rep, final_filename = optimize_image_external(
+        report_stats = optimize_image_external(
             final_filename, arguments, jpegtran)
     else:
         rep = ['Skipping JPEG file: %s' % filename]
         bytes_diff = {'in': 0, 'out': 0}
+        report_stats = ReportStats._make([filename, bytes_diff, [rep]])
 
-    report_list = [rep]
-
-    return bytes_diff, report_list, final_filename
+    return report_stats
 
 
 def optimize_image(arg):
     """optimizes a given image from a filename"""
     try:
-        filename, image_format, arguments, total_bytes_in, total_bytes_out = arg
-
-        #print(filename, image_format, "starting...")
+        filename, image_format, arguments, total_bytes_in, total_bytes_out = \
+            arg
 
         if is_format_selected(image_format, arguments.to_png_formats,
-                              arguments, arguments.optipng or arguments.pngout):
-            bytes_diff, report_list, final_filename = optimize_png(
-                filename, arguments)
+                              arguments, arguments.optipng or
+                              arguments.pngout):
+            report_stats = optimize_png(filename, arguments)
         elif is_format_selected(image_format, JPEG_FORMATS, arguments,
                                 arguments.jpegrescan or arguments.jpegtran):
-            bytes_diff, report_list, final_filename = optimize_jpeg(
-                filename, arguments)
+            report_stats = optimize_jpeg(filename, arguments)
         elif is_format_selected(image_format, GIF_FORMATS, arguments,
                                 arguments.gifsicle):
             # this captures still GIFs too if not caught above
-            bytes_diff, report_list, final_filename = optimize_gif(
-                filename, arguments)
-
+            report_stats = optimize_gif(filename, arguments)
         else:
             if arguments.verbose:
                 print(filename, image_format)  # image.mode)
                 print("\tFile format not selected.")
             return
 
-        optimize_accounting(final_filename, bytes_diff, report_list,
-                            total_bytes_in, total_bytes_out, arguments)
+        optimize_accounting(report_stats, total_bytes_in, total_bytes_out,
+                            arguments)
     except Exception as exc:
         print(exc)
         traceback.print_exc(exc)
         raise exc
 
 
-def optimize_accounting(filename, bytes_diff, report_list, total_bytes_in,
-                        total_bytes_out, arguments):
+def optimize_accounting(report_stats, total_bytes_in, total_bytes_out,
+                        arguments):
     """record the percent saved, print it and add it to the totals"""
-    report = filename + ': '
-    total = new_percent_saved(bytes_diff['in'], bytes_diff['out'])
+    report = report_stats.final_filename + ': '
+    total = new_percent_saved(report_stats)
     if total:
         report += total
     else:
         report += '0%'
     if arguments.test:
         report += ' could be saved.'
-    tools_report = ', '.join(report_list)
+    tools_report = ', '.join(report_stats.report_list)
     if tools_report:
         report += '\n\t' + tools_report
 
-    total_bytes_in.set(total_bytes_in.get() + bytes_diff['in'])
-    total_bytes_out.set(total_bytes_out.get() + bytes_diff['out'])
+    total_bytes_in.set(total_bytes_in.get() + report_stats.bytes_diff['in'])
+    total_bytes_out.set(total_bytes_out.get() + report_stats.bytes_diff['out'])
 
     print(report)
 
@@ -611,12 +610,10 @@ def comic_archive_compress(args):
             shutil.rmtree(tmp_dir)
         print('done.')
 
-        bytes_diff, final_filename = cleanup_after_optimize(filename,
-                                                            new_filename,
-                                                            arguments)
-
-        optimize_accounting(final_filename, bytes_diff, [''],
-                            total_bytes_in, total_bytes_out, arguments)
+        report_stats = cleanup_after_optimize(filename, new_filename,
+                                              arguments)
+        optimize_accounting(report_stats, total_bytes_in, total_bytes_out,
+                            arguments)
     except Exception as exc:
         print(exc)
         traceback.print_exc(exc)
