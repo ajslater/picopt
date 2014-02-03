@@ -2,9 +2,6 @@ Packaging:
     PIL/Pillow is still a mess.
     DPKG doesn't see python-imaging quite right, I think RPM is the same
 
-Architecture:
-    libpicopt with a seperate cli. Mostly involves cleaning up main()
-
 Options:
     Clean up options with capitals for disable and lowercase for enable
     levels of verbosity
