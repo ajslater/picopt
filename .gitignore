@@ -2,3 +2,4 @@ build
 MANIFEST
 dist
 picopt.egg-info
+test_tmp
