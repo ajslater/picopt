@@ -74,8 +74,7 @@ ABBREVS = (
 
 ReportStats = namedtuple('ReportStats', ['final_filename', 'bytes_diff',
                                          'report_list'])
-ExtArgs = namedtuple('ImageFilenames', ['old_filename', 'new_filename',
-                                        'arguments'])
+ExtArgs = namedtuple('ExtArgs', ['old_filename', 'new_filename', 'arguments'])
 
 
 def humanize_bytes(num_bytes, precision=1):
@@ -300,54 +299,54 @@ def run_ext(args):
     subprocess.call(args, stdout=subprocess.PIPE)
 
 
-def pngout(filename, new_filename, arguments):
+def pngout(ext_args):
     """runs the EXTERNAL program pngout on the file"""
-    args = PNGOUT_ARGS + [filename, new_filename]
+    args = PNGOUT_ARGS + [ext_args.old_filename, ext_args.new_filename]
     run_ext(args)
 
 
-def optipng(filename, new_filename, arguments):
+def optipng(ext_args):
     """runs the EXTERNAL program optipng on the file"""
-    args = OPTIPNG_ARGS + [new_filename]
+    args = OPTIPNG_ARGS + [ext_args.new_filename]
     run_ext(args)
 
 
-def advpng(filename, new_filename, arguments):
+def advpng(ext_args):
     """runs the EXTERNAL program advpng on the file"""
-    args = ADVPNG_ARGS + [new_filename]
+    args = ADVPNG_ARGS + [ext_args.new_filename]
     run_ext(args)
 
 
-def gifsicle(filename, new_filename, arguments):
+def gifsicle(ext_args):
     """runs the EXTERNAL program gifsicle"""
-    args = GIFSICLE_ARGS + [new_filename]
-    if arguments.verbose:
+    args = GIFSICLE_ARGS + [ext_args.new_filename]
+    if ext_args.arguments.verbose:
         print("You should really convert animated GIFS to HTML5 video")
     run_ext(args)
 
 
-def jpegtran(filename, new_filename, arguments):
+def jpegtran(ext_args):
     """create argument list for jpegtran"""
     args = copy.copy(JPEGTRAN_ARGS)
-    if arguments.destroy_metadata:
+    if ext_args.arguments.destroy_metadata:
         args += ["-copy", "none"]
     else:
         args += ["-copy", "all"]
-    if arguments.jpegtran_prog:
+    if ext_args.arguments.jpegtran_prog:
         args += ["-progressive"]
     args += ['-outfile']
-    args += [new_filename, filename]
+    args += [ext_args.new_filename, ext_args.filename]
     run_ext(args)
 
 
-def jpegrescan(filename, new_filename, arguments):
+def jpegrescan(ext_args):
     """runs the EXTERNAL program jpegrescan"""
     args = copy.copy(JPEGRESCAN_ARGS)
-    if arguments.jpegrescan_multithread:
+    if ext_args.arguments.jpegrescan_multithread:
         args += ['-t']
-    if arguments.destroy_metadata:
+    if ext_args.arguments.destroy_metadata:
         args += ['-s']
-    args += [filename, new_filename]
+    args += [ext_args.old_filename, ext_args.new_filename]
     run_ext(args)
 
 
@@ -399,7 +398,8 @@ def optimize_image_external(filename, arguments, func):
     new_filename = os.path.normpath(filename + NEW_EXT)
     shutil.copy2(filename, new_filename)
 
-    func(filename, new_filename, arguments)
+    ext_args = ExtArgs._make([filename, new_filename, arguments])
+    func(ext_args)
 
     report_stats = cleanup_after_optimize(filename, new_filename, arguments)
     percent = new_percent_saved(report_stats)
@@ -430,6 +430,7 @@ def optimize_png(filename, arguments):
     final_filename = filename
 
     filesize_in = os.stat(filename).st_size
+    report_stats = None
 
     for ext_prog in ('optipng', 'advpng', 'pngout'):
         if not getattr(arguments, ext_prog):
@@ -437,12 +438,12 @@ def optimize_png(filename, arguments):
         report_stats = optimize_image_external(
             final_filename, arguments, globals()[ext_prog])
 
-    if report_stats.bytes_diff is not None:
+    if report_stats is not None:
         report_stats.bytes_diff['in'] = filesize_in
     else:
-        report_stats.report_list.append('Skipping PNG file: %s' %
-                                        report_stats.final_filename)
-        report_stats.bytes_diff = {'in': 0, 'out': 0}
+        bytes_diff = {'in': 0, 'out': 0}
+        rep = 'Skipping PNG file: %s' % final_filename
+        report_stats = ReportStats._make([final_filename, bytes_diff, rep])
 
     return report_stats
 
@@ -551,10 +552,6 @@ def get_image_format(filename):
                 image_format = CBZ_FORMAT
             elif rarfile.is_rarfile(filename):
                 image_format = CBR_FORMAT
-        #TODO levels of verbosity
-#        if image_format == 'ERROR' and arguments.verbose and \
-#                not arguments.list_only:
-#            print(filename, "doesn't look like an image or comic archive.")
     return image_format
 
 
