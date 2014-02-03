@@ -31,7 +31,8 @@ PROGRAM_NAME = 'picopt'
 # Extensions
 REMOVE_EXT = '.%s-remove' % PROGRAM_NAME
 NEW_EXT = '.%s-optimized.png' % PROGRAM_NAME
-ARCHIVE_TMP_DIR_TEMPLATE = PROGRAM_NAME+'_tmp_%s'
+ARCHIVE_TMP_DIR_PREFIX = PROGRAM_NAME+'_tmp_'
+ARCHIVE_TMP_DIR_TEMPLATE = ARCHIVE_TMP_DIR_PREFIX+'%s'
 NEW_ARCHIVE_SUFFIX = '%s-optimized.cbz' % PROGRAM_NAME
 # Program args
 JPEGTRAN_ARGS = ['jpegtran', '-optimize']
@@ -130,7 +131,7 @@ def does_external_program_run(prog, arguments):
         subprocess.call([prog, '-h'], stdout=null, stderr=null)
         result = True
     except OSError:
-        if arguments.verbose:
+        if arguments.verbose > 1:
             print("couldn't run %s" % prog)
         result = False
 
@@ -172,6 +173,9 @@ def get_arguments():
                         help="Recurse down through directories ignoring the"
                              "image file arguments on the command line")
     parser.add_argument("-Q", "--quiet", action="store_false",
+                        dest="verbose", default=1,
+                        help="Do not display output")
+    parser.add_argument("-v", "--verbose", action="count",
                         dest="verbose", default=1,
                         help="Do not display output")
     parser.add_argument("-O", "--disable_optipng", action="store_false",
@@ -227,7 +231,7 @@ def get_arguments():
                         dest="record_timestamp", default=0,
                         help="Store the time of the optimization of full "
                              "directories in directory local dotfiles.")
-    parser.add_argument("-v", "--version", action="version",
+    parser.add_argument("-V", "--version", action="version",
                         version=__version__,
                         help="display the version number")
     parser.add_argument("-M", "--destroy_metadata", action="store_true",
@@ -244,6 +248,8 @@ def process_arguments(arguments):
     program_reqs(arguments)
 
     arguments.paths = set(arguments.paths)
+
+    arguments.archive_name = None 
 
     if arguments.formats == DEFAULT_FORMATS:
         extra_formats = JPEG_FORMATS | COMIC_FORMATS | GIF_FORMATS
@@ -390,7 +396,7 @@ def cleanup_after_optimize(filename, new_filename, arguments):
     except OSError as ex:
         print(ex)
 
-    return ReportStats._make([final_filename, bytes_diff, ['']])
+    return ReportStats._make([final_filename, bytes_diff, []])
 
 
 def optimize_image_external(filename, arguments, func):
@@ -483,7 +489,7 @@ def optimize_image(arg):
             # this captures still GIFs too if not caught above
             report_stats = optimize_gif(filename, arguments)
         else:
-            if arguments.verbose:
+            if arguments.verbose > 1:
                 print(filename, image_format)  # image.mode)
                 print("\tFile format not selected.")
             return
@@ -499,22 +505,36 @@ def optimize_image(arg):
 def optimize_accounting(report_stats, total_bytes_in, total_bytes_out,
                         arguments):
     """record the percent saved, print it and add it to the totals"""
-    report = report_stats.final_filename + ': '
-    total = new_percent_saved(report_stats)
-    if total:
-        report += total
-    else:
-        report += '0%'
-    if arguments.test:
-        report += ' could be saved.'
-    tools_report = ', '.join(report_stats.report_list)
-    if tools_report:
-        report += '\n\t' + tools_report
+    if arguments.verbose:
+        report = ''
+        if arguments.archive_name is not None:
+            truncated_filename = report_stats.final_filename.split(
+                ARCHIVE_TMP_DIR_PREFIX, 1)[1]
+            truncated_filename = truncated_filename.split(os.sep, 1)[1]
+            report += '  %s: ' % arguments.archive_name
+        elif arguments.dir in report_stats.final_filename:
+            truncated_filename = report_stats.final_filename.split(
+                arguments.dir, 1)[1]
+            truncated_filename = truncated_filename.split(os.sep, 1)[1]
+        else:
+            truncated_filename = report_stats.final_filename
+
+        report += '%s: ' % truncated_filename
+        total = new_percent_saved(report_stats)
+        if total:
+            report += total
+        else:
+            report += '0%'
+        if arguments.test:
+            report += ' could be saved.'
+        if arguments.verbose > 1:
+            tools_report = ', '.join(report_stats.report_list)
+            if tools_report:
+                report += '\n\t' + tools_report
+        print(report)
 
     total_bytes_in.set(total_bytes_in.get() + report_stats.bytes_diff['in'])
     total_bytes_out.set(total_bytes_out.get() + report_stats.bytes_diff['out'])
-
-    print(report)
 
 
 def is_image_sequenced(image):
@@ -565,7 +585,7 @@ def detect_file(filename, arguments):
     if image_format in ('NONE', 'ERROR'):
         return
 
-    if arguments.verbose and not arguments.list_only:
+    if arguments.verbose > 1 and not arguments.list_only:
         print(filename, image_format, 'is not a enabled image or '
                                       'comic archive type.')
 
@@ -589,7 +609,8 @@ def comic_archive_compress(args):
         #archive into new filename
         new_filename = replace_ext(filename, NEW_ARCHIVE_SUFFIX)
 
-        print('Rezipping archive', end='')
+        if arguments.verbose:
+            print('Rezipping archive', end='')
         with zipfile.ZipFile(new_filename, 'w',
                              compression=zipfile.ZIP_DEFLATED) as new_zf:
             root_len = len(os.path.abspath(tmp_dir))
@@ -598,14 +619,17 @@ def comic_archive_compress(args):
                 for fname in files:
                     fullpath = os.path.join(root, fname)
                     archive_name = os.path.join(archive_root, fname)
-                    print('.', end='')
+                    if arguments.verbose:
+                        print('.', end='')
                     new_zf.write(fullpath, archive_name, zipfile.ZIP_DEFLATED)
 
         # Cleanup tmpdir
         if os.path.isdir(tmp_dir):
-            print('.', end='')
+            if arguments.verbose:
+                print('.', end='')
             shutil.rmtree(tmp_dir)
-        print('done.')
+        if arguments.verbose:
+            print('done.')
 
         report_stats = cleanup_after_optimize(filename, new_filename,
                                               arguments)
@@ -627,6 +651,9 @@ def comic_archive_uncompress(filename, image_format, arguments):
         bytes_diff = {'in': 0, 'out': 0}
         return (bytes_diff, report_list)
 
+    if arguments.verbose:
+        print("Extracting %s..." % filename, end='')
+
     # create the tmpdir
     tmp_dir = get_archive_tmp_dir(filename)
     if os.path.isdir(tmp_dir):
@@ -645,6 +672,9 @@ def comic_archive_uncompress(filename, image_format, arguments):
         report_list = [report]
         bytes_diff = {'in': 0, 'out': 0}
         return (bytes_diff, report_list)
+
+    if arguments.verbose:
+        print('done')
 
     return os.path.basename(tmp_dir)
 
@@ -727,11 +757,9 @@ def optimize_comic_archive(filename_full, image_format, arguments, multiproc,
     tmp_dir_basename = comic_archive_uncompress(filename_full,
                                                 image_format, arguments)
     # recurse into comic archive even if flag not set
-    if arguments.recurse:
-        archive_arguments = arguments
-    else:
-        archive_arguments = copy.deepcopy(arguments)
-        archive_arguments.recurse = True
+    archive_arguments = copy.deepcopy(arguments)
+    archive_arguments.recurse = True
+    archive_arguments.archive_name = os.path.basename(filename_full)
 
     # optimize contents of comic archive
     dirname = os.path.dirname(filename_full)
@@ -824,12 +852,14 @@ def report_totals(bytes_in, bytes_out, arguments):
                 msg = "Lost"
         msg += " a total of %s or %.*f%s" % (humanize_bytes(bytes_saved),
                                              2, percent_bytes_saved, '%')
-        print(msg)
-        if arguments.test:
-            print("Test run did not change any files.")
+        if arguments.verbose:
+            print(msg)
+            if arguments.test:
+                print("Test run did not change any files.")
 
     else:
-        print("Didn't optimize any files.")
+        if arguments.verbose:
+            print("Didn't optimize any files.")
 
 
 def optimize_files_after(path, arguments, file_list, multiproc):
