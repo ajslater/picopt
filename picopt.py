@@ -250,8 +250,7 @@ def process_arguments(arguments):
     program_reqs(arguments)
 
     arguments.paths = set(arguments.paths)
-
-    arguments.archive_name = None 
+    arguments.archive_name = None
 
     if arguments.formats == DEFAULT_FORMATS:
         extra_formats = JPEG_FORMATS | COMIC_FORMATS | GIF_FORMATS
@@ -328,8 +327,6 @@ def advpng(ext_args):
 def gifsicle(ext_args):
     """runs the EXTERNAL program gifsicle"""
     args = GIFSICLE_ARGS + [ext_args.new_filename]
-    if ext_args.arguments.verbose:
-        print("You should really convert animated GIFS to HTML5 video")
     run_ext(args)
 
 
@@ -476,8 +473,8 @@ def optimize_jpeg(filename, arguments):
 def optimize_image(arg):
     """optimizes a given image from a filename"""
     try:
-        filename, image_format, arguments, total_bytes_in, total_bytes_out = \
-            arg
+        filename, image_format, arguments, total_bytes_in, total_bytes_out, \
+            nag_about_gifs = arg
 
         if is_format_selected(image_format, arguments.to_png_formats,
                               arguments, arguments.optipng or
@@ -490,6 +487,7 @@ def optimize_image(arg):
                                 arguments.gifsicle):
             # this captures still GIFs too if not caught above
             report_stats = optimize_gif(filename, arguments)
+            nag_about_gifs.set(True)
         else:
             if arguments.verbose > 1:
                 print(filename, image_format)  # image.mode)
@@ -504,6 +502,13 @@ def optimize_image(arg):
         raise exc
 
 
+def truncate_cwd(full_filename, arguments):
+    """ remove the cwd from the full filenam """
+    truncated_filename = full_filename.split(arguments.dir, 1)[1]
+    truncated_filename = truncated_filename.split(os.sep, 1)[1]
+    return truncated_filename
+
+
 def optimize_accounting(report_stats, total_bytes_in, total_bytes_out,
                         arguments):
     """record the percent saved, print it and add it to the totals"""
@@ -515,9 +520,8 @@ def optimize_accounting(report_stats, total_bytes_in, total_bytes_out,
             truncated_filename = truncated_filename.split(os.sep, 1)[1]
             report += '  %s: ' % arguments.archive_name
         elif arguments.dir in report_stats.final_filename:
-            truncated_filename = report_stats.final_filename.split(
-                arguments.dir, 1)[1]
-            truncated_filename = truncated_filename.split(os.sep, 1)[1]
+            truncated_filename = truncate_cwd(report_stats.final_filename,
+                                              arguments)
         else:
             truncated_filename = report_stats.final_filename
 
@@ -657,7 +661,8 @@ def comic_archive_uncompress(filename, image_format, arguments):
         return (bytes_diff, report_list)
 
     if arguments.verbose:
-        print("Extracting %s..." % filename, end='')
+        truncated_filename = truncate_cwd(filename, arguments)
+        print("Extracting %s..." % truncated_filename, end='')
 
     # create the tmpdir
     tmp_dir = get_archive_tmp_dir(filename)
@@ -803,7 +808,7 @@ def optimize_file(filename_full, arguments, multiproc, optimize_after):
     else:
         # regular image
         args = [filename_full, image_format, arguments,
-                multiproc['in'], multiproc['out']]
+                multiproc['in'], multiproc['out'], multiproc['nag_about_gifs']]
         return multiproc['pool'].apply_async(optimize_image, args=(args,))
 
 
@@ -835,7 +840,7 @@ def optimize_files(cwd, filter_list, arguments, multiproc, optimize_after):
     return result_set
 
 
-def report_totals(bytes_in, bytes_out, arguments):
+def report_totals(bytes_in, bytes_out, arguments, nag_about_gifs):
     """report the total number and percent of bytes saved"""
     if bytes_in:
         bytes_saved = bytes_in - bytes_out
@@ -865,6 +870,9 @@ def report_totals(bytes_in, bytes_out, arguments):
     else:
         if arguments.verbose:
             print("Didn't optimize any files.")
+
+    if nag_about_gifs and arguments.verbose:
+        print("You should really convert animated GIFS to HTML5 video")
 
 
 def optimize_files_after(path, arguments, file_list, multiproc):
@@ -933,9 +941,11 @@ def run_main(raw_arguments):
     manager = multiprocessing.Manager()
     total_bytes_in = manager.Value(int, 0)
     total_bytes_out = manager.Value(int, 0)
+    nag_about_gifs = manager.Value(bool, False)
     pool = multiprocessing.Pool()
 
-    multiproc = {'pool': pool, 'in': total_bytes_in, 'out': total_bytes_out}
+    multiproc = {'pool': pool, 'in': total_bytes_in, 'out': total_bytes_out,
+                 'nag_about_gifs': nag_about_gifs}
 
     # Optimize Files
     optimize_all_files(multiproc, arguments)
@@ -947,7 +957,7 @@ def run_main(raw_arguments):
 
     # Finish by reporting totals
     report_totals(multiproc['in'].get(), multiproc['out'].get(),
-                  arguments)
+                  arguments, multiproc['nag_about_gifs'].get())
 
 
 def main():
