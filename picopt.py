@@ -45,7 +45,8 @@ GIFSICLE_ARGS = ['gifsicle', '--optimize=3', '--batch']
 PNG_FORMATS = set(['PNG'])
 SEQUENCED_TEMPLATE = '%s SEQUENCED'
 GIF_FORMATS = set([SEQUENCED_TEMPLATE % 'GIF', 'GIF'])
-PNG_CONVERTABLE_FORMATS = set(('PNM', 'TIFF', 'BMP', 'GIF')) | PNG_FORMATS
+LOSSLESS_FORMATS = set(('PNM', 'TIFF', 'BMP', 'GIF'))
+PNG_CONVERTABLE_FORMATS = LOSSLESS_FORMATS | PNG_FORMATS
 JPEG_FORMATS = set(['JPEG'])
 CBR_EXT = '.cbr'
 CBZ_EXT = '.cbz'
@@ -55,6 +56,8 @@ CBR_FORMAT = 'CBR'
 COMIC_FORMATS = set((CBZ_FORMAT, CBR_FORMAT))
 FORMAT_DELIMETER = ','
 DEFAULT_FORMATS = 'ALL'
+ALL_DEFAULT_FORMATS = JPEG_FORMATS | GIF_FORMATS | PNG_CONVERTABLE_FORMATS
+ALL_FORMATS = ALL_DEFAULT_FORMATS | COMIC_FORMATS
 NONE_FORMAT = 'NONE'
 ERROR_FORMAT = 'ERROR'
 # Programs
@@ -163,29 +166,32 @@ def get_arguments():
     programs_str = ', '.join(PROGRAMS[:-1])+' and '+PROGRAMS[-1]
     description = "Uses "+programs_str+" if they are on the path."
     parser = argparse.ArgumentParser(usage=usage, description=description)
-    parser.add_argument("-d", "--dir", action="store", dest="dir",
-                        default=os.getcwd(),
-                        help="Directory to change to before optimiziaton")
-    parser.add_argument("-f", "--formats", action="store", dest="formats",
-                        default=DEFAULT_FORMATS,
-                        help="Only optimize images of the specifed '"
-                             + FORMAT_DELIMETER + "' delimited formats")
     parser.add_argument("-r", "--recurse", action="store_true",
                         dest="recurse", default=0,
                         help="Recurse down through directories ignoring the"
                              "image file arguments on the command line")
     parser.add_argument("-v", "--verbose", action="count",
                         dest="verbose", default=1,
-                        help="Display more output. -v (default) and -vv (noisy)")
+                        help="Display more output. -v (default) and -vv "
+                             "(noisy)")
     parser.add_argument("-Q", "--quiet", action="store_false",
                         dest="verbose", default=1,
                         help="Display little to no output")
-    parser.add_argument("-O", "--disable_optipng", action="store_false",
-                        dest="optipng", default=1,
-                        help="Do not optimize with optipng")
     parser.add_argument("-a", "--enable_advpng", action="store_true",
                         dest="advpng", default=0,
                         help="Optimize with advpng (disabled by default)")
+    parser.add_argument("-c", "--comics", action="store_true",
+                        dest="comics", default=0,
+                        help="Also optimize comic book archives (cbz & cbr)")
+    parser.add_argument("-f", "--formats", action="store", dest="formats",
+                        default=DEFAULT_FORMATS,
+                        help="Only optimize images of the specifed '%s' "
+                             "delimited formats from: %s" %
+                             (FORMAT_DELIMETER,
+                              ', '.join(sorted(ALL_FORMATS))))
+    parser.add_argument("-O", "--disable_optipng", action="store_false",
+                        dest="optipng", default=1,
+                        help="Do not optimize with optipng")
     parser.add_argument("-P", "--disable_pngout", action="store_false",
                         dest="pngout", default=1,
                         help="Do not optimize with pngout")
@@ -204,35 +210,37 @@ def get_arguments():
                         help="disable optimizing animated GIFs")
     parser.add_argument("-Y", "--disable_convert_type", action="store_const",
                         dest="to_png_formats",
-                        const=PNG_CONVERTABLE_FORMATS, default=PNG_FORMATS,
+                        const=PNG_FORMATS, default=PNG_CONVERTABLE_FORMATS,
                         help="Do not convert other lossless formats like "
-                             "GIFs and TIFFs to PNGs when optimizing")
+                             " %s to PNG when optimizing. By default, %s"
+                             " does convert these formats to PNG" %
+                             (', '.join(LOSSLESS_FORMATS), PROGRAM_NAME))
     parser.add_argument("-S", "--disable_follow_symlinks",
                               action="store_false",
                         dest="follow_symlinks", default=1,
                         help="disable following symlinks for files and "
                              "directories")
+    parser.add_argument("-d", "--dir", action="store", dest="dir",
+                        default=os.getcwd(),
+                        help="Directory to change to before optimiziaton")
     parser.add_argument("-b", "--bigger", action="store_true",
                         dest="bigger", default=0,
                         help="Save optimized files that are larger than "
                              "the originals")
+    parser.add_argument("-t", "--record_timestamp", action="store_true",
+                        dest="record_timestamp", default=0,
+                        help="Store the time of the optimization of full "
+                             "directories in directory local dotfiles.")
+    parser.add_argument("-D", "--optimize_after", action="store",
+                        dest="optimize_after", default=None,
+                        help="only optimize files after the specified "
+                             "timestamp. Supercedes -t")
     parser.add_argument("-N", "--noop", action="store_true",
                         dest="test", default=0,
                         help="Do not replace files with optimized versions")
     parser.add_argument("-l", "--list", action="store_true",
                         dest="list_only", default=0,
                         help="Only list files that would be optimized")
-    parser.add_argument("-c", "--comics", action="store_true",
-                        dest="comics", default=0,
-                        help="Also optimize comic book archives (cbz & cbr)")
-   parser.add_argument("-D", "--optimize_after", action="store",
-                        dest="optimize_after", default=None,
-                        help="only optimize files after the specified "
-                             "timestamp. Supercedes -t")
-    parser.add_argument("-t", "--record_timestamp", action="store_true",
-                        dest="record_timestamp", default=0,
-                        help="Store the time of the optimization of full "
-                             "directories in directory local dotfiles.")
     parser.add_argument("-V", "--version", action="version",
                         version=__version__,
                         help="display the version number")
@@ -253,10 +261,10 @@ def process_arguments(arguments):
     arguments.archive_name = None
 
     if arguments.formats == DEFAULT_FORMATS:
-        extra_formats = JPEG_FORMATS | COMIC_FORMATS | GIF_FORMATS
-        arguments.formats = arguments.to_png_formats | extra_formats
+        arguments.formats = arguments.to_png_formats | JPEG_FORMATS | \
+            GIF_FORMATS
     else:
-        arguments.formats = arguments.formats.split(FORMAT_DELIMETER)
+        arguments.formats = arguments.formats.upper().split(FORMAT_DELIMETER)
 
     if arguments.optimize_after is not None:
         try:
@@ -432,8 +440,6 @@ def optimize_gif(filename, arguments):
 
 def optimize_png(filename, arguments):
     """run EXTERNAL programs to optimize lossless formats to PNGs"""
-    final_filename = filename
-
     filesize_in = os.stat(filename).st_size
     report_stats = None
 
@@ -441,14 +447,15 @@ def optimize_png(filename, arguments):
         if not getattr(arguments, ext_prog):
             continue
         report_stats = optimize_image_external(
-            final_filename, arguments, globals()[ext_prog])
+            filename, arguments, globals()[ext_prog])
+        filename = report_stats.final_filename
 
     if report_stats is not None:
         report_stats.bytes_diff['in'] = filesize_in
     else:
         bytes_diff = {'in': 0, 'out': 0}
-        rep = 'Skipping PNG file: %s' % final_filename
-        report_stats = ReportStats._make([final_filename, bytes_diff, rep])
+        rep = 'Skipping file: %s' % filename
+        report_stats = ReportStats._make([filename, bytes_diff, rep])
 
     return report_stats
 
