@@ -174,12 +174,12 @@ def get_arguments():
                         dest="recurse", default=0,
                         help="Recurse down through directories ignoring the"
                              "image file arguments on the command line")
-    parser.add_argument("-Q", "--quiet", action="store_false",
-                        dest="verbose", default=1,
-                        help="Do not display output")
     parser.add_argument("-v", "--verbose", action="count",
                         dest="verbose", default=1,
-                        help="Do not display output")
+                        help="Display more output. -v (default) and -vv (noisy)")
+    parser.add_argument("-Q", "--quiet", action="store_false",
+                        dest="verbose", default=1,
+                        help="Display little to no output")
     parser.add_argument("-O", "--disable_optipng", action="store_false",
                         dest="optipng", default=1,
                         help="Do not optimize with optipng")
@@ -199,19 +199,6 @@ def get_arguments():
     parser.add_argument("-T", "--disable_jpegtran", action="store_false",
                         dest="jpegtran", default=1,
                         help="Do not optimize with jpegtran")
-    parser.add_argument("-b", "--bigger", action="store_true",
-                        dest="bigger", default=0,
-                        help="Save optimized files that are larger than "
-                             "the originals")
-    parser.add_argument("-N", "--noop", action="store_true",
-                        dest="test", default=0,
-                        help="Do not replace files with optimized versions")
-    parser.add_argument("-l", "--list", action="store_true",
-                        dest="list_only", default=0,
-                        help="Only list files that would be optimized")
-    parser.add_argument("-c", "--comics", action="store_true",
-                        dest="comics", default=0,
-                        help="Also optimize comic book archives (cbz & cbr)")
     parser.add_argument("-G", "--disable_gifsicle", action="store_false",
                         dest="gifsicle", default=1,
                         help="disable optimizing animated GIFs")
@@ -225,7 +212,20 @@ def get_arguments():
                         dest="follow_symlinks", default=1,
                         help="disable following symlinks for files and "
                              "directories")
-    parser.add_argument("-D", "--optimize_after", action="store",
+    parser.add_argument("-b", "--bigger", action="store_true",
+                        dest="bigger", default=0,
+                        help="Save optimized files that are larger than "
+                             "the originals")
+    parser.add_argument("-N", "--noop", action="store_true",
+                        dest="test", default=0,
+                        help="Do not replace files with optimized versions")
+    parser.add_argument("-l", "--list", action="store_true",
+                        dest="list_only", default=0,
+                        help="Only list files that would be optimized")
+    parser.add_argument("-c", "--comics", action="store_true",
+                        dest="comics", default=0,
+                        help="Also optimize comic book archives (cbz & cbr)")
+   parser.add_argument("-D", "--optimize_after", action="store",
                         dest="optimize_after", default=None,
                         help="only optimize files after the specified "
                              "timestamp. Supercedes -t")

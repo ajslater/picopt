@@ -1,3 +1,6 @@
+v1.0.1
+* Fix typos in --help
+
 v1.0.0
 * Packaging for PyPI
 * Internal changes to make picopt more modular and library friendly
