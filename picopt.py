@@ -329,6 +329,7 @@ def jpegtran(filename, new_filename, arguments):
         args += ["-progressive"]
     args += ['-outfile']
     args += [new_filename, filename]
+    run_ext(args)
 
 
 def jpegrescan(filename, new_filename, arguments):
