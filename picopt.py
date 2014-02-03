@@ -20,10 +20,8 @@ import time
 import rarfile
 try:
     from PIL import Image
-    from PIL import ImageFile
 except ImportError:
     import Image
-    import ImageFile
 
 __version__ = '0.13.2'
 
@@ -233,8 +231,11 @@ def get_arguments():
     parser.add_argument("paths", metavar="path", type=str, nargs="+",
                         help="File or directory paths to optimize")
 
-    arguments = parser.parse_args()
+    return parser.parse_args()
 
+
+def process_arguments(arguments):
+    """ Recomputer special cases for input arguments """
     program_reqs(arguments)
 
     arguments.paths = set(arguments.paths)
@@ -836,60 +837,85 @@ def report_totals(bytes_in, bytes_out, arguments):
         print("Didn't optimize any files.")
 
 
-def main():
-    """main"""
-    #TODO make the relevant parts of this call as a library
+def optimize_files_after(path, arguments, file_list, multiproc):
+    """ compute the optimize after date for the a batch of files
+        and then optimize them.
+    """
+    optimize_after = get_optimize_after(path, True, None, arguments)
+    optimize_files(path, file_list, arguments, multiproc, optimize_after)
 
-    # Init
-    ImageFile.MAXBLOCK = 3000000  # default is 64k
 
-    arguments = get_arguments()
-
+def optimize_all_files(multiproc, arguments):
+    """ Optimize the files from the arugments list in two batches.
+        One for absolute paths which are probably outside the current
+        working directory tree and one for relative files.
+    """
+    # Change dirs
     os.chdir(arguments.dir)
     cwd = os.getcwd()
 
+    # Init records
+    record_dirs = set()
+    cwd_files = set()
+
+    for filename in arguments.paths:
+        # Record dirs to put timestamps in later
+        if arguments.recurse and os.path.isdir(filename):
+            record_dirs.add(filename)
+
+        # Optimize all apsolute paths on the command line with an optimize
+        #   after path computed from the absolute directory path they
+        # reside in.
+        #   Otherwise add the files to the list to do next
+        if os.path.isabs(filename):
+            #FIXME: this needs to get ../ relative links too i think
+            abs_dir = os.path.dirname(filename)
+            optimize_files_after(abs_dir, arguments, [filename], multiproc)
+        else:
+            cwd_files.add(filename)
+
+    # Optimize non-absolute paths with an optimize after computed from
+    # the current directory
+    if len(cwd_files):
+        optimize_files_after(cwd, arguments, cwd_files, multiproc)
+
+    return record_dirs
+
+
+def run_main(raw_arguments):
+    """ The main optimization call """
+
+    arguments = process_arguments(raw_arguments)
+
+    # Setup Multiprocessing
     manager = multiprocessing.Manager()
     total_bytes_in = manager.Value(int, 0)
     total_bytes_out = manager.Value(int, 0)
     pool = multiprocessing.Pool()
 
     multiproc = {'pool': pool, 'in': total_bytes_in, 'out': total_bytes_out}
-    record_dirs = set()
-    cwd_files = set()
 
-    # Optimize
-    for filename in arguments.paths:
+    # Optimize Files
+    record_dirs = optimize_all_files(multiproc, arguments)
 
-        if arguments.recurse and os.path.isdir(filename):
-            # dirs to put timestamps in later
-            record_dirs.add(filename)
-
-        if os.path.isabs(filename):
-            # optimize absolute paths on the command line
-            abs_dir = os.path.dirname(filename)
-            optimize_after = get_optimize_after(abs_dir, True, None,
-                                                arguments)
-            optimize_files(abs_dir, [filename], arguments,
-                           multiproc, optimize_after)
-
-        else:
-            cwd_files.add(filename)
-
-    if len(cwd_files):
-        # optimize cwd files
-        optimize_after = get_optimize_after(cwd, True, None, arguments)
-        optimize_files(cwd, cwd_files, arguments, multiproc, optimize_after)
-
+    # Shut down multiprocessing
     pool = multiproc['pool']
     pool.close()
     pool.join()
 
     # Finish up
+    #TODO: make this multiprocessing?
     for filename in record_dirs:
         record_timestamp(filename, arguments)
 
     report_totals(multiproc['in'].get(), multiproc['out'].get(),
                   arguments)
+
+
+def main():
+    """main"""
+    raw_arguments = get_arguments()
+    run_main(raw_arguments)
 
 
 if __name__ == '__main__':
