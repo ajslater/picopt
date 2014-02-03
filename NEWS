@@ -1,3 +1,6 @@
+v1.0.2
+* Fix -Y to actually disable not enable type conversion
+
 v1.0.1
 * Fix typos in --help
 
