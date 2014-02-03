@@ -132,7 +132,7 @@ Just list files picopt.py would try to optimize:
 Optimize everything in my iPhoto library, but only after the last time i
 did this, skipping symlinks to avoid massive amounts of duplicate work.
 Don't convert lossless files to PNGs because that would confuse iPhoto.
-Also drop a timestamp file so I don't have to remeber the last time I
+Also drop a timestamp file so I don't have to remember the last time I
 did this:
 
 ::
