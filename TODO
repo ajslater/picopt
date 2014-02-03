@@ -3,7 +3,6 @@ Packaging:
     DPKG doesn't see python-imaging quite right, I think RPM is the same
 
 Options:
-    Clean up options with capitals for disable and lowercase for enable
     levels of verbosity
 
 Tests:

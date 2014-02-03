@@ -171,33 +171,33 @@ def get_arguments():
                         dest="recurse", default=0,
                         help="Recurse down through directories ignoring the"
                              "image file arguments on the command line")
-    parser.add_argument("-q", "--quiet", action="store_false",
+    parser.add_argument("-Q", "--quiet", action="store_false",
                         dest="verbose", default=1,
                         help="Do not display output")
-    parser.add_argument("-o", "--disable_optipng", action="store_false",
+    parser.add_argument("-O", "--disable_optipng", action="store_false",
                         dest="optipng", default=1,
                         help="Do not optimize with optipng")
     parser.add_argument("-a", "--enable_advpng", action="store_true",
                         dest="advpng", default=0,
                         help="Optimize with advpng (disabled by default)")
-    parser.add_argument("-p", "--disable_pngout", action="store_false",
+    parser.add_argument("-P", "--disable_pngout", action="store_false",
                         dest="pngout", default=1,
                         help="Do not optimize with pngout")
-    parser.add_argument("-j", "--disable_jpegrescan", action="store_false",
+    parser.add_argument("-J", "--disable_jpegrescan", action="store_false",
                         dest="jpegrescan", default=1,
                         help="Do not optimize with jpegrescan")
-    parser.add_argument("-e", "--disable_progressive", action="store_false",
+    parser.add_argument("-E", "--disable_progressive", action="store_false",
                         dest="jpegtran_prog", default=1,
                         help="Don't try to reduce size by making "
                         "progressive JPEGs with jpegtran")
-    parser.add_argument("-t", "--disable_jpegtran", action="store_false",
+    parser.add_argument("-T", "--disable_jpegtran", action="store_false",
                         dest="jpegtran", default=1,
                         help="Do not optimize with jpegtran")
     parser.add_argument("-b", "--bigger", action="store_true",
                         dest="bigger", default=0,
                         help="Save optimized files that are larger than "
                              "the originals")
-    parser.add_argument("-n", "--noop", action="store_true",
+    parser.add_argument("-N", "--noop", action="store_true",
                         dest="test", default=0,
                         help="Do not replace files with optimized versions")
     parser.add_argument("-l", "--list", action="store_true",
@@ -206,10 +206,10 @@ def get_arguments():
     parser.add_argument("-c", "--comics", action="store_true",
                         dest="comics", default=0,
                         help="Also optimize comic book archives (cbz & cbr)")
-    parser.add_argument("-g", "--disable_gifsicle", action="store_false",
+    parser.add_argument("-G", "--disable_gifsicle", action="store_false",
                         dest="gifsicle", default=1,
                         help="disable optimizing animated GIFs")
-    parser.add_argument("-C", "--disable_convert_type", action="store_const",
+    parser.add_argument("-Y", "--disable_convert_type", action="store_const",
                         dest="to_png_formats",
                         const=PNG_CONVERTABLE_FORMATS, default=PNG_FORMATS,
                         help="Do not convert other lossless formats like "
@@ -222,15 +222,15 @@ def get_arguments():
     parser.add_argument("-D", "--optimize_after", action="store",
                         dest="optimize_after", default=None,
                         help="only optimize files after the specified "
-                             "timestamp. Supercedes -T")
-    parser.add_argument("-T", "--record_timestamp", action="store_true",
+                             "timestamp. Supercedes -t")
+    parser.add_argument("-t", "--record_timestamp", action="store_true",
                         dest="record_timestamp", default=0,
                         help="Store the time of the optimization of full "
                              "directories in directory local dotfiles.")
     parser.add_argument("-v", "--version", action="version",
                         version=__version__,
                         help="display the version number")
-    parser.add_argument("-m", "--destroy_metadata", action="store_true",
+    parser.add_argument("-M", "--destroy_metadata", action="store_true",
                         dest="destroy_metadata", default=0,
                         help="*Destroy* metadata like EXIF and JFIF")
     parser.add_argument("paths", metavar="path", type=str, nargs="+",
