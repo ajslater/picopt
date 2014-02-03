@@ -55,6 +55,8 @@ CBR_FORMAT = 'CBR'
 COMIC_FORMATS = set((CBZ_FORMAT, CBR_FORMAT))
 FORMAT_DELIMETER = ','
 DEFAULT_FORMATS = 'ALL'
+NONE_FORMAT = 'NONE'
+ERROR_FORMAT = 'ERROR'
 # Programs
 PROGRAMS = ('optipng', 'pngout', 'jpegrescan', 'jpegtran', 'gifsicle',
             'advpng')
@@ -377,8 +379,8 @@ def cleanup_after_optimize(filename, new_filename, arguments):
         bytes_diff['out'] = filesize_in  # overwritten on succes below
         if (filesize_out > 0) and ((filesize_out < filesize_in)
                                    or arguments.bigger):
-            old_image_format = get_image_format(filename)
-            new_image_format = get_image_format(new_filename)
+            old_image_format = get_image_format(filename, arguments)
+            new_image_format = get_image_format(new_filename, arguments)
             if old_image_format != new_image_format:
                 final_filename = replace_ext(filename,
                                              new_image_format.lower())
@@ -548,11 +550,11 @@ def is_image_sequenced(image):
     return result
 
 
-def get_image_format(filename):
+def get_image_format(filename, arguments):
     """gets the image format"""
     image = None
     bad_image = 1
-    image_format = 'NONE'
+    image_format = NONE_FORMAT
     sequenced = False
     try:
         image = Image.open(filename)
@@ -564,25 +566,28 @@ def get_image_format(filename):
 
     if sequenced:
         image_format = SEQUENCED_TEMPLATE % image_format
-    elif image is None or bad_image or image_format == 'NONE':
-        image_format = 'ERROR'
+    elif image is None or bad_image or image_format == NONE_FORMAT:
+        image_format = ERROR_FORMAT
         filename_ext = os.path.splitext(filename)[-1].lower()
         if filename_ext in COMIC_EXTS:
             if zipfile.is_zipfile(filename):
                 image_format = CBZ_FORMAT
             elif rarfile.is_rarfile(filename):
                 image_format = CBR_FORMAT
+        if (arguments.verbose > 1) and image_format == ERROR_FORMAT and \
+                (not arguments.list_only):
+            print(filename, "doesn't look like an image or comic archive.")
     return image_format
 
 
 def detect_file(filename, arguments):
     """decides what to do with the file"""
-    image_format = get_image_format(filename)
+    image_format = get_image_format(filename, arguments)
 
     if image_format in arguments.formats:
         return image_format
 
-    if image_format in ('NONE', 'ERROR'):
+    if image_format in (NONE_FORMAT, ERROR_FORMAT):
         return
 
     if arguments.verbose > 1 and not arguments.list_only:
