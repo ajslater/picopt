@@ -1,10 +1,11 @@
 Packaging:
     PIL/Pillow is still a mess.
-    DPKG doesn't see python-imaging quite right, I think RPM is the same
+    DPKG uses python-imaging I think RPM is the same. I think python Pillow/PIL dependency isn't satisfied by either.
 
 Tests:
     More formal tests.
     Test each option.
+    Unit Tests?
 
 Formats:
-    Compressing images inside PDFs would be cool, but difficult due to non-standard image formats and lack of easy PDF exploders/bundlers.
+    PDF would be cool, but difficult due to non-standard image formats and lack of easy PDF exploders/bundlers.
