@@ -38,8 +38,8 @@ to optimize or when you last optimized them.
 Installation
 ------------
 
-Lossless external programs
-~~~~~~~~~~~~~~~~~~~~~~~~~~
+Lossless external program packages
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 OS X
 ^^^^
@@ -53,31 +53,25 @@ Debian / Ubuntu
 
 ::
 
-    apt-get install optipng pngout libjpeg-progs gifsicle
+    apt-get install optipng pngout libjpeg-progs gifsicle python-imaging
 
 Redhat / Fedora
 ^^^^^^^^^^^^^^^
 
 ::
 
-    yum install optipng pngout libjpeg-progs gifsicle
+    yum install optipng pngout libjpeg-progs gifsicle python-imaging
 
 jpegrescan
 ~~~~~~~~~~
 
-jpegrescan is the best jpeg optimizer, but remains unpackaged :(
+jpegrescan is a better jpeg optimizer than jpegtran, unfortunately it
+remains unpackaged :(
 
 ::
 
     git clone git@github.com:kud/jpegrescan.git
     ln -s jpegrescan/jpegrescan /usr/local/bin/jpegrescan
-
-Dependencies on Linux
-~~~~~~~~~~~~~~~~~~~~~
-
-I think using the python-imaging package on Debian (and possibly Redhat)
-may be the best way resolve the PIL depenency #### Debian / Ubuntu
-apt-get install python-imaging
 
 Picopt
 ~~~~~~
@@ -144,7 +138,7 @@ did this:
 Packaged For
 ------------
 
--  `PyPI <https://pypi.python.org/pypi/picopt/0.13.1>`__
+-  `PyPI <https://pypi.python.org/pypi/picopt/>`__
 -  `Arch Linux <https://aur.archlinux.org/packages/picopt/>`__
 
 Alternatives

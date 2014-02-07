@@ -18,26 +18,22 @@ Picopt allows you to drop picopt timestamps at the root of your recursive optimi
 Installation
 ------------
 
-### Lossless external programs
+### Lossless external program packages
 #### OS X
     brew install optipng pngout jpeg gifsicle
 
 #### Debian / Ubuntu
-    apt-get install optipng pngout libjpeg-progs gifsicle
+    apt-get install optipng pngout libjpeg-progs gifsicle python-imaging
 
 #### Redhat / Fedora
-    yum install optipng pngout libjpeg-progs gifsicle
+    yum install optipng pngout libjpeg-progs gifsicle python-imaging
 
 ### jpegrescan
-jpegrescan is the best jpeg optimizer, but remains unpackaged :(
+jpegrescan is a better jpeg optimizer than jpegtran, unfortunately it
+remains unpackaged :(
 
     git clone git@github.com:kud/jpegrescan.git
     ln -s jpegrescan/jpegrescan /usr/local/bin/jpegrescan
-
-### Dependencies on Linux
-I think using the python-imaging package on Debian (and possibly Redhat) may be the best way resolve the PIL depenency
-#### Debian / Ubuntu
-    apt-get install python-imaging
 
 ### Picopt
     pip install picopt
@@ -79,7 +75,7 @@ Optimize everything in my iPhoto library, but only after the last time i did thi
 Packaged For
 ------------
 
-* [PyPI](https://pypi.python.org/pypi/picopt/0.13.1)
+* [PyPI](https://pypi.python.org/pypi/picopt/)
 * [Arch Linux](https://aur.archlinux.org/packages/picopt/)
 
 
