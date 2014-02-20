@@ -349,7 +349,7 @@ def jpegtran(ext_args):
     if ext_args.arguments.jpegtran_prog:
         args += ["-progressive"]
     args += ['-outfile']
-    args += [ext_args.new_filename, ext_args.filename]
+    args += [ext_args.new_filename, ext_args.old_filename]
     run_ext(args)
 
 
