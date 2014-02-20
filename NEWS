@@ -1,5 +1,6 @@
-v1.0.3-rc
+v1.0.3
 * Fix -v to actually be more verbose than default
+* Fix from Dennis Schwertel to jpegtran runner
 
 v1.0.2
 * Fix -Y to actually disable not enable type conversion
