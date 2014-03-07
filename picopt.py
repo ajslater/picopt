@@ -730,14 +730,20 @@ def record_timestamp(pathname_full, arguments):
     if arguments.test or arguments.list_only or not arguments.record_timestamp:
         return
     elif not arguments.follow_symlinks and os.path.islink(pathname_full):
+        if arguments.verbose:
+            print('Not setting timestamp because not following symlinks')
         return
     elif not os.path.isdir(pathname_full):
+        if arguments.verbose:
+            print('Not setting timestamp for a non-directory')
         return
 
     record_filename_full = os.path.join(pathname_full, RECORD_FILENAME)
     try:
         with open(record_filename_full, 'w'):
             os.utime(record_filename_full, None)
+        if arguments.verbose:
+            print("Set timestamp: %s" % record_filename_full)
     except IOError:
         print("Could not set timestamp in %s" % pathname_full)
 
@@ -790,9 +796,8 @@ def optimize_comic_archive(filename_full, image_format, arguments, multiproc,
     for result in result_set:
         result.wait()
 
-    pool = multiproc['pool']
     args = (filename_full, multiproc['in'], multiproc['out'], arguments)
-    return pool.apply_async(comic_archive_compress, args=(args,))
+    return multiproc['pool'].apply_async(comic_archive_compress, args=(args,))
 
 
 def optimize_file(filename_full, arguments, multiproc, optimize_after):
@@ -934,10 +939,10 @@ def optimize_all_files(multiproc, arguments):
         result.wait()
 
     # Write timestamps
-    pool = multiproc['pool']
     for filename in record_dirs:
-        args = (filename, arguments)
-        pool.apply_async(record_timestamp, args=(args,))
+        #args = (filename, arguments)
+        #multiproc['pool'].apply_async(record_timestamp, args=(args,))
+        record_timestamp(filename, arguments)
 
 
 def run_main(raw_arguments):
