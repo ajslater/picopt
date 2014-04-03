@@ -1,4 +1,4 @@
-v1.0.4
+v1.0.5
 * Fix timestamp writing to really happen once workers have finished
 * Fix size saved if size in is zero
 
