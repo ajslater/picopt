@@ -1,3 +1,7 @@
+v1.0.4
+* Fix timestamp writing to really happen once workers have finished
+* Fix size saved if size in is zero
+
 v1.0.3
 * Fix -v to actually be more verbose than default
 * Fix from Dennis Schwertel to jpegtran runner

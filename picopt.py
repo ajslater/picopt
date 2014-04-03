@@ -302,8 +302,12 @@ def replace_ext(filename, new_ext):
 def new_percent_saved(report_stats):
     """spits out how much space the optimization saved"""
     size_in = report_stats.bytes_diff['in']
-    size_out = report_stats.bytes_diff['out']
-    percent_saved = (1 - (size_out / size_in)) * 100
+    if size_in != 0:
+        size_out = report_stats.bytes_diff['out']
+        ratio = size_out / size_in
+    else:
+        ratio = 0
+    percent_saved = (1 - ratio) * 100
 
     size_saved_kb = humanize_bytes(size_in - size_out)
     result = '%.*f%s (%s)' % (2, percent_saved, '%', size_saved_kb)
@@ -909,7 +913,6 @@ def optimize_all_files(multiproc, arguments):
     # Init records
     record_dirs = set()
     cwd_files = set()
-    full_result_set = set()
 
     for filename in arguments.paths:
         # Record dirs to put timestamps in later
@@ -921,28 +924,17 @@ def optimize_all_files(multiproc, arguments):
         #   Otherwise add the files to the list to do next
         path_dn, path_fn = os.path.split(os.path.realpath(filename))
         if path_dn != cwd:
-            result_set = optimize_files_after(path_dn, arguments,
-                                              [path_fn], multiproc)
-            full_result_set.union(result_set)
+            optimize_files_after(path_dn, arguments,
+                                 [path_fn], multiproc)
         else:
             cwd_files.add(path_fn)
 
     # Optimize immediate descendants with optimize after computed from
     # the current directory
     if len(cwd_files):
-        result_set = optimize_files_after(cwd, arguments, cwd_files,
-                                          multiproc)
-        full_result_set.union(result_set)
+        optimize_files_after(cwd, arguments, cwd_files, multiproc)
 
-    # Wait for all files to finish compressing
-    for result in full_result_set:
-        result.wait()
-
-    # Write timestamps
-    for filename in record_dirs:
-        #args = (filename, arguments)
-        #multiproc['pool'].apply_async(record_timestamp, args=(args,))
-        record_timestamp(filename, arguments)
+    return record_dirs
 
 
 def run_main(raw_arguments):
@@ -961,12 +953,15 @@ def run_main(raw_arguments):
                  'nag_about_gifs': nag_about_gifs}
 
     # Optimize Files
-    optimize_all_files(multiproc, arguments)
+    record_dirs = optimize_all_files(multiproc, arguments)
 
     # Shut down multiprocessing
-    pool = multiproc['pool']
     pool.close()
     pool.join()
+
+    # Write timestamps
+    for filename in record_dirs:
+        record_timestamp(filename, arguments)
 
     # Finish by reporting totals
     report_totals(multiproc['in'].get(), multiproc['out'].get(),
