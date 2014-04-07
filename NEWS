@@ -1,3 +1,6 @@
+v1.0.6
+* Fix comic archive switch which was disabled somehow
+
 v1.0.5
 * Fix timestamp writing to really happen once workers have finished
 * Fix size saved if size in is zero

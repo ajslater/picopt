@@ -267,6 +267,9 @@ def process_arguments(arguments):
     else:
         arguments.formats = arguments.formats.upper().split(FORMAT_DELIMETER)
 
+    if arguments.comics:
+        arguments.formats = arguments.formats | COMIC_FORMATS
+
     if arguments.optimize_after is not None:
         try:
             after_dt = dateutil.parser.parse(arguments.optimize_after)
@@ -627,7 +630,7 @@ def comic_archive_compress(args):
 
         tmp_dir = get_archive_tmp_dir(filename)
 
-        #archive into new filename
+        # archive into new filename
         new_filename = replace_ext(filename, NEW_ARCHIVE_SUFFIX)
 
         if arguments.verbose:
