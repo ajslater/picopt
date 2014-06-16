@@ -169,11 +169,11 @@ def get_arguments():
     parser.add_argument("-r", "--recurse", action="store_true",
                         dest="recurse", default=0,
                         help="Recurse down through directories ignoring the"
-                             "image file arguments on the command line")
+                        "image file arguments on the command line")
     parser.add_argument("-v", "--verbose", action="count",
                         dest="verbose", default=0,
                         help="Display more output. -v (default) and -vv "
-                             "(noisy)")
+                        "(noisy)")
     parser.add_argument("-Q", "--quiet", action="store_const",
                         dest="verbose", const=-1,
                         help="Display little to no output")
@@ -186,9 +186,8 @@ def get_arguments():
     parser.add_argument("-f", "--formats", action="store", dest="formats",
                         default=DEFAULT_FORMATS,
                         help="Only optimize images of the specifed '%s' "
-                             "delimited formats from: %s" %
-                             (FORMAT_DELIMETER,
-                              ', '.join(sorted(ALL_FORMATS))))
+                        "delimited formats from: %s" %
+                        (FORMAT_DELIMETER, ', '.join(sorted(ALL_FORMATS))))
     parser.add_argument("-O", "--disable_optipng", action="store_false",
                         dest="optipng", default=1,
                         help="Do not optimize with optipng")
@@ -212,29 +211,29 @@ def get_arguments():
                         dest="to_png_formats",
                         const=PNG_FORMATS, default=PNG_CONVERTABLE_FORMATS,
                         help="Do not convert other lossless formats like "
-                             " %s to PNG when optimizing. By default, %s"
-                             " does convert these formats to PNG" %
-                             (', '.join(LOSSLESS_FORMATS), PROGRAM_NAME))
+                        " %s to PNG when optimizing. By default, %s"
+                        " does convert these formats to PNG" %
+                        (', '.join(LOSSLESS_FORMATS), PROGRAM_NAME))
     parser.add_argument("-S", "--disable_follow_symlinks",
-                              action="store_false",
+                        action="store_false",
                         dest="follow_symlinks", default=1,
                         help="disable following symlinks for files and "
-                             "directories")
+                        "directories")
     parser.add_argument("-d", "--dir", action="store", dest="dir",
                         default=os.getcwd(),
                         help="Directory to change to before optimiziaton")
     parser.add_argument("-b", "--bigger", action="store_true",
                         dest="bigger", default=0,
                         help="Save optimized files that are larger than "
-                             "the originals")
+                        "the originals")
     parser.add_argument("-t", "--record_timestamp", action="store_true",
                         dest="record_timestamp", default=0,
                         help="Store the time of the optimization of full "
-                             "directories in directory local dotfiles.")
+                        "directories in directory local dotfiles.")
     parser.add_argument("-D", "--optimize_after", action="store",
                         dest="optimize_after", default=None,
                         help="only optimize files after the specified "
-                             "timestamp. Supercedes -t")
+                        "timestamp. Supercedes -t")
     parser.add_argument("-N", "--noop", action="store_true",
                         dest="test", default=0,
                         help="Do not replace files with optimized versions")
@@ -611,7 +610,7 @@ def detect_file(filename, arguments):
 
     if arguments.verbose > 1 and not arguments.list_only:
         print(filename, image_format, 'is not a enabled image or '
-                                      'comic archive type.')
+              'comic archive type.')
 
 
 def get_archive_tmp_dir(filename):
