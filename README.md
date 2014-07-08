@@ -46,7 +46,7 @@ Optimize all JPEG files in a dirctory:
 
 Optimize all files and recurse directories:
 
-    picotpt -r *
+    picopt -r *
 
 Optimize files and recurse directories AND optimize comic book archives:
 
