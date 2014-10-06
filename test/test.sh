@@ -6,5 +6,5 @@ rm -rf $TEST_DIR
 cp -a test_files $TEST_DIR
 
 python $PICOPT $* $TEST_DIR/images/*
-python $PICOPT -rcT $* $TEST_DIR
-python $PICOPT -rcT $* $TEST_DIR
+python $PICOPT -rct $* $TEST_DIR
+python $PICOPT -rct $* $TEST_DIR
