@@ -3,9 +3,9 @@ picopt
 
 A multi-format, recursive, multiprocessor aware, command line image optimizer utility that uses external tools to do the optimizing.
 
-Picopt depends on Python [PIL](http://www.pythonware.com/products/pil/) to identify files and [rarfile](https://pypi.python.org/pypi/rarfile) to open CBRs.
+Picopt depends on Python [PIL](http://www.pythonware.com/products/pil/) to identify files and Python [rarfile](https://pypi.python.org/pypi/rarfile) to open CBRs.
 
-To optimize JPEG images. Picopt needs either [jpegrescan](https://github.com/kud/jpegrescan) or [jpegtran](http://jpegclub.org/jpegtran/) on the path. jpegrescan is preferred.
+To optimize JPEG images. Picopt needs one of [mozjpeg](https://github.com/mozilla/mozjpeg), [jpegrescan](https://github.com/kud/jpegrescan) or [jpegtran](http://jpegclub.org/jpegtran/) on the path. in order of preferrence.
 
 To optimize lossless images like PNG, PNM, GIF, TIFF and BMP, picopt requires either [optipng](http://optipng.sourceforge.net/), [advpng](http://advancemame.sourceforge.net/doc-advpng.html) or [pngout](http://advsys.net/ken/utils.htm) be on the path. Optipng provides the most advantage, but best results are acheived by using pngout as well. Advpng support is disabled by default and must be explicitly enabled on the command line.
 
@@ -34,6 +34,14 @@ remains unpackaged :(
 
     git clone git@github.com:kud/jpegrescan.git
     ln -s jpegrescan/jpegrescan /usr/local/bin/jpegrescan
+
+### MozJPEG
+mozjpeg is a better option than even jpegrescan. As of Oct 2014 it may or
+may not be packaged for your \*nix, but even when it is, picopt requires
+that its separately compiled version of jpegtran be symlinked to 'mozjpeg'
+somewhere in the path. This installation example is for OS X:
+    brew install mozjpeg
+    ln -s /usr/local/Cellar/mozjpeg/2.1/bin/jpegtran /usr/local/bin/mozjpeg
 
 ### Picopt
     pip install picopt
