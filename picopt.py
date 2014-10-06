@@ -202,7 +202,7 @@ def get_arguments():
                         dest="jpegtran_prog", default=1,
                         help="Don't try to reduce size by making "
                         "progressive JPEGs with jpegtran")
-    parser.add_argument("-F", "--disable_mozjpeg", action="store_false",
+    parser.add_argument("-Z", "--disable_mozjpeg", action="store_false",
                         dest="mozjpeg", default=1,
                         help="Do not optimize with mozjpeg")
     parser.add_argument("-T", "--disable_jpegtran", action="store_false",
