@@ -9,3 +9,6 @@ Tests:
 
 Formats:
     PDF would be cool, but difficult due to non-standard image formats and lack of easy PDF exploders/bundlers.
+
+Architecture:
+    Break up into smaller modules
