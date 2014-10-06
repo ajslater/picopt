@@ -6,12 +6,13 @@ optimizer utility that uses external tools to do the optimizing.
 
 Picopt depends on Python
 `PIL <http://www.pythonware.com/products/pil/>`__ to identify files and
-`rarfile <https://pypi.python.org/pypi/rarfile>`__ to open CBRs.
+Python `rarfile <https://pypi.python.org/pypi/rarfile>`__ to open CBRs.
 
-To optimize JPEG images. Picopt needs either
+To optimize JPEG images. Picopt needs one of
+`mozjpeg <https://github.com/mozilla/mozjpeg>`__,
 `jpegrescan <https://github.com/kud/jpegrescan>`__ or
-`jpegtran <http://jpegclub.org/jpegtran/>`__ on the path. jpegrescan is
-preferred.
+`jpegtran <http://jpegclub.org/jpegtran/>`__ on the path. in order of
+preferrence.
 
 To optimize lossless images like PNG, PNM, GIF, TIFF and BMP, picopt
 requires either `optipng <http://optipng.sourceforge.net/>`__,
@@ -73,6 +74,16 @@ remains unpackaged :(
     git clone git@github.com:kud/jpegrescan.git
     ln -s jpegrescan/jpegrescan /usr/local/bin/jpegrescan
 
+MozJPEG
+~~~~~~~
+
+mozjpeg is a better option than even jpegrescan. As of Oct 2014 it may
+or may not be packaged for your \*nix, but even when it is, picopt
+requires that its separately compiled version of jpegtran be symlinked
+to 'mozjpeg' somewhere in the path. This installation example is for OS
+X: brew install mozjpeg ln -s /usr/local/Cellar/mozjpeg/2.1/bin/jpegtran
+/usr/local/bin/mozjpeg
+
 Picopt
 ~~~~~~
 
@@ -93,7 +104,7 @@ Optimize all files and recurse directories:
 
 ::
 
-    picotpt -r *
+    picopt -r *
 
 Optimize files and recurse directories AND optimize comic book archives:
 
