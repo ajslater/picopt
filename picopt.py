@@ -62,8 +62,8 @@ ALL_FORMATS = ALL_DEFAULT_FORMATS | COMIC_FORMATS
 NONE_FORMAT = 'NONE'
 ERROR_FORMAT = 'ERROR'
 # Programs
-PROGRAMS = ('optipng', 'pngout', 'mozjpeg', 'jpegrescan', 'jpegtran', 'gifsicle',
-            'advpng')
+PROGRAMS = ('optipng', 'pngout', 'mozjpeg', 'jpegrescan', 'jpegtran',
+            'gifsicle', 'advpng')
 RECORD_FILENAME = '.%s_timestamp' % PROGRAM_NAME
 if sys.version > '3':
     LongInt = int
@@ -283,7 +283,7 @@ def process_arguments(arguments):
             exit(1)
 
     # Make a rough guess about weather or not to invoke multithreding
-    # jpegrtan '-t' uses three threads
+    # jpegrescan '-t' uses three threads
     # one off multithread switch bcaseu this is the only one right now
     files_in_paths = 0
     non_file_in_paths = False
@@ -342,6 +342,7 @@ def advpng(ext_args):
     args = ADVPNG_ARGS + [ext_args.new_filename]
     run_ext(args)
 
+
 def gifsicle(ext_args):
     """runs the EXTERNAL program gifsicle"""
     args = GIFSICLE_ARGS + [ext_args.new_filename]
@@ -358,6 +359,7 @@ def mozjpeg(ext_args):
     args += ['-outfile']
     args += [ext_args.new_filename, ext_args.old_filename]
     run_ext(args)
+
 
 def jpegtran(ext_args):
     """create argument list for jpegtran"""
@@ -512,7 +514,8 @@ def optimize_image(arg):
                               arguments.pngout):
             report_stats = optimize_png(filename, arguments)
         elif is_format_selected(image_format, JPEG_FORMATS, arguments,
-                                arguments.mozjpeg or arguments.jpegrescan or arguments.jpegtran):
+                                arguments.mozjpeg or arguments.jpegrescan
+                                or arguments.jpegtran):
             report_stats = optimize_jpeg(filename, arguments)
         elif is_format_selected(image_format, GIF_FORMATS, arguments,
                                 arguments.gifsicle):
