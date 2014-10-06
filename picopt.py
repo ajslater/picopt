@@ -912,7 +912,7 @@ def report_totals(bytes_in, bytes_out, arguments, nag_about_gifs):
 
     if nag_about_gifs and arguments.verbose:
         print("Most animated GIFS would be better off converted to"
-              "HTML5 video")
+              " HTML5 video")
 
 
 def optimize_files_after(path, arguments, file_list, multiproc):
