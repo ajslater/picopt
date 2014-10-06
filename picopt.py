@@ -35,6 +35,7 @@ ARCHIVE_TMP_DIR_PREFIX = PROGRAM_NAME+'_tmp_'
 ARCHIVE_TMP_DIR_TEMPLATE = ARCHIVE_TMP_DIR_PREFIX+'%s'
 NEW_ARCHIVE_SUFFIX = '%s-optimized.cbz' % PROGRAM_NAME
 # Program args
+MOZJPEG_ARGS = ['mozjpeg']
 JPEGTRAN_ARGS = ['jpegtran', '-optimize']
 JPEGRESCAN_ARGS = ['jpegrescan']
 OPTIPNG_ARGS = ['optipng', '-o6', '-fix', '-preserve', '-force', '-quiet']
@@ -61,7 +62,7 @@ ALL_FORMATS = ALL_DEFAULT_FORMATS | COMIC_FORMATS
 NONE_FORMAT = 'NONE'
 ERROR_FORMAT = 'ERROR'
 # Programs
-PROGRAMS = ('optipng', 'pngout', 'jpegrescan', 'jpegtran', 'gifsicle',
+PROGRAMS = ('optipng', 'pngout', 'mozjpeg', 'jpegrescan', 'jpegtran', 'gifsicle',
             'advpng')
 RECORD_FILENAME = '.%s_timestamp' % PROGRAM_NAME
 if sys.version > '3':
@@ -151,7 +152,7 @@ def program_reqs(arguments):
         setattr(arguments, program_name, val)
 
     do_png = arguments.optipng or arguments.pngout or arguments.advpng
-    do_jpeg = arguments.jpegrescan or arguments.jpegtran
+    do_jpeg = arguments.mozjpeg or arguments.jpegrescan or arguments.jpegtran
 
     do_comics = arguments.comics
 
@@ -201,6 +202,9 @@ def get_arguments():
                         dest="jpegtran_prog", default=1,
                         help="Don't try to reduce size by making "
                         "progressive JPEGs with jpegtran")
+    parser.add_argument("-F", "--disable_mozjpeg", action="store_false",
+                        dest="mozjpeg", default=1,
+                        help="Do not optimize with mozjpeg")
     parser.add_argument("-T", "--disable_jpegtran", action="store_false",
                         dest="jpegtran", default=1,
                         help="Do not optimize with jpegtran")
@@ -338,12 +342,22 @@ def advpng(ext_args):
     args = ADVPNG_ARGS + [ext_args.new_filename]
     run_ext(args)
 
-
 def gifsicle(ext_args):
     """runs the EXTERNAL program gifsicle"""
     args = GIFSICLE_ARGS + [ext_args.new_filename]
     run_ext(args)
 
+
+def mozjpeg(ext_args):
+    """create argument list for mozjpeg"""
+    args = copy.copy(MOZJPEG_ARGS)
+    if ext_args.arguments.destroy_metadata:
+        args += ["-copy", "none"]
+    else:
+        args += ["-copy", "all"]
+    args += ['-outfile']
+    args += [ext_args.new_filename, ext_args.old_filename]
+    run_ext(args)
 
 def jpegtran(ext_args):
     """create argument list for jpegtran"""
@@ -470,7 +484,10 @@ def optimize_png(filename, arguments):
 def optimize_jpeg(filename, arguments):
     """run EXTERNAL programs to optimize jpeg formats"""
     final_filename = filename
-    if arguments.jpegrescan:
+    if arguments.mozjpeg:
+        report_stats = optimize_image_external(
+            final_filename, arguments, mozjpeg)
+    elif arguments.jpegrescan:
         report_stats = optimize_image_external(
             final_filename, arguments, jpegrescan)
     elif arguments.jpegtran_prog or arguments.jpegtran:
@@ -495,7 +512,7 @@ def optimize_image(arg):
                               arguments.pngout):
             report_stats = optimize_png(filename, arguments)
         elif is_format_selected(image_format, JPEG_FORMATS, arguments,
-                                arguments.jpegrescan or arguments.jpegtran):
+                                arguments.mozjpeg or arguments.jpegrescan or arguments.jpegtran):
             report_stats = optimize_jpeg(filename, arguments)
         elif is_format_selected(image_format, GIF_FORMATS, arguments,
                                 arguments.gifsicle):
