@@ -46,7 +46,7 @@ GIFSICLE_ARGS = ['gifsicle', '--optimize=3', '--batch']
 PNG_FORMATS = set(['PNG'])
 SEQUENCED_TEMPLATE = '%s SEQUENCED'
 GIF_FORMATS = set([SEQUENCED_TEMPLATE % 'GIF', 'GIF'])
-LOSSLESS_FORMATS = set(('PNM', 'TIFF', 'BMP', 'GIF'))
+LOSSLESS_FORMATS = set(('PNM', 'PPM', 'TIFF', 'BMP', 'GIF'))
 PNG_CONVERTABLE_FORMATS = LOSSLESS_FORMATS | PNG_FORMATS
 JPEG_FORMATS = set(['JPEG'])
 CBR_EXT = '.cbr'
@@ -595,8 +595,7 @@ def get_image_format(filename, arguments):
     image_format = NONE_FORMAT
     sequenced = False
     try:
-        image = Image.open(filename)
-        bad_image = image.verify()
+        bad_image = Image.open(filename).verify()
         image = Image.open(filename)
         image_format = image.format
         sequenced = is_image_sequenced(image)
