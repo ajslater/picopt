@@ -597,6 +597,7 @@ def get_image_format(filename, arguments):
     try:
         image = Image.open(filename)
         bad_image = image.verify()
+        image = Image.open(filename)
         image_format = image.format
         sequenced = is_image_sequenced(image)
     except (OSError, IOError):
