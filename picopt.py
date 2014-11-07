@@ -581,6 +581,7 @@ def is_image_sequenced(image):
     """determines if the image is a sequenced image"""
     try:
         image.seek(1)
+        image.seek(0)
         result = True
     except EOFError:
         result = False
@@ -599,7 +600,7 @@ def get_image_format(filename, arguments):
         image = Image.open(filename)
         image_format = image.format
         sequenced = is_image_sequenced(image)
-    except (OSError, IOError):
+    except (OSError, IOError, AttributeError):
         pass
 
     if sequenced:
