@@ -1,14 +1,17 @@
+v1.2
+* picopt learned the -j option for specifying number of subprocesses (thanks @DarwinAwardWinner)
+
 v1.1.3
-fixed rare crash on sequential gif detection
+* fixed rare crash on sequential gif detection
 
 v1.1.2
-detect PNM images properly for conversion with optipng
+* detect PNM images properly for conversion with optipng
 
 v1.1.1
-fix verifying gif crash (thanks @DarwinAwardWinner)
+* fix verifying gif crash (thanks @DarwinAwardWinner)
 
 v1.1.0
-mozjpeg support (thanks to @crass00)
+* mozjpeg support (thanks to @crass00)
 
 v1.0.6
 * Fix comic archive switch which was disabled somehow
