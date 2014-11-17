@@ -252,6 +252,9 @@ def get_arguments():
                         help="*Destroy* metadata like EXIF and JFIF")
     parser.add_argument("paths", metavar="path", type=str, nargs="+",
                         help="File or directory paths to optimize")
+    parser.add_argument("-j", "--jobs", type=int, action="store",
+                        dest="jobs", default=multiprocessing.cpu_count(),
+                        help="Number of parallel jobs to run simultaneously.")
 
     return parser.parse_args()
 
@@ -282,6 +285,9 @@ def process_arguments(arguments):
             print('Could not parse date to optimize after.')
             exit(1)
 
+    if arguments.jobs < 1:
+        arguments.jobs = 1
+
     # Make a rough guess about weather or not to invoke multithreding
     # jpegrescan '-t' uses three threads
     # one off multithread switch bcaseu this is the only one right now
@@ -293,7 +299,7 @@ def process_arguments(arguments):
         else:
             non_file_in_paths = True
     arguments.jpegrescan_multithread = not non_file_in_paths and \
-        multiprocessing.cpu_count() - (files_in_paths*3) > -1
+        arguments.jobs - (files_in_paths*3) > -1
 
     return arguments
 
@@ -971,7 +977,7 @@ def run_main(raw_arguments):
     total_bytes_in = manager.Value(int, 0)
     total_bytes_out = manager.Value(int, 0)
     nag_about_gifs = manager.Value(bool, False)
-    pool = multiprocessing.Pool()
+    pool = multiprocessing.Pool(arguments.jobs)
 
     multiproc = {'pool': pool, 'in': total_bytes_in, 'out': total_bytes_out,
                  'nag_about_gifs': nag_about_gifs}
