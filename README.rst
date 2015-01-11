@@ -1,18 +1,20 @@
 picopt
 ======
 
-A multi-format, recursive, multiprocessor aware, command line image
-optimizer utility that uses external tools to do the optimizing.
+A multi-format, recursive, multiprocessor aware, command line lossless
+image optimizer utility that uses external tools to do the optimizing.
 
 Picopt depends on Python
 `PIL <http://www.pythonware.com/products/pil/>`__ to identify files and
 Python `rarfile <https://pypi.python.org/pypi/rarfile>`__ to open CBRs.
 
+The actual image optimization is accomplished by external programs.
+
 To optimize JPEG images. Picopt needs one of
 `mozjpeg <https://github.com/mozilla/mozjpeg>`__,
 `jpegrescan <https://github.com/kud/jpegrescan>`__ or
 `jpegtran <http://jpegclub.org/jpegtran/>`__ on the path. in order of
-preferrence.
+preference.
 
 To optimize lossless images like PNG, PNM, GIF, TIFF and BMP, picopt
 requires either `optipng <http://optipng.sourceforge.net/>`__,
@@ -24,13 +26,15 @@ explicitly enabled on the command line.
 
 Animated GIFs are optimized with
 `gifsicle <http://www.lcdf.org/gifsicle/>`__ if it is available. Picopt
-may also nag you to use `HTML5 video <http://gfycat.com/about>`__
-instead.
+nag you to convert your file to `HTML5
+video <http://gfycat.com/about>`__, but does not provide this service
+itself.
 
 Picopt uncompresses, optimizes and rezips `comic book archive
 files <https://en.wikipedia.org/wiki/Comic_book_archive>`__. Be aware
 that CBR rar archives will be rezipped into CBZs instead of CBR. Comic
-book archive optimization is off by defualt.
+book archive optimization is not turned on by default to prevent
+surprises.
 
 Picopt allows you to drop picopt timestamps at the root of your
 recursive optimization trees so you don't have to remember which files
@@ -155,6 +159,6 @@ Packaged For
 Alternatives
 ------------
 
-`Imageoptim <http://imageoptim.com/>`__ is an all-in-one OS X GUI
+`Imageoptim <http://imageoptim.com/>`__ is an all-in-one OS X GUI image
 optimizer. Imageoptim command line usage is possible with `an external
 program <https://code.google.com/p/imageoptim/issues/detail?can=2&start=0&num=100&q=&colspec=ID%20Type%20Status%20Priority%20Milestone%20Owner%20Summary%20Stars&groupby=&sort=&id=39>`__.
