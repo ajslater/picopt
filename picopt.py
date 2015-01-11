@@ -475,8 +475,9 @@ def optimize_png(filename, arguments):
     for ext_prog in ('optipng', 'advpng', 'pngout'):
         if not getattr(arguments, ext_prog):
             continue
-        report_stats = optimize_image_external(
-            filename, arguments, globals()[ext_prog])
+        report_stats = optimize_image_external(filename,
+                                               arguments,
+                                               globals()[ext_prog])
         filename = report_stats.final_filename
 
     if report_stats is not None:
@@ -646,6 +647,23 @@ def get_archive_tmp_dir(filename):
     return os.path.join(head, ARCHIVE_TMP_DIR_TEMPLATE % tail)
 
 
+def comic_archive_write_zipfile(arguments, new_filename, tmp_dir):
+    """ Zip up the files in the tempdir into the new filename """
+    if arguments.verbose:
+        print('Rezipping archive', end='')
+    with zipfile.ZipFile(new_filename, 'w',
+                         compression=zipfile.ZIP_DEFLATED) as new_zf:
+        root_len = len(os.path.abspath(tmp_dir))
+        for root, dirs, files in os.walk(tmp_dir):
+            archive_root = os.path.abspath(root)[root_len:]
+            for fname in files:
+                fullpath = os.path.join(root, fname)
+                archive_name = os.path.join(archive_root, fname)
+                if arguments.verbose:
+                    print('.', end='')
+                new_zf.write(fullpath, archive_name, zipfile.ZIP_DEFLATED)
+
+
 def comic_archive_compress(args):
     """called back by every optimization inside a comic archive.
        when they're all done it creates the new archive and cleans up.
@@ -653,25 +671,11 @@ def comic_archive_compress(args):
 
     try:
         filename, total_bytes_in, total_bytes_out, arguments = args
-
         tmp_dir = get_archive_tmp_dir(filename)
-
         # archive into new filename
         new_filename = replace_ext(filename, NEW_ARCHIVE_SUFFIX)
 
-        if arguments.verbose:
-            print('Rezipping archive', end='')
-        with zipfile.ZipFile(new_filename, 'w',
-                             compression=zipfile.ZIP_DEFLATED) as new_zf:
-            root_len = len(os.path.abspath(tmp_dir))
-            for root, dirs, files in os.walk(tmp_dir):
-                archive_root = os.path.abspath(root)[root_len:]
-                for fname in files:
-                    fullpath = os.path.join(root, fname)
-                    archive_name = os.path.join(archive_root, fname)
-                    if arguments.verbose:
-                        print('.', end='')
-                    new_zf.write(fullpath, archive_name, zipfile.ZIP_DEFLATED)
+        comic_archive_write_zipfile(arguments, new_filename, tmp_dir)
 
         # Cleanup tmpdir
         if os.path.isdir(tmp_dir):
