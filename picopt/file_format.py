@@ -8,17 +8,10 @@ try:
 except ImportError:
     import Image
 
-import jpeg
 import gif
-import png
 import comic
 
 # Formats
-FORMAT_DELIMETER = ','
-DEFAULT_FORMATS = 'ALL'
-ALL_DEFAULT_FORMATS = jpeg.FORMATS | gif.FORMATS | \
-                      png.CONVERTABLE_FORMATS
-ALL_FORMATS = ALL_DEFAULT_FORMATS | comic.FORMATS
 NONE_FORMAT = 'NONE'
 ERROR_FORMAT = 'ERROR'
 

@@ -14,7 +14,6 @@ import extern
 import stats
 import timestamp
 import optimize
-import file_format
 import png
 import jpeg
 import gif
@@ -25,6 +24,12 @@ __version__ = '1.2.0'
 
 # Programs
 PROGRAMS = set(png.PROGRAMS + gif.PROGRAMS + jpeg.PROGRAMS)
+
+FORMAT_DELIMETER = ','
+DEFAULT_FORMATS = 'ALL'
+ALL_DEFAULT_FORMATS = jpeg.FORMATS | gif.FORMATS | \
+                      png.CONVERTABLE_FORMATS
+ALL_FORMATS = ALL_DEFAULT_FORMATS | comic.FORMATS
 
 
 def get_arguments():
@@ -51,11 +56,10 @@ def get_arguments():
                         dest="comics", default=0,
                         help="Also optimize comic book archives (cbz & cbr)")
     parser.add_argument("-f", "--formats", action="store", dest="formats",
-                        default=file_format.DEFAULT_FORMATS,
+                        default=DEFAULT_FORMATS,
                         help="Only optimize images of the specifed '%s' "
                         "delimited formats from: %s" %
-                        (file_format.FORMAT_DELIMETER,
-                         ', '.join(sorted(file_format.ALL_FORMATS))))
+                        (FORMAT_DELIMETER, ', '.join(sorted(ALL_FORMATS))))
     parser.add_argument("-O", "--disable_optipng", action="store_false",
                         dest="optipng", default=1,
                         help="Do not optimize with optipng")
@@ -136,12 +140,11 @@ def process_arguments(arguments):
     arguments.paths = set(arguments.paths)
     arguments.archive_name = None
 
-    if arguments.formats == file_format.DEFAULT_FORMATS:
+    if arguments.formats == DEFAULT_FORMATS:
         arguments.formats = arguments.to_png_formats | \
             jpeg.FORMATS | gif.FORMATS
     else:
-        arguments.formats = arguments.formats.upper().split(
-            file_format.FORMAT_DELIMETER)
+        arguments.formats = arguments.formats.upper().split(FORMAT_DELIMETER)
 
     if arguments.comics:
         arguments.formats = arguments.formats | comic.FORMATS
