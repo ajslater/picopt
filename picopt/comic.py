@@ -30,6 +30,18 @@ CBR_FORMAT = 'CBR'
 FORMATS = set((CBZ_FORMAT, CBR_FORMAT))
 
 
+def get_comic_format(filename, filename_ext):
+    """ return the comic format if it is a comic archive  """
+    image_format = None
+    filename_ext = os.path.splitext(filename)[-1].lower()
+    if filename_ext in COMIC_EXTS:
+        if zipfile.is_zipfile(filename):
+            image_format = CBZ_FORMAT
+        elif rarfile.is_rarfile(filename):
+            image_format = CBR_FORMAT
+    return image_format
+
+
 def get_archive_tmp_dir(filename):
     """ get the name of the working dir to use for this filename"""
     head, tail = os.path.split(filename)

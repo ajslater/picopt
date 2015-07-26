@@ -1,7 +1,4 @@
 from __future__ import print_function
-import os
-import rarfile
-import zipfile
 
 try:
     from PIL import Image
@@ -54,12 +51,9 @@ def get_image_format(filename, arguments):
         image_format = gif.SEQUENCED_TEMPLATE % image_format
     elif image is None or bad_image or image_format == NONE_FORMAT:
         image_format = ERROR_FORMAT
-        filename_ext = os.path.splitext(filename)[-1].lower()
-        if filename_ext in comic.COMIC_EXTS:
-            if zipfile.is_zipfile(filename):
-                image_format = comic.CBZ_FORMAT
-            elif rarfile.is_rarfile(filename):
-                image_format = comic.CBR_FORMAT
+        comic_format = comic.get_comic_format(filename)
+        if comic_format:
+            image_format = comic_format
         if (arguments.verbose > 1) and image_format == ERROR_FORMAT and \
                 (not arguments.list_only):
             print(filename, "doesn't look like an image or comic archive.")
