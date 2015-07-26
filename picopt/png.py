@@ -1,7 +1,6 @@
 import os
 
 import extern
-from extern import optimize_image_external
 import stats
 
 
@@ -41,9 +40,9 @@ def optimize_png(filename, arguments):
     for ext_prog in ('optipng', 'advpng', 'pngout'):
         if not getattr(arguments, ext_prog):
             continue
-        report_stats = optimize_image_external(filename,
-                                               arguments,
-                                               globals()[ext_prog])
+        report_stats = extern.optimize_image_external(filename,
+                                                      arguments,
+                                                      globals()[ext_prog])
         filename = report_stats.final_filename
 
     if report_stats is not None:

@@ -1,7 +1,6 @@
 import copy
 
 import extern
-from extern import optimize_image_external
 import stats
 
 PROGRAMS = ['mozjpeg', 'jpegrescan', 'jpegtran']
@@ -53,13 +52,13 @@ def optimize_jpeg(filename, arguments):
     """run EXTERNAL programs to optimize jpeg formats"""
     final_filename = filename
     if arguments.mozjpeg:
-        report_stats = optimize_image_external(
+        report_stats = extern.optimize_image_external(
             final_filename, arguments, mozjpeg)
     elif arguments.jpegrescan:
-        report_stats = optimize_image_external(
+        report_stats = extern.optimize_image_external(
             final_filename, arguments, jpegrescan)
     elif arguments.jpegtran_prog or arguments.jpegtran:
-        report_stats = optimize_image_external(
+        report_stats = extern.optimize_image_external(
             final_filename, arguments, jpegtran)
     else:
         rep = ['Skipping JPEG file: %s' % filename]

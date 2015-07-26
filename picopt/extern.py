@@ -5,10 +5,11 @@ import subprocess
 
 import file_format
 import stats
+import name
 
 
-REMOVE_EXT = '.%s-remove' % PROGRAM_NAME
-NEW_EXT = '.%s-optimized.png' % PROGRAM_NAME
+REMOVE_EXT = '.%s-remove' % name.PROGRAM_NAME
+NEW_EXT = '.%s-optimized.png' % name.PROGRAM_NAME
 
 
 ExtArgs = namedtuple('ExtArgs', ['old_filename', 'new_filename', 'arguments'])

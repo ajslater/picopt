@@ -3,9 +3,8 @@ Packaging:
     DPKG uses python-imaging I think RPM is the same. I think python Pillow/PIL dependency isn't satisfied by either.
 
 Tests:
-    More formal tests.
-    Test each option.
     Unit Tests?
+    Functional Tests for each option
 
 Formats:
     PDF would be cool, but difficult due to non-standard image formats and lack of easy PDF exploders/bundlers.

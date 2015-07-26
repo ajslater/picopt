@@ -20,10 +20,9 @@ import png
 import jpeg
 import gif
 import comic
+import name
 
 __version__ = '1.2.0'
-
-PROGRAM_NAME = 'picopt'
 
 # Programs
 PROGRAMS = set(png.PROGRAMS + gif.PROGRAMS + jpeg.PROGRAMS)
@@ -32,7 +31,7 @@ PROGRAMS = set(png.PROGRAMS + gif.PROGRAMS + jpeg.PROGRAMS)
 def get_arguments():
     """parses the command line"""
     usage = "%(prog)s [arguments] [image files]"
-    programs_str = ', '.join(PROGRAMS[:-1])+' and '+PROGRAMS[-1]
+    programs_str = ', '.join(PROGRAMS)
     description = "Uses "+programs_str+" if they are on the path."
     parser = argparse.ArgumentParser(usage=usage, description=description)
     parser.add_argument("-r", "--recurse", action="store_true",
@@ -87,8 +86,8 @@ def get_arguments():
                         help="Do not convert other lossless formats like "
                         " %s to PNG when optimizing. By default, %s"
                         " does convert these formats to PNG" %
-                        (', '.join(file_format.LOSSLESS_FORMATS),
-                         PROGRAM_NAME))
+                        (', '.join(png.LOSSLESS_FORMATS),
+                         name.PROGRAM_NAME))
     parser.add_argument("-S", "--disable_follow_symlinks",
                         action="store_false",
                         dest="follow_symlinks", default=1,

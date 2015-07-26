@@ -1,7 +1,8 @@
 import os
 import optimize
+import name
 
-RECORD_FILENAME = '.%s_timestamp' % PROGRAM_NAME
+RECORD_FILENAME = '.%s_timestamp' % name.PROGRAM_NAME
 
 
 def get_timestamp(dirname_full, remove, arguments):

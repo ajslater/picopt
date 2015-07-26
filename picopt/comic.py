@@ -14,12 +14,13 @@ import zipfile
 import extern
 import optimize
 import stats
+import name
 
 
 # Extensions
-ARCHIVE_TMP_DIR_PREFIX = PROGRAM_NAME+'_tmp_'
+ARCHIVE_TMP_DIR_PREFIX = name.PROGRAM_NAME+'_tmp_'
 ARCHIVE_TMP_DIR_TEMPLATE = ARCHIVE_TMP_DIR_PREFIX+'%s'
-NEW_ARCHIVE_SUFFIX = '%s-optimized.cbz' % PROGRAM_NAME
+NEW_ARCHIVE_SUFFIX = '%s-optimized.cbz' % name.PROGRAM_NAME
 
 CBR_EXT = '.cbr'
 CBZ_EXT = '.cbz'
