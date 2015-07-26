@@ -3,7 +3,6 @@
 Runs pictures through image specific external optimizers
 """
 from __future__ import print_function
-from __future__ import division
 
 import os
 import argparse

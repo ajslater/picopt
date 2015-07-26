@@ -2,7 +2,6 @@
 Optimize comic archives
 """
 from __future__ import print_function
-from __future__ import division
 
 import copy
 import os
