@@ -1,4 +1,5 @@
 import extern
+import optimize_image
 
 PROGRAMS = ['gifsicle']
 SEQUENCED_TEMPLATE = '%s SEQUENCED'
@@ -19,5 +20,5 @@ PROG_MAP = (gifsicle,)
 
 def optimize(filename, arguments):
     """run EXTERNAL programs to optimize animated gifs"""
-    return extern.optimize_with_progs(PROG_MAP, filename, 'animated GIF',
-                                      True, arguments)
+    return optimize_image.optimize_with_progs(PROG_MAP, filename,
+                                              'animated GIF', True, arguments)

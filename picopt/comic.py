@@ -10,8 +10,8 @@ import shutil
 import traceback
 import zipfile
 
-import extern
 import files
+import optimize_image
 import stats
 import name
 
@@ -113,7 +113,7 @@ def comic_archive_compress(args):
         filename, total_bytes_in, total_bytes_out, arguments = args
         tmp_dir = get_archive_tmp_dir(filename)
         # archive into new filename
-        new_filename = extern.replace_ext(filename, NEW_ARCHIVE_SUFFIX)
+        new_filename = optimize_image.replace_ext(filename, NEW_ARCHIVE_SUFFIX)
 
         comic_archive_write_zipfile(arguments, new_filename, tmp_dir)
 
@@ -125,8 +125,8 @@ def comic_archive_compress(args):
         if arguments.verbose:
             print('done.')
 
-        report_stats = extern.cleanup_after_optimize(filename, new_filename,
-                                                     arguments)
+        report_stats = optimize_image.cleanup_after_optimize(
+            filename, new_filename, arguments)
         stats.optimize_accounting(report_stats, total_bytes_in,
                                   total_bytes_out, arguments)
     except Exception as exc:

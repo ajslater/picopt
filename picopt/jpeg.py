@@ -1,6 +1,7 @@
 import copy
 
 import extern
+import optimize_image
 
 PROGRAMS = ['mozjpeg', 'jpegrescan', 'jpegtran']
 FORMATS = set(['JPEG'])
@@ -52,5 +53,5 @@ PROG_MAP = (mozjpeg, jpegrescan, jpegtran)
 
 def optimize(filename, arguments):
     """run EXTERNAL programs to optimize jpeg formats"""
-    return extern.optimize_with_progs(PROG_MAP, filename, 'JPEG', True,
-                                      arguments)
+    return optimize_image.optimize_with_progs(PROG_MAP, filename, 'JPEG', True,
+                                              arguments)
