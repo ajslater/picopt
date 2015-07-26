@@ -22,13 +22,13 @@ def optimize_image(arg):
                                           arguments, arguments.optipng or
                                           arguments.pngout):
             report_stats = png.optimize(filename, arguments)
-        elif file_format.is_format_selected(image_format, jpeg.JPEG_FORMATS,
+        elif file_format.is_format_selected(image_format, jpeg.FORMATS,
                                             arguments,
                                             arguments.mozjpeg or
                                             arguments.jpegrescan or
                                             arguments.jpegtran):
             report_stats = jpeg.optimize(filename, arguments)
-        elif file_format.is_format_selected(image_format, gif.GIF_FORMATS,
+        elif file_format.is_format_selected(image_format, gif.FORMATS,
                                             arguments, arguments.gifsicle):
             # this captures still GIFs too if not caught above
             report_stats = gif.optimize(filename, arguments)

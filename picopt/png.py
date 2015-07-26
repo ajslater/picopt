@@ -2,13 +2,13 @@ import extern
 
 
 PROGRAMS = ['optipng', 'pngout', 'advpng']
+FORMATS = set(['PNG'])
+LOSSLESS_FORMATS = set(('PNM', 'PPM', 'TIFF', 'BMP', 'GIF'))
+CONVERTABLE_FORMATS = LOSSLESS_FORMATS | FORMATS
+
 OPTIPNG_ARGS = ['optipng', '-o6', '-fix', '-preserve', '-force', '-quiet']
 ADVPNG_ARGS = ['advpng', '-z', '-4', '-f']
 PNGOUT_ARGS = ['pngout', '-q', '-force', '-y']
-
-PNG_FORMATS = set(['PNG'])
-LOSSLESS_FORMATS = set(('PNM', 'PPM', 'TIFF', 'BMP', 'GIF'))
-PNG_CONVERTABLE_FORMATS = LOSSLESS_FORMATS | PNG_FORMATS
 
 
 def pngout(ext_args):

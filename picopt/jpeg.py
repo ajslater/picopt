@@ -3,11 +3,10 @@ import copy
 import extern
 
 PROGRAMS = ['mozjpeg', 'jpegrescan', 'jpegtran']
+FORMATS = set(['JPEG'])
 MOZJPEG_ARGS = ['mozjpeg']
 JPEGTRAN_ARGS = ['jpegtran', '-optimize']
 JPEGRESCAN_ARGS = ['jpegrescan']
-
-JPEG_FORMATS = set(['JPEG'])
 
 
 def mozjpeg(ext_args):

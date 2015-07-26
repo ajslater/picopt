@@ -80,8 +80,8 @@ def get_arguments():
                         help="disable optimizing animated GIFs")
     parser.add_argument("-Y", "--disable_convert_type", action="store_const",
                         dest="to_png_formats",
-                        const=png.PNG_FORMATS,
-                        default=png.PNG_CONVERTABLE_FORMATS,
+                        const=png.FORMATS,
+                        default=png.CONVERTABLE_FORMATS,
                         help="Do not convert other lossless formats like "
                         " %s to PNG when optimizing. By default, %s"
                         " does convert these formats to PNG" %
@@ -138,7 +138,7 @@ def process_arguments(arguments):
 
     if arguments.formats == file_format.DEFAULT_FORMATS:
         arguments.formats = arguments.to_png_formats | \
-            jpeg.JPEG_FORMATS | gif.GIF_FORMATS
+            jpeg.FORMATS | gif.FORMATS
     else:
         arguments.formats = arguments.formats.upper().split(
             file_format.FORMAT_DELIMETER)
