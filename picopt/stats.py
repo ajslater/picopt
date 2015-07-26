@@ -162,3 +162,11 @@ def report_totals(bytes_in, bytes_out, arguments, nag_about_gifs):
     if nag_about_gifs and arguments.verbose:
         print("Most animated GIFS would be better off converted to"
               " HTML5 video")
+
+
+def skip(type_name, filename):
+    """ provide reporting statistics for a skipped file """
+    bytes_diff = {'in': 0, 'out': 0}
+    rep = ['Skipping %s file: %s' % (type_name, filename)]
+    report_stats = ReportStats._make([filename, bytes_diff, [rep]])
+    return report_stats

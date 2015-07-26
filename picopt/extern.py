@@ -116,3 +116,28 @@ def optimize_image_external(filename, arguments, func):
     report_stats.report_list.append(report)
 
     return report_stats
+
+
+def optimize_with_progs(funcs, filename, type_name, best_only,
+                        arguments):
+    """ Use either all the optimizing functions in sequence or just the
+        best one to optimize the image and report back statistics """
+    filesize_in = os.stat(filename).st_size
+    report_stats = None
+
+    for func in funcs:
+        if not getattr(arguments, func.__name__):
+            continue
+        report_stats = optimize_image_external(filename,
+                                               arguments,
+                                               func)
+        filename = report_stats.final_filename
+        if best_only:
+            break
+
+    if report_stats is not None:
+        report_stats.bytes_diff['in'] = filesize_in
+    else:
+        report_stats = stats.skip(type_name, filename)
+
+    return report_stats

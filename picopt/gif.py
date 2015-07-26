@@ -1,5 +1,4 @@
 import extern
-import stats
 
 PROGRAMS = ['gifsicle']
 GIFSICLE_ARGS = ['gifsicle', '--optimize=3', '--batch']
@@ -15,14 +14,10 @@ def gifsicle(ext_args):
     extern.run_ext(args)
 
 
+PROG_MAP = (gifsicle,)
+
+
 def optimize_gif(filename, arguments):
     """run EXTERNAL programs to optimize animated gifs"""
-    if arguments.gifsicle:
-        report_stats = extern.optimize_image_external(filename, arguments,
-                                                      gifsicle)
-    else:
-        rep = ['Skipping animated GIF: %s' % filename]
-        bytes_diff = {'in': 0, 'out': 0}
-        report_stats = stats.ReportStats._make([filename, bytes_diff, [rep]])
-
-    return report_stats
+    return extern.optimize_with_progs(PROG_MAP, filename, 'animated GIF',
+                                      True, arguments)

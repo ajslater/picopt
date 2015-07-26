@@ -1,7 +1,4 @@
-import os
-
 import extern
-import stats
 
 
 PROGRAMS = ['optipng', 'pngout', 'advpng']
@@ -32,24 +29,10 @@ def advpng(ext_args):
     extern.run_ext(args)
 
 
+PROG_MAP = (optipng, advpng, pngout)
+
+
 def optimize_png(filename, arguments):
     """run EXTERNAL programs to optimize lossless formats to PNGs"""
-    filesize_in = os.stat(filename).st_size
-    report_stats = None
-
-    for ext_prog in ('optipng', 'advpng', 'pngout'):
-        if not getattr(arguments, ext_prog):
-            continue
-        report_stats = extern.optimize_image_external(filename,
-                                                      arguments,
-                                                      globals()[ext_prog])
-        filename = report_stats.final_filename
-
-    if report_stats is not None:
-        report_stats.bytes_diff['in'] = filesize_in
-    else:
-        bytes_diff = {'in': 0, 'out': 0}
-        rep = 'Skipping file: %s' % filename
-        report_stats = stats.ReportStats._make([filename, bytes_diff, rep])
-
-    return report_stats
+    return extern.optimize_with_progs(PROG_MAP, filename, 'PNG', False,
+                                      arguments)
