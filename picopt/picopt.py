@@ -145,7 +145,7 @@ def process_arguments(arguments):
             file_format.FORMAT_DELIMETER)
 
     if arguments.comics:
-        arguments.formats = arguments.formats | comic.COMIC_FORMATS
+        arguments.formats = arguments.formats | comic.FORMATS
 
     if arguments.optimize_after is not None:
         try:

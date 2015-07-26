@@ -28,7 +28,7 @@ COMIC_EXTS = set((CBR_EXT, CBZ_EXT))
 
 CBZ_FORMAT = 'CBZ'
 CBR_FORMAT = 'CBR'
-COMIC_FORMATS = set((CBZ_FORMAT, CBR_FORMAT))
+FORMATS = set((CBZ_FORMAT, CBR_FORMAT))
 
 
 def get_archive_tmp_dir(filename):
