@@ -11,12 +11,6 @@ ADVPNG_ARGS = ['advpng', '-z', '-4', '-f']
 PNGOUT_ARGS = ['pngout', '-q', '-force', '-y']
 
 
-def pngout(ext_args):
-    """runs the EXTERNAL program pngout on the file"""
-    args = PNGOUT_ARGS + [ext_args.old_filename, ext_args.new_filename]
-    extern.run_ext(args)
-
-
 def optipng(ext_args):
     """runs the EXTERNAL program optipng on the file"""
     args = OPTIPNG_ARGS + [ext_args.new_filename]
@@ -26,6 +20,12 @@ def optipng(ext_args):
 def advpng(ext_args):
     """runs the EXTERNAL program advpng on the file"""
     args = ADVPNG_ARGS + [ext_args.new_filename]
+    extern.run_ext(args)
+
+
+def pngout(ext_args):
+    """runs the EXTERNAL program pngout on the file"""
+    args = PNGOUT_ARGS + [ext_args.old_filename, ext_args.new_filename]
     extern.run_ext(args)
 
 

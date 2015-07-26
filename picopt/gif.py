@@ -3,6 +3,7 @@ import extern
 PROGRAMS = ['gifsicle']
 SEQUENCED_TEMPLATE = '%s SEQUENCED'
 FORMATS = set([SEQUENCED_TEMPLATE % 'GIF', 'GIF'])
+
 GIFSICLE_ARGS = ['gifsicle', '--optimize=3', '--batch']
 
 

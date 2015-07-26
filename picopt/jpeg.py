@@ -4,6 +4,7 @@ import extern
 
 PROGRAMS = ['mozjpeg', 'jpegrescan', 'jpegtran']
 FORMATS = set(['JPEG'])
+
 MOZJPEG_ARGS = ['mozjpeg']
 JPEGTRAN_ARGS = ['jpegtran', '-optimize']
 JPEGRESCAN_ARGS = ['jpegrescan']
