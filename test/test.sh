@@ -1,5 +1,5 @@
 #!/bin/sh
-PICOPT='../picopt.py'
+PICOPT='../picopt/picopt.py'
 TEST_DIR='test_tmp'
 
 rm -rf $TEST_DIR
