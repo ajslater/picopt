@@ -26,7 +26,7 @@ setup(
     install_requires=REQ_LIST,
     entry_points={
         'console_scripts': [
-            'picopt = picopt:main'
+            'picopt = picopt.picopt:main'
         ]
     },
     long_description=LONG_DESCRIPTION,
@@ -45,7 +45,7 @@ setup(
         'Programming Language :: Python :: 2.6',
         'Programming Language :: Python :: 2.7',
         'Programming Language :: Python :: 3',
-        'Programming Language :: Python :: 3.3',
+        'Programming Language :: Python :: 3.4',
         'Topic :: Internet :: WWW/HTTP :: Site Management',
         'Topic :: Multimedia :: Graphics :: Graphics Conversion'
     ],
