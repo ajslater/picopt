@@ -11,9 +11,9 @@ import dateutil.parser
 import time
 
 import extern
+import files
 import stats
 import timestamp
-import optimize
 import png
 import jpeg
 import gif
@@ -193,7 +193,7 @@ def run_main(raw_arguments):
                  'nag_about_gifs': nag_about_gifs}
 
     # Optimize Files
-    record_dirs = optimize.optimize_all_files(multiproc, arguments)
+    record_dirs = files.optimize_all_files(multiproc, arguments)
 
     # Shut down multiprocessing
     pool.close()

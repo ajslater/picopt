@@ -11,7 +11,7 @@ import traceback
 import zipfile
 
 import extern
-import optimize
+import files
 import stats
 import name
 
@@ -43,9 +43,9 @@ def comic_archive_write_zipfile(arguments, new_filename, tmp_dir):
     with zipfile.ZipFile(new_filename, 'w',
                          compression=zipfile.ZIP_DEFLATED) as new_zf:
         root_len = len(os.path.abspath(tmp_dir))
-        for root, dirs, files in os.walk(tmp_dir):
+        for root, dirs, filenames in os.walk(tmp_dir):
             archive_root = os.path.abspath(root)[root_len:]
-            for fname in files:
+            for fname in filenames:
                 fullpath = os.path.join(root, fname)
                 archive_name = os.path.join(archive_root, fname)
                 if arguments.verbose:
@@ -135,9 +135,9 @@ def optimize_comic_archive(filename_full, image_format, arguments, multiproc,
 
     # optimize contents of comic archive
     dirname = os.path.dirname(filename_full)
-    result_set = optimize.optimize_files(dirname, [tmp_dir_basename],
-                                         archive_arguments, multiproc,
-                                         optimize_after)
+    result_set = files.optimize_files(dirname, [tmp_dir_basename],
+                                      archive_arguments, multiproc,
+                                      optimize_after)
 
     # I'd like to stuff this waiting into the compression process,
     # but process results don't serialize. :(

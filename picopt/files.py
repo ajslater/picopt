@@ -1,50 +1,10 @@
 from __future__ import print_function
 import os
-import traceback
 
-import file_format
-import png
-import jpeg
-import gif
 import comic
-import stats
+import detect_format
+import optimize_image
 import timestamp
-
-
-def optimize_image(arg):
-    """optimizes a given image from a filename"""
-    try:
-        filename, image_format, arguments, total_bytes_in, total_bytes_out, \
-            nag_about_gifs = arg
-
-        if file_format.is_format_selected(image_format,
-                                          arguments.to_png_formats,
-                                          arguments, arguments.optipng or
-                                          arguments.pngout):
-            report_stats = png.optimize(filename, arguments)
-        elif file_format.is_format_selected(image_format, jpeg.FORMATS,
-                                            arguments,
-                                            arguments.mozjpeg or
-                                            arguments.jpegrescan or
-                                            arguments.jpegtran):
-            report_stats = jpeg.optimize(filename, arguments)
-        elif file_format.is_format_selected(image_format, gif.FORMATS,
-                                            arguments, arguments.gifsicle):
-            # this captures still GIFs too if not caught above
-            report_stats = gif.optimize(filename, arguments)
-            nag_about_gifs.set(True)
-        else:
-            if arguments.verbose > 1:
-                print(filename, image_format)  # image.mode)
-                print("\tFile format not selected.")
-            return
-
-        stats.optimize_accounting(report_stats, total_bytes_in,
-                                  total_bytes_out, arguments)
-    except Exception as exc:
-        print(exc)
-        traceback.print_exc(exc)
-        raise exc
 
 
 def optimize_dir(filename_full, arguments, multiproc, optimize_after):
@@ -66,15 +26,15 @@ def optimize_file(filename_full, arguments, multiproc, optimize_after):
         if mtime <= optimize_after:
             return
 
-    image_format = file_format.detect_file(filename_full, arguments)
+    image_format = detect_format.detect_file(filename_full, arguments)
     if not image_format:
         return
 
     if arguments.list_only:
         # list only
         print("%s : %s" % (filename_full, image_format))
-    elif file_format.is_format_selected(image_format, comic.FORMATS,
-                                        arguments, arguments.comics):
+    elif detect_format.is_format_selected(image_format, comic.FORMATS,
+                                          arguments, arguments.comics):
         return comic.optimize_comic_archive(filename_full, image_format,
                                             arguments, multiproc,
                                             optimize_after)
@@ -82,7 +42,8 @@ def optimize_file(filename_full, arguments, multiproc, optimize_after):
         # regular image
         args = [filename_full, image_format, arguments,
                 multiproc['in'], multiproc['out'], multiproc['nag_about_gifs']]
-        return multiproc['pool'].apply_async(optimize_image, args=(args,))
+        return multiproc['pool'].apply_async(optimize_image.optimize_image,
+                                             args=(args,))
 
 
 def optimize_files(cwd, filter_list, arguments, multiproc, optimize_after):
