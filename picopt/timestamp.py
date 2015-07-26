@@ -1,6 +1,6 @@
 from __future__ import print_function
 import os
-import optimize
+
 import name
 
 RECORD_FILENAME = '.%s_timestamp' % name.PROGRAM_NAME
@@ -47,15 +47,6 @@ def get_optimize_after(current_path, look_up, optimize_after, arguments):
         optimize_after = max(get_timestamp(current_path, True, arguments),
                              optimize_after)
     return optimize_after
-
-
-def optimize_files_after(path, arguments, file_list, multiproc):
-    """ compute the optimize after date for the a batch of files
-        and then optimize them.
-    """
-    optimize_after = get_optimize_after(path, True, None, arguments)
-    return optimize.optimize_files(path, file_list, arguments, multiproc,
-                                   optimize_after)
 
 
 def record_timestamp(pathname_full, arguments):

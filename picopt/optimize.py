@@ -113,6 +113,15 @@ def optimize_files(cwd, filter_list, arguments, multiproc, optimize_after):
     return result_set
 
 
+def optimize_files_after(path, arguments, file_list, multiproc):
+    """ compute the optimize after date for the a batch of files
+        and then optimize them.
+    """
+    optimize_after = timestamp.get_optimize_after(path, True, None, arguments)
+    return optimize_files(path, file_list, arguments, multiproc,
+                          optimize_after)
+
+
 def optimize_all_files(multiproc, arguments):
     """ Optimize the files from the arugments list in two batches.
         One for absolute paths which are probably outside the current
@@ -136,14 +145,13 @@ def optimize_all_files(multiproc, arguments):
         #   Otherwise add the files to the list to do next
         path_dn, path_fn = os.path.split(os.path.realpath(filename))
         if path_dn != cwd:
-            timestamp.optimize_files_after(path_dn, arguments,
-                                           [path_fn], multiproc)
+            optimize_files_after(path_dn, arguments, [path_fn], multiproc)
         else:
             cwd_files.add(path_fn)
 
     # Optimize immediate descendants with optimize after computed from
     # the current directory
     if len(cwd_files):
-        timestamp.optimize_files_after(cwd, arguments, cwd_files, multiproc)
+        optimize_files_after(cwd, arguments, cwd_files, multiproc)
 
     return record_dirs
