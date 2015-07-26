@@ -36,6 +36,45 @@ def get_archive_tmp_dir(filename):
     return os.path.join(head, ARCHIVE_TMP_DIR_TEMPLATE % tail)
 
 
+def comic_archive_uncompress(filename, image_format, arguments):
+    """ uncompress comic archives and return the name of the working
+        directory we uncompressed into """
+
+    if not arguments.comics:
+        report = ['Skipping archive file: %s' % filename]
+        report_list = [report]
+        bytes_diff = {'in': 0, 'out': 0}
+        return (bytes_diff, report_list)
+
+    if arguments.verbose:
+        truncated_filename = stats.truncate_cwd(filename, arguments)
+        print("Extracting %s..." % truncated_filename, end='')
+
+    # create the tmpdir
+    tmp_dir = get_archive_tmp_dir(filename)
+    if os.path.isdir(tmp_dir):
+        shutil.rmtree(tmp_dir)
+    os.mkdir(tmp_dir)
+
+    # extract archvie into the tmpdir
+    if image_format == CBZ_FORMAT:
+        with zipfile.ZipFile(filename, 'r') as zfile:
+            zfile.extractall(tmp_dir)
+    elif image_format == CBR_FORMAT:
+        with rarfile.RarFile(filename, 'r') as rfile:
+            rfile.extractall(tmp_dir)
+    else:
+        report = '%s %s is not a good format' % (filename, image_format)
+        report_list = [report]
+        bytes_diff = {'in': 0, 'out': 0}
+        return (bytes_diff, report_list)
+
+    if arguments.verbose:
+        print('done')
+
+    return os.path.basename(tmp_dir)
+
+
 def comic_archive_write_zipfile(arguments, new_filename, tmp_dir):
     """ Zip up the files in the tempdir into the new filename """
     if arguments.verbose:
@@ -82,45 +121,6 @@ def comic_archive_compress(args):
         print(exc)
         traceback.print_exc(exc)
         raise exc
-
-
-def comic_archive_uncompress(filename, image_format, arguments):
-    """ uncompress comic archives and return the name of the working
-        directory we uncompressed into """
-
-    if not arguments.comics:
-        report = ['Skipping archive file: %s' % filename]
-        report_list = [report]
-        bytes_diff = {'in': 0, 'out': 0}
-        return (bytes_diff, report_list)
-
-    if arguments.verbose:
-        truncated_filename = stats.truncate_cwd(filename, arguments)
-        print("Extracting %s..." % truncated_filename, end='')
-
-    # create the tmpdir
-    tmp_dir = get_archive_tmp_dir(filename)
-    if os.path.isdir(tmp_dir):
-        shutil.rmtree(tmp_dir)
-    os.mkdir(tmp_dir)
-
-    # extract archvie into the tmpdir
-    if image_format == CBZ_FORMAT:
-        with zipfile.ZipFile(filename, 'r') as zfile:
-            zfile.extractall(tmp_dir)
-    elif image_format == CBR_FORMAT:
-        with rarfile.RarFile(filename, 'r') as rfile:
-            rfile.extractall(tmp_dir)
-    else:
-        report = '%s %s is not a good format' % (filename, image_format)
-        report_list = [report]
-        bytes_diff = {'in': 0, 'out': 0}
-        return (bytes_diff, report_list)
-
-    if arguments.verbose:
-        print('done')
-
-    return os.path.basename(tmp_dir)
 
 
 def optimize_comic_archive(filename_full, image_format, arguments, multiproc,
