@@ -50,7 +50,7 @@ def jpegrescan(ext_args):
 PROG_MAP = (mozjpeg, jpegrescan, jpegtran)
 
 
-def optimize_jpeg(filename, arguments):
+def optimize(filename, arguments):
     """run EXTERNAL programs to optimize jpeg formats"""
     return extern.optimize_with_progs(PROG_MAP, filename, 'JPEG', True,
                                       arguments)

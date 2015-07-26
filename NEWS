@@ -1,3 +1,5 @@
+* break up monolithic picopt into modules
+
 v1.2
 * picopt learned the -j option for specifying number of subprocesses (thanks @DarwinAwardWinner)
 

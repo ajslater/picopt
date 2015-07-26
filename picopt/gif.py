@@ -17,7 +17,7 @@ def gifsicle(ext_args):
 PROG_MAP = (gifsicle,)
 
 
-def optimize_gif(filename, arguments):
+def optimize(filename, arguments):
     """run EXTERNAL programs to optimize animated gifs"""
     return extern.optimize_with_progs(PROG_MAP, filename, 'animated GIF',
                                       True, arguments)

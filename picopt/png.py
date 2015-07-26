@@ -32,7 +32,7 @@ def advpng(ext_args):
 PROG_MAP = (optipng, advpng, pngout)
 
 
-def optimize_png(filename, arguments):
+def optimize(filename, arguments):
     """run EXTERNAL programs to optimize lossless formats to PNGs"""
     return extern.optimize_with_progs(PROG_MAP, filename, 'PNG', False,
                                       arguments)
