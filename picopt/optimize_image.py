@@ -81,27 +81,26 @@ def optimize_image_external(filename, arguments, func):
     return report_stats
 
 
-def optimize_with_progs(funcs, filename, type_name, best_only,
-                        arguments):
+def optimize_with_progs(format_module, filename, image_format, arguments):
     """ Use either all the optimizing functions in sequence or just the
         best one to optimize the image and report back statistics """
     filesize_in = os.stat(filename).st_size
     report_stats = None
 
-    for func in funcs:
+    for func in format_module.PROG_MAP:
         if not getattr(arguments, func.__name__):
             continue
         report_stats = optimize_image_external(filename,
                                                arguments,
                                                func)
         filename = report_stats.final_filename
-        if best_only:
+        if format_module.BEST_ONLY:
             break
 
     if report_stats is not None:
         report_stats.bytes_diff['in'] = filesize_in
     else:
-        report_stats = stats.skip(type_name, filename)
+        report_stats = stats.skip(image_format, filename)
 
     return report_stats
 
@@ -136,10 +135,8 @@ def optimize_image(arg):
                 print("\tFile format not selected.")
             return
 
-        report_stats = optimize_with_progs(format_module.PROG_MAP, filename,
-                                           image_format,
-                                           format_module.BEST_ONLY,
-                                           arguments)
+        report_stats = optimize_with_progs(format_module, filename,
+                                           image_format, arguments)
         stats.optimize_accounting(report_stats, total_bytes_in,
                                   total_bytes_out, arguments)
     except Exception as exc:
