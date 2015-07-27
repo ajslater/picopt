@@ -106,6 +106,7 @@ def optimize_with_progs(format_module, filename, image_format, arguments):
 
 
 def get_format_module(image_format, nag_about_gifs, arguments):
+    """ get the format module to use for optimizing the image """
     format_module = None
 
     if detect_format.is_format_selected(image_format,
