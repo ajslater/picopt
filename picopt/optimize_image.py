@@ -112,21 +112,23 @@ def optimize_image(arg):
         filename, image_format, arguments, total_bytes_in, total_bytes_out, \
             nag_about_gifs = arg
 
+        format_module = None
+
         if detect_format.is_format_selected(image_format,
                                             arguments.to_png_formats,
                                             arguments, arguments.optipng or
                                             arguments.pngout):
-            report_stats = png.optimize(filename, arguments)
+            format_module = png
         elif detect_format.is_format_selected(image_format, jpeg.FORMATS,
                                               arguments,
                                               arguments.mozjpeg or
                                               arguments.jpegrescan or
                                               arguments.jpegtran):
-            report_stats = jpeg.optimize(filename, arguments)
+            format_module = jpeg
         elif detect_format.is_format_selected(image_format, gif.FORMATS,
                                               arguments, arguments.gifsicle):
             # this captures still GIFs too if not caught above
-            report_stats = gif.optimize(filename, arguments)
+            format_module = gif
             nag_about_gifs.set(True)
         else:
             if arguments.verbose > 1:
@@ -134,6 +136,10 @@ def optimize_image(arg):
                 print("\tFile format not selected.")
             return
 
+        report_stats = optimize_with_progs(format_module.PROG_MAP, filename,
+                                           image_format,
+                                           format_module.BEST_ONLY,
+                                           arguments)
         stats.optimize_accounting(report_stats, total_bytes_in,
                                   total_bytes_out, arguments)
     except Exception as exc:

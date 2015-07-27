@@ -1,5 +1,4 @@
 import extern
-import optimize_image
 
 
 PROGRAMS = ['optipng', 'pngout', 'advpng']
@@ -31,9 +30,4 @@ def pngout(ext_args):
 
 
 PROG_MAP = (optipng, advpng, pngout)
-
-
-def optimize(filename, arguments):
-    """run EXTERNAL programs to optimize lossless formats to PNGs"""
-    return optimize_image.optimize_with_progs(PROG_MAP, filename, 'PNG',
-                                              False, arguments)
+BEST_ONLY = False
