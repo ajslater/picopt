@@ -7,18 +7,6 @@ import optimize_image
 import timestamp
 
 
-def optimize_dir(filename_full, arguments, multiproc, optimize_after):
-    """ Recursively optimize a directory """
-    if not arguments.recurse:
-        return set()
-    next_dir_list = os.listdir(filename_full)
-    next_dir_list.sort()
-    optimize_after = timestamp.get_optimize_after(filename_full, False,
-                                                  optimize_after, arguments)
-    return optimize_files(filename_full, next_dir_list, arguments,
-                          multiproc, optimize_after)
-
-
 def optimize_file(filename_full, arguments, multiproc, optimize_after):
     """ Optimize an individual file """
     if optimize_after is not None:
@@ -34,7 +22,7 @@ def optimize_file(filename_full, arguments, multiproc, optimize_after):
         # list only
         print("%s : %s" % (filename_full, image_format))
     elif detect_format.is_format_selected(image_format, comic.FORMATS,
-                                          arguments, arguments.comics):
+                                          comic.PROGRAMS, arguments):
         return comic.optimize_comic_archive(filename_full, image_format,
                                             arguments, multiproc,
                                             optimize_after)
@@ -44,6 +32,18 @@ def optimize_file(filename_full, arguments, multiproc, optimize_after):
                 multiproc['in'], multiproc['out'], multiproc['nag_about_gifs']]
         return multiproc['pool'].apply_async(optimize_image.optimize_image,
                                              args=(args,))
+
+
+def optimize_dir(filename_full, arguments, multiproc, optimize_after):
+    """ Recursively optimize a directory """
+    if not arguments.recurse:
+        return set()
+    next_dir_list = os.listdir(filename_full)
+    next_dir_list.sort()
+    optimize_after = timestamp.get_optimize_after(filename_full, False,
+                                                  optimize_after, arguments)
+    return optimize_files(filename_full, next_dir_list, arguments,
+                          multiproc, optimize_after)
 
 
 def optimize_files(cwd, filter_list, arguments, multiproc, optimize_after):

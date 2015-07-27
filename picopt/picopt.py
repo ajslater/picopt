@@ -35,7 +35,7 @@ ALL_FORMATS = ALL_DEFAULT_FORMATS | comic.FORMATS
 def get_arguments():
     """parses the command line"""
     usage = "%(prog)s [arguments] [image files]"
-    programs_str = ', '.join(PROGRAMS)
+    programs_str = ', '.join([prog.__name__ for prog in PROGRAMS])
     description = "Uses "+programs_str+" if they are on the path."
     parser = argparse.ArgumentParser(usage=usage, description=description)
     parser.add_argument("-r", "--recurse", action="store_true",

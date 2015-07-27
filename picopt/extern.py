@@ -18,10 +18,10 @@ def does_external_program_run(prog, arguments):
 
 def program_reqs(arguments, programs):
     """run the external program tester on the required binaries"""
-    for program_name in programs:
-        val = getattr(arguments, program_name) \
-            and does_external_program_run(program_name, arguments)
-        setattr(arguments, program_name, val)
+    for program in programs:
+        val = getattr(arguments, program.__name__) \
+            and does_external_program_run(program.__name__, arguments)
+        setattr(arguments, program.__name__, val)
 
     do_png = arguments.optipng or arguments.pngout or arguments.advpng
     do_jpeg = arguments.mozjpeg or arguments.jpegrescan or arguments.jpegtran

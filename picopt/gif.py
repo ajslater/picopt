@@ -1,6 +1,5 @@
 import extern
 
-PROGRAMS = ['gifsicle']
 SEQUENCED_TEMPLATE = '%s SEQUENCED'
 GIF_FORMAT = 'GIF'
 FORMATS = set([SEQUENCED_TEMPLATE % GIF_FORMAT, GIF_FORMAT])
@@ -14,5 +13,5 @@ def gifsicle(ext_args):
     extern.run_ext(args)
 
 
-PROG_MAP = (gifsicle,)
+PROGRAMS = (gifsicle,)
 BEST_ONLY = True

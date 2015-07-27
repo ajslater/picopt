@@ -13,10 +13,15 @@ NONE_FORMAT = 'NONE'
 ERROR_FORMAT = 'ERROR'
 
 
-def is_format_selected(image_format, formats, arguments, mode):
+def is_format_selected(image_format, formats, progs, arguments):
     """returns a boolean indicating weather or not the image format
     was selected by the command line arguments"""
     intersection = formats & arguments.formats
+    mode = False
+    for prog in progs:
+        if getattr(arguments, prog.__name__):
+            mode = True
+            break
     result = (image_format in intersection) and mode
     return result
 

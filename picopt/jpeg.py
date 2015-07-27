@@ -2,7 +2,6 @@ import copy
 
 import extern
 
-PROGRAMS = ['mozjpeg', 'jpegrescan', 'jpegtran']
 FORMATS = set(['JPEG'])
 
 MOZJPEG_ARGS = ['mozjpeg']
@@ -47,5 +46,5 @@ def jpegrescan(ext_args):
     extern.run_ext(args)
 
 
-PROG_MAP = (mozjpeg, jpegrescan, jpegtran)
+PROGRAMS = (mozjpeg, jpegrescan, jpegtran)
 BEST_ONLY = True

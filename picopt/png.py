@@ -1,7 +1,6 @@
 import extern
 
 
-PROGRAMS = ['optipng', 'pngout', 'advpng']
 FORMATS = set(['PNG'])
 LOSSLESS_FORMATS = set(('PNM', 'PPM', 'TIFF', 'BMP', 'GIF'))
 CONVERTABLE_FORMATS = LOSSLESS_FORMATS | FORMATS
@@ -29,5 +28,5 @@ def pngout(ext_args):
     extern.run_ext(args)
 
 
-PROG_MAP = (optipng, advpng, pngout)
+PROGRAMS = (optipng, advpng, pngout)
 BEST_ONLY = False

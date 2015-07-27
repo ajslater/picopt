@@ -30,6 +30,12 @@ CBR_FORMAT = 'CBR'
 FORMATS = set((CBZ_FORMAT, CBR_FORMAT))
 
 
+def comics():
+    pass
+
+PROGRAMS = (comics,)
+
+
 def get_comic_format(filename):
     """ return the comic format if it is a comic archive  """
     image_format = None

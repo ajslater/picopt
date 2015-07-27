@@ -87,7 +87,7 @@ def optimize_with_progs(format_module, filename, image_format, arguments):
     filesize_in = os.stat(filename).st_size
     report_stats = None
 
-    for func in format_module.PROG_MAP:
+    for func in format_module.PROGRAMS:
         if not getattr(arguments, func.__name__):
             continue
         report_stats = optimize_image_external(filename,
@@ -105,31 +105,36 @@ def optimize_with_progs(format_module, filename, image_format, arguments):
     return report_stats
 
 
+def get_format_module(image_format, nag_about_gifs, arguments):
+    format_module = None
+
+    if detect_format.is_format_selected(image_format,
+                                        arguments.to_png_formats,
+                                        png.PROGRAMS,
+                                        arguments):
+        format_module = png
+    elif detect_format.is_format_selected(image_format, jpeg.FORMATS,
+                                          jpeg.PROGRAMS, arguments):
+        format_module = jpeg
+    elif detect_format.is_format_selected(image_format, gif.FORMATS,
+                                          gif.PROGRAMS, arguments):
+        # this captures still GIFs too if not caught above
+        format_module = gif
+        nag_about_gifs.set(True)
+
+    return format_module
+
+
 def optimize_image(arg):
     """optimizes a given image from a filename"""
     try:
         filename, image_format, arguments, total_bytes_in, total_bytes_out, \
             nag_about_gifs = arg
 
-        format_module = None
+        format_module = get_format_module(image_format, nag_about_gifs,
+                                          arguments)
 
-        if detect_format.is_format_selected(image_format,
-                                            arguments.to_png_formats,
-                                            arguments, arguments.optipng or
-                                            arguments.pngout):
-            format_module = png
-        elif detect_format.is_format_selected(image_format, jpeg.FORMATS,
-                                              arguments,
-                                              arguments.mozjpeg or
-                                              arguments.jpegrescan or
-                                              arguments.jpegtran):
-            format_module = jpeg
-        elif detect_format.is_format_selected(image_format, gif.FORMATS,
-                                              arguments, arguments.gifsicle):
-            # this captures still GIFs too if not caught above
-            format_module = gif
-            nag_about_gifs.set(True)
-        else:
+        if format_module is None:
             if arguments.verbose > 1:
                 print(filename, image_format)  # image.mode)
                 print("\tFile format not selected.")
