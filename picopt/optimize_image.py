@@ -4,10 +4,12 @@ import shutil
 import traceback
 
 import detect_format
-import gif
-import jpeg
+from formats import (
+    gif,
+    jpeg,
+    png
+)
 import name
-import png
 import stats
 
 

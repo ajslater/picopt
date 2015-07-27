@@ -12,12 +12,14 @@ import time
 
 import extern
 import files
+import comic
+from formats import (
+    gif,
+    jpeg,
+    png
+)
 import stats
 import timestamp
-import png
-import jpeg
-import gif
-import comic
 import name
 
 __version__ = '1.2.0'

@@ -5,6 +5,7 @@ Tests:
 Architecture:
     Make comic archive module more like the other format modules?
     Map module deps and reorg better
+    Make a settings concept for libpicopt
 
 Packaging:
     PIL/Pillow is still a mess.

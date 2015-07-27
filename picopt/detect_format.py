@@ -5,8 +5,8 @@ try:
 except ImportError:
     import Image
 
-import gif
 import comic
+from formats import gif
 
 # Formats
 NONE_FORMAT = 'NONE'

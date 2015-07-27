@@ -15,7 +15,6 @@ import optimize_image
 import stats
 import name
 
-
 # Extensions
 ARCHIVE_TMP_DIR_PREFIX = name.PROGRAM_NAME+'_tmp_'
 ARCHIVE_TMP_DIR_TEMPLATE = ARCHIVE_TMP_DIR_PREFIX+'%s'
@@ -146,6 +145,7 @@ def optimize_comic_archive(filename_full, image_format, arguments, multiproc,
     """ Optimize a comic archive """
     tmp_dir_basename = comic_archive_uncompress(filename_full,
                                                 image_format, arguments)
+
     # recurse into comic archive even if flag not set
     archive_arguments = copy.deepcopy(arguments)
     archive_arguments.recurse = True
