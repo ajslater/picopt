@@ -1,10 +1,12 @@
 from __future__ import print_function
 import os
+import multiprocessing
 
 import comic
 import detect_format
 import optimize_image
 from settings import Settings
+import stats
 import timestamp
 
 
@@ -120,3 +122,32 @@ def optimize_all_files(multiproc):
         optimize_files_after(cwd, cwd_files, multiproc)
 
     return record_dirs
+
+
+def optimize():
+    """ use preconfigured settings to optimize files """
+
+    # Setup Multiprocessing
+    manager = multiprocessing.Manager()
+    total_bytes_in = manager.Value(int, 0)
+    total_bytes_out = manager.Value(int, 0)
+    nag_about_gifs = manager.Value(bool, False)
+    pool = multiprocessing.Pool(Settings.jobs)
+
+    multiproc = {'pool': pool, 'in': total_bytes_in, 'out': total_bytes_out,
+                 'nag_about_gifs': nag_about_gifs}
+
+    # Optimize Files
+    record_dirs = optimize_all_files(multiproc)
+
+    # Shut down multiprocessing
+    pool.close()
+    pool.join()
+
+    # Write timestamps
+    for filename in record_dirs:
+        timestamp.record_timestamp(filename)
+
+    # Finish by reporting totals
+    stats.report_totals(multiproc['in'].get(), multiproc['out'].get(),
+                        multiproc['nag_about_gifs'].get())

@@ -20,8 +20,6 @@ from formats import (
 )
 import name
 from settings import Settings
-import stats
-import timestamp
 
 __version__ = '1.2.0'
 
@@ -183,43 +181,11 @@ def process_arguments(arguments):
     return arguments
 
 
-def run_main(raw_arguments):
-    """ The main optimization call """
-
-    process_arguments(raw_arguments)
-
-    # TODO: move this rest back down into library land
-
-    # Setup Multiprocessing
-    manager = multiprocessing.Manager()
-    total_bytes_in = manager.Value(int, 0)
-    total_bytes_out = manager.Value(int, 0)
-    nag_about_gifs = manager.Value(bool, False)
-    pool = multiprocessing.Pool(Settings.jobs)
-
-    multiproc = {'pool': pool, 'in': total_bytes_in, 'out': total_bytes_out,
-                 'nag_about_gifs': nag_about_gifs}
-
-    # Optimize Files
-    record_dirs = files.optimize_all_files(multiproc)
-
-    # Shut down multiprocessing
-    pool.close()
-    pool.join()
-
-    # Write timestamps
-    for filename in record_dirs:
-        timestamp.record_timestamp(filename)
-
-    # Finish by reporting totals
-    stats.report_totals(multiproc['in'].get(), multiproc['out'].get(),
-                        multiproc['nag_about_gifs'].get())
-
-
 def main():
     """main"""
     raw_arguments = get_arguments()
-    run_main(raw_arguments)
+    process_arguments(raw_arguments)
+    files.optimize()
 
 
 if __name__ == '__main__':
