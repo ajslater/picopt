@@ -134,7 +134,7 @@ def optimize_image(arg):
         filename, image_format, settings, total_bytes_in, total_bytes_out, \
             nag_about_gifs = arg
 
-        Settings.apply(settings)
+        Settings.update(settings)
 
         format_module = get_format_module(image_format, nag_about_gifs)
 

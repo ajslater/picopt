@@ -115,8 +115,9 @@ def comic_archive_compress(args):
     """
 
     try:
-        filename, total_bytes_in, total_bytes_out, settings = args
-        Settings.apply(settings)
+        filename, total_bytes_in, total_bytes_out, image_format, \
+            settings = args
+        Settings.update(settings)
         tmp_dir = get_archive_tmp_dir(filename)
         # archive into new filename
         new_filename = optimize.replace_ext(filename, NEW_ARCHIVE_SUFFIX)
@@ -132,7 +133,7 @@ def comic_archive_compress(args):
             print('done.')
 
         report_stats = optimize.cleanup_after_optimize(
-            filename, new_filename)
+            filename, new_filename, image_format)
         stats.optimize_accounting(report_stats, total_bytes_in,
                                   total_bytes_out)
     except Exception as exc:
@@ -157,5 +158,6 @@ def walk_comic_archive(filename_full, image_format, multiproc,
     for result in result_set:
         result.wait()
 
-    args = (filename_full, multiproc['in'], multiproc['out'], Settings)
+    args = (filename_full, multiproc['in'], multiproc['out'], image_format,
+            Settings)
     return multiproc['pool'].apply_async(comic_archive_compress, args=(args,))

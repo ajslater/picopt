@@ -11,7 +11,6 @@ import dateutil.parser
 import time
 
 import comic
-import extern
 import walk
 from formats import (
     gif,
@@ -137,9 +136,9 @@ def get_arguments():
 def process_arguments(arguments):
     """ Recomputer special cases for input arguments """
 
-    Settings.apply(arguments)
+    Settings.update(arguments)
 
-    extern.program_reqs(PROGRAMS)
+    Settings.config_program_reqs(PROGRAMS)
 
     Settings.verbose = arguments.verbose + 1
     Settings.paths = set(arguments.paths)

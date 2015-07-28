@@ -3,9 +3,7 @@ Tests:
     Functional Tests for each option
 
 Architecture:
-    Map module deps and reorg better
     extern should probably only be called by the format files
-    detect_format should probably only be called by files or optimize_image
     Make comic archive module more like the other format modules?
     Split comic into format file and files like file?
 
