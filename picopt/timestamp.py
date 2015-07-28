@@ -35,7 +35,7 @@ def get_parent_timestamp(full_pathname, mtime):
     return get_parent_timestamp(parent_pathname, mtime)
 
 
-def get_optimize_after(current_path, look_up, optimize_after):
+def get_walk_after(current_path, look_up, optimize_after):
     """ Figure out the which mtime to check against and if we look up
         return that we've looked up too"""
     if Settings.optimize_after is not None:

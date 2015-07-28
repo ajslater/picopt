@@ -9,8 +9,8 @@ import shutil
 import traceback
 import zipfile
 
-import files
-import optimize_image
+import walk
+import optimize
 import stats
 from settings import Settings
 import name
@@ -119,7 +119,7 @@ def comic_archive_compress(args):
         Settings.apply(settings)
         tmp_dir = get_archive_tmp_dir(filename)
         # archive into new filename
-        new_filename = optimize_image.replace_ext(filename, NEW_ARCHIVE_SUFFIX)
+        new_filename = optimize.replace_ext(filename, NEW_ARCHIVE_SUFFIX)
 
         comic_archive_write_zipfile(new_filename, tmp_dir)
 
@@ -131,7 +131,7 @@ def comic_archive_compress(args):
         if Settings.verbose:
             print('done.')
 
-        report_stats = optimize_image.cleanup_after_optimize(
+        report_stats = optimize.cleanup_after_optimize(
             filename, new_filename)
         stats.optimize_accounting(report_stats, total_bytes_in,
                                   total_bytes_out)
@@ -141,16 +141,16 @@ def comic_archive_compress(args):
         raise exc
 
 
-def optimize_comic_archive(filename_full, image_format, multiproc,
-                           optimize_after):
+def walk_comic_archive(filename_full, image_format, multiproc,
+                       optimize_after):
     """ Optimize a comic archive """
     tmp_dir_basename = comic_archive_uncompress(filename_full,
                                                 image_format)
 
     # optimize contents of comic archive
     dirname = os.path.dirname(filename_full)
-    result_set = files.optimize_files(dirname, [tmp_dir_basename],
-                                      multiproc, optimize_after, True)
+    result_set = walk.walk_files(dirname, [tmp_dir_basename],
+                                 multiproc, optimize_after, True)
 
     # I'd like to stuff this waiting into the compression process,
     # but process results don't serialize. :(

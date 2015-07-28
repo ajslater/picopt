@@ -12,7 +12,7 @@ import time
 
 import comic
 import extern
-import files
+import walk
 from formats import (
     gif,
     jpeg,
@@ -185,7 +185,7 @@ def main():
     """main"""
     raw_arguments = get_arguments()
     process_arguments(raw_arguments)
-    files.optimize()
+    walk.run()
 
 
 if __name__ == '__main__':

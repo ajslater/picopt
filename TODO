@@ -3,9 +3,11 @@ Tests:
     Functional Tests for each option
 
 Architecture:
-    Make comic archive module more like the other format modules?
     Map module deps and reorg better
-    Make a settings concept for libpicopt
+    extern should probably only be called by the format files
+    detect_format should probably only be called by files or optimize_image
+    Make comic archive module more like the other format modules?
+    Split comic into format file and files like file?
 
 Packaging:
     PIL/Pillow is still a mess.

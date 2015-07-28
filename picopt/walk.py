@@ -4,17 +4,17 @@ import multiprocessing
 
 import comic
 import detect_format
-import optimize_image
+import optimize
 from settings import Settings
 import stats
 import timestamp
 
 
-def optimize_file(filename_full, multiproc, optimize_after):
+def walk_file(filename_full, multiproc, walk_after):
     """ Optimize an individual file """
-    if optimize_after is not None:
+    if walk_after is not None:
         mtime = os.stat(filename_full).st_mtime
-        if mtime <= optimize_after:
+        if mtime <= walk_after:
             return
 
     image_format = detect_format.detect_file(filename_full)
@@ -26,17 +26,17 @@ def optimize_file(filename_full, multiproc, optimize_after):
         print("%s : %s" % (filename_full, image_format))
     elif detect_format.is_format_selected(image_format, comic.FORMATS,
                                           comic.PROGRAMS):
-        return comic.optimize_comic_archive(filename_full, image_format,
-                                            multiproc, optimize_after)
+        return comic.walk_comic_archive(filename_full, image_format,
+                                        multiproc, walk_after)
     else:
         # regular image
         args = [filename_full, image_format, Settings,
                 multiproc['in'], multiproc['out'], multiproc['nag_about_gifs']]
-        return multiproc['pool'].apply_async(optimize_image.optimize_image,
+        return multiproc['pool'].apply_async(optimize.optimize_image,
                                              args=(args,))
 
 
-def optimize_dir(filename_full, multiproc, optimize_after, recurse=None):
+def walk_dir(filename_full, multiproc, walk_after, recurse=None):
     """ Recursively optimize a directory """
     if recurse is None:
         recurse = Settings.recurse
@@ -45,13 +45,13 @@ def optimize_dir(filename_full, multiproc, optimize_after, recurse=None):
         return set()
     next_dir_list = os.listdir(filename_full)
     next_dir_list.sort()
-    optimize_after = timestamp.get_optimize_after(filename_full, False,
-                                                  optimize_after)
-    return optimize_files(filename_full, next_dir_list, multiproc,
-                          optimize_after)
+    walk_after = timestamp.get_walk_after(filename_full, False,
+                                          walk_after)
+    return walk_files(filename_full, next_dir_list, multiproc,
+                      walk_after)
 
 
-def optimize_files(cwd, filter_list, multiproc, optimize_after, recurse=None):
+def walk_files(cwd, filter_list, multiproc, walk_after, recurse=None):
     """sorts through a list of files, decends directories and
        calls the optimizer on the extant files"""
     if recurse is None:
@@ -68,12 +68,12 @@ def optimize_files(cwd, filter_list, multiproc, optimize_after, recurse=None):
         elif os.path.basename(filename_full) == timestamp.RECORD_FILENAME:
             continue
         elif os.path.isdir(filename_full):
-            results = optimize_dir(filename_full, multiproc,
-                                   optimize_after, recurse)
+            results = walk_dir(filename_full, multiproc,
+                               walk_after, recurse)
             result_set = result_set.union(results)
         elif os.path.exists(filename_full):
-            result = optimize_file(filename_full, multiproc,
-                                   optimize_after)
+            result = walk_file(filename_full, multiproc,
+                               walk_after)
             if result:
                 result_set.add(result)
         elif Settings.verbose:
@@ -81,15 +81,15 @@ def optimize_files(cwd, filter_list, multiproc, optimize_after, recurse=None):
     return result_set
 
 
-def optimize_files_after(path, file_list, multiproc):
+def walk_files_after(path, file_list, multiproc):
     """ compute the optimize after date for the a batch of files
         and then optimize them.
     """
-    optimize_after = timestamp.get_optimize_after(path, True, None)
-    return optimize_files(path, file_list, multiproc, optimize_after)
+    walk_after = timestamp.get_walk_after(path, True, None)
+    return walk_files(path, file_list, multiproc, walk_after)
 
 
-def optimize_all_files(multiproc):
+def walk_all_files(multiproc):
     """ Optimize the files from the arugments list in two batches.
         One for absolute paths which are probably outside the current
         working directory tree and one for relative files.
@@ -112,19 +112,19 @@ def optimize_all_files(multiproc):
         #   Otherwise add the files to the list to do next
         path_dn, path_fn = os.path.split(os.path.realpath(filename))
         if path_dn != cwd:
-            optimize_files_after(path_dn, [path_fn], multiproc)
+            walk_files_after(path_dn, [path_fn], multiproc)
         else:
             cwd_files.add(path_fn)
 
     # Optimize immediate descendants with optimize after computed from
     # the current directory
     if len(cwd_files):
-        optimize_files_after(cwd, cwd_files, multiproc)
+        walk_files_after(cwd, cwd_files, multiproc)
 
     return record_dirs
 
 
-def optimize():
+def run():
     """ use preconfigured settings to optimize files """
 
     # Setup Multiprocessing
@@ -138,7 +138,7 @@ def optimize():
                  'nag_about_gifs': nag_about_gifs}
 
     # Optimize Files
-    record_dirs = optimize_all_files(multiproc)
+    record_dirs = walk_all_files(multiproc)
 
     # Shut down multiprocessing
     pool.close()
