@@ -31,7 +31,7 @@ def replace_ext(filename, new_ext):
     return new_filename
 
 
-def cleanup_after_optimize(filename, new_filename):
+def cleanup_after_optimize(filename, new_filename, old_image_format):
     """report results. replace old file with better one or discard new wasteful
        file"""
 
@@ -44,7 +44,7 @@ def cleanup_after_optimize(filename, new_filename):
         bytes_diff['out'] = filesize_in  # overwritten on succes below
         if (filesize_out > 0) and ((filesize_out < filesize_in) or
                                    Settings.bigger):
-            old_image_format = detect_format.get_image_format(filename)
+            # old_image_format = detect_format.get_image_format(filename)
             new_image_format = detect_format.get_image_format(new_filename)
             if old_image_format != new_image_format:
                 final_filename = replace_ext(filename,
@@ -66,15 +66,16 @@ def cleanup_after_optimize(filename, new_filename):
     return stats.ReportStats._make([final_filename, bytes_diff, []])
 
 
-def optimize_image_external(filename, func):
-    """this could be a decorator"""
+def optimize_image_external(filename, func, image_format):
+    """ optimize the file with the external function """
     new_filename = os.path.normpath(filename + NEW_EXT)
     shutil.copy2(filename, new_filename)
 
     ext_args = ExtArgs._make([filename, new_filename])
     func(ext_args)
 
-    report_stats = cleanup_after_optimize(filename, new_filename)
+    report_stats = cleanup_after_optimize(filename, new_filename,
+                                          image_format)
     percent = stats.new_percent_saved(report_stats)
     if percent != 0:
         report = '%s: %s' % (func.__name__, percent)
@@ -94,7 +95,7 @@ def optimize_with_progs(format_module, filename, image_format):
     for func in format_module.PROGRAMS:
         if not getattr(Settings, func.__name__):
             continue
-        report_stats = optimize_image_external(filename, func)
+        report_stats = optimize_image_external(filename, func, image_format)
         filename = report_stats.final_filename
         if format_module.BEST_ONLY:
             break
