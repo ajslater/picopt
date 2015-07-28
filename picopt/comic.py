@@ -3,7 +3,6 @@ Optimize comic archives
 """
 from __future__ import print_function
 
-import copy
 import os
 import rarfile
 import shutil
@@ -13,6 +12,7 @@ import zipfile
 import files
 import optimize_image
 import stats
+from settings import Settings
 import name
 
 # Extensions
@@ -53,18 +53,18 @@ def get_archive_tmp_dir(filename):
     return os.path.join(head, ARCHIVE_TMP_DIR_TEMPLATE % tail)
 
 
-def comic_archive_uncompress(filename, image_format, arguments):
+def comic_archive_uncompress(filename, image_format):
     """ uncompress comic archives and return the name of the working
         directory we uncompressed into """
 
-    if not arguments.comics:
+    if not Settings.comics:
         report = ['Skipping archive file: %s' % filename]
         report_list = [report]
         bytes_diff = {'in': 0, 'out': 0}
         return (bytes_diff, report_list)
 
-    if arguments.verbose:
-        truncated_filename = stats.truncate_cwd(filename, arguments)
+    if Settings.verbose:
+        truncated_filename = stats.truncate_cwd(filename)
         print("Extracting %s..." % truncated_filename, end='')
 
     # create the tmpdir
@@ -86,15 +86,15 @@ def comic_archive_uncompress(filename, image_format, arguments):
         bytes_diff = {'in': 0, 'out': 0}
         return (bytes_diff, report_list)
 
-    if arguments.verbose:
+    if Settings.verbose:
         print('done')
 
     return os.path.basename(tmp_dir)
 
 
-def comic_archive_write_zipfile(arguments, new_filename, tmp_dir):
+def comic_archive_write_zipfile(new_filename, tmp_dir):
     """ Zip up the files in the tempdir into the new filename """
-    if arguments.verbose:
+    if Settings.verbose:
         print('Rezipping archive', end='')
     with zipfile.ZipFile(new_filename, 'w',
                          compression=zipfile.ZIP_DEFLATED) as new_zf:
@@ -104,7 +104,7 @@ def comic_archive_write_zipfile(arguments, new_filename, tmp_dir):
             for fname in filenames:
                 fullpath = os.path.join(root, fname)
                 archive_name = os.path.join(archive_root, fname)
-                if arguments.verbose:
+                if Settings.verbose:
                     print('.', end='')
                 new_zf.write(fullpath, archive_name, zipfile.ZIP_DEFLATED)
 
@@ -115,52 +115,47 @@ def comic_archive_compress(args):
     """
 
     try:
-        filename, total_bytes_in, total_bytes_out, arguments = args
+        filename, total_bytes_in, total_bytes_out, settings = args
+        Settings.apply(settings)
         tmp_dir = get_archive_tmp_dir(filename)
         # archive into new filename
         new_filename = optimize_image.replace_ext(filename, NEW_ARCHIVE_SUFFIX)
 
-        comic_archive_write_zipfile(arguments, new_filename, tmp_dir)
+        comic_archive_write_zipfile(new_filename, tmp_dir)
 
         # Cleanup tmpdir
         if os.path.isdir(tmp_dir):
-            if arguments.verbose:
+            if Settings.verbose:
                 print('.', end='')
             shutil.rmtree(tmp_dir)
-        if arguments.verbose:
+        if Settings.verbose:
             print('done.')
 
         report_stats = optimize_image.cleanup_after_optimize(
-            filename, new_filename, arguments)
+            filename, new_filename)
         stats.optimize_accounting(report_stats, total_bytes_in,
-                                  total_bytes_out, arguments)
+                                  total_bytes_out)
     except Exception as exc:
         print(exc)
         traceback.print_exc(exc)
         raise exc
 
 
-def optimize_comic_archive(filename_full, image_format, arguments, multiproc,
+def optimize_comic_archive(filename_full, image_format, multiproc,
                            optimize_after):
     """ Optimize a comic archive """
     tmp_dir_basename = comic_archive_uncompress(filename_full,
-                                                image_format, arguments)
-
-    # recurse into comic archive even if flag not set
-    archive_arguments = copy.deepcopy(arguments)
-    archive_arguments.recurse = True
-    archive_arguments.archive_name = os.path.basename(filename_full)
+                                                image_format)
 
     # optimize contents of comic archive
     dirname = os.path.dirname(filename_full)
     result_set = files.optimize_files(dirname, [tmp_dir_basename],
-                                      archive_arguments, multiproc,
-                                      optimize_after)
+                                      multiproc, optimize_after, True)
 
     # I'd like to stuff this waiting into the compression process,
     # but process results don't serialize. :(
     for result in result_set:
         result.wait()
 
-    args = (filename_full, multiproc['in'], multiproc['out'], arguments)
+    args = (filename_full, multiproc['in'], multiproc['out'], Settings)
     return multiproc['pool'].apply_async(comic_archive_compress, args=(args,))

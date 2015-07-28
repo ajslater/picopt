@@ -7,19 +7,20 @@ except ImportError:
 
 import comic
 from formats import gif
+from settings import Settings
 
 # Formats
 NONE_FORMAT = 'NONE'
 ERROR_FORMAT = 'ERROR'
 
 
-def is_format_selected(image_format, formats, progs, arguments):
+def is_format_selected(image_format, formats, progs):
     """returns a boolean indicating weather or not the image format
     was selected by the command line arguments"""
-    intersection = formats & arguments.formats
+    intersection = formats & Settings.formats
     mode = False
     for prog in progs:
-        if getattr(arguments, prog.__name__):
+        if getattr(Settings, prog.__name__):
             mode = True
             break
     result = (image_format in intersection) and mode
@@ -38,7 +39,7 @@ def is_image_sequenced(image):
     return result
 
 
-def get_image_format(filename, arguments):
+def get_image_format(filename):
     """gets the image format"""
     image = None
     bad_image = 1
@@ -59,22 +60,22 @@ def get_image_format(filename, arguments):
         comic_format = comic.get_comic_format(filename)
         if comic_format:
             image_format = comic_format
-        if (arguments.verbose > 1) and image_format == ERROR_FORMAT and \
-                (not arguments.list_only):
+        if (Settings.verbose > 1) and image_format == ERROR_FORMAT and \
+                (not Settings.list_only):
             print(filename, "doesn't look like an image or comic archive.")
     return image_format
 
 
-def detect_file(filename, arguments):
+def detect_file(filename):
     """decides what to do with the file"""
-    image_format = get_image_format(filename, arguments)
+    image_format = get_image_format(filename)
 
-    if image_format in arguments.formats:
+    if image_format in Settings.formats:
         return image_format
 
     if image_format in (NONE_FORMAT, ERROR_FORMAT):
         return
 
-    if arguments.verbose > 1 and not arguments.list_only:
+    if Settings.verbose > 1 and not Settings.list_only:
         print(filename, image_format, 'is not a enabled image or '
               'comic archive type.')

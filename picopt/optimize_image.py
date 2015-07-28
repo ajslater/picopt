@@ -10,6 +10,7 @@ from formats import (
     png
 )
 import name
+from settings import Settings
 import stats
 
 
@@ -17,7 +18,10 @@ REMOVE_EXT = '.%s-remove' % name.PROGRAM_NAME
 NEW_EXT = '.%s-optimized.png' % name.PROGRAM_NAME
 
 
-ExtArgs = namedtuple('ExtArgs', ['old_filename', 'new_filename', 'arguments'])
+ExtArgs = namedtuple('ExtArgs', ['old_filename', 'new_filename'])
+
+Settings.formats = png.CONVERTABLE_FORMATS | jpeg.FORMATS | gif.FORMATS
+Settings.to_png_formats = png.CONVERTABLE_FORMATS
 
 
 def replace_ext(filename, new_ext):
@@ -27,7 +31,7 @@ def replace_ext(filename, new_ext):
     return new_filename
 
 
-def cleanup_after_optimize(filename, new_filename, arguments):
+def cleanup_after_optimize(filename, new_filename):
     """report results. replace old file with better one or discard new wasteful
        file"""
 
@@ -39,16 +43,14 @@ def cleanup_after_optimize(filename, new_filename, arguments):
         bytes_diff['in'] = filesize_in
         bytes_diff['out'] = filesize_in  # overwritten on succes below
         if (filesize_out > 0) and ((filesize_out < filesize_in) or
-                                   arguments.bigger):
-            old_image_format = detect_format.get_image_format(filename,
-                                                              arguments)
-            new_image_format = detect_format.get_image_format(new_filename,
-                                                              arguments)
+                                   Settings.bigger):
+            old_image_format = detect_format.get_image_format(filename)
+            new_image_format = detect_format.get_image_format(new_filename)
             if old_image_format != new_image_format:
                 final_filename = replace_ext(filename,
                                              new_image_format.lower())
             rem_filename = filename + REMOVE_EXT
-            if not arguments.test:
+            if not Settings.test:
                 os.rename(filename, rem_filename)
                 os.rename(new_filename, final_filename)
                 os.remove(rem_filename)
@@ -64,15 +66,15 @@ def cleanup_after_optimize(filename, new_filename, arguments):
     return stats.ReportStats._make([final_filename, bytes_diff, []])
 
 
-def optimize_image_external(filename, arguments, func):
+def optimize_image_external(filename, func):
     """this could be a decorator"""
     new_filename = os.path.normpath(filename + NEW_EXT)
     shutil.copy2(filename, new_filename)
 
-    ext_args = ExtArgs._make([filename, new_filename, arguments])
+    ext_args = ExtArgs._make([filename, new_filename])
     func(ext_args)
 
-    report_stats = cleanup_after_optimize(filename, new_filename, arguments)
+    report_stats = cleanup_after_optimize(filename, new_filename)
     percent = stats.new_percent_saved(report_stats)
     if percent != 0:
         report = '%s: %s' % (func.__name__, percent)
@@ -83,18 +85,16 @@ def optimize_image_external(filename, arguments, func):
     return report_stats
 
 
-def optimize_with_progs(format_module, filename, image_format, arguments):
+def optimize_with_progs(format_module, filename, image_format):
     """ Use either all the optimizing functions in sequence or just the
         best one to optimize the image and report back statistics """
     filesize_in = os.stat(filename).st_size
     report_stats = None
 
     for func in format_module.PROGRAMS:
-        if not getattr(arguments, func.__name__):
+        if not getattr(Settings, func.__name__):
             continue
-        report_stats = optimize_image_external(filename,
-                                               arguments,
-                                               func)
+        report_stats = optimize_image_external(filename, func)
         filename = report_stats.final_filename
         if format_module.BEST_ONLY:
             break
@@ -107,20 +107,19 @@ def optimize_with_progs(format_module, filename, image_format, arguments):
     return report_stats
 
 
-def get_format_module(image_format, nag_about_gifs, arguments):
+def get_format_module(image_format, nag_about_gifs):
     """ get the format module to use for optimizing the image """
     format_module = None
 
     if detect_format.is_format_selected(image_format,
-                                        arguments.to_png_formats,
-                                        png.PROGRAMS,
-                                        arguments):
+                                        Settings.to_png_formats,
+                                        png.PROGRAMS):
         format_module = png
     elif detect_format.is_format_selected(image_format, jpeg.FORMATS,
-                                          jpeg.PROGRAMS, arguments):
+                                          jpeg.PROGRAMS):
         format_module = jpeg
     elif detect_format.is_format_selected(image_format, gif.FORMATS,
-                                          gif.PROGRAMS, arguments):
+                                          gif.PROGRAMS):
         # this captures still GIFs too if not caught above
         format_module = gif
         nag_about_gifs.set(True)
@@ -131,22 +130,23 @@ def get_format_module(image_format, nag_about_gifs, arguments):
 def optimize_image(arg):
     """optimizes a given image from a filename"""
     try:
-        filename, image_format, arguments, total_bytes_in, total_bytes_out, \
+        filename, image_format, settings, total_bytes_in, total_bytes_out, \
             nag_about_gifs = arg
 
-        format_module = get_format_module(image_format, nag_about_gifs,
-                                          arguments)
+        Settings.apply(settings)
+
+        format_module = get_format_module(image_format, nag_about_gifs)
 
         if format_module is None:
-            if arguments.verbose > 1:
+            if Settings.verbose > 1:
                 print(filename, image_format)  # image.mode)
                 print("\tFile format not selected.")
             return
 
         report_stats = optimize_with_progs(format_module, filename,
-                                           image_format, arguments)
+                                           image_format)
         stats.optimize_accounting(report_stats, total_bytes_in,
-                                  total_bytes_out, arguments)
+                                  total_bytes_out)
     except Exception as exc:
         print(exc)
         traceback.print_exc(exc)

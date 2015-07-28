@@ -10,22 +10,24 @@ import multiprocessing
 import dateutil.parser
 import time
 
+import comic
 import extern
 import files
-import comic
 from formats import (
     gif,
     jpeg,
     png
 )
+import name
+from settings import Settings
 import stats
 import timestamp
-import name
 
 __version__ = '1.2.0'
 
 # Programs
-PROGRAMS = set(png.PROGRAMS + gif.PROGRAMS + jpeg.PROGRAMS)
+PROGRAMS = set(png.PROGRAMS + gif.PROGRAMS +
+               jpeg.PROGRAMS)
 
 FORMAT_DELIMETER = ','
 DEFAULT_FORMATS = 'ALL'
@@ -136,20 +138,22 @@ def get_arguments():
 
 def process_arguments(arguments):
     """ Recomputer special cases for input arguments """
-    extern.program_reqs(arguments, PROGRAMS)
 
-    arguments.verbose += 1
-    arguments.paths = set(arguments.paths)
-    arguments.archive_name = None
+    Settings.apply(arguments)
+
+    extern.program_reqs(PROGRAMS)
+
+    Settings.verbose = arguments.verbose + 1
+    Settings.paths = set(arguments.paths)
 
     if arguments.formats == DEFAULT_FORMATS:
-        arguments.formats = arguments.to_png_formats | \
+        Settings.formats = arguments.to_png_formats | \
             jpeg.FORMATS | gif.FORMATS
     else:
-        arguments.formats = arguments.formats.upper().split(FORMAT_DELIMETER)
+        Settings.formats = arguments.formats.upper().split(FORMAT_DELIMETER)
 
     if arguments.comics:
-        arguments.formats = arguments.formats | comic.FORMATS
+        Settings.formats = Settings.formats | comic.FORMATS
 
     if arguments.optimize_after is not None:
         try:
@@ -161,7 +165,7 @@ def process_arguments(arguments):
             exit(1)
 
     if arguments.jobs < 1:
-        arguments.jobs = 1
+        Settings.jobs = 1
 
     # Make a rough guess about weather or not to invoke multithreding
     # jpegrescan '-t' uses three threads
@@ -173,8 +177,8 @@ def process_arguments(arguments):
             files_in_paths += 1
         else:
             non_file_in_paths = True
-    arguments.jpegrescan_multithread = not non_file_in_paths and \
-        arguments.jobs - (files_in_paths*3) > -1
+    Settings.jpegrescan_multithread = not non_file_in_paths and \
+        Settings.jobs - (files_in_paths*3) > -1
 
     return arguments
 
@@ -182,20 +186,22 @@ def process_arguments(arguments):
 def run_main(raw_arguments):
     """ The main optimization call """
 
-    arguments = process_arguments(raw_arguments)
+    process_arguments(raw_arguments)
+
+    # TODO: move this rest back down into library land
 
     # Setup Multiprocessing
     manager = multiprocessing.Manager()
     total_bytes_in = manager.Value(int, 0)
     total_bytes_out = manager.Value(int, 0)
     nag_about_gifs = manager.Value(bool, False)
-    pool = multiprocessing.Pool(arguments.jobs)
+    pool = multiprocessing.Pool(Settings.jobs)
 
     multiproc = {'pool': pool, 'in': total_bytes_in, 'out': total_bytes_out,
                  'nag_about_gifs': nag_about_gifs}
 
     # Optimize Files
-    record_dirs = files.optimize_all_files(multiproc, arguments)
+    record_dirs = files.optimize_all_files(multiproc)
 
     # Shut down multiprocessing
     pool.close()
@@ -203,11 +209,11 @@ def run_main(raw_arguments):
 
     # Write timestamps
     for filename in record_dirs:
-        timestamp.record_timestamp(filename, arguments)
+        timestamp.record_timestamp(filename)
 
     # Finish by reporting totals
     stats.report_totals(multiproc['in'].get(), multiproc['out'].get(),
-                        arguments, multiproc['nag_about_gifs'].get())
+                        multiproc['nag_about_gifs'].get())
 
 
 def main():

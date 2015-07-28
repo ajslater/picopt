@@ -1,9 +1,10 @@
 from __future__ import division
 from __future__ import print_function
-
 from collections import namedtuple
 import os
 import sys
+
+from settings import Settings
 
 
 if sys.version > '3':
@@ -87,26 +88,24 @@ def new_percent_saved(report_stats):
     return result
 
 
-def truncate_cwd(full_filename, arguments):
+def truncate_cwd(full_filename):
     """ remove the cwd from the full filenam """
-    truncated_filename = full_filename.split(arguments.dir, 1)[1]
+    truncated_filename = full_filename.split(Settings.dir, 1)[1]
     truncated_filename = truncated_filename.split(os.sep, 1)[1]
     return truncated_filename
 
 
-def optimize_accounting(report_stats, total_bytes_in, total_bytes_out,
-                        arguments):
+def optimize_accounting(report_stats, total_bytes_in, total_bytes_out):
     """record the percent saved, print it and add it to the totals"""
-    if arguments.verbose:
+    if Settings.verbose:
         report = ''
-#        if arguments.archive_name is not None:
+#        if Settings.archive_name is not None:
 #            truncated_filename = report_stats.final_filename.split(
 #                ARCHIVE_TMP_DIR_PREFIX, 1)[1]
 #            truncated_filename = truncated_filename.split(os.sep, 1)[1]
-#            report += '  %s: ' % arguments.archive_name
-        if arguments.dir in report_stats.final_filename:
-            truncated_filename = truncate_cwd(report_stats.final_filename,
-                                              arguments)
+#            report += '  %s: ' % Settings.archive_name
+        if Settings.dir in report_stats.final_filename:
+            truncated_filename = truncate_cwd(report_stats.final_filename)
         else:
             truncated_filename = report_stats.final_filename
 
@@ -116,9 +115,9 @@ def optimize_accounting(report_stats, total_bytes_in, total_bytes_out,
             report += total
         else:
             report += '0%'
-        if arguments.test:
+        if Settings.test:
             report += ' could be saved.'
-        if arguments.verbose > 1:
+        if Settings.verbose > 1:
             tools_report = ', '.join(report_stats.report_list)
             if tools_report:
                 report += '\n\t' + tools_report
@@ -128,13 +127,13 @@ def optimize_accounting(report_stats, total_bytes_in, total_bytes_out,
     total_bytes_out.set(total_bytes_out.get() + report_stats.bytes_diff['out'])
 
 
-def report_totals(bytes_in, bytes_out, arguments, nag_about_gifs):
+def report_totals(bytes_in, bytes_out, nag_about_gifs):
     """report the total number and percent of bytes saved"""
     if bytes_in:
         bytes_saved = bytes_in - bytes_out
         percent_bytes_saved = bytes_saved / bytes_in * 100
         msg = ''
-        if arguments.test:
+        if Settings.test:
             if percent_bytes_saved > 0:
                 msg += "Could save"
             elif percent_bytes_saved == 0:
@@ -150,16 +149,16 @@ def report_totals(bytes_in, bytes_out, arguments, nag_about_gifs):
                 msg = "Lost"
         msg += " a total of %s or %.*f%s" % (humanize_bytes(bytes_saved),
                                              2, percent_bytes_saved, '%')
-        if arguments.verbose:
+        if Settings.verbose:
             print(msg)
-            if arguments.test:
+            if Settings.test:
                 print("Test run did not change any files.")
 
     else:
-        if arguments.verbose:
+        if Settings.verbose:
             print("Didn't optimize any files.")
 
-    if nag_about_gifs and arguments.verbose:
+    if nag_about_gifs and Settings.verbose:
         print("Most animated GIFS would be better off converted to"
               " HTML5 video")
 
