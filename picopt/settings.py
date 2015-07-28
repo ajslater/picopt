@@ -3,6 +3,7 @@ import multiprocessing
 
 
 class Settings(object):
+    """ a global settings class """
     advpng = False
     archive_name = None
     bigger = False
