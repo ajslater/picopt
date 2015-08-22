@@ -1,4 +1,4 @@
-import extern
+import picopt.extern
 
 
 FORMATS = set(['PNG'])
@@ -11,21 +11,21 @@ PNGOUT_ARGS = ['pngout', '-q', '-force', '-y']
 
 
 def optipng(ext_args):
-    """runs the EXTERNAL program optipng on the file"""
+    """runs the externAL program optipng on the file"""
     args = OPTIPNG_ARGS + [ext_args.new_filename]
-    extern.run_ext(args)
+    picopt.extern.run_ext(args)
 
 
 def advpng(ext_args):
-    """runs the EXTERNAL program advpng on the file"""
+    """runs the externAL program advpng on the file"""
     args = ADVPNG_ARGS + [ext_args.new_filename]
-    extern.run_ext(args)
+    picopt.extern.run_ext(args)
 
 
 def pngout(ext_args):
-    """runs the EXTERNAL program pngout on the file"""
+    """runs the externAL program pngout on the file"""
     args = PNGOUT_ARGS + [ext_args.old_filename, ext_args.new_filename]
-    extern.run_ext(args)
+    picopt.extern.run_ext(args)
 
 
 PROGRAMS = (optipng, advpng, pngout)
