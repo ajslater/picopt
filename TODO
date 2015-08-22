@@ -3,7 +3,6 @@ Tests:
     Functional Tests for each option
 
 Architecture:
-    extern should probably only be called by the format files
     Make comic archive module more like the other format modules?
     Split comic into format file and files like file?
 

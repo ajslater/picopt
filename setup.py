@@ -1,19 +1,32 @@
+#!/usr/bin/env python
 """ Setup file for Picopt
 Reference:
 https://hynek.me/articles/sharing-your-labor-of-love-pypi-quick-and-dirty/
 """
+import sys
 from setuptools import setup
 from pip.req import parse_requirements
 
 __version__ = "1.2.0"
 README_FILENAME = "README.rst"
-REQUIREMENTS_FILENAME = "requirements.txt"
+REQUIREMENTS = {
+    'prod': "requirements.txt",
+    'dev': "requirements-dev.txt"
+}
+
+
+def parse_reqs(filename):
+    """ parse setup requirements from a requirements.txt file """
+    install_reqs = parse_requirements(filename, session=False)
+    return [str(ir.req) for ir in install_reqs]
+
+req_list = parse_reqs(REQUIREMENTS['prod'])
+if len(sys.argv) > 2 and sys.argv[2] == ('develop'):
+    req_list += parse_reqs(REQUIREMENTS['dev'])
+
 
 with open(README_FILENAME, 'r') as readme_file:
     LONG_DESCRIPTION = readme_file.read()
-
-INSTALL_REQS = parse_requirements(REQUIREMENTS_FILENAME)
-REQ_LIST = [str(ir.req) for ir in INSTALL_REQS]
 
 setup(
     name='picopt',
@@ -23,7 +36,7 @@ setup(
     author_email='aj@slater.net',
     url='https://github.com/ajslater/picopt/',
     py_modules=['picopt'],
-    install_requires=REQ_LIST,
+    install_requires=req_list,
     entry_points={
         'console_scripts': [
             'picopt = picopt.picopt:main'
