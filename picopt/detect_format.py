@@ -28,7 +28,6 @@ def is_format_selected(image_format, formats, progs):
     was selected by the command line arguments"""
     intersection = formats & Settings.formats
     mode = is_program_selected(progs)
-
     result = (image_format in intersection) and mode
     return result
 
@@ -75,7 +74,6 @@ def get_image_format(filename):
 def detect_file(filename):
     """decides what to do with the file"""
     image_format = get_image_format(filename)
-    print(Settings.formats)
 
     if image_format in Settings.formats:
         return image_format
