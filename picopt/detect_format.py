@@ -14,15 +14,21 @@ NONE_FORMAT = 'NONE'
 ERROR_FORMAT = 'ERROR'
 
 
-def is_format_selected(image_format, formats, progs):
-    """returns a boolean indicating weather or not the image format
-    was selected by the command line arguments"""
-    intersection = formats & Settings.formats
+def is_program_selected(progs):
     mode = False
     for prog in progs:
         if getattr(Settings, prog.__name__):
             mode = True
             break
+    return mode
+
+
+def is_format_selected(image_format, formats, progs):
+    """returns a boolean indicating weather or not the image format
+    was selected by the command line arguments"""
+    intersection = formats & Settings.formats
+    mode = is_program_selected(progs)
+
     result = (image_format in intersection) and mode
     return result
 
@@ -69,6 +75,7 @@ def get_image_format(filename):
 def detect_file(filename):
     """decides what to do with the file"""
     image_format = get_image_format(filename)
+    print(Settings.formats)
 
     if image_format in Settings.formats:
         return image_format
