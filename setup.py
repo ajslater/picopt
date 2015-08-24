@@ -12,7 +12,7 @@ REQUIREMENTS_FILENAME = "requirements.txt"
 with open(README_FILENAME, 'r') as readme_file:
     LONG_DESCRIPTION = readme_file.read()
 
-INSTALL_REQS = parse_requirements(REQUIREMENTS_FILENAME)
+INSTALL_REQS = parse_requirements(REQUIREMENTS_FILENAME, session=False)
 REQ_LIST = [str(ir.req) for ir in INSTALL_REQS]
 
 setup(
