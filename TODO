@@ -6,6 +6,8 @@ Tests:
 Architecture:
     Make comic archive module more like the other format modules?
     Split comic into format file and files like file?
+    Dynamically link in libraries instead of using command line procs
+    Rewrite in golang
 
 Packaging:
     PIL/Pillow is still a mess.
