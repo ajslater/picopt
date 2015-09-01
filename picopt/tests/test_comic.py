@@ -1,6 +1,6 @@
 from unittest import TestCase
 
-from picopt import comic
+import picopt.comic as comic
 
 TEST_FILES_ROOT = 'old_tests/test_files'
 COMIC_ROOT = TEST_FILES_ROOT+'/comic_archives'

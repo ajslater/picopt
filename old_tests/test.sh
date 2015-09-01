@@ -1,10 +1,10 @@
 #!/bin/sh
-PICOPT='../picopt/picopt.py'
+PICOPT='picopt'
 TEST_DIR='test_tmp'
 
 rm -rf $TEST_DIR
 cp -a test_files $TEST_DIR
 
-python $PICOPT $* $TEST_DIR/images/*
-python $PICOPT -rct $* $TEST_DIR
-python $PICOPT -rct $* $TEST_DIR
+$PICOPT $* $TEST_DIR/images/*
+$PICOPT -rct $* $TEST_DIR
+$PICOPT -rct $* $TEST_DIR

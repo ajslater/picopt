@@ -15,7 +15,7 @@ import walk
 from formats import (
     gif,
     jpeg,
-    png
+    png,
 )
 import name
 from settings import Settings

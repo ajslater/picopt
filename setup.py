@@ -4,10 +4,10 @@ Reference:
 https://hynek.me/articles/sharing-your-labor-of-love-pypi-quick-and-dirty/
 """
 import sys
-from setuptools import setup
+from setuptools import setup, find_packages
 from pip.req import parse_requirements
 
-__version__ = "1.2.0"
+__version__ = "2.0.0a0"
 README_FILENAME = "README.rst"
 REQUIREMENTS = {
     'prod': "requirements.txt",
@@ -39,7 +39,7 @@ setup(
     install_requires=req_list,
     entry_points={
         'console_scripts': [
-            'picopt = picopt.picopt:main'
+            'picopt = picopt.cli:main'
         ]
     },
     long_description=LONG_DESCRIPTION,
@@ -62,4 +62,6 @@ setup(
         'Topic :: Internet :: WWW/HTTP :: Site Management',
         'Topic :: Multimedia :: Graphics :: Graphics Conversion'
     ],
+    packages=find_packages(),
+    test_suite='picopt.tests',
 )

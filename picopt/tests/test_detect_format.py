@@ -5,8 +5,8 @@ try:
 except ImportError:
     import Image
 
-import picopt.comic
-from picopt import detect_format
+import picopt.comic as comic
+import picopt.detect_format as detect_format
 from picopt.settings import Settings
 
 
@@ -132,9 +132,9 @@ class TestDetectFile(TestCase):
         self._test_type(INVALID_ROOT, 'test_gif.gif', None)
 
     def test_detect_file_cbr(self):
-        Settings.formats = Settings.formats | picopt.comic.FORMATS
+        Settings.formats = Settings.formats | comic.FORMATS
         self._test_type(COMIC_ROOT, 'test_cbr.cbr', 'CBR')
 
     def test_detect_file_cbz(self):
-        Settings.formats = Settings.formats | picopt.comic.FORMATS
+        Settings.formats = Settings.formats | comic.FORMATS
         self._test_type(COMIC_ROOT, 'test_cbz.cbz', 'CBZ')

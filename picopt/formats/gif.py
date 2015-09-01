@@ -1,4 +1,4 @@
-import picopt.extern
+import picopt.extern as extern
 
 SEQUENCED_TEMPLATE = '%s SEQUENCED'
 GIF_FORMAT = 'GIF'
@@ -10,7 +10,7 @@ GIFSICLE_ARGS = ['gifsicle', '--optimize=3', '--batch']
 def gifsicle(ext_args):
     """runs the EXTERNAL program gifsicle"""
     args = GIFSICLE_ARGS + [ext_args.new_filename]
-    picopt.extern.run_ext(args)
+    extern.run_ext(args)
 
 
 PROGRAMS = (gifsicle,)
