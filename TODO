@@ -1,14 +1,20 @@
+Tests:
+    Unit Tests
+    Functional Tests for each option
+    Test recursive opt timestamps
+
+Architecture:
+    Make comic archive module more like the other format modules?
+    Split comic into format file and files like file?
+    Dynamically link in libraries instead of using command line procs
+    Rewrite in golang
+
 Packaging:
     PIL/Pillow is still a mess.
-    DPKG uses python-imaging I think RPM is the same. I think python Pillow/PIL dependency isn't satisfied by either.
-
-Tests:
-    More formal tests.
-    Test each option.
-    Unit Tests?
+    include libraries and python for best optimizers
 
 Formats:
     PDF would be cool, but difficult due to non-standard image formats and lack of easy PDF exploders/bundlers.
 
-Architecture:
-    Break up into smaller modules
+Features:
+    Ignore flag

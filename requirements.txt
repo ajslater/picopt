@@ -2,3 +2,8 @@ Pillow
 rarfile
 python-dateutil
 argparse
+
+coverage
+nose
+flake8
+pep8-naming

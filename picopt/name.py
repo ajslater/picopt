@@ -1,0 +1,1 @@
+PROGRAM_NAME = 'picopt'
