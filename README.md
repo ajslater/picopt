@@ -26,28 +26,35 @@ Installation
     ln -s /usr/local/Cellar/mozjpeg/3.1/bin/jpegtran /usr/local/bin/mozjpeg
 
 #### Debian / Ubuntu
-    apt-get install optipng libjpeg-progs gifsicle python-imaging
+    apt-get install optipng gifsicle python-imaging
+if you don't want to install mozjpeg using the instructions below then use jpegtran:
+
+    apt-get install libjpeg-progs
 
 #### Redhat / Fedora
-    yum install optipng libjpeg-progs gifsicle python-imaging
+    yum install optipng gifsicle python-imaging
+if you don't want to install mozjpeg using the instructions below then use jpegtran:
+
+    yum install libjpeg-progs
+
+#### MozJPEG
+mozjpeg offers better compression than libjpeg-progs' jpegtran. As of Oct 2015 it may or
+may not be packaged for your \*nix, but even when it is, picopt requires
+that its separately compiled version of jpegtran be symlinked to 'mozjpeg'
+somewhere in the path. This installation example is for OS X:
+
+    ln -s /usr/local/Cellar/mozjpeg/3.1/bin/jpegtran /usr/local/bin/mozjpeg
+
+You may find Linux instructions at [Robert Walter's Blog](http://www.robertwalter.de/blog/2015/04/08/mozjpeg-3-0-0-on-debian-and-ubuntu/)
 
 #### jpegrescan
-jpegrescan is a better jpeg optimizer than jpegtran, unfortunately it
-remains unpackaged :(
+If you can't install MozJPEG, jpegrescan is a better jpeg optimizer than jpegtran contained in libjpeg-progs, unfortunately it also remains unpackaged :(
 
     git clone git@github.com:kud/jpegrescan.git
     ln -s jpegrescan/jpegrescan /usr/local/bin/jpegrescan
 
-#### MozJPEG
-mozjpeg is a better option than even jpegrescan. As of Oct 2015 it may or
-may not be packaged for your \*nix, but even when it is, picopt requires
-that its separately compiled version of jpegtran be symlinked to 'mozjpeg'
-somewhere in the path. This installation example is for OS X:
-    ln -s /usr/local/Cellar/mozjpeg/3.1/bin/jpegtran /usr/local/bin/mozjpeg
-You may find Linux instructions at (Robert Walter's Blog)[http://www.robertwalter.de/blog/2015/04/08/mozjpeg-3-0-0-on-debian-and-ubuntu/]
-
 #### pngout
-pngout is a useful compression to use after optipng, you can find the latest binary version [on JonoF's site](http://www.jonof.id.au/kenutils)
+pngout is a useful compression to use after optipng. It is not packaged, but you may find the latest binary version [on JonoF's site](http://www.jonof.id.au/kenutils)
 
 ### Picopt
     pip install picopt
