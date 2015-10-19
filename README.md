@@ -22,28 +22,32 @@ Installation
 
 ### Lossless external program packages
 #### OS X
-    brew install optipng pngout jpeg gifsicle
+    brew install optipng mozjpeg gifsicle
+    ln -s /usr/local/Cellar/mozjpeg/3.1/bin/jpegtran /usr/local/bin/mozjpeg
 
 #### Debian / Ubuntu
-    apt-get install optipng pngout libjpeg-progs gifsicle python-imaging
+    apt-get install optipng libjpeg-progs gifsicle python-imaging
 
 #### Redhat / Fedora
-    yum install optipng pngout libjpeg-progs gifsicle python-imaging
+    yum install optipng libjpeg-progs gifsicle python-imaging
 
-### jpegrescan
+#### jpegrescan
 jpegrescan is a better jpeg optimizer than jpegtran, unfortunately it
 remains unpackaged :(
 
     git clone git@github.com:kud/jpegrescan.git
     ln -s jpegrescan/jpegrescan /usr/local/bin/jpegrescan
 
-### MozJPEG
-mozjpeg is a better option than even jpegrescan. As of Oct 2014 it may or
+#### MozJPEG
+mozjpeg is a better option than even jpegrescan. As of Oct 2015 it may or
 may not be packaged for your \*nix, but even when it is, picopt requires
 that its separately compiled version of jpegtran be symlinked to 'mozjpeg'
 somewhere in the path. This installation example is for OS X:
-    brew install mozjpeg
-    ln -s /usr/local/Cellar/mozjpeg/2.1/bin/jpegtran /usr/local/bin/mozjpeg
+    ln -s /usr/local/Cellar/mozjpeg/3.1/bin/jpegtran /usr/local/bin/mozjpeg
+You may find Linux instructions at (Robert Walter's Blog)[http://www.robertwalter.de/blog/2015/04/08/mozjpeg-3-0-0-on-debian-and-ubuntu/]
+
+#### pngout
+pngout is a useful compression to use after optipng, you can find the latest binary version [on JonoF's site](http://www.jonof.id.au/kenutils)
 
 ### Picopt
     pip install picopt

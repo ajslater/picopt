@@ -51,24 +51,25 @@ OS X
 
 ::
 
-    brew install optipng pngout jpeg gifsicle
+    brew install optipng mozjpeg gifsicle
+    ln -s /usr/local/Cellar/mozjpeg/3.1/bin/jpegtran /usr/local/bin/mozjpeg
 
 Debian / Ubuntu
 ^^^^^^^^^^^^^^^
 
 ::
 
-    apt-get install optipng pngout libjpeg-progs gifsicle python-imaging
+    apt-get install optipng libjpeg-progs gifsicle python-imaging
 
 Redhat / Fedora
 ^^^^^^^^^^^^^^^
 
 ::
 
-    yum install optipng pngout libjpeg-progs gifsicle python-imaging
+    yum install optipng libjpeg-progs gifsicle python-imaging
 
 jpegrescan
-~~~~~~~~~~
+^^^^^^^^^^
 
 jpegrescan is a better jpeg optimizer than jpegtran, unfortunately it
 remains unpackaged :(
@@ -79,14 +80,23 @@ remains unpackaged :(
     ln -s jpegrescan/jpegrescan /usr/local/bin/jpegrescan
 
 MozJPEG
-~~~~~~~
+^^^^^^^
 
-mozjpeg is a better option than even jpegrescan. As of Oct 2014 it may
+mozjpeg is a better option than even jpegrescan. As of Oct 2015 it may
 or may not be packaged for your \*nix, but even when it is, picopt
 requires that its separately compiled version of jpegtran be symlinked
 to 'mozjpeg' somewhere in the path. This installation example is for OS
-X: brew install mozjpeg ln -s /usr/local/Cellar/mozjpeg/2.1/bin/jpegtran
-/usr/local/bin/mozjpeg
+X: ln -s /usr/local/Cellar/mozjpeg/3.1/bin/jpegtran
+/usr/local/bin/mozjpeg You may find Linux instructions at (Robert
+Walter's
+Blog)[http://www.robertwalter.de/blog/2015/04/08/mozjpeg-3-0-0-on-debian-and-ubuntu/]
+
+pngout
+^^^^^^
+
+pngout is a useful compression to use after optipng, you can find the
+latest binary version `on JonoF's
+site <http://www.jonof.id.au/kenutils>`__
 
 Picopt
 ~~~~~~
@@ -159,6 +169,9 @@ Packaged For
 Alternatives
 ------------
 
-`Imageoptim <http://imageoptim.com/>`__ is an all-in-one OS X GUI image
-optimizer. Imageoptim command line usage is possible with `an external
+`imagemin <https://github.com/imagemin/imagemin-cli>`__ looks to be an
+all in one cli and gui solution with bundled libraries, so no awkward
+dependancies `Imageoptim <http://imageoptim.com/>`__ is an all-in-one OS
+X GUI image optimizer. Imageoptim command line usage is possible with
+`an external
 program <https://code.google.com/p/imageoptim/issues/detail?can=2&start=0&num=100&q=&colspec=ID%20Type%20Status%20Priority%20Milestone%20Owner%20Summary%20Stars&groupby=&sort=&id=39>`__.
