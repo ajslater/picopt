@@ -190,7 +190,7 @@ Alternatives
 
 `imagemin <https://github.com/imagemin/imagemin-cli>`__ looks to be an
 all in one cli and gui solution with bundled libraries, so no awkward
-dependancies `Imageoptim <http://imageoptim.com/>`__ is an all-in-one OS
-X GUI image optimizer. Imageoptim command line usage is possible with
+dependancies. `Imageoptim <http://imageoptim.com/>`__ is an all-in-one
+OS X GUI image optimizer. Imageoptim command line usage is possible with
 `an external
 program <https://code.google.com/p/imageoptim/issues/detail?can=2&start=0&num=100&q=&colspec=ID%20Type%20Status%20Priority%20Milestone%20Owner%20Summary%20Stars&groupby=&sort=&id=39>`__.
