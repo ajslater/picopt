@@ -7,13 +7,14 @@ Architecture:
     Make comic archive module more like the other format modules?
     Split comic into format file and files like file?
     Dynamically link in libraries instead of using command line procs
-    Rewrite in golang
+    Rewrite in golang with clibs dynamically linked.
 
 Packaging:
     PIL/Pillow is still a mess.
     include libraries and python for best optimizers
 
 Formats:
+    SVG - svgo
     PDF would be cool, but difficult due to non-standard image formats and lack of easy PDF exploders/bundlers.
 
 Features:
