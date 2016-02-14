@@ -179,6 +179,17 @@ did this:
 
     picopt -rSYt -D '2013 June 1 14:00' 'Pictures/iPhoto Library'
 
+Gotchas
+-------
+
+Picopt automatically uses timestamp files if it detects them in or above
+the current directory tree. A situation can arise with comic archives
+where the comic archive itself is newer than the timestamp file so it is
+processed, but the files inside the archive are older than the timestamp
+file so they are not. Currently the workaround is to move the comic
+archive outside of the current tree into a temporary directory and
+process it there.
+
 Packaged For
 ------------
 
