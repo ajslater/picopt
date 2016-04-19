@@ -1,3 +1,6 @@
+v1.3.1
+* Remove dev dependancies from installed requirements.
+
 v1.3
 * break up monolithic picopt into modules. No functional change.
 
