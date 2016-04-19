@@ -20,7 +20,7 @@ from formats import (
 import name
 from settings import Settings
 
-__version__ = '1.3.0'
+__version__ = '1.3.1'
 
 # Programs
 PROGRAMS = set(png.PROGRAMS + gif.PROGRAMS +
