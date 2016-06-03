@@ -3,6 +3,8 @@
 Reference:
 https://hynek.me/articles/sharing-your-labor-of-love-pypi-quick-and-dirty/
 """
+import os
+import re
 import sys
 from setuptools import setup, find_packages
 from pip.req import parse_requirements
@@ -13,6 +15,13 @@ REQUIREMENTS = {
     'prod': "requirements.txt",
     'dev': "requirements-dev.txt"
 }
+
+
+def get_version(package):
+    """ Return package version as listed in `__version__` in `init.py`. """
+    with open(os.path.join(package, '__init__.py'), 'rb') as init_py:
+        src = init_py.read().decode('utf-8')
+        return re.search("__version__ = ['\"]([^'\"]+)['\"]", src).group(1)
 
 
 def parse_reqs(filename):
@@ -30,7 +39,7 @@ with open(README_FILENAME, 'r') as readme_file:
 
 setup(
     name='picopt',
-    version=__version__,
+    version=get_version('picopt'),
     description='Optimize image files and comic archives with external tools',
     author='AJ Slater',
     author_email='aj@slater.net',

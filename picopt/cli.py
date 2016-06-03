@@ -10,6 +10,7 @@ import multiprocessing
 import dateutil.parser
 import time
 
+from picopt import __version__
 import comic
 import walk
 from formats import (
@@ -19,8 +20,6 @@ from formats import (
 )
 import name
 from settings import Settings
-
-__version__ = '1.3.1'
 
 # Programs
 PROGRAMS = set(png.PROGRAMS + gif.PROGRAMS +
