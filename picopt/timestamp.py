@@ -15,6 +15,7 @@ def get_timestamp(dirname_full, remove):
 
     if os.path.exists(record_filename):
         mtime = os.stat(record_filename).st_mtime
+        print('Found timestamp %s:%s' % (dirname_full, mtime))
         if Settings.record_timestamp and remove:
             os.remove(record_filename)
         return mtime
