@@ -3,5 +3,5 @@
 build
 MANIFEST
 dist
-picopt.egg-info
+*.egg-info
 test_tmp
