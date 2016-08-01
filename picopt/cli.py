@@ -8,7 +8,6 @@ import multiprocessing
 import time
 import dateutil.parser
 
-from . import __version__
 import comic
 import walk
 from .formats import (
@@ -18,6 +17,7 @@ from .formats import (
 )
 import name
 from .settings import Settings
+from . import __version__
 
 # Programs
 PROGRAMS = set(png.PROGRAMS + gif.PROGRAMS +
