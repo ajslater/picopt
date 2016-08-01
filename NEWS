@@ -2,6 +2,7 @@ v1.3.3
 * Print found picopt timestamps
 * Lots of linting
 * Fix jpeg_multithread flag
+* moved tests out of picopt module
 
 v1.3.2
 * Keep __version__ in one place in picopt/__init__.py
