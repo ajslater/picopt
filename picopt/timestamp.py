@@ -1,6 +1,7 @@
 """Timestamp writer for keeping track of bulk optimizations."""
 from __future__ import print_function
 import os
+from datetime import datetime
 
 import name
 from .settings import Settings
@@ -18,7 +19,8 @@ def get_timestamp(dirname_full, remove):
 
     if os.path.exists(record_filename):
         mtime = os.stat(record_filename).st_mtime
-        print('Found timestamp %s:%s' % (dirname_full, mtime))
+        mtime_str = datetime.fromtimestamp(mtime)
+        print('Found timestamp %s:%s' % (dirname_full, mtime_str))
         if Settings.record_timestamp and remove:
             os.remove(record_filename)
         return mtime

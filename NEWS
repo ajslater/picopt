@@ -1,6 +1,10 @@
+v1.3.3
+* Print found picopt timestamps
+* Lots of linting
+* Fix jpeg_multithread flag
+
 v1.3.2
 * Keep __version__ in one place in picopt/__init__.py
-*
 
 v1.3.1
 * Remove dev dependancies from installed requirements.
