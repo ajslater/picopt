@@ -1,3 +1,5 @@
+"""Settings class for picopt."""
+from __future__ import print_function
 import os
 import multiprocessing
 
@@ -5,7 +7,8 @@ import extern
 
 
 class Settings(object):
-    """ a global settings class """
+    """Global settings class."""
+
     advpng = False
     archive_name = None
     bigger = False
@@ -17,7 +20,7 @@ class Settings(object):
     gifsicle = True
     jobs = multiprocessing.cpu_count()
     jpegrescan = True
-    jpegrescan_mutithread = False
+    jpegrescan_multithread = False
     jpegtran = True
     jpegtran_prog = True
     list_only = False
@@ -34,14 +37,15 @@ class Settings(object):
 
     @classmethod
     def update(cls, settings):
-        for k, v in settings.__dict__.iteritems():
-            if k.startswith('_'):
+        """Update settings with a dict."""
+        for key, val in settings.__dict__.iteritems():
+            if key.startswith('_'):
                 continue
-            setattr(cls, k, v)
+            setattr(cls, key, val)
 
     @classmethod
     def config_program_reqs(cls, programs):
-        """run the external program tester on the required binaries"""
+        """Run the external program tester on the required binaries."""
         for program in programs:
             val = getattr(cls, program.__name__) \
                 and extern.does_external_program_run(program.__name__)

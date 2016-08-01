@@ -1,7 +1,6 @@
 from unittest import TestCase
 
-import picopt.extern as extern
-
+from picopt import extern
 
 class TestDoesExernalProgramRun(TestCase):
 

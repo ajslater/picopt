@@ -1,24 +1,23 @@
-"""
-Optimize comic archives
-"""
+"""Optimize comic archives."""
 from __future__ import print_function
 
 import os
-import rarfile
+import zipfile
 import shutil
 import traceback
-import zipfile
 
-import walk
-import optimize
-import stats
-from settings import Settings
-import name
+import rarfile
+
+from . import walk
+from . import optimize
+from . import stats
+from .settings import Settings
+from .name import PROGRAM_NAME
 
 # Extensions
-ARCHIVE_TMP_DIR_PREFIX = name.PROGRAM_NAME+'_tmp_'
+ARCHIVE_TMP_DIR_PREFIX = PROGRAM_NAME+'_tmp_'
 ARCHIVE_TMP_DIR_TEMPLATE = ARCHIVE_TMP_DIR_PREFIX+'%s'
-NEW_ARCHIVE_SUFFIX = '%s-optimized.cbz' % name.PROGRAM_NAME
+NEW_ARCHIVE_SUFFIX = '%s-optimized.cbz' % PROGRAM_NAME
 
 CBR_EXT = '.cbr'
 CBZ_EXT = '.cbz'
@@ -30,13 +29,18 @@ FORMATS = set((CBZ_FORMAT, CBR_FORMAT))
 
 
 def comics():
+    """
+    Comic optimizer.
+
+    Not used because comics are special
+    """
     pass
 
 PROGRAMS = (comics,)
 
 
 def get_comic_format(filename):
-    """ return the comic format if it is a comic archive  """
+    """Return the comic format if it is a comic archive."""
     image_format = None
     filename_ext = os.path.splitext(filename)[-1].lower()
     if filename_ext in COMIC_EXTS:
@@ -48,15 +52,17 @@ def get_comic_format(filename):
 
 
 def get_archive_tmp_dir(filename):
-    """ get the name of the working dir to use for this filename"""
+    """Get the name of the working dir to use for this filename."""
     head, tail = os.path.split(filename)
     return os.path.join(head, ARCHIVE_TMP_DIR_TEMPLATE % tail)
 
 
 def comic_archive_uncompress(filename, image_format):
-    """ uncompress comic archives and return the name of the working
-        directory we uncompressed into """
+    """
+    Uncompress comic archives.
 
+    Return the name of the working directory we uncompressed into.
+    """
     if not Settings.comics:
         report = ['Skipping archive file: %s' % filename]
         report_list = [report]
@@ -93,7 +99,7 @@ def comic_archive_uncompress(filename, image_format):
 
 
 def comic_archive_write_zipfile(new_filename, tmp_dir):
-    """ Zip up the files in the tempdir into the new filename """
+    """Zip up the files in the tempdir into the new filename."""
     if Settings.verbose:
         print('Rezipping archive', end='')
     with zipfile.ZipFile(new_filename, 'w',
@@ -110,10 +116,11 @@ def comic_archive_write_zipfile(new_filename, tmp_dir):
 
 
 def comic_archive_compress(args):
-    """called back by every optimization inside a comic archive.
-       when they're all done it creates the new archive and cleans up.
     """
+    Called back by every optimization inside a comic archive.
 
+    When they're all done it creates the new archive and cleans up.
+    """
     try:
         filename, total_bytes_in, total_bytes_out, image_format, \
             settings = args
@@ -144,7 +151,7 @@ def comic_archive_compress(args):
 
 def walk_comic_archive(filename_full, image_format, multiproc,
                        optimize_after):
-    """ Optimize a comic archive """
+    """Optimize a comic archive."""
     tmp_dir_basename = comic_archive_uncompress(filename_full,
                                                 image_format)
 

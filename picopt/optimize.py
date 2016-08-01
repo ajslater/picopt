@@ -1,16 +1,18 @@
+"""Optimize a file."""
+from __future__ import print_function
 from collections import namedtuple
 import os
 import shutil
 import traceback
 
 import detect_format
-from formats import (
+from .formats import (
     gif,
     jpeg,
     png
 )
 import name
-from settings import Settings
+from .settings import Settings
 import stats
 
 
@@ -25,16 +27,18 @@ Settings.to_png_formats = png.CONVERTABLE_FORMATS
 
 
 def replace_ext(filename, new_ext):
-    """replaces the file extention"""
+    """Replace the file extention."""
     filename_base = os.path.splitext(filename)[0]
     new_filename = '{}.{}'.format(filename_base, new_ext)
     return new_filename
 
 
 def cleanup_after_optimize(filename, new_filename, old_image_format):
-    """report results. replace old file with better one or discard new wasteful
-       file"""
+    """
+    Replace old file with better one or discard new wasteful file.
 
+    And report results.
+    """
     bytes_diff = {'in': 0, 'out': 0}
     final_filename = filename
     try:
@@ -67,7 +71,7 @@ def cleanup_after_optimize(filename, new_filename, old_image_format):
 
 
 def optimize_image_external(filename, func, image_format):
-    """ optimize the file with the external function """
+    """Optimize the file with the external function."""
     new_filename = os.path.normpath(filename + NEW_EXT)
     shutil.copy2(filename, new_filename)
 
@@ -87,8 +91,11 @@ def optimize_image_external(filename, func, image_format):
 
 
 def optimize_with_progs(format_module, filename, image_format):
-    """ Use either all the optimizing functions in sequence or just the
-        best one to optimize the image and report back statistics """
+    """
+    Use the correct optimizing functions in sequence.
+
+    And report back statistics.
+    """
     filesize_in = os.stat(filename).st_size
     report_stats = None
 
@@ -109,7 +116,7 @@ def optimize_with_progs(format_module, filename, image_format):
 
 
 def get_format_module(image_format, nag_about_gifs):
-    """ get the format module to use for optimizing the image """
+    """Get the format module to use for optimizing the image."""
     format_module = None
 
     if detect_format.is_format_selected(image_format,
@@ -129,7 +136,7 @@ def get_format_module(image_format, nag_about_gifs):
 
 
 def optimize_image(arg):
-    """optimizes a given image from a filename"""
+    """Optimize a given image from a filename."""
     try:
         filename, image_format, settings, total_bytes_in, total_bytes_out, \
             nag_about_gifs = arg

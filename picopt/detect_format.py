@@ -1,3 +1,4 @@
+"""Detect file formats."""
 from __future__ import print_function
 
 try:
@@ -6,8 +7,8 @@ except ImportError:
     import Image
 
 import comic
-from formats import gif
-from settings import Settings
+from .formats import gif
+from .settings import Settings
 
 # Formats
 NONE_FORMAT = 'NONE'
@@ -15,6 +16,7 @@ ERROR_FORMAT = 'ERROR'
 
 
 def is_program_selected(progs):
+    """Determine if the program is enabled in the settings."""
     mode = False
     for prog in progs:
         if getattr(Settings, prog.__name__):
@@ -24,8 +26,7 @@ def is_program_selected(progs):
 
 
 def is_format_selected(image_format, formats, progs):
-    """returns a boolean indicating weather or not the image format
-    was selected by the command line arguments"""
+    """Determine if the image format is selected by the command line arguments."""
     intersection = formats & Settings.formats
     mode = is_program_selected(progs)
     result = (image_format in intersection) and mode
@@ -33,7 +34,7 @@ def is_format_selected(image_format, formats, progs):
 
 
 def is_image_sequenced(image):
-    """determines if the image is a sequenced image"""
+    """Determine if the image is a sequenced image."""
     try:
         image.seek(1)
         image.seek(0)
@@ -45,7 +46,7 @@ def is_image_sequenced(image):
 
 
 def get_image_format(filename):
-    """gets the image format"""
+    """Get the image format."""
     image = None
     bad_image = 1
     image_format = NONE_FORMAT
@@ -72,7 +73,7 @@ def get_image_format(filename):
 
 
 def detect_file(filename):
-    """decides what to do with the file"""
+    """Decide what to do with the file."""
     image_format = get_image_format(filename)
 
     if image_format in Settings.formats:

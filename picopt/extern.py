@@ -1,11 +1,13 @@
+"""Run external programs."""
+from __future__ import print_function
 from __future__ import division
 import subprocess
 
-from settings import Settings
+from .settings import Settings
 
 
 def does_external_program_run(prog):
-    """test to see if the external programs can be run"""
+    """Test to see if the external programs can be run."""
     try:
         null = open('/dev/null')
         subprocess.call([prog, '-h'], stdout=null, stderr=null)
@@ -19,5 +21,5 @@ def does_external_program_run(prog):
 
 
 def run_ext(args):
-    """run EXTERNAL program"""
+    """Run EXTERNAL program."""
     subprocess.call(args, stdout=subprocess.PIPE)

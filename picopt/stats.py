@@ -1,10 +1,11 @@
+"""Statistics for the optimization operations."""
 from __future__ import division
 from __future__ import print_function
 from collections import namedtuple
 import os
 import sys
 
-from settings import Settings
+from .settings import Settings
 
 
 if sys.version > '3':
@@ -29,10 +30,11 @@ ReportStats = namedtuple('ReportStats', ['final_filename', 'bytes_diff',
 
 def humanize_bytes(num_bytes, precision=1):
     """
+    Return a humanized string representation of a number of num_bytes.
+
     from:
     http://code.activestate.com/recipes/
            577081-humanized-representation-of-a-number-of-num_bytes/
-    Return a humanized string representation of a number of num_bytes.
 
     Assumes `from __future__ import division`.
 
@@ -53,7 +55,6 @@ def humanize_bytes(num_bytes, precision=1):
     >>> humanize_bytes(1024*1234*1111,1)
     '1.3 GB'
     """
-
     if num_bytes == 0:
         return 'no bytes'
     if num_bytes == 1:
@@ -74,7 +75,7 @@ def humanize_bytes(num_bytes, precision=1):
 
 
 def new_percent_saved(report_stats):
-    """spits out how much space the optimization saved"""
+    """Spit out how much space the optimization saved."""
     size_in = report_stats.bytes_diff['in']
     if size_in != 0:
         size_out = report_stats.bytes_diff['out']
@@ -89,14 +90,14 @@ def new_percent_saved(report_stats):
 
 
 def truncate_cwd(full_filename):
-    """ remove the cwd from the full filename """
+    """Remove the cwd from the full filename."""
     truncated_filename = full_filename.split(Settings.dir, 1)[1]
     truncated_filename = truncated_filename.split(os.sep, 1)[1]
     return truncated_filename
 
 
 def optimize_accounting(report_stats, total_bytes_in, total_bytes_out):
-    """record the percent saved, print it and add it to the totals"""
+    """Record the percent saved, print it and add it to the totals."""
     if Settings.verbose:
         report = ''
 #        if Settings.archive_name is not None:
@@ -128,7 +129,7 @@ def optimize_accounting(report_stats, total_bytes_in, total_bytes_out):
 
 
 def report_totals(bytes_in, bytes_out, nag_about_gifs):
-    """report the total number and percent of bytes saved"""
+    """Report the total number and percent of bytes saved."""
     if bytes_in:
         bytes_saved = bytes_in - bytes_out
         percent_bytes_saved = bytes_saved / bytes_in * 100
@@ -164,7 +165,7 @@ def report_totals(bytes_in, bytes_out, nag_about_gifs):
 
 
 def skip(type_name, filename):
-    """ provide reporting statistics for a skipped file """
+    """Provide reporting statistics for a skipped file."""
     bytes_diff = {'in': 0, 'out': 0}
     rep = ['Skipping %s file: %s' % (type_name, filename)]
     report_stats = ReportStats._make([filename, bytes_diff, [rep]])

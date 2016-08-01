@@ -1,15 +1,18 @@
+"""Timestamp writer for keeping track of bulk optimizations."""
 from __future__ import print_function
 import os
 
 import name
-from settings import Settings
+from .settings import Settings
 
 RECORD_FILENAME = '.%s_timestamp' % name.PROGRAM_NAME
 
 
 def get_timestamp(dirname_full, remove):
-    """ get the timestamp from the timestamp file and optionally remove it
-        if we're going to write another one.
+    """
+    Get the timestamp from the timestamp file.
+
+    Optionally remove it if we're going to write another one.
     """
     record_filename = os.path.join(dirname_full, RECORD_FILENAME)
 
@@ -24,8 +27,11 @@ def get_timestamp(dirname_full, remove):
 
 
 def get_parent_timestamp(full_pathname, mtime):
-    """ get the timestamps up the directory tree because they affect
-        every subdirectory """
+    """
+    Get the timestamps up the directory tree.
+
+    Because they affect every subdirectory.
+    """
     parent_pathname = os.path.dirname(full_pathname)
 
     mtime = max(get_timestamp(parent_pathname, False), mtime)
@@ -37,8 +43,11 @@ def get_parent_timestamp(full_pathname, mtime):
 
 
 def get_walk_after(current_path, look_up, optimize_after):
-    """ Figure out the which mtime to check against and if we look up
-        return that we've looked up too"""
+    """
+    Figure out the which mtime to check against.
+
+    If we look up return that we've looked up too
+    """
     if Settings.optimize_after is not None:
         optimize_after = Settings.optimize_after
     else:
@@ -51,7 +60,7 @@ def get_walk_after(current_path, look_up, optimize_after):
 
 
 def record_timestamp(pathname_full):
-    """Record the timestamp of running in a dotfile"""
+    """Record the timestamp of running in a dotfile."""
     if Settings.test or Settings.list_only or not Settings.record_timestamp:
         return
     elif not Settings.follow_symlinks and os.path.islink(pathname_full):

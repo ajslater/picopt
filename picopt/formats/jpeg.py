@@ -1,7 +1,8 @@
+"""JPEG format."""
 import copy
 
-import picopt.extern as extern
-from picopt.settings import Settings
+from .. import extern
+from ..settings import Settings
 
 FORMATS = set(['JPEG'])
 
@@ -11,7 +12,7 @@ JPEGRESCAN_ARGS = ['jpegrescan']
 
 
 def mozjpeg(ext_args):
-    """create argument list for mozjpeg"""
+    """Create argument list for mozjpeg."""
     args = copy.copy(MOZJPEG_ARGS)
     if Settings.destroy_metadata:
         args += ["-copy", "none"]
@@ -23,7 +24,7 @@ def mozjpeg(ext_args):
 
 
 def jpegtran(ext_args):
-    """create argument list for jpegtran"""
+    """Create argument list for jpegtran."""
     args = copy.copy(JPEGTRAN_ARGS)
     if Settings.destroy_metadata:
         args += ["-copy", "none"]
@@ -37,7 +38,7 @@ def jpegtran(ext_args):
 
 
 def jpegrescan(ext_args):
-    """runs the EXTERNAL program jpegrescan"""
+    """Run the EXTERNAL program jpegrescan."""
     args = copy.copy(JPEGRESCAN_ARGS)
     if Settings.jpegrescan_multithread:
         args += ['-t']

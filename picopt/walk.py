@@ -1,3 +1,4 @@
+"""Walk the directory trees and files and call the optimizers."""
 from __future__ import print_function
 import os
 import multiprocessing
@@ -5,13 +6,13 @@ import multiprocessing
 import comic
 import detect_format
 import optimize
-from settings import Settings
 import stats
 import timestamp
+from .settings import Settings
 
 
 def walk_file(filename_full, multiproc, walk_after):
-    """ Optimize an individual file """
+    """Optimize an individual file."""
     if walk_after is not None:
         mtime = os.stat(filename_full).st_mtime
         if mtime <= walk_after:
@@ -37,7 +38,7 @@ def walk_file(filename_full, multiproc, walk_after):
 
 
 def walk_dir(filename_full, multiproc, walk_after, recurse=None):
-    """ Recursively optimize a directory """
+    """Recursively optimize a directory."""
     if recurse is None:
         recurse = Settings.recurse
 
@@ -52,8 +53,11 @@ def walk_dir(filename_full, multiproc, walk_after, recurse=None):
 
 
 def walk_files(cwd, filter_list, multiproc, walk_after, recurse=None):
-    """sorts through a list of files, decends directories and
-       calls the optimizer on the extant files"""
+    """
+    Sort through a list of files.
+
+    Decends directories and calls the optimizer on the extant files.
+    """
     if recurse is None:
         recurse = Settings.recurse
 
@@ -82,17 +86,21 @@ def walk_files(cwd, filter_list, multiproc, walk_after, recurse=None):
 
 
 def walk_files_after(path, file_list, multiproc):
-    """ compute the optimize after date for the a batch of files
-        and then optimize them.
+    """
+    Compute the optimize after date for the a batch of files.
+
+    Then optimize them.
     """
     walk_after = timestamp.get_walk_after(path, True, None)
     return walk_files(path, file_list, multiproc, walk_after)
 
 
 def walk_all_files(multiproc):
-    """ Optimize the files from the arugments list in two batches.
-        One for absolute paths which are probably outside the current
-        working directory tree and one for relative files.
+    """
+    Optimize the files from the arugments list in two batches.
+
+    One for absolute paths which are probably outside the current
+    working directory tree and one for relative files.
     """
     # Change dirs
     os.chdir(Settings.dir)
@@ -125,8 +133,7 @@ def walk_all_files(multiproc):
 
 
 def run():
-    """ use preconfigured settings to optimize files """
-
+    """Use preconfigured settings to optimize files."""
     # Setup Multiprocessing
     manager = multiprocessing.Manager()
     total_bytes_in = manager.Value(int, 0)

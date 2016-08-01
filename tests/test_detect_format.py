@@ -5,8 +5,8 @@ try:
 except ImportError:
     import Image
 
-import picopt.comic as comic
-import picopt.detect_format as detect_format
+from picopt import comic
+from picopt import detect_format
 from picopt.settings import Settings
 
 
@@ -18,7 +18,7 @@ COMIC_ROOT = TEST_FILES_ROOT+'/comic_archives'
 
 class TestIsProgramSelected(TestCase):
 
-    def pngout():
+    def pngout(self):
         pass
 
     programs = (pngout,)
@@ -36,10 +36,10 @@ class TestIsFormatSelected(TestCase):
 
     formats = set(['GIF'])
 
-    def pngout():
+    def pngout(self):
         pass
 
-    def cbz():
+    def cbz(self):
         pass
 
     programs = (pngout, cbz)

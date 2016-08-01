@@ -1,25 +1,23 @@
 #!/usr/bin/env python
-"""
-Runs pictures through image specific external optimizers
-"""
+"""Run pictures through image specific external optimizers."""
 from __future__ import print_function
 
 import os
 import argparse
 import multiprocessing
-import dateutil.parser
 import time
+import dateutil.parser
 
-from picopt import __version__
+from . import __version__
 import comic
 import walk
-from formats import (
+from .formats import (
     gif,
     jpeg,
     png,
 )
 import name
-from settings import Settings
+from .settings import Settings
 
 # Programs
 PROGRAMS = set(png.PROGRAMS + gif.PROGRAMS +
@@ -33,7 +31,7 @@ ALL_FORMATS = ALL_DEFAULT_FORMATS | comic.FORMATS
 
 
 def get_arguments():
-    """parses the command line"""
+    """Parse the command line."""
     usage = "%(prog)s [arguments] [image files]"
     programs_str = ', '.join([prog.__name__ for prog in PROGRAMS])
     description = "Uses "+programs_str+" if they are on the path."
@@ -133,8 +131,7 @@ def get_arguments():
 
 
 def process_arguments(arguments):
-    """ Recomputer special cases for input arguments """
-
+    """Recompute special cases for input arguments."""
     Settings.update(arguments)
 
     Settings.config_program_reqs(PROGRAMS)
@@ -180,7 +177,7 @@ def process_arguments(arguments):
 
 
 def main():
-    """main"""
+    """Process command line arguments and walk inputs."""
     raw_arguments = get_arguments()
     process_arguments(raw_arguments)
     walk.run()

@@ -2,7 +2,6 @@ from unittest import TestCase
 
 from picopt.settings import Settings
 
-
 class TestSettings(TestCase):
 
     class DummySettings(object):
