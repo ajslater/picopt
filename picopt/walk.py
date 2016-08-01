@@ -11,10 +11,16 @@ import timestamp
 from .settings import Settings
 
 
-def walk_file(filename_full, multiproc, walk_after):
+def walk_file(filename_full, multiproc, walk_after, archive_mtime):
     """Optimize an individual file."""
     if walk_after is not None:
         mtime = os.stat(filename_full).st_mtime
+        # if the file is in an archive, use the archive time if it
+        # is newer. This helps if you have a new archive that you
+        # collected from someone who put really old files in it that
+        # should still be optimised
+        if archive_mtime is not None:
+            mtime = max(mtime, archive_mtime)
         if mtime <= walk_after:
             return
 
@@ -37,7 +43,8 @@ def walk_file(filename_full, multiproc, walk_after):
                                              args=(args,))
 
 
-def walk_dir(filename_full, multiproc, walk_after, recurse=None):
+def walk_dir(filename_full, multiproc, walk_after, recurse=None,
+             archive_mtime=None):
     """Recursively optimize a directory."""
     if recurse is None:
         recurse = Settings.recurse
@@ -49,10 +56,11 @@ def walk_dir(filename_full, multiproc, walk_after, recurse=None):
     walk_after = timestamp.get_walk_after(filename_full, False,
                                           walk_after)
     return walk_files(filename_full, next_dir_list, multiproc,
-                      walk_after)
+                      walk_after, archive_mtime)
 
 
-def walk_files(cwd, filter_list, multiproc, walk_after, recurse=None):
+def walk_files(cwd, filter_list, multiproc, walk_after, recurse=None,
+               archive_mtime=None):
     """
     Sort through a list of files.
 
@@ -73,11 +81,11 @@ def walk_files(cwd, filter_list, multiproc, walk_after, recurse=None):
             continue
         elif os.path.isdir(filename_full):
             results = walk_dir(filename_full, multiproc,
-                               walk_after, recurse)
+                               walk_after, recurse, archive_mtime)
             result_set = result_set.union(results)
         elif os.path.exists(filename_full):
             result = walk_file(filename_full, multiproc,
-                               walk_after)
+                               walk_after, archive_mtime)
             if result:
                 result_set.add(result)
         elif Settings.verbose:

@@ -157,8 +157,10 @@ def walk_comic_archive(filename_full, image_format, multiproc,
 
     # optimize contents of comic archive
     dirname = os.path.dirname(filename_full)
+    archive_mtime = os.stat(filename_full).st_mtime
     result_set = walk.walk_files(dirname, [tmp_dir_basename],
-                                 multiproc, optimize_after, True)
+                                 multiproc, optimize_after, True,
+                                 archive_mtime)
 
     # I'd like to stuff this waiting into the compression process,
     # but process results don't serialize. :(
