@@ -1,3 +1,6 @@
+v1.3.4
+* let the archive date override the newness of its contained files.
+
 v1.3.3
 * Print found picopt timestamps
 * Lots of linting
