@@ -99,7 +99,7 @@ def walk_dir(dir_path, multiproc, walk_after, recurse=None,
         filename_full = os.path.join(dir_path, filename)
         results = walk_file(filename_full, multiproc, walk_after, recurse,
                             archive_mtime)
-        result_set.union(results)
+        result_set = result_set.union(results)
     return result_set
 
 
@@ -123,7 +123,7 @@ def walk_all_files(multiproc):
         walk_after = timestamp.get_walk_after(filename_full)
         results = walk_file(filename_full, multiproc, Settings.recurse,
                             walk_after)
-        result_set.union(results)
+        result_set = result_set.union(results)
 
     for result in result_set:
         result.wait()
