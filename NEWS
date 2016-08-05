@@ -1,8 +1,10 @@
-v1.3.4
+v1.4.0
 * let the archive date override the newness of its contained files.
 * let the cli be run programatically with passed in args
 * code no longer relies on cwd for finding its way
+* -d --directory argument goes away
 * nosetests now run the old inadequate cli tests
+* big code cleanup
 
 v1.3.3
 * Print found picopt timestamps
