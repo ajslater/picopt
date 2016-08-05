@@ -24,8 +24,7 @@ def process_if_not_file(filename_full, multiproc, walk_after, recurse,
     elif os.path.isdir(filename_full):
         results = walk_dir(filename_full, multiproc,
                            walk_after, recurse, archive_mtime)
-        if results:
-            result_set = result_set.union(results)
+        result_set = result_set.union(results)
         return result_set, True
     elif not os.path.exists(filename_full):
         if Settings.verbose:
@@ -65,9 +64,11 @@ def walk_file(filename_full, multiproc, walk_after, recurse=None,
     if Settings.list_only:
         # list only
         print("%s : %s" % (filename_full, image_format))
-        result = None
-    elif detect_format.is_format_selected(image_format, comic.FORMATS,
-                                          comic.PROGRAMS):
+        return result_set
+
+    if detect_format.is_format_selected(image_format, comic.FORMATS,
+                                        comic.PROGRAMS):
+        # comic archive
         result = comic.walk_comic_archive(filename_full, image_format,
                                           multiproc, walk_after)
     else:
@@ -96,9 +97,9 @@ def walk_dir(dir_path, multiproc, walk_after, recurse=None,
 
     for filename in filenames:
         filename_full = os.path.join(dir_path, filename)
-        result = walk_file(filename_full, multiproc, walk_after, recurse,
-                           archive_mtime)
-        result_set.union(result)
+        results = walk_file(filename_full, multiproc, walk_after, recurse,
+                            archive_mtime)
+        result_set.union(results)
     return result_set
 
 
@@ -112,6 +113,7 @@ def walk_all_files(multiproc):
     # Init records
     record_dirs = set()
     walk_after_times = {}
+    result_set = set()
 
     for filename in Settings.paths:
         # Record dirs to put timestamps in later
@@ -125,7 +127,12 @@ def walk_all_files(multiproc):
         if dirname not in walk_after_times:
             walk_after_times[dirname] = timestamp.get_walk_after(dirname)
         walk_after = walk_after_times[dirname]
-        walk_file(filename_full, multiproc, Settings.recurse, walk_after)
+        results = walk_file(filename_full, multiproc, Settings.recurse,
+                            walk_after)
+        result_set.union(results)
+
+    for result in result_set:
+        result.wait()
 
     return record_dirs
 
