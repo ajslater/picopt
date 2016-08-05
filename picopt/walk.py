@@ -11,26 +11,26 @@ import timestamp
 from .settings import Settings
 
 
-def walk_file(filename_full, multiproc, walk_after, recurse=None,
-              archive_mtime=None):
-    """Optimize an individual file."""
-    filename_full = os.path.normpath(filename_full)
+def process_if_not_file(filename_full, multiproc, walk_after, recurse,
+                        archive_mtime):
+    """Handle things that are not optimizable files."""
     result_set = set()
 
     # File types
     if not Settings.follow_symlinks and os.path.islink(filename_full):
-        return result_set
+        return result_set, True
     elif os.path.basename(filename_full) == timestamp.RECORD_FILENAME:
-        return result_set
+        return result_set, True
     elif os.path.isdir(filename_full):
         results = walk_dir(filename_full, multiproc,
-                            walk_after, recurse, archive_mtime)
+                           walk_after, recurse, archive_mtime)
         if results:
             result_set = result_set.union(results)
+        return result_set, True
     elif not os.path.exists(filename_full):
         if Settings.verbose:
             print(filename_full, 'was not found.')
-        return result_set
+        return result_set, True
 
     # Timestamp
     if walk_after is not None:
@@ -42,7 +42,20 @@ def walk_file(filename_full, multiproc, walk_after, recurse=None,
         if archive_mtime is not None:
             mtime = max(mtime, archive_mtime)
         if mtime <= walk_after:
-            return result_set
+            return result_set, True
+
+    return result_set, False
+
+
+def walk_file(filename_full, multiproc, walk_after, recurse=None,
+              archive_mtime=None):
+    """Optimize an individual file."""
+    filename_full = os.path.normpath(filename_full)
+
+    result_set, early_return = process_if_not_file(
+        filename_full, multiproc, walk_after, recurse, archive_mtime)
+    if early_return:
+        return result_set
 
     # Image format
     image_format = detect_format.detect_file(filename_full)
@@ -52,16 +65,20 @@ def walk_file(filename_full, multiproc, walk_after, recurse=None,
     if Settings.list_only:
         # list only
         print("%s : %s" % (filename_full, image_format))
+        result = None
     elif detect_format.is_format_selected(image_format, comic.FORMATS,
                                           comic.PROGRAMS):
-        return comic.walk_comic_archive(filename_full, image_format,
-                                        multiproc, walk_after)
+        result = comic.walk_comic_archive(filename_full, image_format,
+                                          multiproc, walk_after)
     else:
         # regular image
         args = [filename_full, image_format, Settings,
                 multiproc['in'], multiproc['out'], multiproc['nag_about_gifs']]
-        return multiproc['pool'].apply_async(optimize.optimize_image,
-                                             args=(args,))
+        result = multiproc['pool'].apply_async(optimize.optimize_image,
+                                               args=(args,))
+    if result:
+        result_set.add(result)
+    return result_set
 
 
 def walk_dir(dir_path, multiproc, walk_after, recurse=None,
