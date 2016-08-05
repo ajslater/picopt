@@ -18,18 +18,18 @@ def process_if_not_file(filename_full, multiproc, walk_after, recurse,
 
     # File types
     if not Settings.follow_symlinks and os.path.islink(filename_full):
-        return result_set, True
+        return result_set
     elif os.path.basename(filename_full) == timestamp.RECORD_FILENAME:
-        return result_set, True
+        return result_set
     elif os.path.isdir(filename_full):
         results = walk_dir(filename_full, multiproc,
                            walk_after, recurse, archive_mtime)
         result_set = result_set.union(results)
-        return result_set, True
+        return result_set
     elif not os.path.exists(filename_full):
         if Settings.verbose:
             print(filename_full, 'was not found.')
-        return result_set, True
+        return result_set
 
     # Timestamp
     if walk_after is not None:
@@ -41,9 +41,9 @@ def process_if_not_file(filename_full, multiproc, walk_after, recurse,
         if archive_mtime is not None:
             mtime = max(mtime, archive_mtime)
         if mtime <= walk_after:
-            return result_set, True
+            return result_set
 
-    return result_set, False
+    return None
 
 
 def walk_file(filename_full, multiproc, walk_after, recurse=None,
@@ -51,10 +51,11 @@ def walk_file(filename_full, multiproc, walk_after, recurse=None,
     """Optimize an individual file."""
     filename_full = os.path.normpath(filename_full)
 
-    result_set, early_return = process_if_not_file(
+    result_set = process_if_not_file(
         filename_full, multiproc, walk_after, recurse, archive_mtime)
-    if early_return:
+    if result_set is not None:
         return result_set
+    result_set = set()
 
     # Image format
     image_format = detect_format.detect_file(filename_full)
