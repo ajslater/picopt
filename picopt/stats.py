@@ -91,8 +91,11 @@ def new_percent_saved(report_stats):
 
 def truncate_cwd(full_filename):
     """Remove the cwd from the full filename."""
-    truncated_filename = full_filename.split(Settings.dir, 1)[1]
-    truncated_filename = truncated_filename.split(os.sep, 1)[1]
+    if full_filename.startswith(Settings.dir):
+        truncated_filename = full_filename.split(Settings.dir, 1)[1]
+        truncated_filename = truncated_filename.split(os.sep, 1)[1]
+    else:
+        truncated_filename = full_filename
     return truncated_filename
 
 
