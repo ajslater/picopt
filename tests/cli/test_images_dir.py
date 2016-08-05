@@ -30,7 +30,6 @@ class TestCLIImages(TestCLI):
 
 class TestCLIEverything(TestCLI):
 
-    def test_all_twice(self):
+    def test_all_once(self):
         args = [None, '-rct', TEST_FILES_DST]
-        cli.main(args)
         cli.main(args)
