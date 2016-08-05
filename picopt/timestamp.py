@@ -45,13 +45,14 @@ def get_parent_timestamp(dirname, mtime):
     return get_parent_timestamp(parent_pathname, mtime)
 
 
-def get_walk_after(dirname, optimize_after=None):
+def get_walk_after(filename, optimize_after=None):
     """
     Figure out the which mtime to check against.
 
     If we look up return that we've looked up too
     """
     if Settings.optimize_after is None:
+        dirname = os.path.dirname(filename)
         if dirname in TIMESTAMP_CACHE:
             return TIMESTAMP_CACHE[dirname]
         if optimize_after is None:

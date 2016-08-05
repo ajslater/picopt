@@ -112,21 +112,15 @@ def walk_all_files(multiproc):
     """
     # Init records
     record_dirs = set()
-    walk_after_times = {}
     result_set = set()
 
     for filename in Settings.paths:
         # Record dirs to put timestamps in later
-        filename_full = os.path.normpath(filename)
+        filename_full = os.path.abspath(filename)
         if Settings.recurse and os.path.isdir(filename_full):
             record_dirs.add(filename_full)
 
-        # Cache walk after times for each dir so we don't repeat the
-        # lookup
-        dirname = os.path.dirname(filename_full)
-        if dirname not in walk_after_times:
-            walk_after_times[dirname] = timestamp.get_walk_after(dirname)
-        walk_after = walk_after_times[dirname]
+        walk_after = timestamp.get_walk_after(filename_full)
         results = walk_file(filename_full, multiproc, Settings.recurse,
                             walk_after)
         result_set.union(results)
