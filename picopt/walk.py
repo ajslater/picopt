@@ -11,8 +11,28 @@ import timestamp
 from .settings import Settings
 
 
-def walk_file(filename_full, multiproc, walk_after, archive_mtime):
+def walk_file(filename_full, multiproc, walk_after, recurse=None,
+              archive_mtime=None):
     """Optimize an individual file."""
+    filename_full = os.path.normpath(filename_full)
+    result_set = set()
+
+    # File types
+    if not Settings.follow_symlinks and os.path.islink(filename_full):
+        return result_set
+    elif os.path.basename(filename_full) == timestamp.RECORD_FILENAME:
+        return result_set
+    elif os.path.isdir(filename_full):
+        results = walk_dir(filename_full, multiproc,
+                            walk_after, recurse, archive_mtime)
+        if results:
+            result_set = result_set.union(results)
+    elif not os.path.exists(filename_full):
+        if Settings.verbose:
+            print(filename_full, 'was not found.')
+        return result_set
+
+    # Timestamp
     if walk_after is not None:
         mtime = os.stat(filename_full).st_mtime
         # if the file is in an archive, use the archive time if it
@@ -22,11 +42,12 @@ def walk_file(filename_full, multiproc, walk_after, archive_mtime):
         if archive_mtime is not None:
             mtime = max(mtime, archive_mtime)
         if mtime <= walk_after:
-            return
+            return result_set
 
+    # Image format
     image_format = detect_format.detect_file(filename_full)
     if not image_format:
-        return
+        return result_set
 
     if Settings.list_only:
         # list only
@@ -43,64 +64,27 @@ def walk_file(filename_full, multiproc, walk_after, archive_mtime):
                                              args=(args,))
 
 
-def walk_dir(filename_full, multiproc, walk_after, recurse=None,
+def walk_dir(dir_path, multiproc, walk_after, recurse=None,
              archive_mtime=None):
     """Recursively optimize a directory."""
     if recurse is None:
         recurse = Settings.recurse
 
-    if not recurse:
-        return set()
-    next_dir_list = os.listdir(filename_full)
-    next_dir_list.sort()
-    walk_after = timestamp.get_walk_after(filename_full, False,
-                                          walk_after)
-    return walk_files(filename_full, next_dir_list, multiproc,
-                      walk_after, archive_mtime)
-
-
-def walk_files(cwd, filter_list, multiproc, walk_after, recurse=None,
-               archive_mtime=None):
-    """
-    Sort through a list of files.
-
-    Decends directories and calls the optimizer on the extant files.
-    """
-    if recurse is None:
-        recurse = Settings.recurse
-
     result_set = set()
-    for filename in filter_list:
+    if not recurse:
+        return result_set
 
-        filename_full = os.path.join(cwd, filename)
-        filename_full = os.path.normpath(filename_full)
+    next_dir_list = os.listdir(dir_path)
+    next_dir_list.sort()
+    walk_after = timestamp.get_walk_after(dir_path, walk_after)
 
-        if not Settings.follow_symlinks and os.path.islink(filename_full):
-            continue
-        elif os.path.basename(filename_full) == timestamp.RECORD_FILENAME:
-            continue
-        elif os.path.isdir(filename_full):
-            results = walk_dir(filename_full, multiproc,
-                               walk_after, recurse, archive_mtime)
-            result_set = result_set.union(results)
-        elif os.path.exists(filename_full):
-            result = walk_file(filename_full, multiproc,
-                               walk_after, archive_mtime)
-            if result:
-                result_set.add(result)
-        elif Settings.verbose:
-            print(filename_full, 'was not found.')
+    for filename in next_dir_list:
+        filename_full = os.path.join(dir_path, filename)
+        result = walk_file(filename_full, multiproc, walk_after, recurse,
+                           archive_mtime)
+        if result:
+            result_set.union(result)
     return result_set
-
-
-def walk_files_after(path, file_list, multiproc):
-    """
-    Compute the optimize after date for the a batch of files.
-
-    Then optimize them.
-    """
-    walk_after = timestamp.get_walk_after(path, True, None)
-    return walk_files(path, file_list, multiproc, walk_after)
 
 
 def walk_all_files(multiproc):
@@ -110,32 +94,23 @@ def walk_all_files(multiproc):
     One for absolute paths which are probably outside the current
     working directory tree and one for relative files.
     """
-    # Change dirs
-    os.chdir(Settings.dir)
-    cwd = os.getcwd()
-
     # Init records
     record_dirs = set()
-    cwd_files = set()
+    walk_after_times = {}
 
     for filename in Settings.paths:
         # Record dirs to put timestamps in later
-        if Settings.recurse and os.path.isdir(filename):
-            record_dirs.add(filename)
+        filename_full = os.path.normpath(filename)
+        if Settings.recurse and os.path.isdir(filename_full):
+            record_dirs.add(filename_full)
 
-        # Optimize all filenames that are not immediate descendants of
-        #   the cwd and compute their optimize-after times individually.
-        #   Otherwise add the files to the list to do next
-        path_dn, path_fn = os.path.split(os.path.realpath(filename))
-        if path_dn != cwd:
-            walk_files_after(path_dn, [path_fn], multiproc)
-        else:
-            cwd_files.add(path_fn)
-
-    # Optimize immediate descendants with optimize after computed from
-    # the current directory
-    if len(cwd_files):
-        walk_files_after(cwd, cwd_files, multiproc)
+        # Cache walk after times for each dir so we don't repeat the
+        # lookup
+        dirname = os.path.dirname(filename_full)
+        if dirname not in walk_after_times:
+            walk_after_times[dirname] = timestamp.get_walk_after(dirname)
+        walk_after = walk_after_times[dirname]
+        walk_file(filename_full, multiproc, Settings.recurse, walk_after)
 
     return record_dirs
 

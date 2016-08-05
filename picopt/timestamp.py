@@ -7,6 +7,7 @@ import name
 from .settings import Settings
 
 RECORD_FILENAME = '.%s_timestamp' % name.PROGRAM_NAME
+TIMESTAMP_CACHE = {}
 
 
 def get_timestamp(dirname_full, remove):
@@ -28,13 +29,13 @@ def get_timestamp(dirname_full, remove):
     return None
 
 
-def get_parent_timestamp(full_pathname, mtime):
+def get_parent_timestamp(dirname, mtime):
     """
     Get the timestamps up the directory tree.
 
     Because they affect every subdirectory.
     """
-    parent_pathname = os.path.dirname(full_pathname)
+    parent_pathname = os.path.dirname(dirname)
 
     mtime = max(get_timestamp(parent_pathname, False), mtime)
 
@@ -44,20 +45,23 @@ def get_parent_timestamp(full_pathname, mtime):
     return get_parent_timestamp(parent_pathname, mtime)
 
 
-def get_walk_after(current_path, look_up, optimize_after):
+def get_walk_after(dirname, optimize_after=None):
     """
     Figure out the which mtime to check against.
 
     If we look up return that we've looked up too
     """
-    if Settings.optimize_after is not None:
-        optimize_after = Settings.optimize_after
-    else:
-        if look_up:
-            optimize_after = get_parent_timestamp(current_path,
+    if Settings.optimize_after is None:
+        if dirname in TIMESTAMP_CACHE:
+            return TIMESTAMP_CACHE[dirname]
+        if optimize_after is None:
+            optimize_after = get_parent_timestamp(dirname,
                                                   optimize_after)
-        optimize_after = max(get_timestamp(current_path, True),
+        optimize_after = max(get_timestamp(dirname, True),
                              optimize_after)
+        TIMESTAMP_CACHE[dirname] = optimize_after
+    else:
+        optimize_after = Settings.optimize_after
     return optimize_after
 
 

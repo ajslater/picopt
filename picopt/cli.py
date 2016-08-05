@@ -30,7 +30,7 @@ ALL_DEFAULT_FORMATS = jpeg.FORMATS | gif.FORMATS | \
 ALL_FORMATS = ALL_DEFAULT_FORMATS | comic.FORMATS
 
 
-def get_arguments():
+def get_arguments(args):
     """Parse the command line."""
     usage = "%(prog)s [arguments] [image files]"
     programs_str = ', '.join([prog.__name__ for prog in PROGRAMS])
@@ -127,7 +127,7 @@ def get_arguments():
                         dest="jobs", default=multiprocessing.cpu_count(),
                         help="Number of parallel jobs to run simultaneously.")
 
-    return parser.parse_args()
+    return parser.parse_args(args)
 
 
 def process_arguments(arguments):
@@ -176,12 +176,13 @@ def process_arguments(arguments):
     return arguments
 
 
-def main():
+def main(args):
     """Process command line arguments and walk inputs."""
-    raw_arguments = get_arguments()
+    raw_arguments = get_arguments(args[1:])
     process_arguments(raw_arguments)
     walk.run()
 
 
 if __name__ == '__main__':
-    main()
+    import sys
+    main(sys.argv)

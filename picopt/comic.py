@@ -95,7 +95,7 @@ def comic_archive_uncompress(filename, image_format):
     if Settings.verbose:
         print('done')
 
-    return os.path.basename(tmp_dir)
+    return tmp_dir
 
 
 def comic_archive_write_zipfile(new_filename, tmp_dir):
@@ -152,15 +152,12 @@ def comic_archive_compress(args):
 def walk_comic_archive(filename_full, image_format, multiproc,
                        optimize_after):
     """Optimize a comic archive."""
-    tmp_dir_basename = comic_archive_uncompress(filename_full,
-                                                image_format)
+    tmp_dir = comic_archive_uncompress(filename_full, image_format)
 
     # optimize contents of comic archive
-    dirname = os.path.dirname(filename_full)
     archive_mtime = os.stat(filename_full).st_mtime
-    result_set = walk.walk_files(dirname, [tmp_dir_basename],
-                                 multiproc, optimize_after, True,
-                                 archive_mtime)
+    result_set = walk.walk_dir(tmp_dir, multiproc, optimize_after,
+                               True, archive_mtime)
 
     # I'd like to stuff this waiting into the compression process,
     # but process results don't serialize. :(
