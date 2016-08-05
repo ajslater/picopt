@@ -1,5 +1,7 @@
 v1.3.4
 * let the archive date override the newness of its contained files.
+* let the cli be run programatically with passed in args
+* code no longer relies on cwd for finding its way
 
 v1.3.3
 * Print found picopt timestamps
