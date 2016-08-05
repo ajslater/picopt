@@ -15,7 +15,7 @@ from .formats import (
     jpeg,
     png,
 )
-from . import name
+from . import PROGRAM_NAME
 from .settings import Settings
 from . import __version__
 
@@ -87,8 +87,7 @@ def get_arguments(args):
                         help="Do not convert other lossless formats like "
                         " %s to PNG when optimizing. By default, %s"
                         " does convert these formats to PNG" %
-                        (', '.join(png.LOSSLESS_FORMATS),
-                         name.PROGRAM_NAME))
+                        (', '.join(png.LOSSLESS_FORMATS), PROGRAM_NAME))
     parser.add_argument("-S", "--disable_follow_symlinks",
                         action="store_false",
                         dest="follow_symlinks", default=1,

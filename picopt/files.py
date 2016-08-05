@@ -3,10 +3,10 @@ from __future__ import print_function
 import os
 
 from . import stats
-from . import name
+from . import PROGRAM_NAME
 from .settings import Settings
 
-REMOVE_EXT = '.%s-remove' % name.PROGRAM_NAME
+REMOVE_EXT = '.%s-remove' % PROGRAM_NAME
 
 def replace_ext(filename, new_ext):
     """Replace the file extention."""

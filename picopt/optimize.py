@@ -11,13 +11,13 @@ from .formats import (
     jpeg,
     png
 )
-from . import name
+from . import PROGRAM_NAME
 from .settings import Settings
 from . import stats
 from . import files
 
 
-NEW_EXT = '.%s-optimized.png' % name.PROGRAM_NAME
+NEW_EXT = '.%s-optimized.png' % PROGRAM_NAME
 
 
 ExtArgs = namedtuple('ExtArgs', ['old_filename', 'new_filename'])

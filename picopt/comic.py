@@ -11,7 +11,7 @@ import rarfile
 from . import walk
 from . import stats
 from .settings import Settings
-from .name import PROGRAM_NAME
+from . import PROGRAM_NAME
 from . import files
 
 # Extensions

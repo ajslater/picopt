@@ -3,10 +3,10 @@ from __future__ import print_function
 import os
 from datetime import datetime
 
-from . import name
+from . import PROGRAM_NAME
 from .settings import Settings
 
-RECORD_FILENAME = '.%s_timestamp' % name.PROGRAM_NAME
+RECORD_FILENAME = '.%s_timestamp' % PROGRAM_NAME
 TIMESTAMP_CACHE = {}
 
 
