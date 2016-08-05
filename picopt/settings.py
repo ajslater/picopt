@@ -14,7 +14,6 @@ class Settings(object):
     bigger = False
     comics = False
     destroy_metadata = False
-    dir = os.getcwd()
     follow_symlinks = True
     formats = set()
     gifsicle = True

@@ -15,7 +15,7 @@ NONE_FORMAT = 'NONE'
 ERROR_FORMAT = 'ERROR'
 
 
-def is_program_selected(progs):
+def _is_program_selected(progs):
     """Determine if the program is enabled in the settings."""
     mode = False
     for prog in progs:
@@ -28,12 +28,12 @@ def is_program_selected(progs):
 def is_format_selected(image_format, formats, progs):
     """Determine if the image format is selected by the command line arguments."""
     intersection = formats & Settings.formats
-    mode = is_program_selected(progs)
+    mode = _is_program_selected(progs)
     result = (image_format in intersection) and mode
     return result
 
 
-def is_image_sequenced(image):
+def _is_image_sequenced(image):
     """Determine if the image is a sequenced image."""
     try:
         image.seek(1)
@@ -55,7 +55,7 @@ def get_image_format(filename):
         bad_image = Image.open(filename).verify()
         image = Image.open(filename)
         image_format = image.format
-        sequenced = is_image_sequenced(image)
+        sequenced = _is_image_sequenced(image)
     except (OSError, IOError, AttributeError):
         pass
 

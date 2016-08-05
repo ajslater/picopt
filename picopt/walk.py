@@ -11,8 +11,8 @@ import timestamp
 from .settings import Settings
 
 
-def process_if_not_file(filename_full, multiproc, walk_after, recurse,
-                        archive_mtime):
+def _process_if_not_file(filename_full, multiproc, walk_after, recurse,
+                         archive_mtime):
     """Handle things that are not optimizable files."""
     result_set = set()
 
@@ -51,10 +51,11 @@ def walk_file(filename_full, multiproc, walk_after, recurse=None,
     """Optimize an individual file."""
     filename_full = os.path.normpath(filename_full)
 
-    result_set = process_if_not_file(
+    result_set = _process_if_not_file(
         filename_full, multiproc, walk_after, recurse, archive_mtime)
     if result_set is not None:
         return result_set
+
     result_set = set()
 
     # Image format
@@ -104,7 +105,7 @@ def walk_dir(dir_path, multiproc, walk_after, recurse=None,
     return result_set
 
 
-def walk_all_files(multiproc):
+def _walk_all_files(multiproc):
     """
     Optimize the files from the arugments list in two batches.
 
@@ -145,7 +146,7 @@ def run():
                  'nag_about_gifs': nag_about_gifs}
 
     # Optimize Files
-    record_dirs = walk_all_files(multiproc)
+    record_dirs = _walk_all_files(multiproc)
 
     # Shut down multiprocessing
     pool.close()

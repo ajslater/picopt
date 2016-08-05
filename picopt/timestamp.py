@@ -10,7 +10,7 @@ RECORD_FILENAME = '.%s_timestamp' % name.PROGRAM_NAME
 TIMESTAMP_CACHE = {}
 
 
-def get_timestamp(dirname_full, remove):
+def _get_timestamp(dirname_full, remove):
     """
     Get the timestamp from the timestamp file.
 
@@ -29,7 +29,7 @@ def get_timestamp(dirname_full, remove):
     return None
 
 
-def get_parent_timestamp(dirname, mtime):
+def _get_parent_timestamp(dirname, mtime):
     """
     Get the timestamps up the directory tree.
 
@@ -37,12 +37,12 @@ def get_parent_timestamp(dirname, mtime):
     """
     parent_pathname = os.path.dirname(dirname)
 
-    mtime = max(get_timestamp(parent_pathname, False), mtime)
+    mtime = max(_get_timestamp(parent_pathname, False), mtime)
 
     if parent_pathname == os.path.dirname(parent_pathname):
         return mtime
 
-    return get_parent_timestamp(parent_pathname, mtime)
+    return _get_parent_timestamp(parent_pathname, mtime)
 
 
 def get_walk_after(filename, optimize_after=None):
@@ -56,9 +56,9 @@ def get_walk_after(filename, optimize_after=None):
         if dirname in TIMESTAMP_CACHE:
             return TIMESTAMP_CACHE[dirname]
         if optimize_after is None:
-            optimize_after = get_parent_timestamp(dirname,
-                                                  optimize_after)
-        optimize_after = max(get_timestamp(dirname, True),
+            optimize_after = _get_parent_timestamp(dirname,
+                                                   optimize_after)
+        optimize_after = max(_get_timestamp(dirname, True),
                              optimize_after)
         TIMESTAMP_CACHE[dirname] = optimize_after
     else:

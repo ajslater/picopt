@@ -28,7 +28,7 @@ ReportStats = namedtuple('ReportStats', ['final_filename', 'bytes_diff',
                                          'report_list'])
 
 
-def humanize_bytes(num_bytes, precision=1):
+def _humanize_bytes(num_bytes, precision=1):
     """
     Return a humanized string representation of a number of num_bytes.
 
@@ -80,7 +80,7 @@ def new_percent_saved(report_stats):
     if size_in > 0:
         size_out = report_stats.bytes_diff['out']
         ratio = size_out / size_in
-        kb_saved = humanize_bytes(size_in - size_out)
+        kb_saved = _humanize_bytes(size_in - size_out)
     else:
         ratio = 0
         kb_saved = 0
@@ -149,7 +149,7 @@ def report_totals(bytes_in, bytes_out, nag_about_gifs):
                 msg += "Evened out"
             else:
                 msg = "Lost"
-        msg += " a total of %s or %.*f%s" % (humanize_bytes(bytes_saved),
+        msg += " a total of %s or %.*f%s" % (_humanize_bytes(bytes_saved),
                                              2, percent_bytes_saved, '%')
         if Settings.verbose:
             print(msg)

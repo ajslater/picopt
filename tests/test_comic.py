@@ -3,7 +3,7 @@ from unittest import TestCase
 
 from picopt import comic
 
-TEST_FILES_ROOT = 'old_tests/test_files'
+TEST_FILES_ROOT = 'tests/test_files'
 COMIC_ROOT = TEST_FILES_ROOT+'/comic_archives'
 
 
@@ -24,5 +24,5 @@ class TestGetComicFormat(TestCase):
 class TestGetArchiveTmpDir(TestCase):
 
     def test_foo(self):
-        res = comic.get_archive_tmp_dir('foo')
+        res = comic._get_archive_tmp_dir('foo')
         self.assertEqual(res, 'picopt_tmp_foo')

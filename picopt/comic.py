@@ -9,10 +9,10 @@ import traceback
 import rarfile
 
 from . import walk
-from . import optimize
 from . import stats
 from .settings import Settings
 from .name import PROGRAM_NAME
+from . import files
 
 # Extensions
 ARCHIVE_TMP_DIR_PREFIX = PROGRAM_NAME+'_tmp_'
@@ -51,13 +51,13 @@ def get_comic_format(filename):
     return image_format
 
 
-def get_archive_tmp_dir(filename):
+def _get_archive_tmp_dir(filename):
     """Get the name of the working dir to use for this filename."""
     head, tail = os.path.split(filename)
     return os.path.join(head, ARCHIVE_TMP_DIR_TEMPLATE % tail)
 
 
-def comic_archive_uncompress(filename, image_format):
+def _comic_archive_uncompress(filename, image_format):
     """
     Uncompress comic archives.
 
@@ -74,7 +74,7 @@ def comic_archive_uncompress(filename, image_format):
         print("Extracting %s..." % truncated_filename, end='')
 
     # create the tmpdir
-    tmp_dir = get_archive_tmp_dir(filename)
+    tmp_dir = _get_archive_tmp_dir(filename)
     if os.path.isdir(tmp_dir):
         shutil.rmtree(tmp_dir)
     os.mkdir(tmp_dir)
@@ -98,7 +98,7 @@ def comic_archive_uncompress(filename, image_format):
     return tmp_dir
 
 
-def comic_archive_write_zipfile(new_filename, tmp_dir):
+def _comic_archive_write_zipfile(new_filename, tmp_dir):
     """Zip up the files in the tempdir into the new filename."""
     if Settings.verbose:
         print('Rezipping archive', end='')
@@ -117,22 +117,22 @@ def comic_archive_write_zipfile(new_filename, tmp_dir):
                 new_zf.write(fullpath, archive_name, zipfile.ZIP_DEFLATED)
 
 
-def comic_archive_compress(args):
+def _comic_archive_compress(args):
     """
     Called back by every optimization inside a comic archive.
 
     When they're all done it creates the new archive and cleans up.
     """
     try:
-        filename, total_bytes_in, total_bytes_out, image_format, \
+        filename, total_bytes_in, total_bytes_out, old_format, \
             settings = args
         Settings.update(settings)
-        tmp_dir = get_archive_tmp_dir(filename)
+        tmp_dir = _get_archive_tmp_dir(filename)
 
         # archive into new filename
-        new_filename = optimize.replace_ext(filename, NEW_ARCHIVE_SUFFIX)
+        new_filename = files.replace_ext(filename, NEW_ARCHIVE_SUFFIX)
 
-        comic_archive_write_zipfile(new_filename, tmp_dir)
+        _comic_archive_write_zipfile(new_filename, tmp_dir)
 
         # Cleanup tmpdir
         if os.path.isdir(tmp_dir):
@@ -142,8 +142,8 @@ def comic_archive_compress(args):
         if Settings.verbose:
             print('done.')
 
-        report_stats = optimize.cleanup_after_optimize(
-            filename, new_filename, image_format)
+        report_stats = files.cleanup_after_optimize(
+            filename, new_filename, old_format, CBZ_FORMAT)
         stats.optimize_accounting(report_stats, total_bytes_in,
                                   total_bytes_out)
     except Exception as exc:
@@ -155,7 +155,7 @@ def comic_archive_compress(args):
 def walk_comic_archive(filename_full, image_format, multiproc,
                        optimize_after):
     """Optimize a comic archive."""
-    tmp_dir = comic_archive_uncompress(filename_full, image_format)
+    tmp_dir = _comic_archive_uncompress(filename_full, image_format)
 
     # optimize contents of comic archive
     archive_mtime = os.stat(filename_full).st_mtime
@@ -169,4 +169,4 @@ def walk_comic_archive(filename_full, image_format, multiproc,
 
     args = (filename_full, multiproc['in'], multiproc['out'], image_format,
             Settings)
-    return multiproc['pool'].apply_async(comic_archive_compress, args=(args,))
+    return multiproc['pool'].apply_async(_comic_archive_compress, args=(args,))

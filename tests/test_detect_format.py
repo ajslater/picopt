@@ -10,7 +10,7 @@ from picopt import detect_format
 from picopt.settings import Settings
 
 
-TEST_FILES_ROOT = 'old_tests/test_files/'
+TEST_FILES_ROOT = 'tests/test_files/'
 IMAGES_ROOT = TEST_FILES_ROOT+'/images'
 INVALID_ROOT = TEST_FILES_ROOT+'/invalid'
 COMIC_ROOT = TEST_FILES_ROOT+'/comic_archives'
@@ -24,11 +24,11 @@ class TestIsProgramSelected(TestCase):
     programs = (pngout,)
 
     def test_pngout(self):
-        res = detect_format.is_program_selected(self.programs)
+        res = detect_format._is_program_selected(self.programs)
         self.assertTrue(res)
 
     def test_empty(self):
-        res = detect_format.is_program_selected([])
+        res = detect_format._is_program_selected([])
         self.assertFalse(res)
 
 
@@ -64,12 +64,12 @@ class TestIsImageSequenced(TestCase):
 
     def test_animated_gif(self):
         image = Image.open(IMAGES_ROOT+'/test_animated_gif.gif')
-        res = detect_format.is_image_sequenced(image)
+        res = detect_format._is_image_sequenced(image)
         self.assertTrue(res)
 
     def test_normal_gif(self):
         image = Image.open(IMAGES_ROOT+'/test_gif.gif')
-        res = detect_format.is_image_sequenced(image)
+        res = detect_format._is_image_sequenced(image)
         self.assertFalse(res)
 
 

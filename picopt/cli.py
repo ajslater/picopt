@@ -94,9 +94,6 @@ def get_arguments(args):
                         dest="follow_symlinks", default=1,
                         help="disable following symlinks for files and "
                         "directories")
-    parser.add_argument("-d", "--dir", action="store", dest="dir",
-                        default=os.getcwd(),
-                        help="Directory to change to before optimiziaton")
     parser.add_argument("-b", "--bigger", action="store_true",
                         dest="bigger", default=0,
                         help="Save optimized files that are larger than "
