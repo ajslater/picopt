@@ -92,8 +92,8 @@ def new_percent_saved(report_stats):
 
 def truncate_cwd(full_filename):
     """Remove the cwd from the full filename."""
-    if full_filename.startswith(Settings.dir):
-        truncated_filename = full_filename.split(Settings.dir, 1)[1]
+    if full_filename.startswith(os.getcwd()):
+        truncated_filename = full_filename.split(os.getcwd(), 1)[1]
         truncated_filename = truncated_filename.split(os.sep, 1)[1]
     else:
         truncated_filename = full_filename
@@ -109,10 +109,7 @@ def optimize_accounting(report_stats, total_bytes_in, total_bytes_out):
 #                ARCHIVE_TMP_DIR_PREFIX, 1)[1]
 #            truncated_filename = truncated_filename.split(os.sep, 1)[1]
 #            report += '  %s: ' % Settings.archive_name
-        if Settings.dir in report_stats.final_filename:
-            truncated_filename = truncate_cwd(report_stats.final_filename)
-        else:
-            truncated_filename = report_stats.final_filename
+        truncated_filename = truncate_cwd(report_stats.final_filename)
 
         report += '%s: ' % truncated_filename
         total = new_percent_saved(report_stats)
