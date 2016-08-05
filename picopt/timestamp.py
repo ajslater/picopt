@@ -3,7 +3,7 @@ from __future__ import print_function
 import os
 from datetime import datetime
 
-import name
+from . import name
 from .settings import Settings
 
 RECORD_FILENAME = '.%s_timestamp' % name.PROGRAM_NAME

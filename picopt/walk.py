@@ -4,10 +4,10 @@ import os
 import multiprocessing
 
 import comic
-import detect_format
-import optimize
-import stats
-import timestamp
+from . import detect_format
+from . import optimize
+from . import stats
+from . import timestamp
 from .settings import Settings
 
 

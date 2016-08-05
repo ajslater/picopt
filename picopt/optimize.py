@@ -5,16 +5,16 @@ import os
 import shutil
 import traceback
 
-import detect_format
+from . import detect_format
 from .formats import (
     gif,
     jpeg,
     png
 )
-import name
+from . import name
 from .settings import Settings
-import stats
-import files
+from . import stats
+from . import files
 
 
 NEW_EXT = '.%s-optimized.png' % name.PROGRAM_NAME

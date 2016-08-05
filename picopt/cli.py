@@ -8,14 +8,14 @@ import multiprocessing
 import time
 import dateutil.parser
 
-import comic
-import walk
+from . import comic
+from . import walk
 from .formats import (
     gif,
     jpeg,
     png,
 )
-import name
+from . import name
 from .settings import Settings
 from . import __version__
 

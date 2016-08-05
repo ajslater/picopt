@@ -2,8 +2,8 @@
 from __future__ import print_function
 import os
 
-import stats
-import name
+from . import stats
+from . import name
 from .settings import Settings
 
 REMOVE_EXT = '.%s-remove' % name.PROGRAM_NAME
