@@ -105,7 +105,9 @@ def comic_archive_write_zipfile(new_filename, tmp_dir):
     with zipfile.ZipFile(new_filename, 'w',
                          compression=zipfile.ZIP_DEFLATED) as new_zf:
         root_len = len(os.path.abspath(tmp_dir))
-        for root, dirs, filenames in os.walk(tmp_dir):
+        for r_d_f in os.walk(tmp_dir):
+            root = r_d_f[0]
+            filenames = r_d_f[2]
             archive_root = os.path.abspath(root)[root_len:]
             for fname in filenames:
                 fullpath = os.path.join(root, fname)
@@ -126,6 +128,7 @@ def comic_archive_compress(args):
             settings = args
         Settings.update(settings)
         tmp_dir = get_archive_tmp_dir(filename)
+
         # archive into new filename
         new_filename = optimize.replace_ext(filename, NEW_ARCHIVE_SUFFIX)
 
