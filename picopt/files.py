@@ -1,9 +1,10 @@
 """File utility operations."""
+from __future__ import print_function
 import os
 
 import stats
-from .settings import Settings
 import name
+from .settings import Settings
 
 REMOVE_EXT = '.%s-remove' % name.PROGRAM_NAME
 
@@ -47,4 +48,4 @@ def cleanup_after_optimize(filename, new_filename, old_format, new_format):
     except OSError as ex:
         print(ex)
 
-    return stats.ReportStats._make([final_filename, bytes_diff, []])
+    return stats.ReportStats(final_filename, bytes_diff, [])

@@ -1,7 +1,6 @@
 """Statistics for the optimization operations."""
 from __future__ import division
 from __future__ import print_function
-from collections import namedtuple
 import os
 import sys
 
@@ -24,8 +23,14 @@ ABBREVS = (
 )
 
 
-ReportStats = namedtuple('ReportStats', ['final_filename', 'bytes_diff',
-                                         'report_list'])
+class ReportStats(object):
+    """Container for reported stats from optimization operations."""
+
+    def __init__(self, final_filename, bytes_diff, report_list):
+        """Initialize required instance variables."""
+        self.final_filename = final_filename
+        self.bytes_diff = bytes_diff
+        self.report_list = report_list
 
 
 def _humanize_bytes(num_bytes, precision=1):
@@ -169,5 +174,5 @@ def skip(type_name, filename):
     """Provide reporting statistics for a skipped file."""
     bytes_diff = {'in': 0, 'out': 0}
     rep = ['Skipping %s file: %s' % (type_name, filename)]
-    report_stats = ReportStats._make([filename, bytes_diff, [rep]])
+    report_stats = ReportStats(filename, bytes_diff, [rep])
     return report_stats
