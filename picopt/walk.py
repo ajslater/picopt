@@ -76,8 +76,7 @@ def walk_file(filename_full, multiproc, walk_after, recurse=None,
                 multiproc['in'], multiproc['out'], multiproc['nag_about_gifs']]
         result = multiproc['pool'].apply_async(optimize.optimize_image,
                                                args=(args,))
-    if result:
-        result_set.add(result)
+    result_set.add(result)
     return result_set
 
 
@@ -91,16 +90,15 @@ def walk_dir(dir_path, multiproc, walk_after, recurse=None,
     if not recurse:
         return result_set
 
-    next_dir_list = os.listdir(dir_path)
-    next_dir_list.sort()
+    filenames = os.listdir(dir_path)
+    filenames.sort()
     walk_after = timestamp.get_walk_after(dir_path, walk_after)
 
-    for filename in next_dir_list:
+    for filename in filenames:
         filename_full = os.path.join(dir_path, filename)
         result = walk_file(filename_full, multiproc, walk_after, recurse,
                            archive_mtime)
-        if result:
-            result_set.union(result)
+        result_set.union(result)
     return result_set
 
 
