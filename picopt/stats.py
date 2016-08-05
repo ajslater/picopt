@@ -77,15 +77,16 @@ def humanize_bytes(num_bytes, precision=1):
 def new_percent_saved(report_stats):
     """Spit out how much space the optimization saved."""
     size_in = report_stats.bytes_diff['in']
-    if size_in != 0:
+    if size_in > 0:
         size_out = report_stats.bytes_diff['out']
         ratio = size_out / size_in
+        kb_saved = humanize_bytes(size_in - size_out)
     else:
         ratio = 0
+        kb_saved = 0
     percent_saved = (1 - ratio) * 100
 
-    size_saved_kb = humanize_bytes(size_in - size_out)
-    result = '%.*f%s (%s)' % (2, percent_saved, '%', size_saved_kb)
+    result = '%.*f%s (%s)' % (2, percent_saved, '%', kb_saved)
     return result
 
 
