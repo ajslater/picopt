@@ -5,7 +5,7 @@ try:
 except ImportError:
     import Image
 
-from picopt import comic
+from picopt.formats import comic
 from picopt import detect_format
 from picopt.settings import Settings
 
