@@ -1,14 +1,13 @@
 """Run external programs."""
 from __future__ import print_function
-from __future__ import division
 import subprocess
 
 
 def does_external_program_run(prog, verbose):
     """Test to see if the external programs can be run."""
     try:
-        null = open('/dev/null')
-        subprocess.call([prog, '-h'], stdout=null, stderr=null)
+        with open('/dev/null') as null:
+            subprocess.call([prog, '-h'], stdout=null, stderr=null)
         result = True
     except OSError:
         if verbose > 1:
