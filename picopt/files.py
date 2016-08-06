@@ -30,7 +30,6 @@ def cleanup_after_optimize(filename, new_filename, old_format, new_format):
         bytes_diff['out'] = filesize_in  # overwritten on succes below
         if (filesize_out > 0) and ((filesize_out < filesize_in) or
                                    Settings.bigger):
-            # old_format = detect_format.get_image_format(filename)
             if old_format != new_format:
                 final_filename = replace_ext(filename,
                                              new_format.lower())
