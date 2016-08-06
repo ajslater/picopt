@@ -8,11 +8,10 @@ import traceback
 
 import rarfile
 
-from . import walk
-from . import stats
-from .settings import Settings
-from . import PROGRAM_NAME
-from . import files
+from .. import stats
+from ..settings import Settings
+from .. import PROGRAM_NAME
+from .. import files
 
 # Extensions
 ARCHIVE_TMP_DIR_PREFIX = PROGRAM_NAME+'_tmp_'
@@ -32,12 +31,11 @@ def comics():
     """
     Comic optimizer.
 
-    Not used because comics are special
+    Not used because comics are special and use walk.walk_comic_archive
     """
     pass
 
 PROGRAMS = (comics,)
-
 
 def get_comic_format(filename):
     """Return the comic format if it is a comic archive."""
@@ -57,7 +55,7 @@ def _get_archive_tmp_dir(filename):
     return os.path.join(head, ARCHIVE_TMP_DIR_TEMPLATE % tail)
 
 
-def _comic_archive_uncompress(filename, image_format):
+def comic_archive_uncompress(filename, image_format):
     """
     Uncompress comic archives.
 
@@ -117,7 +115,7 @@ def _comic_archive_write_zipfile(new_filename, tmp_dir):
                 new_zf.write(fullpath, archive_name, zipfile.ZIP_DEFLATED)
 
 
-def _comic_archive_compress(args):
+def comic_archive_compress(args):
     """
     Called back by every optimization inside a comic archive.
 
@@ -150,23 +148,3 @@ def _comic_archive_compress(args):
         print(exc)
         traceback.print_exc(exc)
         raise exc
-
-
-def walk_comic_archive(filename_full, image_format, multiproc,
-                       optimize_after):
-    """Optimize a comic archive."""
-    tmp_dir = _comic_archive_uncompress(filename_full, image_format)
-
-    # optimize contents of comic archive
-    archive_mtime = os.stat(filename_full).st_mtime
-    result_set = walk.walk_dir(tmp_dir, multiproc, optimize_after,
-                               True, archive_mtime)
-
-    # I'd like to stuff this waiting into the compression process,
-    # but process results don't serialize. :(
-    for result in result_set:
-        result.wait()
-
-    args = (filename_full, multiproc['in'], multiproc['out'], image_format,
-            Settings)
-    return multiproc['pool'].apply_async(_comic_archive_compress, args=(args,))

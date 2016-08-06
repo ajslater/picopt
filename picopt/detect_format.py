@@ -6,8 +6,7 @@ try:
 except ImportError:
     import Image
 
-import comic
-from .formats import gif
+from .formats import (gif, comic)
 from .settings import Settings
 
 # Formats

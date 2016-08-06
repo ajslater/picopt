@@ -3,12 +3,32 @@ from __future__ import print_function
 import os
 import multiprocessing
 
-import comic
+from .formats import comic
 from . import detect_format
 from . import optimize
 from . import stats
 from . import timestamp
 from .settings import Settings
+
+
+def walk_comic_archive(filename_full, image_format, multiproc,
+                       optimize_after):
+    """Optimize a comic archive."""
+    tmp_dir = comic.comic_archive_uncompress(filename_full, image_format)
+
+    # optimize contents of comic archive
+    archive_mtime = os.stat(filename_full).st_mtime
+    result_set = walk_dir(tmp_dir, multiproc, optimize_after, True,
+                          archive_mtime)
+
+    # I'd like to stuff this waiting into the compression process,
+    # but process results don't serialize. :(
+    for result in result_set:
+        result.wait()
+
+    args = (filename_full, multiproc['in'], multiproc['out'], image_format,
+            Settings)
+    return multiproc['pool'].apply_async(comic.comic_archive_compress, args=(args,))
 
 
 def _process_if_not_file(filename_full, multiproc, walk_after, recurse,
@@ -71,8 +91,8 @@ def walk_file(filename_full, multiproc, walk_after, recurse=None,
     if detect_format.is_format_selected(image_format, comic.FORMATS,
                                         comic.PROGRAMS):
         # comic archive
-        result = comic.walk_comic_archive(filename_full, image_format,
-                                          multiproc, walk_after)
+        result = walk_comic_archive(filename_full, image_format,
+                                    multiproc, walk_after)
     else:
         # regular image
         args = [filename_full, image_format, Settings,

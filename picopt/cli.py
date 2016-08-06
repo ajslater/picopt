@@ -8,12 +8,12 @@ import multiprocessing
 import time
 import dateutil.parser
 
-from . import comic
 from . import walk
 from .formats import (
     gif,
     jpeg,
     png,
+    comic,
 )
 from . import PROGRAM_NAME
 from .settings import Settings
