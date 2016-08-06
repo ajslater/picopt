@@ -109,11 +109,6 @@ def optimize_accounting(report_stats, total_bytes_in, total_bytes_out):
     """Record the percent saved, print it and add it to the totals."""
     if Settings.verbose:
         report = ''
-#        if Settings.archive_name is not None:
-#            truncated_filename = report_stats.final_filename.split(
-#                ARCHIVE_TMP_DIR_PREFIX, 1)[1]
-#            truncated_filename = truncated_filename.split(os.sep, 1)[1]
-#            report += '  %s: ' % Settings.archive_name
         truncated_filename = truncate_cwd(report_stats.final_filename)
 
         report += '%s: ' % truncated_filename

@@ -4,17 +4,17 @@ import copy
 from .. import extern
 from ..settings import Settings
 
-JPEG_FORMAT = 'JPEG'
-FORMATS = set([JPEG_FORMAT])
+_JPEG_FORMAT = 'JPEG'
+FORMATS = set([_JPEG_FORMAT])
 
-MOZJPEG_ARGS = ['mozjpeg']
-JPEGTRAN_ARGS = ['jpegtran', '-optimize']
-JPEGRESCAN_ARGS = ['jpegrescan']
+_MOZJPEG_ARGS = ['mozjpeg']
+_JPEGTRAN_ARGS = ['jpegtran', '-optimize']
+_JPEGRESCAN_ARGS = ['jpegrescan']
 
 
 def mozjpeg(ext_args):
     """Create argument list for mozjpeg."""
-    args = copy.copy(MOZJPEG_ARGS)
+    args = copy.copy(_MOZJPEG_ARGS)
     if Settings.destroy_metadata:
         args += ["-copy", "none"]
     else:
@@ -22,12 +22,12 @@ def mozjpeg(ext_args):
     args += ['-outfile']
     args += [ext_args.new_filename, ext_args.old_filename]
     extern.run_ext(args)
-    return JPEG_FORMAT
+    return _JPEG_FORMAT
 
 
 def jpegtran(ext_args):
     """Create argument list for jpegtran."""
-    args = copy.copy(JPEGTRAN_ARGS)
+    args = copy.copy(_JPEGTRAN_ARGS)
     if Settings.destroy_metadata:
         args += ["-copy", "none"]
     else:
@@ -37,19 +37,19 @@ def jpegtran(ext_args):
     args += ['-outfile']
     args += [ext_args.new_filename, ext_args.old_filename]
     extern.run_ext(args)
-    return JPEG_FORMAT
+    return _JPEG_FORMAT
 
 
 def jpegrescan(ext_args):
     """Run the EXTERNAL program jpegrescan."""
-    args = copy.copy(JPEGRESCAN_ARGS)
+    args = copy.copy(_JPEGRESCAN_ARGS)
     if Settings.jpegrescan_multithread:
         args += ['-t']
     if Settings.destroy_metadata:
         args += ['-s']
     args += [ext_args.old_filename, ext_args.new_filename]
     extern.run_ext(args)
-    return JPEG_FORMAT
+    return _JPEG_FORMAT
 
 
 PROGRAMS = (mozjpeg, jpegrescan, jpegtran)

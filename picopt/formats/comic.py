@@ -14,24 +14,26 @@ from .. import PROGRAM_NAME
 from .. import files
 
 # Extensions
-ARCHIVE_TMP_DIR_PREFIX = PROGRAM_NAME+'_tmp_'
-ARCHIVE_TMP_DIR_TEMPLATE = ARCHIVE_TMP_DIR_PREFIX+'%s'
-NEW_ARCHIVE_SUFFIX = '%s-optimized.cbz' % PROGRAM_NAME
+_ARCHIVE_TMP_DIR_PREFIX = PROGRAM_NAME+'_tmp_'
+_ARCHIVE_TMP_DIR_TEMPLATE = _ARCHIVE_TMP_DIR_PREFIX+'%s'
+_NEW_ARCHIVE_SUFFIX = '%s-optimized.cbz' % PROGRAM_NAME
 
-CBR_EXT = '.cbr'
-CBZ_EXT = '.cbz'
-COMIC_EXTS = set((CBR_EXT, CBZ_EXT))
+_CBR_EXT = '.cbr'
+_CBZ_EXT = '.cbz'
+_COMIC_EXTS = set((_CBR_EXT, _CBZ_EXT))
 
-CBZ_FORMAT = 'CBZ'
-CBR_FORMAT = 'CBR'
-FORMATS = set((CBZ_FORMAT, CBR_FORMAT))
+_CBZ_FORMAT = 'CBZ'
+_CBR_FORMAT = 'CBR'
+FORMATS = set((_CBZ_FORMAT, _CBR_FORMAT))
 
 
 def comics():
     """
-    Comic optimizer.
+    Dummy Comic optimizer.
 
     Not used because comics are special and use walk.walk_comic_archive
+    But currently neccissary to keep detect_format._is_program_selected()
+    working
     """
     pass
 
@@ -41,18 +43,18 @@ def get_comic_format(filename):
     """Return the comic format if it is a comic archive."""
     image_format = None
     filename_ext = os.path.splitext(filename)[-1].lower()
-    if filename_ext in COMIC_EXTS:
+    if filename_ext in _COMIC_EXTS:
         if zipfile.is_zipfile(filename):
-            image_format = CBZ_FORMAT
+            image_format = _CBZ_FORMAT
         elif rarfile.is_rarfile(filename):
-            image_format = CBR_FORMAT
+            image_format = _CBR_FORMAT
     return image_format
 
 
 def _get_archive_tmp_dir(filename):
     """Get the name of the working dir to use for this filename."""
     head, tail = os.path.split(filename)
-    return os.path.join(head, ARCHIVE_TMP_DIR_TEMPLATE % tail)
+    return os.path.join(head, _ARCHIVE_TMP_DIR_TEMPLATE % tail)
 
 
 def comic_archive_uncompress(filename, image_format):
@@ -78,10 +80,10 @@ def comic_archive_uncompress(filename, image_format):
     os.mkdir(tmp_dir)
 
     # extract archvie into the tmpdir
-    if image_format == CBZ_FORMAT:
+    if image_format == _CBZ_FORMAT:
         with zipfile.ZipFile(filename, 'r') as zfile:
             zfile.extractall(tmp_dir)
-    elif image_format == CBR_FORMAT:
+    elif image_format == _CBR_FORMAT:
         with rarfile.RarFile(filename, 'r') as rfile:
             rfile.extractall(tmp_dir)
     else:
@@ -128,7 +130,7 @@ def comic_archive_compress(args):
         tmp_dir = _get_archive_tmp_dir(filename)
 
         # archive into new filename
-        new_filename = files.replace_ext(filename, NEW_ARCHIVE_SUFFIX)
+        new_filename = files.replace_ext(filename, _NEW_ARCHIVE_SUFFIX)
 
         _comic_archive_write_zipfile(new_filename, tmp_dir)
 
@@ -141,7 +143,7 @@ def comic_archive_compress(args):
             print('done.')
 
         report_stats = files.cleanup_after_optimize(
-            filename, new_filename, old_format, CBZ_FORMAT)
+            filename, new_filename, old_format, _CBZ_FORMAT)
         stats.optimize_accounting(report_stats, total_bytes_in,
                                   total_bytes_out)
     except Exception as exc:
