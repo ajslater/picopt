@@ -12,6 +12,7 @@ def gifsicle(ext_args):
     """Run the EXTERNAL program gifsicle."""
     args = GIFSICLE_ARGS + [ext_args.new_filename]
     extern.run_ext(args)
+    return GIF_FORMAT
 
 
 PROGRAMS = (gifsicle,)

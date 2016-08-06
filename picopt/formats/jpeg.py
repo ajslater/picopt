@@ -4,7 +4,8 @@ import copy
 from .. import extern
 from ..settings import Settings
 
-FORMATS = set(['JPEG'])
+JPEG_FORMAT = 'JPEG'
+FORMATS = set([JPEG_FORMAT])
 
 MOZJPEG_ARGS = ['mozjpeg']
 JPEGTRAN_ARGS = ['jpegtran', '-optimize']
@@ -21,6 +22,7 @@ def mozjpeg(ext_args):
     args += ['-outfile']
     args += [ext_args.new_filename, ext_args.old_filename]
     extern.run_ext(args)
+    return JPEG_FORMAT
 
 
 def jpegtran(ext_args):
@@ -35,6 +37,7 @@ def jpegtran(ext_args):
     args += ['-outfile']
     args += [ext_args.new_filename, ext_args.old_filename]
     extern.run_ext(args)
+    return JPEG_FORMAT
 
 
 def jpegrescan(ext_args):
@@ -46,6 +49,7 @@ def jpegrescan(ext_args):
         args += ['-s']
     args += [ext_args.old_filename, ext_args.new_filename]
     extern.run_ext(args)
+    return JPEG_FORMAT
 
 
 PROGRAMS = (mozjpeg, jpegrescan, jpegtran)

@@ -5,6 +5,7 @@ v1.4.0
 * -d --directory argument goes away
 * nosetests now run the old inadequate cli tests
 * big code cleanup
+* don't redetect new image format type
 
 v1.3.3
 * Print found picopt timestamps

@@ -32,9 +32,7 @@ def _optimize_image_external(filename, func, image_format):
     shutil.copy2(filename, new_filename)
 
     ext_args = ExtArgs._make([filename, new_filename])
-    func(ext_args)
-    # XXX this could be gotten from func
-    new_image_format = detect_format.get_image_format(new_filename)
+    new_image_format = func(ext_args)
 
     report_stats = files.cleanup_after_optimize(filename, new_filename,
                                                 image_format, new_image_format)

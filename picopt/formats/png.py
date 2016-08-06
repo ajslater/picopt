@@ -1,7 +1,8 @@
 """PNG format."""
 from .. import extern
 
-FORMATS = set(['PNG'])
+PNG_FORMAT = 'PNG'
+FORMATS = set([PNG_FORMAT])
 LOSSLESS_FORMATS = set(('PNM', 'PPM', 'TIFF', 'BMP', 'GIF'))
 CONVERTABLE_FORMATS = LOSSLESS_FORMATS | FORMATS
 
@@ -14,18 +15,21 @@ def optipng(ext_args):
     """Run the externAL program optipng on the file."""
     args = OPTIPNG_ARGS + [ext_args.new_filename]
     extern.run_ext(args)
+    return PNG_FORMAT
 
 
 def advpng(ext_args):
     """Run the externAL program advpng on the file."""
     args = ADVPNG_ARGS + [ext_args.new_filename]
     extern.run_ext(args)
+    return PNG_FORMAT
 
 
 def pngout(ext_args):
     """Run the externAL program pngout on the file."""
     args = PNGOUT_ARGS + [ext_args.old_filename, ext_args.new_filename]
     extern.run_ext(args)
+    return PNG_FORMAT
 
 
 PROGRAMS = (optipng, advpng, pngout)
