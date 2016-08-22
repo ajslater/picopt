@@ -6,6 +6,7 @@ from ..settings import Settings
 
 _JPEG_FORMAT = 'JPEG'
 FORMATS = set([_JPEG_FORMAT])
+OUT_EXT = '.jpg'
 
 _MOZJPEG_ARGS = ['mozjpeg']
 _JPEGTRAN_ARGS = ['jpegtran', '-optimize']

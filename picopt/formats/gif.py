@@ -4,6 +4,7 @@ from .. import extern
 SEQUENCED_TEMPLATE = '%s SEQUENCED'
 _GIF_FORMAT = 'GIF'
 FORMATS = set([SEQUENCED_TEMPLATE % _GIF_FORMAT, _GIF_FORMAT])
+OUT_EXT = '.'+_GIF_FORMAT.lower()
 
 _GIFSICLE_ARGS = ['gifsicle', '--optimize=3', '--batch']
 

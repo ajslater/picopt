@@ -14,19 +14,18 @@ from .. import PROGRAM_NAME
 from .. import files
 from ..stats import ReportStats
 
-# Extensions
-_ARCHIVE_TMP_DIR_PREFIX = PROGRAM_NAME+'_tmp_'
-_ARCHIVE_TMP_DIR_TEMPLATE = _ARCHIVE_TMP_DIR_PREFIX+'%s'
-_NEW_ARCHIVE_SUFFIX = '%s-optimized.cbz' % PROGRAM_NAME
-
-_CBR_EXT = '.cbr'
-_CBZ_EXT = '.cbz'
-_COMIC_EXTS = set((_CBR_EXT, _CBZ_EXT))
-
 _CBZ_FORMAT = 'CBZ'
 _CBR_FORMAT = 'CBR'
 FORMATS = set((_CBZ_FORMAT, _CBR_FORMAT))
 
+_CBR_EXT = '.cbr'
+_CBZ_EXT = '.cbz'
+_COMIC_EXTS = set((_CBR_EXT, _CBZ_EXT))
+OUT_EXT = _CBZ_EXT
+
+_ARCHIVE_TMP_DIR_PREFIX = PROGRAM_NAME+'_tmp_'
+_ARCHIVE_TMP_DIR_TEMPLATE = _ARCHIVE_TMP_DIR_PREFIX+'%s'
+_NEW_ARCHIVE_SUFFIX = '%s-optimized%s' % (PROGRAM_NAME, OUT_EXT)
 
 def comics():
     """

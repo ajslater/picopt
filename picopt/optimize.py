@@ -16,9 +16,7 @@ from .settings import Settings
 from . import stats
 from . import files
 
-
-NEW_EXT = '.%s-optimized.png' % PROGRAM_NAME
-
+TMP_SUFFIX = '.%s-optimized' % PROGRAM_NAME
 
 ExtArgs = namedtuple('ExtArgs', ['old_filename', 'new_filename'])
 
@@ -26,9 +24,10 @@ Settings.formats = png.CONVERTABLE_FORMATS | jpeg.FORMATS | gif.FORMATS
 Settings.to_png_formats = png.CONVERTABLE_FORMATS
 
 
-def _optimize_image_external(filename, func, image_format):
+def _optimize_image_external(filename, func, image_format, new_ext):
     """Optimize the file with the external function."""
-    new_filename = os.path.normpath(filename + NEW_EXT)
+    new_filename = filename + TMP_SUFFIX + new_ext
+    new_filename = os.path.normpath(new_filename)
     shutil.copy2(filename, new_filename)
 
     ext_args = ExtArgs._make([filename, new_filename])
@@ -58,7 +57,8 @@ def _optimize_with_progs(format_module, filename, image_format):
     for func in format_module.PROGRAMS:
         if not getattr(Settings, func.__name__):
             continue
-        report_stats = _optimize_image_external(filename, func, image_format)
+        report_stats = _optimize_image_external(
+            filename, func, image_format, format_module.OUT_EXT)
         filename = report_stats.final_filename
         if format_module.BEST_ONLY:
             break

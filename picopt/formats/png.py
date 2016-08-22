@@ -5,6 +5,7 @@ _PNG_FORMAT = 'PNG'
 FORMATS = set([_PNG_FORMAT])
 LOSSLESS_FORMATS = set(('PNM', 'PPM', 'TIFF', 'BMP', 'GIF'))
 CONVERTABLE_FORMATS = LOSSLESS_FORMATS | FORMATS
+OUT_EXT = '.'+_PNG_FORMAT.lower()
 
 _OPTIPNG_ARGS = ['optipng', '-o6', '-fix', '-preserve', '-force', '-quiet']
 _ADVPNG_ARGS = ['advpng', '-z', '-4', '-f']
