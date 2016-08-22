@@ -2,6 +2,14 @@
 from __future__ import print_function
 import subprocess
 
+class ExtArgs(object):
+    """Arguments for external programs."""
+
+    def __init__(self, old_filename, new_filename):
+        """Set arguments."""
+        self.old_filename = old_filename
+        self.new_filename = new_filename
+
 
 def does_external_program_run(prog, verbose):
     """Test to see if the external programs can be run."""

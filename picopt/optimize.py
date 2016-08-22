@@ -1,6 +1,5 @@
 """Optimize a file."""
 from __future__ import print_function
-from collections import namedtuple
 import os
 import shutil
 import traceback
@@ -15,10 +14,9 @@ from . import PROGRAM_NAME
 from .settings import Settings
 from . import stats
 from . import files
+from .extern import ExtArgs
 
 TMP_SUFFIX = '.%s-optimized' % PROGRAM_NAME
-
-ExtArgs = namedtuple('ExtArgs', ['old_filename', 'new_filename'])
 
 Settings.formats = png.CONVERTABLE_FORMATS | jpeg.FORMATS | gif.FORMATS
 Settings.to_png_formats = png.CONVERTABLE_FORMATS
@@ -30,7 +28,7 @@ def _optimize_image_external(filename, func, image_format, new_ext):
     new_filename = os.path.normpath(new_filename)
     shutil.copy2(filename, new_filename)
 
-    ext_args = ExtArgs._make([filename, new_filename])
+    ext_args = ExtArgs(filename, new_filename)
     new_image_format = func(ext_args)
 
     report_stats = files.cleanup_after_optimize(filename, new_filename,
