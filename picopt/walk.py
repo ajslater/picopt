@@ -16,24 +16,27 @@ def _comic_archive_skip(report_stats):
 
 def walk_comic_archive(filename_full, image_format, optimize_after):
     """Optimize a comic archive."""
-    tmp_dir, report_stats = comic.comic_archive_uncompress(filename_full, image_format)
+    # uncompress archive
+    tmp_dir, report_stats = comic.comic_archive_uncompress(filename_full,
+                                                           image_format)
     if tmp_dir is None and report_stats:
         return Settings.pool.apply_async(_comic_archive_skip,
                                          args=report_stats)
 
-    # optimize contents of comic archive
+    # optimize contents of archive
     archive_mtime = os.stat(filename_full).st_mtime
-    result_set = walk_dir(tmp_dir, optimize_after, True,
-                          archive_mtime)
+    result_set = walk_dir(tmp_dir, optimize_after, True, archive_mtime)
 
-    # I'd like to stuff this waiting into the compression process,
-    # but process results don't serialize. :(
+    # wait for archive contents to optimize before recompressing
     nag_about_gifs = False
     for result in result_set:
         res = result.get()
         nag_about_gifs = nag_about_gifs or res.nag_about_gifs
+
+    # recompress archive
     args = (filename_full, image_format, Settings, nag_about_gifs)
-    return Settings.pool.apply_async(comic.comic_archive_compress, args=(args,))
+    return Settings.pool.apply_async(comic.comic_archive_compress,
+                                     args=(args,))
 
 
 def _process_if_not_file(filename_full, walk_after, recurse,
@@ -97,8 +100,7 @@ def walk_file(filename, walk_after, recurse=None,
     if detect_format.is_format_selected(image_format, comic.FORMATS,
                                         comic.PROGRAMS):
         # comic archive
-        result = walk_comic_archive(filename, image_format,
-                                    walk_after)
+        result = walk_comic_archive(filename, image_format, walk_after)
     else:
         # regular image
         args = [filename, image_format, Settings]
