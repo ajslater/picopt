@@ -39,10 +39,10 @@ class TestIsFormatSelected(TestCase):
     def pngout(self):
         pass
 
-    def cbz(self):
+    def comics(self):
         pass
 
-    programs = (pngout, cbz)
+    programs = (pngout, comics)
 
     def test_GIF(self):
         res = detect_format.is_format_selected('GIF', self.formats,
