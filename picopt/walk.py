@@ -68,7 +68,7 @@ def _process_if_not_file(filename_full, walk_after, recurse,
         if mtime <= walk_after:
             return result_set
 
-    return None
+    return result_set
 
 
 def walk_file(filename, walk_after, recurse=None,
