@@ -71,36 +71,37 @@ def _process_if_not_file(filename_full, walk_after, recurse,
     return None
 
 
-def walk_file(filename_full, walk_after, recurse=None,
+def walk_file(filename, walk_after, recurse=None,
               archive_mtime=None):
     """Optimize an individual file."""
-    filename_full = os.path.normpath(filename_full)
+    filename = os.path.normpath(filename)
 
+    walk_after = timestamp.get_walk_after(filename, walk_after)
     result_set = _process_if_not_file(
-        filename_full, walk_after, recurse, archive_mtime)
+        filename, walk_after, recurse, archive_mtime)
     if result_set is not None:
         return result_set
 
     result_set = set()
 
     # Image format
-    image_format = detect_format.detect_file(filename_full)
+    image_format = detect_format.detect_file(filename)
     if not image_format:
         return result_set
 
     if Settings.list_only:
         # list only
-        print("%s : %s" % (filename_full, image_format))
+        print("%s : %s" % (filename, image_format))
         return result_set
 
     if detect_format.is_format_selected(image_format, comic.FORMATS,
                                         comic.PROGRAMS):
         # comic archive
-        result = walk_comic_archive(filename_full, image_format,
+        result = walk_comic_archive(filename, image_format,
                                     walk_after)
     else:
         # regular image
-        args = [filename_full, image_format, Settings]
+        args = [filename, image_format, Settings]
         result = Settings.pool.apply_async(optimize.optimize_image,
                                            args=(args,))
     result_set.add(result)
@@ -116,15 +117,13 @@ def walk_dir(dir_path, walk_after, recurse=None, archive_mtime=None):
     if not recurse:
         return result_set
 
-    filenames = os.listdir(dir_path)
-    filenames.sort()
-    walk_after = timestamp.get_walk_after(dir_path, walk_after)
+    for root, _, filenames in os.walk(dir_path):
+        for filename in filenames:
+            filename_full = os.path.join(root, filename)
+            results = walk_file(filename_full, walk_after, recurse,
+                                archive_mtime)
+            result_set = result_set.union(results)
 
-    for filename in filenames:
-        filename_full = os.path.join(dir_path, filename)
-        results = walk_file(filename_full, walk_after, recurse,
-                            archive_mtime)
-        result_set = result_set.union(results)
     return result_set
 
 
