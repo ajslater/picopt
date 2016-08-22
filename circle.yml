@@ -1,6 +1,6 @@
 machine:
     pre:
-        - sudo apt-get update; sudo apt-get install -y python-pip optipng pngout gifsicle python-imaging
+        - sudo apt-get update; sudo apt-get install -y python-pip optipng gifsicle python-imaging
         - wget http://static.jonof.id.au/dl/kenutils/pngout-20150319-linux-static.tar.gz; tar xzf pngout-20150319-linux-static.tar.gz; ln -sf pngout-20150319-linux-static/x86_64/pngout-static /usr/local/bin/pngout
         - wget https://mozjpeg.codelove.de/bin/mozjpeg_3.1_amd64.deb; sudo dpkg -i mozjpeg_3.1_amd64.deb; ln -sf /opt/mozjpeg/bin/jpegtran /usr/local/bin/mozjpeg
 
