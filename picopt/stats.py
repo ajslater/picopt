@@ -26,11 +26,15 @@ ABBREVS = (
 class ReportStats(object):
     """Container for reported stats from optimization operations."""
 
-    def __init__(self, final_filename, bytes_diff, report_list):
+    def __init__(self, final_filename, bytes_in, bytes_out, report_list,
+                 nag_about_gifs=False):
         """Initialize required instance variables."""
         self.final_filename = final_filename
-        self.bytes_diff = bytes_diff
+        self.bytes_in = bytes_in
+        self.bytes_out = bytes_out
         self.report_list = report_list
+        #XXX not sure this is ever set in the constructor
+        self.nag_about_gifs = nag_about_gifs
 
 
 def _humanize_bytes(num_bytes, precision=1):
@@ -81,9 +85,9 @@ def _humanize_bytes(num_bytes, precision=1):
 
 def new_percent_saved(report_stats):
     """Spit out how much space the optimization saved."""
-    size_in = report_stats.bytes_diff['in']
+    size_in = report_stats.bytes_in
     if size_in > 0:
-        size_out = report_stats.bytes_diff['out']
+        size_out = report_stats.bytes_out
         ratio = size_out / size_in
         kb_saved = _humanize_bytes(size_in - size_out)
     else:
@@ -105,8 +109,8 @@ def truncate_cwd(full_filename):
     return truncated_filename
 
 
-def optimize_accounting(report_stats, total_bytes_in, total_bytes_out):
-    """Record the percent saved, print it and add it to the totals."""
+def report_saved(report_stats):
+    """Record the percent saved & print it."""
     if Settings.verbose:
         report = ''
         truncated_filename = truncate_cwd(report_stats.final_filename)
@@ -124,10 +128,6 @@ def optimize_accounting(report_stats, total_bytes_in, total_bytes_out):
             if tools_report:
                 report += '\n\t' + tools_report
         print(report)
-
-    total_bytes_in.set(total_bytes_in.get() + report_stats.bytes_diff['in'])
-    total_bytes_out.set(total_bytes_out.get() + report_stats.bytes_diff['out'])
-
 
 def report_totals(bytes_in, bytes_out, nag_about_gifs):
     """Report the total number and percent of bytes saved."""
@@ -167,7 +167,6 @@ def report_totals(bytes_in, bytes_out, nag_about_gifs):
 
 def skip(type_name, filename):
     """Provide reporting statistics for a skipped file."""
-    bytes_diff = {'in': 0, 'out': 0}
     rep = ['Skipping %s file: %s' % (type_name, filename)]
-    report_stats = ReportStats(filename, bytes_diff, [rep])
+    report_stats = ReportStats(filename, 0, 0, [rep])
     return report_stats

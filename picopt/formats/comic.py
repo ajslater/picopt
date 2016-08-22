@@ -12,6 +12,7 @@ from .. import stats
 from ..settings import Settings
 from .. import PROGRAM_NAME
 from .. import files
+from ..stats import ReportStats
 
 # Extensions
 _ARCHIVE_TMP_DIR_PREFIX = PROGRAM_NAME+'_tmp_'
@@ -38,6 +39,7 @@ def comics():
     pass
 
 PROGRAMS = (comics,)
+BEST_ONLY = False
 
 def get_comic_format(filename):
     """Return the comic format if it is a comic archive."""
@@ -65,9 +67,7 @@ def comic_archive_uncompress(filename, image_format):
     """
     if not Settings.comics:
         report = ['Skipping archive file: %s' % filename]
-        report_list = [report]
-        bytes_diff = {'in': 0, 'out': 0}
-        return (bytes_diff, report_list)
+        return None, ReportStats(filename, 0, 0, [report])
 
     if Settings.verbose:
         truncated_filename = stats.truncate_cwd(filename)
@@ -88,14 +88,12 @@ def comic_archive_uncompress(filename, image_format):
             rfile.extractall(tmp_dir)
     else:
         report = '%s %s is not a good format' % (filename, image_format)
-        report_list = [report]
-        bytes_diff = {'in': 0, 'out': 0}
-        return (bytes_diff, report_list)
+        return None, ReportStats(filename, 0, 0, [report])
 
     if Settings.verbose:
         print('done')
 
-    return tmp_dir
+    return tmp_dir, None
 
 
 def _comic_archive_write_zipfile(new_filename, tmp_dir):
@@ -124,8 +122,7 @@ def comic_archive_compress(args):
     When they're all done it creates the new archive and cleans up.
     """
     try:
-        filename, total_bytes_in, total_bytes_out, old_format, \
-            settings = args
+        filename, old_format, settings, nag_about_gifs = args
         Settings.update(settings)
         tmp_dir = _get_archive_tmp_dir(filename)
 
@@ -144,8 +141,9 @@ def comic_archive_compress(args):
 
         report_stats = files.cleanup_after_optimize(
             filename, new_filename, old_format, _CBZ_FORMAT)
-        stats.optimize_accounting(report_stats, total_bytes_in,
-                                  total_bytes_out)
+        report_stats.nag_about_gifs = nag_about_gifs
+        stats.report_saved(report_stats)
+        return report_stats
     except Exception as exc:
         print(exc)
         traceback.print_exc(exc)

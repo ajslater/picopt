@@ -64,16 +64,17 @@ def _optimize_with_progs(format_module, filename, image_format):
             break
 
     if report_stats is not None:
-        report_stats.bytes_diff['in'] = filesize_in
+        report_stats.bytes_in = filesize_in
     else:
         report_stats = stats.skip(image_format, filename)
 
     return report_stats
 
 
-def _get_format_module(image_format, nag_about_gifs):
+def _get_format_module(image_format):
     """Get the format module to use for optimizing the image."""
     format_module = None
+    nag_about_gifs = False
 
     if detect_format.is_format_selected(image_format,
                                         Settings.to_png_formats,
@@ -86,20 +87,19 @@ def _get_format_module(image_format, nag_about_gifs):
                                           gif.PROGRAMS):
         # this captures still GIFs too if not caught above
         format_module = gif
-        nag_about_gifs.set(True)
+        nag_about_gifs = True
 
-    return format_module
+    return format_module, nag_about_gifs
 
 
 def optimize_image(arg):
     """Optimize a given image from a filename."""
     try:
-        filename, image_format, settings, total_bytes_in, total_bytes_out, \
-            nag_about_gifs = arg
+        filename, image_format, settings = arg
 
         Settings.update(settings)
 
-        format_module = _get_format_module(image_format, nag_about_gifs)
+        format_module, nag_about_gifs = _get_format_module(image_format)
 
         if format_module is None:
             if Settings.verbose > 1:
@@ -109,8 +109,9 @@ def optimize_image(arg):
 
         report_stats = _optimize_with_progs(format_module, filename,
                                             image_format)
-        stats.optimize_accounting(report_stats, total_bytes_in,
-                                  total_bytes_out)
+        report_stats.nag_about_gifs = nag_about_gifs
+        stats.report_saved(report_stats)
+        return report_stats
     except Exception as exc:
         print(exc)
         traceback.print_exc(exc)

@@ -21,13 +21,14 @@ def cleanup_after_optimize(filename, new_filename, old_format, new_format):
 
     And report results.
     """
-    bytes_diff = {'in': 0, 'out': 0}
+    bytes_in = 0
+    bytes_out = 0
     final_filename = filename
     try:
         filesize_in = os.stat(filename).st_size
         filesize_out = os.stat(new_filename).st_size
-        bytes_diff['in'] = filesize_in
-        bytes_diff['out'] = filesize_in  # overwritten on succes below
+        bytes_in = filesize_in
+        bytes_out = filesize_in  # overwritten on succes below
         if (filesize_out > 0) and ((filesize_out < filesize_in) or
                                    Settings.bigger):
             if old_format != new_format:
@@ -41,10 +42,10 @@ def cleanup_after_optimize(filename, new_filename, old_format, new_format):
             else:
                 os.remove(new_filename)
 
-            bytes_diff['out'] = filesize_out  # only on completion
+            bytes_out = filesize_out  # only on completion
         else:
             os.remove(new_filename)
     except OSError as ex:
         print(ex)
 
-    return stats.ReportStats(final_filename, bytes_diff, [])
+    return stats.ReportStats(final_filename, bytes_in, bytes_out, [])

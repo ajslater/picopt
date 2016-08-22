@@ -11,27 +11,32 @@ from . import timestamp
 from .settings import Settings
 
 
-def walk_comic_archive(filename_full, image_format, multiproc,
-                       optimize_after):
+def _comic_archive_skip(report_stats):
+    return report_stats
+
+def walk_comic_archive(filename_full, image_format, optimize_after):
     """Optimize a comic archive."""
-    tmp_dir = comic.comic_archive_uncompress(filename_full, image_format)
+    tmp_dir, report_stats = comic.comic_archive_uncompress(filename_full, image_format)
+    if tmp_dir is None and report_stats:
+        return Settings.pool.apply_async(_comic_archive_skip,
+                                         args=report_stats)
 
     # optimize contents of comic archive
     archive_mtime = os.stat(filename_full).st_mtime
-    result_set = walk_dir(tmp_dir, multiproc, optimize_after, True,
+    result_set = walk_dir(tmp_dir, optimize_after, True,
                           archive_mtime)
 
     # I'd like to stuff this waiting into the compression process,
     # but process results don't serialize. :(
+    nag_about_gifs = False
     for result in result_set:
-        result.wait()
+        res = result.get()
+        nag_about_gifs = nag_about_gifs or res.nag_about_gifs
+    args = (filename_full, image_format, Settings, nag_about_gifs)
+    return Settings.pool.apply_async(comic.comic_archive_compress, args=(args,))
 
-    args = (filename_full, multiproc['in'], multiproc['out'], image_format,
-            Settings)
-    return multiproc['pool'].apply_async(comic.comic_archive_compress, args=(args,))
 
-
-def _process_if_not_file(filename_full, multiproc, walk_after, recurse,
+def _process_if_not_file(filename_full, walk_after, recurse,
                          archive_mtime):
     """Handle things that are not optimizable files."""
     result_set = set()
@@ -42,8 +47,8 @@ def _process_if_not_file(filename_full, multiproc, walk_after, recurse,
     elif os.path.basename(filename_full) == timestamp.RECORD_FILENAME:
         return result_set
     elif os.path.isdir(filename_full):
-        results = walk_dir(filename_full, multiproc,
-                           walk_after, recurse, archive_mtime)
+        results = walk_dir(filename_full, walk_after, recurse,
+                           archive_mtime)
         result_set = result_set.union(results)
         return result_set
     elif not os.path.exists(filename_full):
@@ -66,13 +71,13 @@ def _process_if_not_file(filename_full, multiproc, walk_after, recurse,
     return None
 
 
-def walk_file(filename_full, multiproc, walk_after, recurse=None,
+def walk_file(filename_full, walk_after, recurse=None,
               archive_mtime=None):
     """Optimize an individual file."""
     filename_full = os.path.normpath(filename_full)
 
     result_set = _process_if_not_file(
-        filename_full, multiproc, walk_after, recurse, archive_mtime)
+        filename_full, walk_after, recurse, archive_mtime)
     if result_set is not None:
         return result_set
 
@@ -92,19 +97,17 @@ def walk_file(filename_full, multiproc, walk_after, recurse=None,
                                         comic.PROGRAMS):
         # comic archive
         result = walk_comic_archive(filename_full, image_format,
-                                    multiproc, walk_after)
+                                    walk_after)
     else:
         # regular image
-        args = [filename_full, image_format, Settings,
-                multiproc['in'], multiproc['out'], multiproc['nag_about_gifs']]
-        result = multiproc['pool'].apply_async(optimize.optimize_image,
-                                               args=(args,))
+        args = [filename_full, image_format, Settings]
+        result = Settings.pool.apply_async(optimize.optimize_image,
+                                           args=(args,))
     result_set.add(result)
     return result_set
 
 
-def walk_dir(dir_path, multiproc, walk_after, recurse=None,
-             archive_mtime=None):
+def walk_dir(dir_path, walk_after, recurse=None, archive_mtime=None):
     """Recursively optimize a directory."""
     if recurse is None:
         recurse = Settings.recurse
@@ -119,13 +122,13 @@ def walk_dir(dir_path, multiproc, walk_after, recurse=None,
 
     for filename in filenames:
         filename_full = os.path.join(dir_path, filename)
-        results = walk_file(filename_full, multiproc, walk_after, recurse,
+        results = walk_file(filename_full, walk_after, recurse,
                             archive_mtime)
         result_set = result_set.union(results)
     return result_set
 
 
-def _walk_all_files(multiproc):
+def _walk_all_files():
     """
     Optimize the files from the arugments list in two batches.
 
@@ -143,39 +146,37 @@ def _walk_all_files(multiproc):
             record_dirs.add(filename_full)
 
         walk_after = timestamp.get_walk_after(filename_full)
-        results = walk_file(filename_full, multiproc, Settings.recurse,
-                            walk_after)
+        results = walk_file(filename_full, Settings.recurse, walk_after)
         result_set = result_set.union(results)
 
+    bytes_in = 0
+    bytes_out = 0
+    nag_about_gifs = False
     for result in result_set:
-        result.wait()
+        res = result.get()
+        bytes_in += res.bytes_in
+        bytes_out += res.bytes_out
+        nag_about_gifs = nag_about_gifs or res.nag_about_gifs
 
-    return record_dirs
+    return record_dirs, bytes_in, bytes_out, nag_about_gifs
 
 
 def run():
     """Use preconfigured settings to optimize files."""
     # Setup Multiprocessing
-    manager = multiprocessing.Manager()
-    total_bytes_in = manager.Value(int, 0)
-    total_bytes_out = manager.Value(int, 0)
-    nag_about_gifs = manager.Value(bool, False)
-    pool = multiprocessing.Pool(Settings.jobs)
-
-    multiproc = {'pool': pool, 'in': total_bytes_in, 'out': total_bytes_out,
-                 'nag_about_gifs': nag_about_gifs}
+    #manager = multiprocessing.Manager()
+    Settings.pool = multiprocessing.Pool(Settings.jobs)
 
     # Optimize Files
-    record_dirs = _walk_all_files(multiproc)
+    record_dirs, bytes_in, bytes_out, nag_about_gifs = _walk_all_files()
 
     # Shut down multiprocessing
-    pool.close()
-    pool.join()
+    Settings.pool.close()
+    Settings.pool.join()
 
     # Write timestamps
     for filename in record_dirs:
         timestamp.record_timestamp(filename)
 
     # Finish by reporting totals
-    stats.report_totals(multiproc['in'].get(), multiproc['out'].get(),
-                        multiproc['nag_about_gifs'].get())
+    stats.report_totals(bytes_in, bytes_out, nag_about_gifs)
