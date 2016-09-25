@@ -172,8 +172,11 @@ def process_arguments(arguments):
     return arguments
 
 
-def main(args):
+def main(args=None):
     """Process command line arguments and walk inputs."""
+    if args is None:
+        import sys
+        args = sys.argv
     raw_arguments = get_arguments(args[1:])
     process_arguments(raw_arguments)
     walk.run()
