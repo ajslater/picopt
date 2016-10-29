@@ -3,6 +3,7 @@
 from __future__ import print_function
 
 import os
+import sys
 import argparse
 import multiprocessing
 import time
@@ -172,13 +173,16 @@ def process_arguments(arguments):
     return arguments
 
 
-def main(args):
+def run(args):
     """Process command line arguments and walk inputs."""
     raw_arguments = get_arguments(args[1:])
     process_arguments(raw_arguments)
     walk.run()
 
 
+def main():
+    """Main entry point."""
+    run(sys.argv)
+
 if __name__ == '__main__':
-    import sys
-    main(sys.argv)
+    main()

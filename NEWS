@@ -1,3 +1,6 @@
+v1.4.1
+* fix main entry bug for cli
+
 v1.4.0
 * let the archive date override the newness of its contained files.
 * let the cli be run programatically with passed in args
