@@ -82,7 +82,7 @@ def walk_file(filename, walk_after, recurse=None,
     walk_after = timestamp.get_walk_after(filename, walk_after)
     result_set = _process_if_not_file(
         filename, walk_after, recurse, archive_mtime)
-    if result_set is not None:
+    if len(result_set):
         return result_set
 
     result_set = set()
