@@ -7,7 +7,7 @@ Architecture:
     Make comic archive module more like the other format modules?
     Split comic into format file and files like file?
     Dynamically link in libraries instead of using command line procs
-    Rewrite in golang with clibs dynamically linked.
+    Rewrite in rust with clibs dynamically linked.
 
 Packaging:
     PIL/Pillow is still a mess.
