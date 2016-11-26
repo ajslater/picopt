@@ -147,7 +147,7 @@ def _walk_all_files():
             record_dirs.add(filename_full)
 
         walk_after = timestamp.get_walk_after(filename_full)
-        results = walk_file(filename_full, Settings.recurse, walk_after)
+        results = walk_file(filename_full, walk_after, Settings.recurse)
         result_set = result_set.union(results)
 
     bytes_in = 0
