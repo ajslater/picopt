@@ -8,13 +8,14 @@ from .settings import Settings
 
 RECORD_FILENAME = '.%s_timestamp' % PROGRAM_NAME
 TIMESTAMP_CACHE = {}
+OLD_TIMESTAMPS = set()
 
 
 def _get_timestamp(dirname_full, remove):
     """
     Get the timestamp from the timestamp file.
 
-    Optionally remove it if we're going to write another one.
+    Optionally mark it for removal if we're going to write another one.
     """
     record_filename = os.path.join(dirname_full, RECORD_FILENAME)
 
@@ -23,9 +24,8 @@ def _get_timestamp(dirname_full, remove):
         mtime_str = datetime.fromtimestamp(mtime)
         print('Found timestamp %s:%s' % (dirname_full, mtime_str))
         if Settings.record_timestamp and remove:
-            os.remove(record_filename)
+            OLD_TIMESTAMPS.add(record_filename)
         return mtime
-
     return None
 
 
@@ -49,20 +49,21 @@ def get_walk_after(filename, optimize_after=None):
     """
     Figure out the which mtime to check against.
 
-    If we look up return that we've looked up too
+    If we have to look up the path return that.
     """
-    if Settings.optimize_after is None:
+    if Settings.optimize_after is not None:
+        optimize_after = Settings.optimize_after
+    else:
         dirname = os.path.dirname(filename)
-        if dirname in TIMESTAMP_CACHE:
-            return TIMESTAMP_CACHE[dirname]
         if optimize_after is None:
-            optimize_after = _get_parent_timestamp(dirname,
-                                                   optimize_after)
+            if dirname in TIMESTAMP_CACHE:
+                optimize_after = TIMESTAMP_CACHE[dirname]
+            else:
+                optimize_after = _get_parent_timestamp(dirname,
+                                                       optimize_after)
         optimize_after = max(_get_timestamp(dirname, True),
                              optimize_after)
         TIMESTAMP_CACHE[dirname] = optimize_after
-    else:
-        optimize_after = Settings.optimize_after
     return optimize_after
 
 
@@ -85,5 +86,9 @@ def record_timestamp(pathname_full):
             os.utime(record_filename_full, None)
         if Settings.verbose:
             print("Set timestamp: %s" % record_filename_full)
+        for fname in OLD_TIMESTAMPS:
+            os.remove(fname)
+            if Settings.verbose:
+                print('Removed old timestamp: %s' % fname)
     except IOError:
         print("Could not set timestamp in %s" % pathname_full)
