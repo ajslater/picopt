@@ -37,12 +37,18 @@ def _get_parent_timestamp(dirname, mtime):
     """
     parent_pathname = os.path.dirname(dirname)
 
+    if parent_pathname in TIMESTAMP_CACHE:
+        return TIMESTAMP_CACHE[parent_pathname]
+
     mtime = max(_get_timestamp(parent_pathname, False), mtime)
 
-    if parent_pathname == os.path.dirname(parent_pathname):
-        return mtime
+    if dirname != os.path.dirname(parent_pathname):
+        mtime = _get_parent_timestamp(parent_pathname, mtime)
 
-    return _get_parent_timestamp(parent_pathname, mtime)
+    if mtime is not None:
+        TIMESTAMP_CACHE[parent_pathname] = mtime
+
+    return mtime
 
 
 def get_walk_after(filename, optimize_after=None):
@@ -52,18 +58,13 @@ def get_walk_after(filename, optimize_after=None):
     If we have to look up the path return that.
     """
     if Settings.optimize_after is not None:
-        optimize_after = Settings.optimize_after
-    else:
-        dirname = os.path.dirname(filename)
-        if optimize_after is None:
-            if dirname in TIMESTAMP_CACHE:
-                optimize_after = TIMESTAMP_CACHE[dirname]
-            else:
-                optimize_after = _get_parent_timestamp(dirname,
-                                                       optimize_after)
-        optimize_after = max(_get_timestamp(dirname, True),
-                             optimize_after)
-        TIMESTAMP_CACHE[dirname] = optimize_after
+        return Settings.optimize_after
+
+    dirname = os.path.dirname(filename)
+    if optimize_after is None:
+        optimize_after = _get_parent_timestamp(dirname, optimize_after)
+    got_timestamp = _get_timestamp(dirname, True)
+    optimize_after = max(got_timestamp, optimize_after)
     return optimize_after
 
 
@@ -87,6 +88,9 @@ def record_timestamp(pathname_full):
         if Settings.verbose:
             print("Set timestamp: %s" % record_filename_full)
         for fname in OLD_TIMESTAMPS:
+            if fname == record_filename_full:
+                # don't remove the timestamp we just set!
+                continue
             os.remove(fname)
             if Settings.verbose:
                 print('Removed old timestamp: %s' % fname)

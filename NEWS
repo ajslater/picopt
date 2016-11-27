@@ -1,5 +1,6 @@
-v1.4.2
-* fix bad distribution
+v1.4.3
+* Fix bug where files would sometimes not be detected
+* Fix broken timestamp processing.
 
 v1.4.1
 * fix main entry bug for cli

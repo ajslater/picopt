@@ -39,4 +39,4 @@ class TestTimestamp(TestCase):
         res = timestamp._get_timestamp(dirname_full, True)
 
         self.assertEqual(res, math.floor(mtime))
-        self.assertFalse(os.path.exists(record_filename))
+        self.assertTrue(record_filename in timestamp.OLD_TIMESTAMPS)
