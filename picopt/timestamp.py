@@ -17,16 +17,21 @@ def _get_timestamp(dirname_full, remove):
 
     Optionally mark it for removal if we're going to write another one.
     """
-    record_filename = os.path.join(dirname_full, RECORD_FILENAME)
+    if dirname_full not in TIMESTAMP_CACHE:
+        record_filename = os.path.join(dirname_full, RECORD_FILENAME)
 
-    if os.path.exists(record_filename):
-        mtime = os.stat(record_filename).st_mtime
-        mtime_str = datetime.fromtimestamp(mtime)
-        print('Found timestamp %s:%s' % (dirname_full, mtime_str))
-        if Settings.record_timestamp and remove:
-            OLD_TIMESTAMPS.add(record_filename)
-        return mtime
-    return None
+        if os.path.exists(record_filename):
+            mtime = os.stat(record_filename).st_mtime
+            mtime_str = datetime.fromtimestamp(mtime)
+            print('Found timestamp %s:%s' % (dirname_full, mtime_str))
+            if Settings.record_timestamp and remove:
+                OLD_TIMESTAMPS.add(record_filename)
+            TIMESTAMP_CACHE[dirname_full] = mtime
+        else:
+            mtime = None
+
+        TIMESTAMP_CACHE[dirname_full] = mtime
+    return TIMESTAMP_CACHE[dirname_full]
 
 
 def _get_parent_timestamp(dirname, mtime):
@@ -37,16 +42,10 @@ def _get_parent_timestamp(dirname, mtime):
     """
     parent_pathname = os.path.dirname(dirname)
 
-    if parent_pathname in TIMESTAMP_CACHE:
-        return TIMESTAMP_CACHE[parent_pathname]
-
     mtime = max(_get_timestamp(parent_pathname, False), mtime)
 
     if dirname != os.path.dirname(parent_pathname):
         mtime = _get_parent_timestamp(parent_pathname, mtime)
-
-    if mtime is not None:
-        TIMESTAMP_CACHE[parent_pathname] = mtime
 
     return mtime
 
@@ -65,6 +64,7 @@ def get_walk_after(filename, optimize_after=None):
         optimize_after = _get_parent_timestamp(dirname, optimize_after)
     got_timestamp = _get_timestamp(dirname, True)
     optimize_after = max(got_timestamp, optimize_after)
+
     return optimize_after
 
 
