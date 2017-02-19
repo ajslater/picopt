@@ -8,6 +8,7 @@ from .settings import Settings
 
 REMOVE_EXT = '.%s-remove' % PROGRAM_NAME
 
+
 def replace_ext(filename, new_ext):
     """Replace the file extention."""
     filename_base = os.path.splitext(filename)[0]

@@ -27,6 +27,7 @@ _ARCHIVE_TMP_DIR_PREFIX = PROGRAM_NAME+'_tmp_'
 _ARCHIVE_TMP_DIR_TEMPLATE = _ARCHIVE_TMP_DIR_PREFIX+'%s'
 _NEW_ARCHIVE_SUFFIX = '%s-optimized%s' % (PROGRAM_NAME, OUT_EXT)
 
+
 def comics():
     """
     Dummy Comic optimizer.
@@ -37,8 +38,10 @@ def comics():
     """
     pass
 
+
 PROGRAMS = (comics,)
 BEST_ONLY = False
+
 
 def get_comic_format(filename):
     """Return the comic format if it is a comic archive."""

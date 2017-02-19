@@ -166,7 +166,7 @@ def _walk_all_files():
 def run():
     """Use preconfigured settings to optimize files."""
     # Setup Multiprocessing
-    #manager = multiprocessing.Manager()
+    # manager = multiprocessing.Manager()
     Settings.pool = multiprocessing.Pool(Settings.jobs)
 
     # Optimize Files

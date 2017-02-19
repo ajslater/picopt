@@ -25,7 +25,7 @@ def _is_program_selected(progs):
 
 
 def is_format_selected(image_format, formats, progs):
-    """Determine if the image format is selected by the command line arguments."""
+    """Determine if the image format is selected by command line arguments."""
     intersection = formats & Settings.formats
     mode = _is_program_selected(progs)
     result = (image_format in intersection) and mode

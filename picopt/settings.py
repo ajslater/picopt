@@ -46,7 +46,8 @@ class Settings(object):
         """Run the external program tester on the required binaries."""
         for program in programs:
             val = getattr(cls, program.__name__) \
-                and extern.does_external_program_run(program.__name__, Settings.verbose)
+                and extern.does_external_program_run(program.__name__,
+                                                     Settings.verbose)
             setattr(cls, program.__name__, val)
 
         do_png = cls.optipng or cls.pngout or cls.advpng

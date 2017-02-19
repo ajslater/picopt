@@ -33,7 +33,7 @@ class ReportStats(object):
         self.bytes_in = bytes_in
         self.bytes_out = bytes_out
         self.report_list = report_list
-        #XXX not sure this is ever set in the constructor
+        # XXX not sure this is ever set in the constructor
         self.nag_about_gifs = nag_about_gifs
 
 
@@ -128,6 +128,7 @@ def report_saved(report_stats):
             if tools_report:
                 report += '\n\t' + tools_report
         print(report)
+
 
 def report_totals(bytes_in, bytes_out, nag_about_gifs):
     """Report the total number and percent of bytes saved."""
