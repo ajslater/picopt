@@ -4,3 +4,4 @@ build
 MANIFEST
 dist
 *.egg-info
+.ropeproject
