@@ -69,7 +69,7 @@ def comic_archive_uncompress(filename, image_format):
     """
     if not Settings.comics:
         report = ['Skipping archive file: %s' % filename]
-        return None, ReportStats(filename, 0, 0, [report])
+        return None, ReportStats(filename, report=report)
 
     if Settings.verbose:
         truncated_filename = stats.truncate_cwd(filename)
@@ -90,7 +90,7 @@ def comic_archive_uncompress(filename, image_format):
             rfile.extractall(tmp_dir)
     else:
         report = '%s %s is not a good format' % (filename, image_format)
-        return None, ReportStats(filename, 0, 0, [report])
+        return None, ReportStats(filename, report=report)
 
     if Settings.verbose:
         print('done')

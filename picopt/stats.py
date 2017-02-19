@@ -26,13 +26,20 @@ ABBREVS = (
 class ReportStats(object):
     """Container for reported stats from optimization operations."""
 
-    def __init__(self, final_filename, bytes_in, bytes_out, report_list,
+    def __init__(self, final_filename, report=None, bytes_count=None,
                  nag_about_gifs=False):
         """Initialize required instance variables."""
         self.final_filename = final_filename
-        self.bytes_in = bytes_in
-        self.bytes_out = bytes_out
-        self.report_list = report_list
+        self.report_list = []
+        if report:
+            self.report_list.append(report)
+        if bytes_count:
+            self.bytes_in = bytes_count[0]
+            self.bytes_out = bytes_count[0]
+        else:
+            self.bytes_count = 0
+            self.bytes_count = 0
+
         # XXX not sure this is ever set in the constructor
         self.nag_about_gifs = nag_about_gifs
 
@@ -168,6 +175,6 @@ def report_totals(bytes_in, bytes_out, nag_about_gifs):
 
 def skip(type_name, filename):
     """Provide reporting statistics for a skipped file."""
-    rep = ['Skipping %s file: %s' % (type_name, filename)]
-    report_stats = ReportStats(filename, 0, 0, [rep])
+    report = ['Skipping %s file: %s' % (type_name, filename)]
+    report_stats = ReportStats(filename, report=report)
     return report_stats

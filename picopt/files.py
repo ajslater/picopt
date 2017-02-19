@@ -49,4 +49,4 @@ def cleanup_after_optimize(filename, new_filename, old_format, new_format):
     except OSError as ex:
         print(ex)
 
-    return stats.ReportStats(final_filename, bytes_in, bytes_out, [])
+    return stats.ReportStats(final_filename, bytes_count=(bytes_in, bytes_out))
