@@ -17,8 +17,6 @@ def _get_timestamp(dirname_full, remove):
 
     Optionally mark it for removal if we're going to write another one.
     """
-    print('dirname_full %s' % dirname_full)
-    print('TIMESTAMP_CACHE %s' % TIMESTAMP_CACHE)
     if dirname_full not in TIMESTAMP_CACHE:
         record_filename = os.path.join(dirname_full, RECORD_FILENAME)
 
