@@ -4,8 +4,8 @@ Tests:
     Test recursive opt timestamps
 
 Architecture:
-    Make comic archive module more like the other format modules?
-    Split comic into format file and files like file?
+    Python 3
+    Change main process into an event loop so comics don't block as much
     Dynamically link in libraries instead of using command line procs
     Rewrite in rust with clibs dynamically linked.
 
