@@ -5,6 +5,7 @@ import time
 from unittest import TestCase
 
 from picopt import timestamp
+from picopt.settings import Settings
 
 TEST_FILES_ROOT = 'tests/test_files'
 COMIC_ROOT = TEST_FILES_ROOT+'/comic_archives'
@@ -36,6 +37,10 @@ class TestTimestamp(TestCase):
         mtime = time.time()
         with open(record_filename, 'a'):
             os.utime(record_filename, (mtime, mtime))
+
+        # Reset the timestamp cache
+        timestamp.TIMESTAMP_CACHE = {}
+        Settings.record_timestamp = True
         res = timestamp._get_timestamp(dirname_full, True)
 
         self.assertEqual(res, math.floor(mtime))

@@ -17,6 +17,8 @@ def _get_timestamp(dirname_full, remove):
 
     Optionally mark it for removal if we're going to write another one.
     """
+    print('dirname_full %s' % dirname_full)
+    print('TIMESTAMP_CACHE %s' % TIMESTAMP_CACHE)
     if dirname_full not in TIMESTAMP_CACHE:
         record_filename = os.path.join(dirname_full, RECORD_FILENAME)
 
@@ -88,11 +90,12 @@ def record_timestamp(pathname_full):
         if Settings.verbose:
             print("Set timestamp: %s" % record_filename_full)
         for fname in OLD_TIMESTAMPS:
-            if fname == record_filename_full:
-                # don't remove the timestamp we just set!
-                continue
-            os.remove(fname)
-            if Settings.verbose:
-                print('Removed old timestamp: %s' % fname)
+            if fname.startswith(pathname_full) and \
+               fname != record_filename_full:
+                # only remove timestamps below the curent path
+                # but don't remove the timestamp we just set!
+                os.remove(fname)
+                if Settings.verbose:
+                    print('Removed old timestamp: %s' % fname)
     except IOError:
         print("Could not set timestamp in %s" % pathname_full)

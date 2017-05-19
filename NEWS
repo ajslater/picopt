@@ -1,3 +1,6 @@
+v1.4.5
+* When setting new timestamps, don't remove timestamps above the root paths specified as input
+
 v1.4.4
 * Use timestamp cacheing more often
 
