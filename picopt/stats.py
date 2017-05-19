@@ -40,7 +40,6 @@ class ReportStats(object):
             self.bytes_count = 0
             self.bytes_count = 0
 
-        # XXX not sure this is ever set in the constructor
         self.nag_about_gifs = nag_about_gifs
 
 
