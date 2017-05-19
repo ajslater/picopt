@@ -16,7 +16,12 @@ def _comic_archive_skip(report_stats):
 
 
 def walk_comic_archive(filename_full, image_format, optimize_after):
-    """Optimize a comic archive."""
+    """Optimize a comic archive.
+       This is done mostly inline to use the master processes process pool
+       for workers. And to avoid calling back up into walk from a dedicated module or
+       format processor. It does mean that we block on uncompress and on
+       waiting for the contents subprocesses to compress.
+    """
     # uncompress archive
     tmp_dir, report_stats = comic.comic_archive_uncompress(filename_full,
                                                            image_format)
