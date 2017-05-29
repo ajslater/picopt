@@ -42,13 +42,18 @@ class Settings(object):
             setattr(cls, key, val)
 
     @classmethod
-    def config_program_reqs(cls, programs):
+    def _set_program_defaults(cls, programs):
         """Run the external program tester on the required binaries."""
         for program in programs:
             val = getattr(cls, program.__name__) \
                 and extern.does_external_program_run(program.__name__,
                                                      Settings.verbose)
             setattr(cls, program.__name__, val)
+
+    @classmethod
+    def config_program_reqs(cls, programs):
+        """Run the program tester and determine if we can do anything."""
+        cls._set_program_defaults(programs)
 
         do_png = cls.optipng or cls.pngout or cls.advpng
         do_jpeg = cls.mozjpeg or cls.jpegrescan or cls.jpegtran
