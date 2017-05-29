@@ -16,12 +16,10 @@ def replace_ext(filename, new_ext):
     return new_filename
 
 
-def cleanup_after_optimize_aux(filename, new_filename, old_format,
-                               new_format):
+def _cleanup_after_optimize_aux(filename, new_filename, old_format,
+                                new_format):
     """
     Replace old file with better one or discard new wasteful file.
-
-    And report results.
     """
     bytes_in = 0
     bytes_out = 0
@@ -57,8 +55,8 @@ def cleanup_after_optimize(filename, new_filename, old_format, new_format):
     """
     Replace old file with better one or discard new wasteful file.
 
-    And report results.
+    And report results using the stats module.
     """
-    final_filename, bytes_in, bytes_out = cleanup_after_optimize_aux(
+    final_filename, bytes_in, bytes_out = _cleanup_after_optimize_aux(
         filename, new_filename, old_format, new_format)
     return stats.ReportStats(final_filename, bytes_count=(bytes_in, bytes_out))

@@ -38,8 +38,8 @@ class TestCleanupAterOptimise(TestCase):
     def cleanup_aux(self, old_size, new_size, old_format, new_format):
         fn_old = self.create_file(self.TEST_FN_OLD, old_format, old_size)
         fn_new = self.create_file(self.TEST_FN_NEW, new_format, new_size)
-        res = files.cleanup_after_optimize_aux(fn_old, fn_new,
-                                               old_format, new_format)
+        res = files._cleanup_after_optimize_aux(fn_old, fn_new,
+                                                old_format, new_format)
         os.remove(res[0])
         return res
 
