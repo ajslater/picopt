@@ -5,3 +5,4 @@ MANIFEST
 dist
 *.egg-info
 .ropeproject
+.picopt_timestamp
