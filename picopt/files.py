@@ -16,7 +16,8 @@ def replace_ext(filename, new_ext):
     return new_filename
 
 
-def cleanup_after_optimize(filename, new_filename, old_format, new_format):
+def cleanup_after_optimize_aux(filename, new_filename, old_format,
+                               new_format):
     """
     Replace old file with better one or discard new wasteful file.
 
@@ -49,4 +50,15 @@ def cleanup_after_optimize(filename, new_filename, old_format, new_format):
     except OSError as ex:
         print(ex)
 
+    return final_filename, bytes_in, bytes_out
+
+
+def cleanup_after_optimize(filename, new_filename, old_format, new_format):
+    """
+    Replace old file with better one or discard new wasteful file.
+
+    And report results.
+    """
+    final_filename, bytes_in, bytes_out = cleanup_after_optimize_aux(
+        filename, new_filename, old_format, new_format)
     return stats.ReportStats(final_filename, bytes_count=(bytes_in, bytes_out))
