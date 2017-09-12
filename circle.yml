@@ -3,3 +3,9 @@ dependencies:
       - ./ci/apt.sh 
       - ./ci/pngout.sh
       - ./ci/mozjpeg.sh
+
+test:
+    pre:
+      - ls /usr/local/bin
+      - echo $PATH
+      - export PATH=$PATH:/usr/local/bin
