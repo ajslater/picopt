@@ -1,5 +1,5 @@
 machine:
     pre:
-      - ci/apt.sh 
-      - ci/pngout.sh
-      - ci/mozjpeg.sh
+      - ./ci/apt.sh 
+      - ./ci/pngout.sh
+      - ./ci/mozjpeg.sh
