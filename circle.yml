@@ -1,5 +1,6 @@
-machine:
+dependancies:
     pre:
-      - ./ci/apt.sh 
-      - ./ci/pngout.sh
-      - ./ci/mozjpeg.sh
+      - ls
+      - picopt/ci/apt.sh 
+      - picopt/ci/pngout.sh
+      - picopt/ci/mozjpeg.sh
