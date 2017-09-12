@@ -1,4 +1,4 @@
-dependancies:
+dependencies:
     pre:
       - ls
       - picopt/ci/apt.sh 
