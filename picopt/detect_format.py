@@ -1,13 +1,14 @@
 """Detect file formats."""
-from __future__ import print_function
+from __future__ import absolute_import, division, print_function
+
+from .formats import comic, gif
+from .settings import Settings
 
 try:
     from PIL import Image
 except ImportError:
     import Image
 
-from .formats import (gif, comic)
-from .settings import Settings
 
 # Formats
 NONE_FORMAT = 'NONE'

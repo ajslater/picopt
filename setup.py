@@ -4,11 +4,14 @@
 Reference:
 https://hynek.me/articles/sharing-your-labor-of-love-pypi-quick-and-dirty/
 """
+from __future__ import absolute_import, division, print_function
+
 import os
 import re
 import sys
-from setuptools import setup, find_packages
+
 from pip.req import parse_requirements
+from setuptools import find_packages, setup
 
 README_FILENAME = "README.rst"
 REQUIREMENTS = {

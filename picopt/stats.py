@@ -1,11 +1,10 @@
 """Statistics for the optimization operations."""
-from __future__ import division
-from __future__ import print_function
+from __future__ import absolute_import, division, print_function
+
 import os
 import sys
 
 from .settings import Settings
-
 
 if sys.version > '3':
     LongInt = int

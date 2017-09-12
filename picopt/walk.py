@@ -1,13 +1,11 @@
 """Walk the directory trees and files and call the optimizers."""
-from __future__ import print_function
-import os
-import multiprocessing
+from __future__ import absolute_import, division, print_function
 
+import multiprocessing
+import os
+
+from . import detect_format, optimize, stats, timestamp
 from .formats import comic
-from . import detect_format
-from . import optimize
-from . import stats
-from . import timestamp
 from .settings import Settings
 
 

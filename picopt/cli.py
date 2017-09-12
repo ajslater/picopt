@@ -1,24 +1,18 @@
 #!/usr/bin/env python
 """Run pictures through image specific external optimizers."""
-from __future__ import print_function
+from __future__ import absolute_import, division, print_function
 
-import os
-import sys
 import argparse
 import multiprocessing
+import os
+import sys
 import time
+
 import dateutil.parser
 
-from . import walk
-from .formats import (
-    gif,
-    jpeg,
-    png,
-    comic,
-)
-from . import PROGRAM_NAME
+from . import PROGRAM_NAME, __version__, walk
+from .formats import comic, gif, jpeg, png
 from .settings import Settings
-from . import __version__
 
 # Programs
 PROGRAMS = set(png.PROGRAMS + gif.PROGRAMS +
