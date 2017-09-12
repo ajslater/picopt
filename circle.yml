@@ -1,8 +1,5 @@
 machine:
-    services:
-        - docker
-
-dependencies:
-    overide:
-        - ci/setup.sh
-
+    pre:
+      - ci/apt.sh 
+      - ci/pngout.sh
+      - ci/mozjpeg.sh
