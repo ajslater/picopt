@@ -49,6 +49,7 @@ class Settings(object):
                 and extern.does_external_program_run(program.__name__,
                                                      Settings.verbose)
             setattr(cls, program.__name__, val)
+            print("SETTING: {}:{}".format(program.__name__, val))
 
     @classmethod
     def config_program_reqs(cls, programs):
