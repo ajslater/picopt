@@ -86,7 +86,8 @@ def _humanize_bytes(num_bytes, precision=1):
     if factored_bytes == 1:
         precision = 0
 
-    return '%.*f %s' % (precision, factored_bytes, factor_suffix)
+    return '{:.{prec}f} {}'.format(factored_bytes, factor_suffix,
+                                   prec=precision)
 
 
 def new_percent_saved(report_stats):
@@ -101,7 +102,7 @@ def new_percent_saved(report_stats):
         kb_saved = 0
     percent_saved = (1 - ratio) * 100
 
-    result = '%.*f%s (%s)' % (2, percent_saved, '%', kb_saved)
+    result = '{:.{prec}f}% ({})'.format(percent_saved, kb_saved, prec=2)
     return result
 
 
@@ -156,8 +157,8 @@ def report_totals(bytes_in, bytes_out, nag_about_gifs):
                 msg += "Evened out"
             else:
                 msg = "Lost"
-        msg += " a total of %s or %.*f%s" % (_humanize_bytes(bytes_saved),
-                                             2, percent_bytes_saved, '%')
+        msg += " a total of {} or {:.{prec}f}%".format(
+            _humanize_bytes(bytes_saved), percent_bytes_saved, prec=2)
         if Settings.verbose:
             print(msg)
             if Settings.test:
