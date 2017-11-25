@@ -134,10 +134,9 @@ def walk_dir(dir_path, walk_after, recurse=None, archive_mtime=None):
                 results = walk_file(filename_full, walk_after, recurse,
                                     archive_mtime)
                 result_set = result_set.union(results)
-            except:
-                print "Error with file: {}".format(filename_full)
+            except Exception:
+                print("Error with file: {}".format(filename_full))
                 raise
-
 
     return result_set
 
