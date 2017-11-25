@@ -1,2 +1,4 @@
-#!/bin/sh
-sudo apt-get install -y python-pip optipng gifsicle unrar
+#!/bin/bash
+set -euo pipefail
+
+apt-get install -y python-pip optipng gifsicle unrar
