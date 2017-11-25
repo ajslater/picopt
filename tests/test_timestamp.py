@@ -18,30 +18,29 @@ class TestTimestamp(TestCase):
         res = timestamp._get_timestamp(path, False)
         self.assertEqual(res, None)
 
-    def test_get_timestamp_no_remove(self):
-        dirname_full = TEST_FILES_ROOT
-        record_filename = os.path.join(dirname_full,
+    def _get_timestamp_setup(self):
+        record_filename = os.path.join(TEST_FILES_ROOT,
                                        timestamp.RECORD_FILENAME)
-        mtime = time.time()
+
+        mtime = math.floor(time.time())
         with open(record_filename, 'a'):
             os.utime(record_filename, (mtime, mtime))
-        res = timestamp._get_timestamp(dirname_full, False)
+        return record_filename, mtime
 
-        self.assertEqual(res, math.floor(mtime))
+    def test_get_timestamp_no_remove(self):
+        record_filename, mtime = self._get_timestamp_setup()
+        res = timestamp._get_timestamp(TEST_FILES_ROOT, False)
+
+        self.assertEqual(res, mtime)
         self.assertTrue(os.path.exists(record_filename))
 
     def test_get_timestamp_remove(self):
-        dirname_full = TEST_FILES_ROOT
-        record_filename = os.path.join(dirname_full,
-                                       timestamp.RECORD_FILENAME)
-        mtime = time.time()
-        with open(record_filename, 'a'):
-            os.utime(record_filename, (mtime, mtime))
+        record_filename, mtime = self._get_timestamp_setup()
 
         # Reset the timestamp cache
         timestamp.TIMESTAMP_CACHE = {}
         Settings.record_timestamp = True
-        res = timestamp._get_timestamp(dirname_full, True)
+        res = timestamp._get_timestamp(TEST_FILES_ROOT, True)
 
-        self.assertEqual(res, math.floor(mtime))
+        self.assertEqual(res, mtime)
         self.assertTrue(record_filename in timestamp.OLD_TIMESTAMPS)
