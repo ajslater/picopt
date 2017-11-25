@@ -18,7 +18,6 @@ def _is_program_selected(progs):
     """Determine if the program is enabled in the settings."""
     mode = False
     for prog in progs:
-        print(prog.__name__, getattr(Settings, prog.__name__))
         if getattr(Settings, prog.__name__):
             mode = True
             break
