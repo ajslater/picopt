@@ -7,8 +7,9 @@ from picopt import cli
 
 TEST_FILES_SRC = 'tests/test_files'
 TEST_FILES_DST_ROOT = '/tmp'
-TEST_FILES_DST = '%s/%s' % (TEST_FILES_DST_ROOT, 'picopt_tests')
-TEST_SMALL_COMIC = "%s/comic_archives/test_small_cbz.cbz" % TEST_FILES_DST
+TEST_FILES_DST = os.path.join(TEST_FILES_DST_ROOT, 'picopt_tests')
+TEST_SMALL_COMIC = os.path.join(TEST_FILES_DST,
+                                'comic_archives/test_small_cbz.cbz')
 
 
 class TestCLI(TestCase):
@@ -20,6 +21,7 @@ class TestCLI(TestCase):
 
     def tearDown(self):
         shutil.rmtree(TEST_FILES_DST)
+
 
 class TestCLISmallComic(TestCLI):
 

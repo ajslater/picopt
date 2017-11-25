@@ -6,7 +6,7 @@ from . import stats
 from . import PROGRAM_NAME
 from .settings import Settings
 
-REMOVE_EXT = '.%s-remove' % PROGRAM_NAME
+REMOVE_EXT = '.{}-remove'.format(PROGRAM_NAME)
 
 
 def replace_ext(filename, new_ext):

@@ -121,7 +121,7 @@ def report_saved(report_stats):
         report = ''
         truncated_filename = truncate_cwd(report_stats.final_filename)
 
-        report += '%s: ' % truncated_filename
+        report += '{}: '.format(truncated_filename)
         total = new_percent_saved(report_stats)
         if total:
             report += total
@@ -174,6 +174,6 @@ def report_totals(bytes_in, bytes_out, nag_about_gifs):
 
 def skip(type_name, filename):
     """Provide reporting statistics for a skipped file."""
-    report = ['Skipping %s file: %s' % (type_name, filename)]
+    report = ['Skipping {} file: {}'.format(type_name, filename)]
     report_stats = ReportStats(filename, report=report)
     return report_stats

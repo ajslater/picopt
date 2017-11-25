@@ -56,9 +56,10 @@ def get_arguments(args):
                         help="Also optimize comic book archives (cbz & cbr)")
     parser.add_argument("-f", "--formats", action="store", dest="formats",
                         default=DEFAULT_FORMATS,
-                        help="Only optimize images of the specifed '%s' "
-                        "delimited formats from: %s" %
-                        (FORMAT_DELIMETER, ', '.join(sorted(ALL_FORMATS))))
+                        help="Only optimize images of the specifed '{}' "
+                        "delimited formats from: {}".format(
+                            FORMAT_DELIMETER,
+                            ', '.join(sorted(ALL_FORMATS))))
     parser.add_argument("-O", "--disable_optipng", action="store_false",
                         dest="optipng", default=1,
                         help="Do not optimize with optipng")
@@ -86,9 +87,10 @@ def get_arguments(args):
                         const=png.FORMATS,
                         default=png.CONVERTABLE_FORMATS,
                         help="Do not convert other lossless formats like "
-                        " %s to PNG when optimizing. By default, %s"
-                        " does convert these formats to PNG" %
-                        (', '.join(png.LOSSLESS_FORMATS), PROGRAM_NAME))
+                        " {} to PNG when optimizing. By default, {}"
+                        " does convert these formats to PNG".format(
+                            ', '.join(png.LOSSLESS_FORMATS),
+                            PROGRAM_NAME))
     parser.add_argument("-S", "--disable_follow_symlinks",
                         action="store_false",
                         dest="follow_symlinks", default=1,
