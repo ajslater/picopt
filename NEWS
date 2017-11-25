@@ -1,5 +1,6 @@
 v1.4.6
 * Fix space savings reporting bug where savings always equaled zero
+* Drop TIFF support. It was never a good idea and behaves poorly on old linux
 
 v1.4.5
 * When setting new timestamps, don't remove timestamps above the root paths specified as input
