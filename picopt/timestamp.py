@@ -24,10 +24,9 @@ def _get_timestamp(dirname_full, remove):
         if os.path.exists(record_filename):
             mtime = os.stat(record_filename).st_mtime
             mtime_str = datetime.fromtimestamp(mtime)
-            print('Found timestamp %s:%s' % (dirname_full, mtime_str))
+            print('Found timestamp {}:{}'.format(dirname_full, mtime_str))
             if Settings.record_timestamp and remove:
                 OLD_TIMESTAMPS.add(record_filename)
-            TIMESTAMP_CACHE[dirname_full] = mtime
         else:
             mtime = None
 

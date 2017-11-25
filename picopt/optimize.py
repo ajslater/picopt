@@ -26,7 +26,8 @@ def _optimize_image_external(filename, func, image_format, new_ext):
     new_image_format = func(ext_args)
 
     report_stats = files.cleanup_after_optimize(filename, new_filename,
-                                                image_format, new_image_format)
+                                                image_format,
+                                                new_image_format)
     percent = stats.new_percent_saved(report_stats)
     if percent != 0:
         report = '%s: %s' % (func.__name__, percent)

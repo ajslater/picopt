@@ -58,7 +58,7 @@ class TestCleanupAterOptimise(TestCase):
     def test_big_small(self):
         old_size = 44
         new_size = 4
-        old_format = 'tiff'
+        old_format = 'bmp'
         new_format = 'png'
         fn, b_in, b_out = self.cleanup_aux(old_size, new_size, old_format,
                                            new_format)
@@ -69,7 +69,7 @@ class TestCleanupAterOptimise(TestCase):
     def test_small_small(self):
         old_size = 5
         new_size = 5
-        old_format = 'tiff'
+        old_format = 'bmp'
         new_format = 'png'
         fn, b_in, b_out = self.cleanup_aux(old_size, new_size, old_format,
                                            new_format)

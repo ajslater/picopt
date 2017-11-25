@@ -8,7 +8,7 @@ from picopt import cli
 
 TEST_FILES_SRC = 'tests/test_files'
 TEST_FILES_DST_ROOT = '/tmp'
-TEST_FILES_DST = '%s/%s' % (TEST_FILES_DST_ROOT, 'picopt_tests')
+TEST_FILES_DST = os.path.join(TEST_FILES_DST_ROOT, 'picopt_tests')
 
 
 class TestCLI(TestCase):
@@ -25,8 +25,9 @@ class TestCLI(TestCase):
 class TestCLIImages(TestCLI):
 
     def test_walk_images(self):
-        args = [None] +  glob.glob(TEST_FILES_DST+'/*')
+        args = [None] + glob.glob(TEST_FILES_DST+'/*')
         cli.run(args)
+
 
 class TestCLIEverything(TestCLI):
 

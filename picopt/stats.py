@@ -34,7 +34,7 @@ class ReportStats(object):
             self.report_list.append(report)
         if bytes_count:
             self.bytes_in = bytes_count[0]
-            self.bytes_out = bytes_count[0]
+            self.bytes_out = bytes_count[1]
         else:
             self.bytes_count = 0
             self.bytes_count = 0
