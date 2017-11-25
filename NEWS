@@ -1,6 +1,6 @@
-v1.4.6
+v1.5.0
+* Drop TIFF support. It was never a good idea, tiff is usually a metadata store. And behaves poorly with older optipng.
 * Fix space savings reporting bug where savings always equaled zero
-* Drop TIFF support. It was never a good idea and behaves poorly on old linux
 
 v1.4.5
 * When setting new timestamps, don't remove timestamps above the root paths specified as input
