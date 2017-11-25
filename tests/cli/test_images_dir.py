@@ -26,7 +26,6 @@ class TestCLIImages(TestCLI):
 
     def test_walk_images(self):
         args = [None] + glob.glob(TEST_FILES_DST+'/*')
-        print args
         cli.run(args)
 
 
@@ -34,5 +33,4 @@ class TestCLIEverything(TestCLI):
 
     def test_all_once(self):
         args = [None, '-rct', TEST_FILES_DST]
-        print args
         cli.run(args)

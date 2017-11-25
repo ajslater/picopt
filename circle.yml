@@ -1,5 +1,5 @@
 dependencies:
     pre:
-      - ./ci/apt.sh 
+      - ./ci/apt.sh
       - ./ci/pngout.sh
       - ./ci/mozjpeg.sh
