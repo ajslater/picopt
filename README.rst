@@ -16,8 +16,8 @@ To optimize JPEG images. Picopt needs one of
 `jpegtran <http://jpegclub.org/jpegtran/>`__ on the path. in order of
 preference.
 
-To optimize lossless images like PNG, PNM, GIF, TIFF and BMP, picopt
-requires either `optipng <http://optipng.sourceforge.net/>`__,
+To optimize lossless images like PNG, PNM, GIF, and BMP, picopt requires
+either `optipng <http://optipng.sourceforge.net/>`__,
 `advpng <http://advancemame.sourceforge.net/doc-advpng.html>`__ or
 `pngout <http://advsys.net/ken/utils.htm>`__ be on the path. Optipng
 provides the most advantage, but best results are acheived by using
