@@ -1,2 +1,2 @@
 #!/bin/sh
-sudo apt-get install -y python-pip optipng gifsicle
+sudo apt-get install -y python-pip optipng gifsicle unrar
