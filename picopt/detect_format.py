@@ -60,7 +60,7 @@ def get_image_format(filename):
         pass
 
     if sequenced:
-        image_format = gif.SEQUENCED_TEMPLATE % image_format
+        image_format = gif.SEQUENCED_TEMPLATE.format(image_format)
     elif image is None or bad_image or image_format == NONE_FORMAT:
         image_format = ERROR_FORMAT
         comic_format = comic.get_comic_format(filename)

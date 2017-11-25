@@ -21,7 +21,7 @@ def does_external_program_run(prog, verbose):
         result = True
     except OSError:
         if verbose > 1:
-            print("couldn't run %s" % prog)
+            print("couldn't run {}".format(prog))
         result = False
 
     return result

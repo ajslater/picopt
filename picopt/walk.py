@@ -100,7 +100,7 @@ def walk_file(filename, walk_after, recurse=None, archive_mtime=None):
 
     if Settings.list_only:
         # list only
-        print("%s : %s" % (filename, image_format))
+        print("{}: {}".format(filename, image_format))
         return result_set
 
     if detect_format.is_format_selected(image_format, comic.FORMATS,
@@ -128,9 +128,13 @@ def walk_dir(dir_path, walk_after, recurse=None, archive_mtime=None):
     for root, _, filenames in os.walk(dir_path):
         for filename in filenames:
             filename_full = os.path.join(root, filename)
-            results = walk_file(filename_full, walk_after, recurse,
-                                archive_mtime)
-            result_set = result_set.union(results)
+            try:
+                results = walk_file(filename_full, walk_after, recurse,
+                                    archive_mtime)
+                result_set = result_set.union(results)
+            except Exception:
+                print("Error with file: {}".format(filename_full))
+                raise
 
     return result_set
 

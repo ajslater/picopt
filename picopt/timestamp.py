@@ -7,7 +7,7 @@ from datetime import datetime
 from . import PROGRAM_NAME
 from .settings import Settings
 
-RECORD_FILENAME = '.%s_timestamp' % PROGRAM_NAME
+RECORD_FILENAME = '.{}_timestamp'.format(PROGRAM_NAME)
 TIMESTAMP_CACHE = {}
 OLD_TIMESTAMPS = set()
 
@@ -86,7 +86,7 @@ def record_timestamp(pathname_full):
         with open(record_filename_full, 'w'):
             os.utime(record_filename_full, None)
         if Settings.verbose:
-            print("Set timestamp: %s" % record_filename_full)
+            print("Set timestamp: {}".format(record_filename_full))
         for fname in OLD_TIMESTAMPS:
             if fname.startswith(pathname_full) and \
                fname != record_filename_full:
@@ -94,6 +94,6 @@ def record_timestamp(pathname_full):
                 # but don't remove the timestamp we just set!
                 os.remove(fname)
                 if Settings.verbose:
-                    print('Removed old timestamp: %s' % fname)
+                    print('Removed old timestamp: {}'.format(fname))
     except IOError:
-        print("Could not set timestamp in %s" % pathname_full)
+        print("Could not set timestamp in {}".format(pathname_full))
