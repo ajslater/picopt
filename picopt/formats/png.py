@@ -3,7 +3,7 @@ from .. import extern
 
 _PNG_FORMAT = 'PNG'
 FORMATS = set([_PNG_FORMAT])
-LOSSLESS_FORMATS = set(('PNM', 'PPM', 'TIFF', 'BMP', 'GIF'))
+LOSSLESS_FORMATS = set(('PNM', 'PPM', 'BMP', 'GIF'))
 CONVERTABLE_FORMATS = LOSSLESS_FORMATS | FORMATS
 OUT_EXT = '.'+_PNG_FORMAT.lower()
 

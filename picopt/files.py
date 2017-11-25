@@ -25,12 +25,9 @@ def _cleanup_after_optimize_aux(filename, new_filename, old_format,
     bytes_out = 0
     final_filename = filename
     try:
-        filesize_in = os.stat(filename).st_size
-        filesize_out = os.stat(new_filename).st_size
-        bytes_in = filesize_in
-        bytes_out = filesize_in  # overwritten on succes below
-        if (filesize_out > 0) and ((filesize_out < filesize_in) or
-                                   Settings.bigger):
+        bytes_in = os.stat(filename).st_size
+        bytes_out = os.stat(new_filename).st_size
+        if (bytes_out > 0) and ((bytes_out < bytes_in) or Settings.bigger):
             if old_format != new_format:
                 final_filename = replace_ext(filename,
                                              new_format.lower())
@@ -42,9 +39,9 @@ def _cleanup_after_optimize_aux(filename, new_filename, old_format,
             else:
                 os.remove(new_filename)
 
-            bytes_out = filesize_out  # only on completion
         else:
             os.remove(new_filename)
+            bytes_out = bytes_in
     except OSError as ex:
         print(ex)
 

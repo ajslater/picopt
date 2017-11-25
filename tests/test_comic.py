@@ -21,6 +21,7 @@ class TestGetComicFormat(TestCase):
         res = comic.get_comic_format(COMIC_ROOT)
         self.assertEqual(res, None)
 
+
 class TestGetArchiveTmpDir(TestCase):
 
     def test_foo(self):
