@@ -1,17 +1,15 @@
 """Optimize comic archives."""
-from __future__ import print_function
+from __future__ import absolute_import, division, print_function
 
 import os
-import zipfile
 import shutil
 import traceback
+import zipfile
 
 import rarfile
 
-from .. import stats
+from .. import PROGRAM_NAME, files, stats
 from ..settings import Settings
-from .. import PROGRAM_NAME
-from .. import files
 from ..stats import ReportStats
 
 _CBZ_FORMAT = 'CBZ'

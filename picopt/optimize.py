@@ -1,20 +1,14 @@
 """Optimize a file."""
-from __future__ import print_function
+from __future__ import absolute_import, division, print_function
+
 import os
 import shutil
 import traceback
 
-from . import detect_format
-from .formats import (
-    gif,
-    jpeg,
-    png
-)
-from . import PROGRAM_NAME
-from .settings import Settings
-from . import stats
-from . import files
+from . import PROGRAM_NAME, detect_format, files, stats
 from .extern import ExtArgs
+from .formats import gif, jpeg, png
+from .settings import Settings
 
 TMP_SUFFIX = '.%s-optimized' % PROGRAM_NAME
 
