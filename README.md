@@ -50,7 +50,7 @@ You may find Linux instructions at [Robert Walter's Blog](http://www.robertwalte
 #### jpegrescan
 If you can't install MozJPEG, jpegrescan is a better jpeg optimizer than jpegtran contained in libjpeg-progs, unfortunately it also remains unpackaged :(
 
-    git clone git@github.com:kud/jpegrescan.git
+    git clone https://github.com/kud/jpegrescan.git
     ln -s jpegrescan/jpegrescan /usr/local/bin/jpegrescan
 
 #### pngout
