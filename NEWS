@@ -1,5 +1,6 @@
 v1.5.2
 * Additional compatibility with Python 3
+* Fix formats as a list when it should be a set issue
 
 v1.5.1
 * Drop TIFF support. It was never a good idea, tiff is usually a metadata store. And behaves poorly with older optipng.
