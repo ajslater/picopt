@@ -37,7 +37,7 @@ class Settings(object):
     @classmethod
     def update(cls, settings):
         """Update settings with a dict."""
-        for key, val in settings.__dict__.iteritems():
+        for key, val in settings.__dict__.items():
             if key.startswith('_'):
                 continue
             setattr(cls, key, val)
