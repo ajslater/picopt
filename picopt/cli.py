@@ -136,7 +136,8 @@ def process_arguments(arguments):
         Settings.formats = arguments.to_png_formats | \
             jpeg.FORMATS | gif.FORMATS
     else:
-        Settings.formats = arguments.formats.upper().split(FORMAT_DELIMETER)
+        Settings.formats = set(
+            arguments.formats.upper().split(FORMAT_DELIMETER))
 
     if arguments.comics:
         Settings.formats = Settings.formats | comic.FORMATS

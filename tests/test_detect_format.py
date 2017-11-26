@@ -106,7 +106,7 @@ class TestGetImageFormat(TestCase):
 class TestDetectFile(TestCase):
 
     class DummySettings(object):
-        formats = ('CBR', 'CBZ')
+        formats = set(['CBR', 'CBZ'])
         comics = True
         list_only = False
 
