@@ -80,8 +80,9 @@ def detect_file(filename):
         return image_format
 
     if image_format in (NONE_FORMAT, ERROR_FORMAT):
-        return
+        return None
 
     if Settings.verbose > 1 and not Settings.list_only:
         print(filename, image_format, 'is not a enabled image or '
               'comic archive type.')
+    return None

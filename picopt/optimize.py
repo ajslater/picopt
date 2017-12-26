@@ -98,7 +98,7 @@ def optimize_image(arg):
             if Settings.verbose > 1:
                 print(filename, image_format)  # image.mode)
                 print("\tFile format not selected.")
-            return
+            return None
 
         report_stats = _optimize_with_progs(format_module, filename,
                                             image_format)

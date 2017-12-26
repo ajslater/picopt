@@ -1,3 +1,6 @@
+v.1.5.3
+* Fix hang on external program error. Especially likley with 16 bit PNGs and pngout.
+
 v1.5.2
 * Additional compatibility with Python 3
 * Fix formats as a list when it should be a set issue
