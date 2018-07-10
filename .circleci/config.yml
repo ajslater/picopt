@@ -1,6 +1,7 @@
 version: 2
 jobs:
   build:
+    docker: circleci/python
     branches:
       only: master
     steps:
