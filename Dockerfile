@@ -1,7 +1,7 @@
 FROM ubuntu:bionic
 
 RUN apt update
-Run apt dist-upgrade
+Run apt dist-upgrade -y
 RUN apt install -y optipng gifsicle unrar curl python-setuptools
 RUN python /usr/lib/python2.7/dist-packages/easy_install.py pip
 
