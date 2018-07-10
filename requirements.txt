@@ -1,4 +1,4 @@
+argparse
+python-dateutil
 Pillow
 rarfile
-python-dateutil
-argparse

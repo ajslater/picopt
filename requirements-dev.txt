@@ -1,7 +1,7 @@
 bumpversion
 coverage
+flake8
+mock
 nose
 nose-pathmunge
-flake8
 pep8-naming
-mock
