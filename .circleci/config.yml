@@ -1,0 +1,10 @@
+version: 2
+jobs:
+  build:
+    branches:
+      only: master
+    steps:
+      - checkout
+      - run: ./ci/apt.sh
+      - run: ./ci/pngout.sh
+      - run: ./ci/mozjpeg.sh
