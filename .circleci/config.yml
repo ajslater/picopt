@@ -1,8 +1,7 @@
 version: 2
 jobs:
   build:
-    docker:
-       - image: ubuntu:bionic
+    machine: true
     steps:
       - checkout
       - run: apt update
@@ -11,6 +10,7 @@ jobs:
       - run: ./ci/mozjpeg.sh
       - run: ./setup.py build develop
   test:
+    machine: true
     parallelism: 4
     steps:
       - run: nosetests
