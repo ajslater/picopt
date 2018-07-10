@@ -5,6 +5,7 @@ jobs:
        - image: ubuntu:bionic
     steps:
       - checkout
+      - run: apt update
       - run: ./ci/apt.sh
       - run: ./ci/pngout.sh
       - run: ./ci/mozjpeg.sh
