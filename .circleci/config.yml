@@ -4,14 +4,9 @@ jobs:
     machine: true
     steps:
       - checkout
-      - run: apt update
-      - run: ./ci/apt.sh
-      - run: ./ci/pngout.sh
-      - run: ./ci/mozjpeg.sh
-      - run: ./setup.py build develop
+      - run: docker build -t picopt-builder .
   test:
-    machine: true
-    parallelism: 4
+    docker:
+        - image: picopt-builder
     steps:
       - run: nosetests
-
