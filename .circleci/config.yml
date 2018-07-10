@@ -1,6 +1,6 @@
 version: 2
 jobs:
-  build-and-test:
+  build:
     machine: true
     steps:
       - checkout
