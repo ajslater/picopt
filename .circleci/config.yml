@@ -9,3 +9,9 @@ jobs:
       - run: ./ci/apt.sh
       - run: ./ci/pngout.sh
       - run: ./ci/mozjpeg.sh
+      - run: ./setup.py build develop
+  test:
+    parallelism: 4
+    steps:
+      - run: nosetests
+
