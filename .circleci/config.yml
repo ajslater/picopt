@@ -1,20 +1,8 @@
 version: 2
 jobs:
-  build:
+  build-and-test:
     machine: true
     steps:
       - checkout
       - run: docker build -t picopt-builder .
-  test:
-    docker:
-        - image: picopt-builder
-    steps:
-      - run: nosetests
-workflows:
-  version: 2
-  build_and_test:
-    jobs:
-      - build
-      - test:
-          requires:
-            - build
+      - run: docker run -ti picopt-builder nosetests
