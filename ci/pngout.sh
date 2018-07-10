@@ -10,5 +10,5 @@ cd /tmp/
 curl -o "$TARBALL" "$URL"
 
 tar xzf "$TARBALL"
-sudo mv "$CONTENTS/x86_64/pngout-static" /usr/local/bin/pngout
+mv "$CONTENTS/x86_64/pngout-static" /usr/local/bin/pngout
 rm -rf "$TARBALL" "$CONTENTS"

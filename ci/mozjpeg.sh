@@ -7,7 +7,7 @@ URL="https://mozjpeg.codelove.de/bin/$DEB"
 
 cd /tmp
 
-wget "$URL"
-sudo dpkg -i "$DEB"
-sudo ln -sf /opt/mozjpeg/bin/jpegtran /usr/local/bin/mozjpeg
+curl -o "$DEB" "$URL"
+dpkg -i "$DEB"
+ln -sf /opt/mozjpeg/bin/jpegtran /usr/local/bin/mozjpeg
 rm -f "$DEB"
