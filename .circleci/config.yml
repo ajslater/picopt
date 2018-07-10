@@ -2,7 +2,7 @@ version: 2
 jobs:
   build:
     docker:
-       - image: circleci/python
+       - image: ubuntu:bionic
     steps:
       - checkout
       - run: ./ci/apt.sh
