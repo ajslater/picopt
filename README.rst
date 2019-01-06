@@ -107,7 +107,7 @@ unpackaged :(
 
 ::
 
-    git clone git@github.com:kud/jpegrescan.git
+    git clone https://github.com/kud/jpegrescan.git
     ln -s jpegrescan/jpegrescan /usr/local/bin/jpegrescan
 
 pngout
