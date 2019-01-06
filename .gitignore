@@ -1,8 +1,9 @@
-*~
-*.pyc
-build
-MANIFEST
-dist
 *.egg-info
-.ropeproject
+*.pyc
+*~
+.mypy_cache
 .picopt_timestamp
+.ropeproject
+MANIFEST
+build
+dist
