@@ -5,4 +5,4 @@ services:
         image: picopt
         container_name: picopt
         command:
-            - nosetests-2.7
+            - bin/tests.sh

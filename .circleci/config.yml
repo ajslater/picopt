@@ -5,4 +5,4 @@ jobs:
     steps:
       - checkout
       - run: docker build -t picopt-builder .
-      - run: docker run -ti picopt-builder nosetests
+      - run: docker run -ti picopt-builder bin/tests.sh
