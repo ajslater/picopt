@@ -109,3 +109,7 @@ Alternatives
 
 [imagemin](https://github.com/imagemin/imagemin-cli) looks to be an all in one cli and gui solution with bundled libraries, so no awkward dependancies.
 [Imageoptim](http://imageoptim.com/) is an all-in-one OS X GUI image optimizer. Imageoptim command line usage is possible with [an external program](https://code.google.com/p/imageoptim/issues/detail?can=2&start=0&num=100&q=&colspec=ID%20Type%20Status%20Priority%20Milestone%20Owner%20Summary%20Stars&groupby=&sort=&id=39).
+
+The Future
+----------
+Maybe someday everyone will just use [AVIF](https://aomediacodec.github.io/av1-avif/) and [AV1](https://en.wikipedia.org/wiki/AV1) for everything and these sorts of tools will be obsolete. Or if Apple decides to support WebP it could happen even sooner.
