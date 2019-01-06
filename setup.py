@@ -24,6 +24,13 @@ REQUIREMENTS = {
     'dev': "requirements-dev.txt"
 }
 
+if sys.version > '3':
+    with open(README_FILENAME, 'r', encoding='utf-8') as readme_file:
+        LONG_DESCRIPTION = readme_file.read()
+else:
+    with open(README_FILENAME, 'r') as readme_file:
+        LONG_DESCRIPTION = readme_file.read()
+
 
 def get_version(package):
     """Return package version as listed in `__version__` in `init.py`."""
@@ -45,9 +52,6 @@ def get_req_list():
         req_list += parse_reqs(REQUIREMENTS['dev'])
     return req_list
 
-
-with open(README_FILENAME, 'r') as readme_file:
-    LONG_DESCRIPTION = readme_file.read()
 
 setup(
     name='picopt',
