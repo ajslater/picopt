@@ -14,7 +14,7 @@ COPY bin ./bin
 RUN ci/mozjpeg.sh
 RUN ci/pngout.sh
 
-COPY requirements* *.py setup.cfg README.rst ./
+COPY requirements* *.py setup.cfg README.md ./
 
 COPY picopt ./picopt
 RUN bin/pandoc_README.sh
