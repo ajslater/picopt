@@ -17,11 +17,8 @@ RUN ci/pngout.sh
 COPY requirements* *.py setup.cfg README.md ./
 
 COPY picopt ./picopt
+# Build
 RUN bin/pandoc_README.sh
 RUN python setup.py build develop
 #RUN python3 setup.py build develop
 COPY tests ./tests
-
-# Build
-RUN nosetests-2.7
-#RUN nosetests-3.4
