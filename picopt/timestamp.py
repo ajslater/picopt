@@ -28,7 +28,7 @@ def _get_timestamp(dirname_full, remove):
             if Settings.record_timestamp and remove:
                 OLD_TIMESTAMPS.add(record_filename)
         else:
-            mtime = None
+            mtime = 0
 
         TIMESTAMP_CACHE[dirname_full] = mtime
     return TIMESTAMP_CACHE[dirname_full]
@@ -42,7 +42,11 @@ def _get_parent_timestamp(dirname, mtime):
     """
     parent_pathname = os.path.dirname(dirname)
 
-    mtime = max(_get_timestamp(parent_pathname, False), mtime)
+    tstamp = _get_timestamp(parent_pathname, False)
+    if mtime is None:
+        mtime = 0
+    if tstamp:
+        mtime = max(tstamp, mtime)
 
     if dirname != os.path.dirname(parent_pathname):
         mtime = _get_parent_timestamp(parent_pathname, mtime)
@@ -63,7 +67,8 @@ def get_walk_after(filename, optimize_after=None):
     if optimize_after is None:
         optimize_after = _get_parent_timestamp(dirname, optimize_after)
     got_timestamp = _get_timestamp(dirname, True)
-    optimize_after = max(got_timestamp, optimize_after)
+    if got_timestamp:
+        optimize_after = max(got_timestamp, optimize_after)
 
     return optimize_after
 

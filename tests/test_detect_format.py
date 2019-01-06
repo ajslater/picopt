@@ -78,7 +78,7 @@ class TestGetImageFormat(TestCase):
     def _test_type(self, root, filename, image_type):
         fn = root+'/'+filename
         res = detect_format.get_image_format(fn)
-        print res
+        print(res)
         self.assertEqual(res, image_type)
 
     def test_get_image_format_jpg(self):
@@ -113,7 +113,7 @@ class TestDetectFile(TestCase):
     def _test_type(self, root, filename, image_type):
         fn = root+'/'+filename
         res = detect_format.detect_file(fn)
-        print res
+        print(res)
         self.assertEqual(res, image_type)
 
     def test_detect_file_jpg(self):

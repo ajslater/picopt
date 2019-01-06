@@ -16,7 +16,7 @@ class TestTimestamp(TestCase):
     def test_get_timestamp_ne(self):
         path = os.path.join(TEST_FILES_ROOT, 'BLARGH')
         res = timestamp._get_timestamp(path, False)
-        self.assertEqual(res, None)
+        self.assertEqual(res, 0)
 
     def _get_timestamp_setup(self):
         record_filename = os.path.join(TEST_FILES_ROOT,
