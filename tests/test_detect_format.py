@@ -1,3 +1,6 @@
+"""Test detect file formats."""
+from __future__ import absolute_import, division, print_function
+
 from unittest import TestCase
 
 try:

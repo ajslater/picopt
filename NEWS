@@ -1,4 +1,7 @@
-v.1.5.3
+v1.5.4
+* Python3 proof the timestamp module
+
+v1.5.3
 * Fix hang on external program error. Especially likley with 16 bit PNGs and pngout.
 
 v1.5.2
