@@ -4,7 +4,6 @@ Tests:
     Test recursive opt timestamps
 
 Architecture:
-    Python 3
     Change main process into an event loop so comics don't block as much
     Dynamically link in libraries instead of using command line procs
     Rewrite in rust with clibs dynamically linked.
@@ -12,6 +11,7 @@ Architecture:
 Packaging:
     PIL/Pillow is still a mess.
     include libraries and python for best optimizers
+    PEP 517 & Flit
 
 Formats:
     SVG - svgo
