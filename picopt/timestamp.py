@@ -77,11 +77,11 @@ def record_timestamp(pathname_full):
     """Record the timestamp of running in a dotfile."""
     if Settings.test or Settings.list_only or not Settings.record_timestamp:
         return
-    elif not Settings.follow_symlinks and os.path.islink(pathname_full):
+    if not Settings.follow_symlinks and os.path.islink(pathname_full):
         if Settings.verbose:
             print('Not setting timestamp because not following symlinks')
         return
-    elif not os.path.isdir(pathname_full):
+    if not os.path.isdir(pathname_full):
         if Settings.verbose:
             print('Not setting timestamp for a non-directory')
         return

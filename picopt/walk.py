@@ -51,9 +51,9 @@ def _is_skippable(filename_full):
     # File types
     if not Settings.follow_symlinks and os.path.islink(filename_full):
         return True
-    elif os.path.basename(filename_full) == timestamp.RECORD_FILENAME:
+    if os.path.basename(filename_full) == timestamp.RECORD_FILENAME:
         return True
-    elif not os.path.exists(filename_full):
+    if not os.path.exists(filename_full):
         if Settings.verbose:
             print(filename_full, 'was not found.')
         return True

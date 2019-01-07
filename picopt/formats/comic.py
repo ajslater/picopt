@@ -34,7 +34,6 @@ def comics():
     But currently neccissary to keep detect_format._is_program_selected()
     working
     """
-    pass
 
 
 PROGRAMS = (comics,)
