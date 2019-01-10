@@ -35,11 +35,14 @@ def _get_timestamp(dirname_full, remove):
     return TIMESTAMP_CACHE[dirname_full]
 
 
-def max_none(lst):
-    """Max function that works in python 2 and 3."""
-    if sys.version > '3':
+if sys.version > '3':
+    def max_none(lst):
+        """Max function that works in python 3."""
         return max((x for x in lst if x is not None), default=None)
-    return max(lst)
+else:
+    def max_none(lst):
+        """Max function from python 2."""
+        return max(lst)
 
 
 def _get_parent_timestamp(dirname, mtime):
