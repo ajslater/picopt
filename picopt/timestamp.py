@@ -2,6 +2,7 @@
 from __future__ import absolute_import, division, print_function
 
 import os
+import sys
 from datetime import datetime
 
 from . import PROGRAM_NAME
@@ -34,6 +35,13 @@ def _get_timestamp(dirname_full, remove):
     return TIMESTAMP_CACHE[dirname_full]
 
 
+def max_none(lst):
+    """Max function that works in python 2 and 3."""
+    if sys.version > '3':
+        return max((x for x in lst if x is not None), default=None)
+    return max(lst)
+
+
 def _get_parent_timestamp(dirname, mtime):
     """
     Get the timestamps up the directory tree.
@@ -43,14 +51,7 @@ def _get_parent_timestamp(dirname, mtime):
     parent_pathname = os.path.dirname(dirname)
 
     tstamp = _get_timestamp(parent_pathname, False)
-    if tstamp is None and mtime is None:
-        mtime = None
-    elif tstamp is None:
-        pass
-    elif mtime is None:
-        mtime = tstamp
-    else:
-        mtime = max(tstamp, mtime)
+    mtime = max_none((tstamp, mtime))
 
     if dirname != os.path.dirname(parent_pathname):
         mtime = _get_parent_timestamp(parent_pathname, mtime)
@@ -71,14 +72,7 @@ def get_walk_after(filename, optimize_after=None):
     if optimize_after is None:
         optimize_after = _get_parent_timestamp(dirname, optimize_after)
     got_timestamp = _get_timestamp(dirname, True)
-    if got_timestamp is None and optimize_after is None:
-        optimize_after = None
-    elif optimize_after is None:
-        optimize_after = got_timestamp
-    elif got_timestamp is None:
-        pass
-    else:
-        optimize_after = max(got_timestamp, optimize_after)
+    optimize_after = max_none((got_timestamp, optimize_after))
 
     return optimize_after
 
