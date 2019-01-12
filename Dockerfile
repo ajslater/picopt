@@ -13,7 +13,7 @@ RUN apt install -y \
 RUN python2 /usr/lib/python2.7/dist-packages/easy_install.py pip
 RUN pip install nose
 RUN python3 /usr/lib/python3/dist-packages/easy_install.py pip
-RUN pip3 install nose>=1.3.7
+RUN pip3 install nose
 
 # prereqs
 COPY ci ./ci
