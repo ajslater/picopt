@@ -175,6 +175,7 @@ def run(args):
     raw_arguments = get_arguments(args[1:])
     process_arguments(raw_arguments)
     walk.run()
+    return True
 
 
 def main():

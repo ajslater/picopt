@@ -56,7 +56,7 @@ If you can't install MozJPEG, jpegrescan is a better jpeg optimizer than jpegtra
 #### pngout
 pngout is a useful compression to use after optipng. It is not packaged, but you may find the latest binary version [on JonoF's site](http://www.jonof.id.au/kenutils)
 
-### Picopt
+### Picopt python package
     pip install picopt
 
 Usage
@@ -100,8 +100,8 @@ Picopt automatically uses timestamp files if it detects them in or above the cur
 Packaged For
 ------------
 
-* [PyPI](https://pypi.python.org/pypi/picopt/)
-* [Arch Linux](https://aur.archlinux.org/packages/picopt/)
+*  [PyPI](https://pypi.python.org/pypi/picopt/)
+*  [Arch Linux](https://aur.archlinux.org/packages/picopt/)
 
 
 Alternatives

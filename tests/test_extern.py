@@ -17,5 +17,7 @@ class TestDoesExernalProgramRun(TestCase):
 
 
 class TestRunExt(TestCase):
+
     def test_true(self):
-        extern.run_ext('true')
+        res = extern.run_ext('true')
+        self.assertTrue(res)

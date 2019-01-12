@@ -17,6 +17,7 @@ class Settings(object):
     follow_symlinks = True
     formats = set()
     gifsicle = True
+    ignore = []
     jobs = multiprocessing.cpu_count()
     jpegrescan = True
     jpegrescan_multithread = False
