@@ -5,4 +5,8 @@ jobs:
     steps:
       - checkout
       - run: docker build -t picopt-builder .
-      - run: docker run -ti picopt-builder bin/tests.sh
+      - run: mkdir -p /test-results
+      - run: docker run -ti picopt-builder -v test-results:/test-results bin/tests.sh
+      - store_test_results:
+            path: /test-results
+

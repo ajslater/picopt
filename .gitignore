@@ -1,9 +1,11 @@
 *.egg-info
 *.pyc
 *~
+.coverage
 .mypy_cache
 .picopt_timestamp
 .ropeproject
 MANIFEST
 build
 dist
+test-results
