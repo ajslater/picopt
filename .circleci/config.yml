@@ -4,8 +4,8 @@ jobs:
     machine: true
     steps:
       - checkout
-      - run: docker build -t picopt-builder .
-      - run: docker run -ti picopt-builder -v /tmp/test-results:test-results bin/tests.sh
+      - run: ci/build.sh
+      - run: ci/test.sh
       - store_test_results:
             path: /tmp/test-results
 

@@ -16,6 +16,7 @@ RUN python3 /usr/lib/python3/dist-packages/easy_install.py pip
 RUN pip3 install nose
 
 # prereqs
+WORKDIR /opt/picopt
 COPY ci ./ci
 COPY bin ./bin
 RUN ci/mozjpeg.sh
