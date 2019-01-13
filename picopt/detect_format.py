@@ -4,11 +4,7 @@ from __future__ import absolute_import, division, print_function
 from .formats import comic, gif
 from .settings import Settings
 
-try:
-    from PIL import Image
-except ImportError:
-    import Image
-
+from PIL import Image
 
 # Formats
 NONE_FORMAT = 'NONE'
