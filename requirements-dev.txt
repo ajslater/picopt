@@ -1,7 +1,0 @@
-bumpversion
-coverage
-flake8
-mock
-nose
-nose-pathmunge
-pep8-naming

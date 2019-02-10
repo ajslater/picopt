@@ -1,0 +1,46 @@
+[build-system]
+requires = ["flit"]
+build-backend = "flit.buildapi"
+
+[tool.flit.metadata]
+module = "picopt"
+author = "AJ Slater"
+author-email = "aj@slater.net"
+home-page = "https://github.com/ajslater/picopt"
+requires = [
+    "argparse",
+    "python-dateutil",
+    "Pillow",
+    "rarfile"
+]
+description-file = "README.rst"
+classifiers = [
+    "Topic :: Internet :: WWW/HTTP :: Site Management",
+    "Topic :: Multimedia :: Graphics :: Graphics Conversion",
+    "License :: OSI Approved :: GNU General Public License v2 (GPLv2)",
+    "Operating System :: OS Independent",
+    "Development Status :: 5 - Production/Stable",
+    "Intended Audience :: Developers",
+    "Intended Audience :: System Administrators",
+    "Environment :: Console",
+    "Programming Language :: Python :: 3"
+]
+requires-python = ">=3,<4"
+keywords = "image, png, jpg, cbz, cbr, optimize"
+
+# TODO: These aren't working not sure why
+[tool.flit.metadata.requires-extra]
+dev = [
+    "bumpversion",
+    "flake8",
+    "pep8-naming"
+]
+test = [
+    "coverage",
+    "mock",
+    "nose",
+    "nose-pathmunge"
+]
+
+[tool.flit.scripts]
+picopt = "picopt.cli:main"
