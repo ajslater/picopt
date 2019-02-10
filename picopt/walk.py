@@ -94,7 +94,15 @@ def walk_file(filename, walk_after, recurse=None, archive_mtime=None):
         return result_set
 
     # Check image format
-    image_format = detect_format.detect_file(filename)
+    try:
+        image_format = detect_format.detect_file(filename)
+    except Exception:
+        res = Settings.pool.apply_async(stats.ReportStats,
+                                        (filename,),
+                                        {'error': "Detect Format"})
+        result_set.add(res)
+        image_format = False
+
     if not image_format:
         return result_set
 
@@ -167,7 +175,7 @@ def _walk_all_files():
     for result in result_set:
         res = result.get()
         if res.error:
-            errors += [(res.final_filename, res.report)]
+            errors += [(res.final_filename, res.error)]
             continue
         bytes_in += res.bytes_in
         bytes_out += res.bytes_out

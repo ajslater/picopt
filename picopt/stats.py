@@ -26,7 +26,7 @@ class ReportStats(object):
     """Container for reported stats from optimization operations."""
 
     def __init__(self, final_filename, report=None, bytes_count=None,
-                 nag_about_gifs=False, error=False):
+                 nag_about_gifs=False, error=None):
         """Initialize required instance variables."""
         self.final_filename = final_filename
         self.report_list = []
@@ -177,7 +177,7 @@ def report_totals(bytes_in, bytes_out, nag_about_gifs, errors):
 
     print("Errors with the following files:")
     for error in errors:
-        print("%s: %s", error[0], error[1])
+        print("{}: {}".format(error[0], error[1]))
 
 
 def skip(type_name, filename):
