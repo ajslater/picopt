@@ -8,25 +8,28 @@ RUN apt install -y \
     git \
     optipng \
     pandoc \
+    python-setuptools \
     python3-setuptools \
     unrar
+RUN python2 /usr/lib/python2.7/dist-packages/easy_install.py pip
+RUN pip install nose
 RUN python3 /usr/lib/python3/dist-packages/easy_install.py pip
-RUN pip3 install flit
+RUN pip3 install flit nose
 
 # prereqs
 WORKDIR /opt/picopt
-COPY ci ./ci
-COPY bin ./bin
+COPY .git ./.git
+RUN git checkout flit .
 RUN ci/mozjpeg.sh
 RUN ci/pngout.sh
 
-COPY pyproject.toml README.md ./
-# TODO ends up with unchecked out vcs errors
-COPY .git ./.git
-COPY picopt ./picopt
-
 # Build
 RUN bin/pandoc_README.sh
+
+# Build python 2
+RUN python2 setup.py build develop
+
+# Build python 3
+RUN git add README.rst
 RUN flit build
-RUN flit install --deps=develop
-COPY tests ./tests
+RUN FLIT_ROOT_INSTALL=1 flit install --deps=develop
