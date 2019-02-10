@@ -1,4 +1,4 @@
-v1.5.4
+v1.6.0
 * Python3 proof the timestamp module and the tests
 * Install and run with python2 & python3 in CI
 * Remove PIL support. Pillow only now.
