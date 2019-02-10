@@ -3,7 +3,7 @@
 set -euo pipefail
 
 URL=http://static.jonof.id.au/dl/kenutils/pngout-20150319-linux-static.tar.gz 
-TARBALL=pngout-20150319-linux-static.tar.gz 
+TARBALL="$(dirname "$0")/pngout-20150319-linux-static.tar.gz"
 BIN_NAME=pngout-20150319-linux-static/x86_64/pngout-static
 DEST=/usr/local/bin/pngout
 
