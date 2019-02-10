@@ -19,18 +19,26 @@ def _get_timestamp(dirname_full, remove):
 
     Optionally mark it for removal if we're going to write another one.
     """
+    record_filename = os.path.join(dirname_full, RECORD_FILENAME)
+
+    if not os.path.exists(record_filename):
+        return None
+
+    mtime = os.stat(record_filename).st_mtime
+    mtime_str = datetime.fromtimestamp(mtime)
+    print('Found timestamp {}:{}'.format(dirname_full, mtime_str))
+    if Settings.record_timestamp and remove:
+        OLD_TIMESTAMPS.add(record_filename)
+    return mtime
+
+
+def _get_timestamp_cached(dirname_full, remove):
+    """
+    Get the timestamp from the cache or fill the cache
+    Much quicker than reading the same files over and over
+    """
     if dirname_full not in TIMESTAMP_CACHE:
-        record_filename = os.path.join(dirname_full, RECORD_FILENAME)
-
-        if os.path.exists(record_filename):
-            mtime = os.stat(record_filename).st_mtime
-            mtime_str = datetime.fromtimestamp(mtime)
-            print('Found timestamp {}:{}'.format(dirname_full, mtime_str))
-            if Settings.record_timestamp and remove:
-                OLD_TIMESTAMPS.add(record_filename)
-        else:
-            mtime = None
-
+        mtime = _get_timestamp(dirname_full, remove)
         TIMESTAMP_CACHE[dirname_full] = mtime
     return TIMESTAMP_CACHE[dirname_full]
 
@@ -45,18 +53,25 @@ else:
         return max(lst)
 
 
+def _max_timestamps(dirname_full, remove, compare_tstamp):
+    """Compare a timestamp file to one passed in. Get the max."""
+    tstamp = _get_timestamp_cached(dirname_full, remove)
+    return max_none((tstamp, compare_tstamp))
+
+
 def _get_parent_timestamp(dirname, mtime):
     """
-    Get the timestamps up the directory tree.
+    Get the timestamps up the directory tree. All the way to root.
 
     Because they affect every subdirectory.
     """
     parent_pathname = os.path.dirname(dirname)
 
-    tstamp = _get_timestamp(parent_pathname, False)
-    mtime = max_none((tstamp, mtime))
+    # max between the parent timestamp the one passed in
+    mtime = _max_timestamps(parent_pathname, False, mtime)
 
     if dirname != os.path.dirname(parent_pathname):
+        # this is only called if we're not at the root
         mtime = _get_parent_timestamp(parent_pathname, mtime)
 
     return mtime
@@ -74,10 +89,7 @@ def get_walk_after(filename, optimize_after=None):
     dirname = os.path.dirname(filename)
     if optimize_after is None:
         optimize_after = _get_parent_timestamp(dirname, optimize_after)
-    got_timestamp = _get_timestamp(dirname, True)
-    optimize_after = max_none((got_timestamp, optimize_after))
-
-    return optimize_after
+    return _max_timestamps(dirname, True, optimize_after)
 
 
 def record_timestamp(pathname_full):

@@ -41,8 +41,6 @@ class TestTimestamp(TestCase):
     def test_get_timestamp_remove(self):
         record_filename, mtime = _get_timestamp_setup()
 
-        # Reset the timestamp cache
-        timestamp.TIMESTAMP_CACHE = {}
         Settings.record_timestamp = True
         res = timestamp._get_timestamp(TEST_FILES_ROOT, True)
 
