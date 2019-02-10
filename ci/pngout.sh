@@ -3,12 +3,14 @@
 set -euo pipefail
 
 URL=http://static.jonof.id.au/dl/kenutils/pngout-20150319-linux-static.tar.gz 
-TARBALL=/tmp/pngout.tar.gz
-CONTENTS=/tmp/pngout-20150319-linux-static
+TARBALL=pngout-20150319-linux-static.tar.gz 
+BIN_NAME=pngout-20150319-linux-static/x86_64/pngout-static
+DEST=/usr/local/bin/pngout
 
-cd /tmp/
-curl -o "$TARBALL" "$URL"
-
-tar xzf "$TARBALL"
-mv "$CONTENTS/x86_64/pngout-static" /usr/local/bin/pngout
-rm -rf "$TARBALL" "$CONTENTS"
+if [ -f "$TARBALL" ]; then
+    echo "$TARBALL > $DEST"
+    tar xzOf "$TARBALL" $BIN_NAME > $DEST
+else
+    echo "$URL > $DEST"
+    curl "$URL" | tar xzOf - $BIN_NAME > $DEST
+fi
