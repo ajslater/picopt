@@ -24,6 +24,7 @@ Installation
 #### OS X
     brew install optipng mozjpeg gifsicle
     ln -s /usr/local/Cellar/mozjpeg/3.1/bin/jpegtran /usr/local/bin/mozjpeg
+    brew install jonof/kenutils/pngout
 
 #### Debian / Ubuntu
     apt-get install optipng gifsicle python-imaging
@@ -54,7 +55,7 @@ If you can't install MozJPEG, jpegrescan is a better jpeg optimizer than jpegtra
     ln -s jpegrescan/jpegrescan /usr/local/bin/jpegrescan
 
 #### pngout
-pngout is a useful compression to use after optipng. It is not packaged, but you may find the latest binary version [on JonoF's site](http://www.jonof.id.au/kenutils)
+pngout is a useful compression to use after optipng. It is not packaged for linux, but you may find the latest binary version [on JonoF's site](http://www.jonof.id.au/kenutils). Picopt looks for the binary to be called `picopt`
 
 ### Picopt python package
     pip install picopt
