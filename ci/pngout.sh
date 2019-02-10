@@ -14,3 +14,4 @@ else
     echo "$URL > $DEST"
     curl "$URL" | tar xzOf - $BIN_NAME > $DEST
 fi
+chmod 755 "$DEST"
