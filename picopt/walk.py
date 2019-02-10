@@ -94,7 +94,15 @@ def walk_file(filename, walk_after, recurse=None, archive_mtime=None):
         return result_set
 
     # Check image format
-    image_format = detect_format.detect_file(filename)
+    try:
+        image_format = detect_format.detect_file(filename)
+    except Exception:
+        res = Settings.pool.apply_async(stats.ReportStats,
+                                        (filename,),
+                                        {'error': "Detect Format"})
+        result_set.add(res)
+        image_format = False
+
     if not image_format:
         return result_set
 
@@ -163,13 +171,17 @@ def _walk_all_files():
     bytes_in = 0
     bytes_out = 0
     nag_about_gifs = False
+    errors = []
     for result in result_set:
         res = result.get()
+        if res.error:
+            errors += [(res.final_filename, res.error)]
+            continue
         bytes_in += res.bytes_in
         bytes_out += res.bytes_out
         nag_about_gifs = nag_about_gifs or res.nag_about_gifs
 
-    return record_dirs, bytes_in, bytes_out, nag_about_gifs
+    return record_dirs, bytes_in, bytes_out, nag_about_gifs, errors
 
 
 def run():
@@ -179,7 +191,8 @@ def run():
     Settings.pool = multiprocessing.Pool(Settings.jobs)
 
     # Optimize Files
-    record_dirs, bytes_in, bytes_out, nag_about_gifs = _walk_all_files()
+    record_dirs, bytes_in, bytes_out, nag_about_gifs, errors = \
+        _walk_all_files()
 
     # Shut down multiprocessing
     Settings.pool.close()
@@ -190,4 +203,4 @@ def run():
         timestamp.record_timestamp(filename)
 
     # Finish by reporting totals
-    stats.report_totals(bytes_in, bytes_out, nag_about_gifs)
+    stats.report_totals(bytes_in, bytes_out, nag_about_gifs, errors)

@@ -108,4 +108,4 @@ def optimize_image(arg):
     except Exception as exc:
         print(exc)
         traceback.print_exc(exc)
-        raise exc
+        return stats.ReportStats(filename, error="Optimizing Image")
