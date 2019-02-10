@@ -26,10 +26,11 @@ class ReportStats(object):
     """Container for reported stats from optimization operations."""
 
     def __init__(self, final_filename, report=None, bytes_count=None,
-                 nag_about_gifs=False):
+                 nag_about_gifs=False, error=False):
         """Initialize required instance variables."""
         self.final_filename = final_filename
         self.report_list = []
+        self.error = error
         if report:
             self.report_list.append(report)
         if bytes_count:
@@ -136,7 +137,7 @@ def report_saved(report_stats):
         print(report)
 
 
-def report_totals(bytes_in, bytes_out, nag_about_gifs):
+def report_totals(bytes_in, bytes_out, nag_about_gifs, errors):
     """Report the total number and percent of bytes saved."""
     if bytes_in:
         bytes_saved = bytes_in - bytes_out
@@ -170,6 +171,13 @@ def report_totals(bytes_in, bytes_out, nag_about_gifs):
     if nag_about_gifs and Settings.verbose:
         print("Most animated GIFS would be better off converted to"
               " HTML5 video")
+
+    if not errors:
+        return
+
+    print("Errors with the following files:")
+    for error in errors:
+        print("%s: %s", error[0], error[1])
 
 
 def skip(type_name, filename):
