@@ -53,6 +53,7 @@ OS X
 
     brew install optipng mozjpeg gifsicle
     ln -s /usr/local/Cellar/mozjpeg/3.1/bin/jpegtran /usr/local/bin/mozjpeg
+    brew install jonof/kenutils/pngout
 
 Debian / Ubuntu
 ^^^^^^^^^^^^^^^
@@ -113,12 +114,13 @@ unpackaged :(
 pngout
 ^^^^^^
 
-pngout is a useful compression to use after optipng. It is not packaged,
-but you may find the latest binary version `on JonoF's
-site <http://www.jonof.id.au/kenutils>`__
+pngout is a useful compression to use after optipng. It is not packaged
+for linux, but you may find the latest binary version `on JonoF's
+site <http://www.jonof.id.au/kenutils>`__. Picopt looks for the binary
+to be called ``picopt``
 
-Picopt
-~~~~~~
+Picopt python package
+~~~~~~~~~~~~~~~~~~~~~
 
 ::
 
@@ -205,3 +207,12 @@ dependancies. `Imageoptim <http://imageoptim.com/>`__ is an all-in-one
 OS X GUI image optimizer. Imageoptim command line usage is possible with
 `an external
 program <https://code.google.com/p/imageoptim/issues/detail?can=2&start=0&num=100&q=&colspec=ID%20Type%20Status%20Priority%20Milestone%20Owner%20Summary%20Stars&groupby=&sort=&id=39>`__.
+
+The Future
+----------
+
+Maybe someday everyone will just use
+`AVIF <https://aomediacodec.github.io/av1-avif/>`__ and
+`AV1 <https://en.wikipedia.org/wiki/AV1>`__ for everything and these
+sorts of tools will be obsolete. Or if Apple decides to support WebP it
+could happen even sooner.
