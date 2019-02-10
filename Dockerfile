@@ -5,15 +5,13 @@ Run apt dist-upgrade -y
 RUN apt install -y \
     curl \
     gifsicle \
+    git \
     optipng \
     pandoc \
-    python-setuptools \
     python3-setuptools \
     unrar
-RUN python2 /usr/lib/python2.7/dist-packages/easy_install.py pip
-RUN pip install nose
 RUN python3 /usr/lib/python3/dist-packages/easy_install.py pip
-RUN pip3 install nose
+RUN pip3 install flit
 
 # prereqs
 WORKDIR /opt/picopt
@@ -22,11 +20,13 @@ COPY bin ./bin
 RUN ci/mozjpeg.sh
 RUN ci/pngout.sh
 
-COPY requirements* *.py setup.cfg README.md ./
-
+COPY pyproject.toml README.md ./
+# TODO ends up with unchecked out vcs errors
+COPY .git ./.git
 COPY picopt ./picopt
+
 # Build
 RUN bin/pandoc_README.sh
-RUN python2 setup.py build develop
-RUN python3 setup.py build develop
+RUN flit build
+RUN flit install --deps=develop
 COPY tests ./tests

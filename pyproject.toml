@@ -29,17 +29,18 @@ requires-python = ">=3,<4"
 keywords = "image, png, jpg, cbz, cbr, optimize"
 
 # TODO: These aren't working not sure why
+# It only seems to look for them in a prebuild wheel
 [tool.flit.metadata.requires-extra]
-dev = [
-    "bumpversion",
-    "flake8",
-    "pep8-naming"
-]
 test = [
     "coverage",
     "mock",
     "nose",
     "nose-pathmunge"
+]
+dev = [
+    "bumpversion",
+    "flake8",
+    "pep8-naming"
 ]
 
 [tool.flit.scripts]
