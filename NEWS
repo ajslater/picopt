@@ -3,6 +3,7 @@ v1.5.4
 * Install and run with python2 & python3 in CI
 * Remove PIL support. Pillow only now.
 * Use flit for Python3 install
+* Report on all errors at the end
 
 v1.5.3
 * Fix hang on external program error. Especially likley with 16 bit PNGs and pngout.
