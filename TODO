@@ -9,13 +9,17 @@ Architecture:
     Rewrite in rust with clibs dynamically linked.
 
 Packaging:
-    PIL/Pillow is still a mess.
     include libraries and python for best optimizers
-    PEP 517 & Flit
 
 Formats:
     SVG - svgo
     PDF would be cool, but difficult due to non-standard image formats and lack of easy PDF exploders/bundlers.
 
 Features:
-    Ignore flag
+    Ignore path flag
+
+Future:
+    When Apple fully supports WebP or AVIF, offer that for everything
+    and prefer it to png. And maybe jpg?
+    https://caniuse.com/#feat=webp
+    https://caniuse.com/#feat=av1
