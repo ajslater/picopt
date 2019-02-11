@@ -38,6 +38,7 @@ test = [
     "nose-pathmunge"
 ]
 dev = [
+    "bumpversion",
     "flake8",
     "pep8-naming"
 ]

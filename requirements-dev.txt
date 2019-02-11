@@ -1,3 +1,4 @@
+bumpversion
 coverage
 flake8
 mock
