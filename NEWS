@@ -1,3 +1,6 @@
+v1.6.1
+* Fix exception handling when extern process returns non-zero
+
 v1.6.0
 * Report on all errors at the end
 * Remove PIL support. Pillow only now.

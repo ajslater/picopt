@@ -30,8 +30,10 @@ def does_external_program_run(prog, verbose):
 def run_ext(args):
     """Run EXTERNAL program."""
     try:
-        out = subprocess.check_call(args) #, stdout=subprocess.PIPE)
-    except Exception as exc:
-        print(out)
+        subprocess.check_call(args)
+    except subprocess.CalledProcessError as exc:
         print(exc)
+        print(exc.cmd)
+        print(exc.returncode)
+        print(exc.output)
         raise
