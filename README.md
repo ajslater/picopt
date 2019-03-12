@@ -21,7 +21,7 @@ Installation
 ------------
 
 ### Lossless external program packages
-#### OS X
+#### macOS
     brew install optipng mozjpeg gifsicle
     ln -s /usr/local/Cellar/mozjpeg/3.1/bin/jpegtran /usr/local/bin/mozjpeg
     brew install jonof/kenutils/pngout
