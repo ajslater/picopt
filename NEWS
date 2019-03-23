@@ -1,3 +1,6 @@
+v1.6.2
+* Fix illegal stack trace call.
+
 v1.6.1
 * Fix exception handling when extern process returns non-zero
 
