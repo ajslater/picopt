@@ -6,6 +6,7 @@ from unittest import TestCase
 
 from picopt import files
 
+
 class TestReplaceExt(TestCase):
 
     @staticmethod

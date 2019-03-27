@@ -3,14 +3,15 @@ from __future__ import absolute_import, division, print_function
 
 from unittest import TestCase
 
+from picopt import detect_format
+from picopt.formats import comic
+from picopt.settings import Settings
+
 try:
     from PIL import Image
 except ImportError:
     import Image
 
-from picopt.formats import comic
-from picopt import detect_format
-from picopt.settings import Settings
 
 
 TEST_FILES_ROOT = 'tests/test_files/'

@@ -5,6 +5,7 @@ from unittest import TestCase
 
 from picopt import extern
 
+
 class TestDoesExernalProgramRun(TestCase):
 
     def test_true(self):
