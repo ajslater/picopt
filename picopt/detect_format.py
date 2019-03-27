@@ -1,10 +1,10 @@
 """Detect file formats."""
 from __future__ import absolute_import, division, print_function
 
+from PIL import Image
+
 from .formats import comic, gif
 from .settings import Settings
-
-from PIL import Image
 
 # Formats
 NONE_FORMAT = 'NONE'
