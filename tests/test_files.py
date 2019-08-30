@@ -47,7 +47,6 @@ class TestCleanupAterOptimise(TestCase):
         os.remove(res[0])
         return res
 
-
     def test_small_big(self):
         old_size = 32
         new_size = 40

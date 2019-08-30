@@ -32,7 +32,6 @@ class TestCLIImages(TestCLI):
         self.assertTrue(res)
 
 
-
 class TestCLIEverything(TestCLI):
 
     def test_all_once(self):

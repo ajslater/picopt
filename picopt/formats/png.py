@@ -2,6 +2,7 @@
 from __future__ import absolute_import, division, print_function
 
 from .. import extern
+from png_bit_depth import png_bit_depth
 
 _PNG_FORMAT = 'PNG'
 FORMATS = set([_PNG_FORMAT])
@@ -30,8 +31,11 @@ def advpng(ext_args):
 
 def pngout(ext_args):
     """Run the external program pngout on the file."""
-    args = _PNGOUT_ARGS + [ext_args.old_filename, ext_args.new_filename]
-    extern.run_ext(args)
+    if png_bit_depth(ext_args.old_filename) == 16:
+        print('skipping pngout for 16 bit PNG')
+    else:
+        args = _PNGOUT_ARGS + [ext_args.old_filename, ext_args.new_filename]
+        extern.run_ext(args)
     return _PNG_FORMAT
 
 
