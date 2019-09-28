@@ -2,6 +2,8 @@
 set -xeuo pipefail
 mkdir -p /tmp/test-results/nose
 nosetests-2.7 \
+    -v \
+    --nocapture \
     --with-coverage \
     --cover-package=picopt \
     --with-xunit \

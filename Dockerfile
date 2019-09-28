@@ -1,4 +1,4 @@
-FROM ubuntu:cosmic
+FROM ubuntu:disco
 
 RUN apt update
 Run apt dist-upgrade -y
@@ -19,7 +19,7 @@ RUN pip3 install flit nose
 # prereqs
 WORKDIR /opt/picopt
 COPY .git ./.git
-RUN git checkout .
+RUN git checkout depth_bug_0
 RUN ci/mozjpeg.sh
 RUN ci/pngout.sh
 
