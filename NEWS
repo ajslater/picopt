@@ -1,3 +1,6 @@
+v1.6.3
+* Don't use pngout on 16 bit pngs because it crashes
+
 v1.6.2
 * Fix illegal stack trace call.
 
