@@ -16,7 +16,7 @@ def png_bit_depth(filename):
             return
 
         img.seek(24)  # bit depth offset
-        depth = ord(struct.unpack('c'), img)[0])
+        depth = ord(struct.unpack('c', img)[0])
         return depth
         #return tuple(img.read(1))[0]
 
