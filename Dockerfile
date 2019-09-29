@@ -19,7 +19,7 @@ RUN pip3 install flit nose
 # prereqs
 WORKDIR /opt/picopt
 COPY .git ./.git
-RUN git checkout depth_bug_0 .
+RUN git checkout png_bit_depth .
 RUN ci/mozjpeg.sh
 RUN ci/pngout.sh
 
