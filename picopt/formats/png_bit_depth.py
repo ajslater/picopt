@@ -2,23 +2,24 @@
 """get the bit depth of a png image"""
 import struct
 
-PNG_HEADER = (137, 80, 78, 71, 13, 10, 26, 10)
-PNG_HEADER = ('\x89', 'P', 'N', 'G', '\r', '\n', '\x1a', '\n')
+PNG_HEADER = (b'\x89', b'P', b'N', b'G', b'\r', b'\n', b'\x1a', b'\n')
+
+
+def unpack(fmt_type, length, file_desc):
+    return struct.unpack(fmt_type*length, file_desc.read(length))
 
 
 def png_bit_depth(filename):
     with open(filename, 'rb') as img:
         img.seek(0)
-        header = struct.unpack('cccccccc', img.read(8))
-        # header = tuple(img.read(8))
+        header = unpack('c', 8, img)
         if header != PNG_HEADER:
-            print('not a png!')
+            print(filename, 'is not a png!')
             return
 
         img.seek(24)  # bit depth offset
-        depth = ord(struct.unpack('c', img.read(1))[0])
+        depth = unpack('b', 1, img)[0]
         return depth
-        #return tuple(img.read(1))[0]
 
 
 def main(filename):
