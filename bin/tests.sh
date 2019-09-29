@@ -10,6 +10,8 @@ nosetests-2.7 \
     --xunit-file=/tmp/test-results/nose/noseresults-2.7.xml
 rm -f .coverage
 nosetests-3.4 \
+    -v \
+    --nocapture \
     --with-coverage \
     --cover-package=picopt \
     --with-xunit \
