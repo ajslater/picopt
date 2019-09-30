@@ -1,25 +1,30 @@
-Tests:
-    Unit Tests
-    Functional Tests for each option
-    Test recursive opt timestamps
+# TODO
 
-Architecture:
-    Change main process into an event loop so comics don't block as much
-    Dynamically link in libraries instead of using command line procs
-    Rewrite in rust with clibs dynamically linked.
+## Bugs:
+- Format Selector not working for PNG
 
-Packaging:
-    include libraries and python for best optimizers
+## Tests:
+- Unit Tests
+- Functional Tests for each option
+- Test recursive opt timestamps
 
-Formats:
-    SVG - svgo
-    PDF would be cool, but difficult due to non-standard image formats and lack of easy PDF exploders/bundlers.
+## Architecture:
+- Change main process into an event loop so comics don't block as much
+- Dynamically link in libraries instead of using command line procs
+- Rewrite in rust with clibs dynamically linked.
 
-Features:
-    Ignore path flag
+## Packaging:
+- Include libraries and python for best optimizers
 
-Future:
-    When Apple fully supports WebP or AVIF, offer that for everything
-    and prefer it to png. And maybe jpg?
-    https://caniuse.com/#feat=webp
-    https://caniuse.com/#feat=av1
+## Formats:
+- SVG - svgo
+- PDF would be cool, but difficult due to non-standard image formats and lack of easy PDF exploders/bundlers.
+
+## Features:
+- Ignore path flag
+
+## Future:
+- When Apple fully supports WebP or AVIF, offer that for everything and prefer it to png.
+-- And maybe jpg?
+-- https://caniuse.com/#feat=webp
+-- https://caniuse.com/#feat=av1

@@ -142,9 +142,14 @@ def process_arguments(arguments):
     if arguments.comics:
         Settings.formats = Settings.formats | comic.FORMATS
 
+    if Settings.verbose >= 0 or arguments.formats != DEFAULT_FORMATS:
+        print("Optimizing formats:", *Settings.formats)
+
     if arguments.optimize_after is not None:
         try:
             after_dt = dateutil.parser.parse(arguments.optimize_after)
+            if Settings.verbose >= 0:
+                print('Optimizing after', after_dt)
             arguments.optimize_after = time.mktime(after_dt.timetuple())
         except Exception as ex:
             print(ex)
