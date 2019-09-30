@@ -124,7 +124,10 @@ def get_arguments(args):
 
 
 def process_arguments(arguments):
-    """Recompute special cases for input arguments."""
+    """
+    Recompute special cases for input arguments.
+    Sets the global Settings singleton with the correct values.
+    """
     Settings.update(arguments)
 
     Settings.config_program_reqs(PROGRAMS)
@@ -150,7 +153,7 @@ def process_arguments(arguments):
             after_dt = dateutil.parser.parse(arguments.optimize_after)
             if Settings.verbose >= 0:
                 print('Optimizing after', after_dt)
-            arguments.optimize_after = time.mktime(after_dt.timetuple())
+            Settings.optimize_after = time.mktime(after_dt.timetuple())
         except Exception as ex:
             print(ex)
             print('Could not parse date to optimize after.')
