@@ -101,7 +101,7 @@ def get_arguments(args):
     parser.add_argument("-D", "--optimize_after", action="store",
                         dest="optimize_after", default=None,
                         help="only optimize files after the specified "
-                        "timestamp. Supercedes -t")
+                        "timestamp. Supercedes .picopt_timestamp file.")
     parser.add_argument("-N", "--noop", action="store_true",
                         dest="test", default=0,
                         help="Do not replace files with optimized versions")
@@ -126,7 +126,7 @@ def get_arguments(args):
 def process_arguments(arguments):
     """
     Recompute special cases for input arguments.
-    Sets the global Settings singleton with the correct values.
+    Sets the global Settings singleton with the correct values from arguments.
     """
     Settings.update(arguments)
 
