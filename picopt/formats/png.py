@@ -34,7 +34,7 @@ def pngout(ext_args):
     # if png_bit_depth(ext_args.old_filename) == 16:
     depth = png_bit_depth(ext_args.old_filename)
     if depth in (16, None):
-        print(' skipping pngout for {} bit PNG'.format(depth))
+        print('Skipped pngout for {} bit PNG:'.format(depth))
     else:
         args = _PNGOUT_ARGS + [ext_args.old_filename, ext_args.new_filename]
         extern.run_ext(args)
