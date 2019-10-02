@@ -1,2 +1,3 @@
 #!/bin/sh
-twine upload dist/$1*
+VERSION=$1
+twine upload dist/picopt-$1*
