@@ -1,6 +1,6 @@
 [build-system]
-requires = ["flit"]
-build-backend = "flit.buildapi"
+requires = ["flit", "poetry>=1.0"]
+build-backend = ["flit.buildapi", "poetry.masonry.api"]
 
 [tool.flit.metadata]
 module = "picopt"
@@ -45,3 +45,44 @@ dev = [
 
 [tool.flit.scripts]
 picopt = "picopt.cli:main"
+
+[tool.poetry]
+name = "picopt"
+version = "1.6.3"
+description = "rerursive image and comic book optimizer"
+license = "GPL-2.0-only"
+authors = ["AJ Slater <aj@slater.net>"]
+readme = "README.md"
+homepage = "https://github.com/ajslater/picopt"
+documentation = "https://github.com/ajslater/picopt"
+keywords = ["image", "png", "jpg", "cbz", "cbr"]
+classifiers = [
+    "Topic :: Internet :: WWW/HTTP :: Site Management",
+    "Topic :: Multimedia :: Graphics :: Graphics Conversion",
+    "Operating System :: OS Independent",
+    "Development Status :: 5 - Production/Stable",
+    "Intended Audience :: Developers",
+    "Intended Audience :: System Administrators",
+    "Environment :: Console",
+    "Programming Language :: Python :: 3"
+]
+
+[tool.poetry.dependencies]
+python = ">=3.6,<4"
+argparse = "^1.4"
+rarfile = "^3.1"
+python-dateutil = "^2.8"
+Pillow = "^6.2"
+
+[tool.poetry.dev-dependencies]
+bumpversion = "^0.5.3"
+flake8 = "^3.7"
+mock = "^3.0"
+nose = "^1.3"
+nose-pathmunge = "^0.1.2"
+pep8-naming = "^0.9.1"
+twine = "^3.1"
+coverage = "^5.0"
+
+[tool.poetry.scripts]
+picopt = "picotp.cli:main"

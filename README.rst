@@ -37,7 +37,7 @@ book archive optimization is not turned on by default to prevent
 surprises.
 
 Picopt allows you to drop picopt timestamps at the root of your
-recursive optimization trees so you don't have to remember which files
+recursive optimization trees so you don’t have to remember which files
 to optimize or when you last optimized them.
 
 Installation
@@ -46,76 +46,76 @@ Installation
 Lossless external program packages
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-OS X
-^^^^
+macOS
+^^^^^
 
 ::
 
-    brew install optipng mozjpeg gifsicle
-    ln -s /usr/local/Cellar/mozjpeg/3.1/bin/jpegtran /usr/local/bin/mozjpeg
-    brew install jonof/kenutils/pngout
+   brew install optipng mozjpeg gifsicle
+   ln -s /usr/local/Cellar/mozjpeg/3.1/bin/jpegtran /usr/local/bin/mozjpeg
+   brew install jonof/kenutils/pngout
 
 Debian / Ubuntu
 ^^^^^^^^^^^^^^^
 
 ::
 
-    apt-get install optipng gifsicle python-imaging
+   apt-get install optipng gifsicle python-imaging
 
-if you don't want to install mozjpeg using the instructions below then
+if you don’t want to install mozjpeg using the instructions below then
 use jpegtran:
 
 ::
 
-    apt-get install libjpeg-progs
+   apt-get install libjpeg-progs
 
 Redhat / Fedora
 ^^^^^^^^^^^^^^^
 
 ::
 
-    yum install optipng gifsicle python-imaging
+   yum install optipng gifsicle python-imaging
 
-if you don't want to install mozjpeg using the instructions below then
+if you don’t want to install mozjpeg using the instructions below then
 use jpegtran:
 
 ::
 
-    yum install libjpeg-progs
+   yum install libjpeg-progs
 
 MozJPEG
 ^^^^^^^
 
-mozjpeg offers better compression than libjpeg-progs' jpegtran. As of
+mozjpeg offers better compression than libjpeg-progs’ jpegtran. As of
 Oct 2015 it may or may not be packaged for your \*nix, but even when it
 is, picopt requires that its separately compiled version of jpegtran be
-symlinked to 'mozjpeg' somewhere in the path. This installation example
+symlinked to ‘mozjpeg’ somewhere in the path. This installation example
 is for OS X:
 
 ::
 
-    ln -s /usr/local/Cellar/mozjpeg/3.1/bin/jpegtran /usr/local/bin/mozjpeg
+   ln -s /usr/local/Cellar/mozjpeg/3.1/bin/jpegtran /usr/local/bin/mozjpeg
 
-You may find Linux instructions at `Robert Walter's
+You may find Linux instructions at `Robert Walter’s
 Blog <http://www.robertwalter.de/blog/2015/04/08/mozjpeg-3-0-0-on-debian-and-ubuntu/>`__
 
 jpegrescan
 ^^^^^^^^^^
 
-If you can't install MozJPEG, jpegrescan is a better jpeg optimizer than
+If you can’t install MozJPEG, jpegrescan is a better jpeg optimizer than
 jpegtran contained in libjpeg-progs, unfortunately it also remains
 unpackaged :(
 
 ::
 
-    git clone https://github.com/kud/jpegrescan.git
-    ln -s jpegrescan/jpegrescan /usr/local/bin/jpegrescan
+   git clone https://github.com/kud/jpegrescan.git
+   ln -s jpegrescan/jpegrescan /usr/local/bin/jpegrescan
 
 pngout
 ^^^^^^
 
 pngout is a useful compression to use after optipng. It is not packaged
-for linux, but you may find the latest binary version `on JonoF's
+for linux, but you may find the latest binary version `on JonoF’s
 site <http://www.jonof.id.au/kenutils>`__. Picopt looks for the binary
 to be called ``picopt``
 
@@ -124,7 +124,7 @@ Picopt python package
 
 ::
 
-    pip install picopt
+   pip install picopt
 
 Usage
 -----
@@ -133,53 +133,53 @@ Optimize all JPEG files in a dirctory:
 
 ::
 
-    picopt *.jpg
+   picopt *.jpg
 
 Optimize all files and recurse directories:
 
 ::
 
-    picopt -r *
+   picopt -r *
 
 Optimize files and recurse directories AND optimize comic book archives:
 
 ::
 
-    picopt -rc *
+   picopt -rc *
 
 Optimize files, but not lossless files:
 
 ::
 
-    picopt -OPG *
+   picopt -OPG *
 
 Optimize files, but not jpegs:
 
 ::
 
-    picopt -JT *
+   picopt -JT *
 
 Optimize files, but not animated gifs:
 
 ::
 
-    picopt -G *
+   picopt -G *
 
 Just list files picopt.py would try to optimize:
 
 ::
 
-    picopt -l *
+   picopt -l *
 
 Optimize everything in my iPhoto library, but only after the last time i
 did this, skipping symlinks to avoid massive amounts of duplicate work.
-Don't convert lossless files to PNGs because that would confuse iPhoto.
-Also drop a timestamp file so I don't have to remember the last time I
+Don’t convert lossless files to PNGs because that would confuse iPhoto.
+Also drop a timestamp file so I don’t have to remember the last time I
 did this:
 
 ::
 
-    picopt -rSYt -D '2013 June 1 14:00' 'Pictures/iPhoto Library'
+   picopt -rSYt -D '2013 June 1 14:00' 'Pictures/iPhoto Library'
 
 Gotchas
 -------
