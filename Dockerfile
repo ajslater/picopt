@@ -7,24 +7,19 @@ RUN apt install -y \
     gifsicle \
     git \
     optipng \
-    pandoc \
     python3-setuptools \
+    python3-venv \
     unrar
-RUN python3 /usr/lib/python3/dist-packages/easy_install.py pip
-RUN pip3 install poetry nose
 
-# prereqs
-WORKDIR /opt/picopt
-COPY .git ./.git
-RUN git checkout master .
+RUN python3 /usr/lib/python3/dist-packages/easy_install.py pip
+RUN pip3 install poetry
+COPY ci ci
 RUN ci/mozjpeg.sh
 RUN ci/pngout.sh
 
-# Build
-RUN bin/pandoc_README.sh
+# Build dir
+WORKDIR /opt/picopt
+COPY . .
 
-# Build python 3
-RUN git add README.rst
-RUN poetry install
-RUN poetry build
+# Install
 RUN poetry install

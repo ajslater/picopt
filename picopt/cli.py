@@ -7,13 +7,16 @@ import multiprocessing
 import os
 import sys
 import time
+import pkg_resources
 
 import dateutil.parser
 
-from . import PROGRAM_NAME, __version__, walk
+from . import PROGRAM_NAME, walk
 from .formats import comic, gif, jpeg, png
 from .settings import Settings
 
+
+DISTRIBUTION = pkg_resources.get_distribution("picopt")
 # Programs
 PROGRAMS = set(png.PROGRAMS + gif.PROGRAMS +
                jpeg.PROGRAMS)
@@ -27,7 +30,8 @@ ALL_FORMATS = ALL_DEFAULT_FORMATS | comic.FORMATS
 
 def get_arguments(args):
     """Parse the command line."""
-    usage = "%(prog)s [arguments] [image files]"
+    usage = f"picopt {DISTRIBUTION.version}\n%(prog)s " \
+            "[arguments] [image files]"
     programs_str = ', '.join([prog.__name__ for prog in PROGRAMS])
     description = "Uses "+programs_str+" if they are on the path."
     parser = argparse.ArgumentParser(usage=usage, description=description)
@@ -109,8 +113,8 @@ def get_arguments(args):
                         dest="list_only", default=0,
                         help="Only list files that would be optimized")
     parser.add_argument("-V", "--version", action="version",
-                        version=__version__,
-                        help="display the version number")
+                        version=DISTRIBUTION.version,
+                        help="Display the version number")
     parser.add_argument("-M", "--destroy_metadata", action="store_true",
                         dest="destroy_metadata", default=0,
                         help="*Destroy* metadata like EXIF and JFIF")

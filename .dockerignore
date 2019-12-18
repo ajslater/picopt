@@ -6,3 +6,4 @@ dist
 .ropeproject
 .mypy_cache
 .picopt_timestamp
+test-results/nose/*
