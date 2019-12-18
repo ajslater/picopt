@@ -153,8 +153,8 @@ python-versions = ">=2.6, !=3.0.*, !=3.1.*"
 version = "1.13.0"
 
 [metadata]
-content-hash = "326224523faa977396b402b27c63b6db2b97b678bae66e9462e1fce38d2dfe8c"
-python-versions = ">=3.6,<4"
+content-hash = "ee97a97a0a1b4f80fcfb2c85e18012f96ade974a883e3e4edfa17518a472d28b"
+python-versions = "^3.6"
 
 [metadata.files]
 argparse = [
