@@ -1,6 +1,6 @@
 """Test comic format."""
-from unittest import TestCase
 from pathlib import Path
+from unittest import TestCase
 
 from picopt import timestamp
 from picopt.settings import Settings

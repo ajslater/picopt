@@ -3,15 +3,14 @@
 import argparse
 import multiprocessing
 import time
-import pkg_resources
 from pathlib import Path
 
 import dateutil.parser
+import pkg_resources
 
 from . import PROGRAM_NAME, walk
 from .formats import comic, gif, jpeg, png
 from .settings import Settings
-
 
 DISTRIBUTION = pkg_resources.get_distribution(PROGRAM_NAME)
 # Programs

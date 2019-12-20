@@ -1,7 +1,7 @@
 """Test comic format."""
 import shutil
-from unittest import TestCase
 from pathlib import Path
+from unittest import TestCase
 
 from picopt import cli
 

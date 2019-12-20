@@ -1,6 +1,6 @@
 """Test handling files."""
-from unittest import TestCase
 from pathlib import Path
+from unittest import TestCase
 
 from picopt import files
 
