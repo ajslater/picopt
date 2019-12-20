@@ -85,9 +85,9 @@ def get_arguments(args):
                         dest="to_png_formats",
                         const=png.FORMATS,
                         default=png.CONVERTABLE_FORMATS,
-                        help=f"Do not convert other lossless formats"
-                        "like {losselss_formats} to PNG when "
-                        "optimizing. By default, {PROGRAM_NAME}"
+                        help="Do not convert other lossless formats"
+                        f"like {lossless_formats} to PNG when "
+                        f"optimizing. By default, {PROGRAM_NAME}"
                         " does convert these formats to PNG")
     parser.add_argument("-S", "--disable_follow_symlinks",
                         action="store_false",

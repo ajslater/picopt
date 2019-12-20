@@ -177,7 +177,7 @@ def report_totals(bytes_in, bytes_out, nag_about_gifs, errors):
 
     print("Errors with the following files:")
     for error in errors:
-        print("{}: {}".format(error[0], error[1]))
+        print(f"{error[0]}: {error[1]}")
 
 
 def skip(type_name, filename):

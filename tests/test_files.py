@@ -9,13 +9,9 @@ from picopt import files
 
 class TestReplaceExt(TestCase):
 
-    @staticmethod
-    def make_ext(base, ext):
-        return '{}.{}'.format(base, ext)
-
     def replace_aux(self, file_base, old_ext, new_ext):
-        old_filename = self.make_ext(file_base, old_ext)
-        new_filename = self.make_ext(file_base, new_ext)
+        old_filename = f"{file_base}.{old_ext}"
+        new_filename = f"{file_base}.{new_ext}"
         res = files.replace_ext(old_filename, new_ext)
         self.assertEquals(new_filename, res)
 
