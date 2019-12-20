@@ -1,9 +1,8 @@
 """Timestamp writer for keeping track of bulk optimizations."""
-from __future__ import absolute_import, division, print_function
-
 import os
 import sys
 from datetime import datetime
+from pathlib import Path
 
 from . import PROGRAM_NAME
 from .settings import Settings
@@ -19,16 +18,16 @@ def _get_timestamp(dirname_full, remove):
 
     Optionally mark it for removal if we're going to write another one.
     """
-    record_filename = os.path.join(dirname_full, RECORD_FILENAME)
+    record_path = Path(dirname_full).joinpath(RECORD_FILENAME)
 
-    if not os.path.exists(record_filename):
+    if not record_path.exists():
         return None
 
-    mtime = os.stat(record_filename).st_mtime
+    mtime = record_path.stat().st_mtime
     mtime_str = datetime.fromtimestamp(mtime)
     print(f'Found timestamp {dirname_full}:{mtime_str}')
     if Settings.record_timestamp and remove:
-        OLD_TIMESTAMPS.add(record_filename)
+        OLD_TIMESTAMPS.add(record_path)
     return mtime
 
 
@@ -65,14 +64,14 @@ def _get_parent_timestamp(dirname, mtime):
 
     Because they affect every subdirectory.
     """
-    parent_pathname = os.path.dirname(dirname)
+    parent_path = Path(dirname).parent
 
     # max between the parent timestamp the one passed in
-    mtime = _max_timestamps(parent_pathname, False, mtime)
+    mtime = _max_timestamps(parent_path, False, mtime)
 
-    if dirname != os.path.dirname(parent_pathname):
+    if dirname != parent_path.parent:
         # this is only called if we're not at the root
-        mtime = _get_parent_timestamp(parent_pathname, mtime)
+        mtime = _get_parent_timestamp(parent_path, mtime)
 
     return mtime
 
@@ -86,7 +85,7 @@ def get_walk_after(filename, optimize_after=None):
     if Settings.optimize_after is not None:
         return Settings.optimize_after
 
-    dirname = os.path.dirname(filename)
+    dirname = Path(filename).parent
     if optimize_after is None:
         optimize_after = _get_parent_timestamp(dirname, optimize_after)
     return _max_timestamps(dirname, True, optimize_after)
@@ -96,27 +95,28 @@ def record_timestamp(pathname_full):
     """Record the timestamp of running in a dotfile."""
     if Settings.test or Settings.list_only or not Settings.record_timestamp:
         return
-    if not Settings.follow_symlinks and os.path.islink(pathname_full):
+    full_path = Path(pathname_full)
+    if not Settings.follow_symlinks and full_path.is_symlink():
         if Settings.verbose:
             print('Not setting timestamp because not following symlinks')
         return
-    if not os.path.isdir(pathname_full):
+    if not full_path.is_dir():
         if Settings.verbose:
             print('Not setting timestamp for a non-directory')
         return
 
-    record_filename_full = os.path.join(pathname_full, RECORD_FILENAME)
+    record_filepath = full_path.joinpath(RECORD_FILENAME)
     try:
-        with open(record_filename_full, 'w'):
-            os.utime(record_filename_full, None)
+        record_filepath.touch()
         if Settings.verbose:
-            print(f"Set timestamp: {record_filename_full}")
+            print(f"Set timestamp: {record_filepath}")
         for fname in OLD_TIMESTAMPS:
+            path = Path(fname)
             if fname.startswith(pathname_full) and \
-               fname != record_filename_full:
+               not path.samefile(record_filepath):
                 # only remove timestamps below the curent path
                 # but don't remove the timestamp we just set!
-                os.remove(fname)
+                path.unlink()
                 if Settings.verbose:
                     print(f'Removed old timestamp: {fname}')
     except IOError:

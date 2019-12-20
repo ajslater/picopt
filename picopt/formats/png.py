@@ -1,6 +1,4 @@
 """PNG format."""
-from __future__ import absolute_import, division, print_function
-
 from .. import extern
 from .png_bit_depth import png_bit_depth
 

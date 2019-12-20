@@ -1,6 +1,4 @@
 """Test detect file formats."""
-from __future__ import absolute_import, division, print_function
-
 from unittest import TestCase
 
 from picopt import detect_format
@@ -11,8 +9,6 @@ try:
     from PIL import Image
 except ImportError:
     import Image
-
-
 
 TEST_FILES_ROOT = 'tests/test_files/'
 IMAGES_ROOT = TEST_FILES_ROOT+'/images'
@@ -48,17 +44,17 @@ class TestIsFormatSelected(TestCase):
 
     programs = (pngout, comics)
 
-    def test_GIF(self):
+    def test_gif(self):
         res = detect_format.is_format_selected('GIF', self.formats,
                                                self.programs)
         self.assertTrue(res)
 
-    def test_CBZ_in_settings(self):
+    def test_cbz_in_settings(self):
         res = detect_format.is_format_selected('CBZ', self.formats,
                                                self.programs)
         self.assertFalse(res)
 
-    def test_CBZ_not_in_settings(self):
+    def test_cbz_not_in_settings(self):
         res = detect_format.is_format_selected('CBZ', set(['CBR']),
                                                self.programs)
         self.assertFalse(res)

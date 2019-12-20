@@ -1,8 +1,7 @@
 """Walk the directory trees and files and call the optimizers."""
-from __future__ import absolute_import, division, print_function
-
 import multiprocessing
 import os
+from pathlib import Path
 
 from . import detect_format, optimize, stats, timestamp
 from .formats import comic
@@ -30,7 +29,7 @@ def walk_comic_archive(filename_full, image_format, optimize_after):
                                          args=report_stats)
 
     # optimize contents of archive
-    archive_mtime = os.stat(filename_full).st_mtime
+    archive_mtime = Path(filename_full).stat().st_mtime
     result_set = walk_dir(tmp_dir, optimize_after, True, archive_mtime)
 
     # wait for archive contents to optimize before recompressing
@@ -49,11 +48,12 @@ def _is_skippable(filename_full):
     """Handle things that are not optimizable files."""
 
     # File types
-    if not Settings.follow_symlinks and os.path.islink(filename_full):
+    full_path = Path(filename_full)
+    if not Settings.follow_symlinks and full_path.is_symlink():
         return True
-    if os.path.basename(filename_full) == timestamp.RECORD_FILENAME:
+    if full_path.name == timestamp.RECORD_FILENAME:
         return True
-    if not os.path.exists(filename_full):
+    if not full_path.exists():
         if Settings.verbose:
             print(filename_full, 'was not found.')
         return True
@@ -65,7 +65,7 @@ def _is_older_than_timestamp(filename, walk_after, archive_mtime):
     if walk_after is None:
         return False
 
-    mtime = os.stat(filename).st_mtime
+    mtime = Path(filename).stat().st_mtime
     # if the file is in an archive, use the archive time if it
     # is newer. This helps if you have a new archive that you
     # collected from someone who put really old files in it that
@@ -77,28 +77,28 @@ def _is_older_than_timestamp(filename, walk_after, archive_mtime):
 
 def walk_file(filename, walk_after, recurse=None, archive_mtime=None):
     """Optimize an individual file."""
-    filename = os.path.normpath(filename)
+    path = Path(filename).resolve(strict=True)
 
     result_set = set()
 
-    if _is_skippable(filename):
+    if _is_skippable(path):
         return result_set
 
-    walk_after = timestamp.get_walk_after(filename, walk_after)
+    walk_after = timestamp.get_walk_after(path, walk_after)
 
     # File is a directory
-    if os.path.isdir(filename):
-        return walk_dir(filename, walk_after, recurse, archive_mtime)
+    if path.is_dir():
+        return walk_dir(path, walk_after, recurse, archive_mtime)
 
-    if _is_older_than_timestamp(filename, walk_after, archive_mtime):
+    if _is_older_than_timestamp(path, walk_after, archive_mtime):
         return result_set
 
     # Check image format
     try:
-        image_format = detect_format.detect_file(filename)
+        image_format = detect_format.detect_file(path)
     except Exception:
         res = Settings.pool.apply_async(stats.ReportStats,
-                                        (filename,),
+                                        (path,),
                                         {'error': "Detect Format"})
         result_set.add(res)
         image_format = False
@@ -108,16 +108,16 @@ def walk_file(filename, walk_after, recurse=None, archive_mtime=None):
 
     if Settings.list_only:
         # list only
-        print(f"{filename}: {image_format}")
+        print(f"{path}: {image_format}")
         return result_set
 
     if detect_format.is_format_selected(image_format, comic.FORMATS,
                                         comic.PROGRAMS):
         # comic archive
-        result = walk_comic_archive(filename, image_format, walk_after)
+        result = walk_comic_archive(path, image_format, walk_after)
     else:
         # regular image
-        args = [filename, image_format, Settings]
+        args = [path, image_format, Settings]
         result = Settings.pool.apply_async(optimize.optimize_image,
                                            args=(args,))
     result_set.add(result)
@@ -134,14 +134,15 @@ def walk_dir(dir_path, walk_after, recurse=None, archive_mtime=None):
         return result_set
 
     for root, _, filenames in os.walk(dir_path):
+        root_path = Path(root)
         for filename in filenames:
-            filename_full = os.path.join(root, filename)
+            full_path = root_path.joinpath(filename)
             try:
-                results = walk_file(filename_full, walk_after, recurse,
+                results = walk_file(full_path, walk_after, recurse,
                                     archive_mtime)
                 result_set = result_set.union(results)
             except Exception:
-                print(f"Error with file: {filename_full}")
+                print(f"Error with file: {full_path}")
                 raise
 
     return result_set
@@ -160,12 +161,12 @@ def _walk_all_files():
 
     for filename in Settings.paths:
         # Record dirs to put timestamps in later
-        filename_full = os.path.abspath(filename)
-        if Settings.recurse and os.path.isdir(filename_full):
-            record_dirs.add(filename_full)
+        full_path = Path(filename).resolve()
+        if Settings.recurse and full_path.is_dir():
+            record_dirs.add(full_path)
 
-        walk_after = timestamp.get_walk_after(filename_full)
-        results = walk_file(filename_full, walk_after, Settings.recurse)
+        walk_after = timestamp.get_walk_after(full_path)
+        results = walk_file(full_path, walk_after, Settings.recurse)
         result_set = result_set.union(results)
 
     bytes_in = 0

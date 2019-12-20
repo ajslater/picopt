@@ -1,23 +1,14 @@
 """Statistics for the optimization operations."""
-from __future__ import absolute_import, division, print_function
-
-import os
-import sys
+from pathlib import Path
 
 from .settings import Settings
 
-if sys.version > '3':
-    LongInt = int
-else:
-    LongInt = long
-
-
 ABBREVS = (
-    (1 << LongInt(50), 'PiB'),
-    (1 << LongInt(40), 'TiB'),
-    (1 << LongInt(30), 'GiB'),
-    (1 << LongInt(20), 'MiB'),
-    (1 << LongInt(10), 'kiB'),
+    (1 << int(50), 'PiB'),
+    (1 << int(40), 'TiB'),
+    (1 << int(30), 'GiB'),
+    (1 << int(20), 'MiB'),
+    (1 << int(10), 'kiB'),
     (1, 'bytes')
 )
 
@@ -51,7 +42,7 @@ def _humanize_bytes(num_bytes, precision=1):
     http://code.activestate.com/recipes/
            577081-humanized-representation-of-a-number-of-num_bytes/
 
-    Assumes `from __future__ import division`.
+    Assumes python 3 style division.
 
     >>> humanize_bytes(1)
     '1 byte'
@@ -106,21 +97,12 @@ def new_percent_saved(report_stats):
     return result
 
 
-def truncate_cwd(full_filename):
-    """Remove the cwd from the full filename."""
-    if full_filename.startswith(os.getcwd()):
-        truncated_filename = full_filename.split(os.getcwd(), 1)[1]
-        truncated_filename = truncated_filename.split(os.sep, 1)[1]
-    else:
-        truncated_filename = full_filename
-    return truncated_filename
-
-
 def report_saved(report_stats):
     """Record the percent saved & print it."""
     if Settings.verbose:
         report = ''
-        truncated_filename = truncate_cwd(report_stats.final_filename)
+        fn = report_stats.final_filename
+        truncated_filename = Path(fn).relative_to(Path.cwd())
 
         report += f'{truncated_filename}: '
         total = new_percent_saved(report_stats)

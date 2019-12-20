@@ -1,6 +1,4 @@
 """Test running external commands."""
-from __future__ import absolute_import, division, print_function
-
 from unittest import TestCase
 
 from picopt import extern

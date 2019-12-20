@@ -1,13 +1,10 @@
 #!/usr/bin/env python
 """Run pictures through image specific external optimizers."""
-from __future__ import absolute_import, division, print_function
-
 import argparse
 import multiprocessing
-import os
-import sys
 import time
 import pkg_resources
+from pathlib import Path
 
 import dateutil.parser
 
@@ -16,7 +13,7 @@ from .formats import comic, gif, jpeg, png
 from .settings import Settings
 
 
-DISTRIBUTION = pkg_resources.get_distribution("picopt")
+DISTRIBUTION = pkg_resources.get_distribution(PROGRAM_NAME)
 # Programs
 PROGRAMS = set(png.PROGRAMS + gif.PROGRAMS +
                jpeg.PROGRAMS)
@@ -30,10 +27,9 @@ ALL_FORMATS = ALL_DEFAULT_FORMATS | comic.FORMATS
 
 def get_arguments(args):
     """Parse the command line."""
-    usage = f"picopt {DISTRIBUTION.version}\n%(prog)s " \
-            "[arguments] [image files]"
+    usage = "%(prog)s [arguments] [image files]"
     programs_str = ', '.join([prog.__name__ for prog in PROGRAMS])
-    description = "Uses "+programs_str+" if they are on the path."
+    description = f"Uses {programs_str} if they are on the path."
     parser = argparse.ArgumentParser(usage=usage, description=description)
     all_formats = ', '.join(sorted(ALL_FORMATS))
     lossless_formats = ', '.join(png.LOSSLESS_FORMATS)
@@ -56,9 +52,9 @@ def get_arguments(args):
                         help="Also optimize comic book archives (cbz & cbr)")
     parser.add_argument("-f", "--formats", action="store", dest="formats",
                         default=DEFAULT_FORMATS,
-                        help=f"Only optimize images of the specifed"
-                        "'{FORMAT_DELIMETER}' delimited formats from:"
-                        " {all_formats}")
+                        help="Only optimize images of the specifed"
+                        f"'{FORMAT_DELIMETER}' delimited formats from:"
+                        f" {all_formats}")
     parser.add_argument("-O", "--disable_optipng", action="store_false",
                         dest="optipng", default=1,
                         help="Do not optimize with optipng")
@@ -168,14 +164,20 @@ def process_arguments(arguments):
 
     # Make a rough guess about weather or not to invoke multithreding
     # jpegrescan '-t' uses three threads
-    # one off multithread switch bcaseu this is the only one right now
+    # one off multithread switch because this is the only one right now
     files_in_paths = 0
     non_file_in_paths = False
     for filename in arguments.paths:
-        if os.path.isfile(filename):
+        path = Path(filename)
+        if path.is_file():
             files_in_paths += 1
-        else:
+
+        elif path.exists():
             non_file_in_paths = True
+        else:
+            print(f"'{filename}' does not exist.")
+            exit(1)
+
     Settings.jpegrescan_multithread = not non_file_in_paths and \
         Settings.jobs - (files_in_paths*3) > -1
 
@@ -192,6 +194,7 @@ def run(args):
 
 def main():
     """Main entry point."""
+    import sys
     run(sys.argv)
 
 

@@ -1,10 +1,9 @@
 """Optimize comic archives."""
-from __future__ import absolute_import, division, print_function
-
 import os
 import shutil
 import traceback
 import zipfile
+from pathlib import Path
 
 import rarfile
 
@@ -22,8 +21,7 @@ _COMIC_EXTS = set((_CBR_EXT, _CBZ_EXT))
 OUT_EXT = _CBZ_EXT
 
 _ARCHIVE_TMP_DIR_PREFIX = PROGRAM_NAME+'_tmp_'
-_ARCHIVE_TMP_DIR_TEMPLATE = _ARCHIVE_TMP_DIR_PREFIX+'{}'
-_NEW_ARCHIVE_SUFFIX = f'{PROGRAM_NAME}-optimized{OUT_EXT}'
+_NEW_ARCHIVE_SUFFIX = f'.{PROGRAM_NAME}-optimized'
 
 
 def comics():
@@ -43,7 +41,7 @@ BEST_ONLY = False
 def get_comic_format(filename):
     """Return the comic format if it is a comic archive."""
     image_format = None
-    filename_ext = os.path.splitext(filename)[-1].lower()
+    filename_ext = Path(filename).suffix.lower()
     if filename_ext in _COMIC_EXTS:
         if zipfile.is_zipfile(filename):
             image_format = _CBZ_FORMAT
@@ -54,8 +52,8 @@ def get_comic_format(filename):
 
 def _get_archive_tmp_dir(filename):
     """Get the name of the working dir to use for this filename."""
-    head, tail = os.path.split(filename)
-    return os.path.join(head, _ARCHIVE_TMP_DIR_TEMPLATE.format(tail))
+    path = Path(filename)
+    return path.parent.joinpath(_ARCHIVE_TMP_DIR_PREFIX + path.name)
 
 
 def comic_archive_uncompress(filename, image_format):
@@ -69,14 +67,14 @@ def comic_archive_uncompress(filename, image_format):
         return None, ReportStats(filename, report=report)
 
     if Settings.verbose:
-        truncated_filename = stats.truncate_cwd(filename)
+        truncated_filename = Path(filename).relative_to(Path.cwd())
         print(f"Extracting {truncated_filename}...", end='')
 
     # create the tmpdir
     tmp_dir = _get_archive_tmp_dir(filename)
-    if os.path.isdir(tmp_dir):
+    if tmp_dir.exists():
         shutil.rmtree(tmp_dir)
-    os.mkdir(tmp_dir)
+    tmp_dir.mkdir()
 
     # extract archvie into the tmpdir
     if image_format == _CBZ_FORMAT:
@@ -101,17 +99,14 @@ def _comic_archive_write_zipfile(new_filename, tmp_dir):
         print('Rezipping archive', end='')
     with zipfile.ZipFile(new_filename, 'w',
                          compression=zipfile.ZIP_DEFLATED) as new_zf:
-        root_len = len(os.path.abspath(tmp_dir))
-        for r_d_f in os.walk(tmp_dir):
-            root = r_d_f[0]
-            filenames = r_d_f[2]
-            archive_root = os.path.abspath(root)[root_len:]
+        for root, _, filenames in os.walk(tmp_dir):
+            root_path = Path(root)
             for fname in filenames:
-                fullpath = os.path.join(root, fname)
-                archive_name = os.path.join(archive_root, fname)
                 if Settings.verbose:
                     print('.', end='')
-                new_zf.write(fullpath, archive_name, zipfile.ZIP_DEFLATED)
+                full_path = root_path.joinpath(fname)
+                archive_path = full_path.relative_to(tmp_dir)
+                new_zf.write(full_path, archive_path, zipfile.ZIP_DEFLATED)
 
 
 def comic_archive_compress(args):
@@ -126,12 +121,14 @@ def comic_archive_compress(args):
         tmp_dir = _get_archive_tmp_dir(filename)
 
         # archive into new filename
-        new_filename = files.replace_ext(filename, _NEW_ARCHIVE_SUFFIX)
+        path = Path(filename)
+        suffix = _NEW_ARCHIVE_SUFFIX + path.suffix
+        new_path = path.with_suffix(suffix)
 
-        _comic_archive_write_zipfile(new_filename, tmp_dir)
+        _comic_archive_write_zipfile(new_path, tmp_dir)
 
         # Cleanup tmpdir
-        if os.path.isdir(tmp_dir):
+        if Path(tmp_dir).exists():
             if Settings.verbose:
                 print('.', end='')
             shutil.rmtree(tmp_dir)
@@ -139,7 +136,7 @@ def comic_archive_compress(args):
             print('done.')
 
         report_stats = files.cleanup_after_optimize(
-            filename, new_filename, old_format, _CBZ_FORMAT)
+            filename, new_path, old_format, _CBZ_FORMAT)
         report_stats.nag_about_gifs = nag_about_gifs
         stats.report_saved(report_stats)
         return report_stats

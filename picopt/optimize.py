@@ -1,9 +1,7 @@
 """Optimize a file."""
-from __future__ import absolute_import, division, print_function
-
-import os
 import shutil
 import traceback
+from pathlib import Path
 
 from . import PROGRAM_NAME, detect_format, files, stats
 from .extern import ExtArgs
@@ -19,13 +17,13 @@ Settings.to_png_formats = png.CONVERTABLE_FORMATS
 def _optimize_image_external(filename, func, image_format, new_ext):
     """Optimize the file with the external function."""
     new_filename = filename + TMP_SUFFIX + new_ext
-    new_filename = os.path.normpath(new_filename)
+    new_path = Path(new_filename).resolve
     shutil.copy2(filename, new_filename)
 
-    ext_args = ExtArgs(filename, new_filename)
+    ext_args = ExtArgs(filename, new_path)
     new_image_format = func(ext_args)
 
-    report_stats = files.cleanup_after_optimize(filename, new_filename,
+    report_stats = files.cleanup_after_optimize(filename, new_path,
                                                 image_format,
                                                 new_image_format)
     percent = stats.new_percent_saved(report_stats)
@@ -44,7 +42,7 @@ def _optimize_with_progs(format_module, filename, image_format):
 
     And report back statistics.
     """
-    filesize_in = os.stat(filename).st_size
+    filesize_in = Path(filename).stat().st_size
     report_stats = None
 
     for func in format_module.PROGRAMS:

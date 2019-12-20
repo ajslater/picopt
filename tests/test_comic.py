@@ -1,6 +1,4 @@
 """Test comic format."""
-from __future__ import absolute_import, division, print_function
-
 from unittest import TestCase
 
 from picopt.formats import comic
@@ -28,4 +26,4 @@ class TestGetArchiveTmpDir(TestCase):
 
     def test_foo(self):
         res = comic._get_archive_tmp_dir('foo')
-        self.assertEqual(res, 'picopt_tmp_foo')
+        self.assertEqual(str(res), 'picopt_tmp_foo')

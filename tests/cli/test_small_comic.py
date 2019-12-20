@@ -1,23 +1,21 @@
 """Test comic format."""
-from __future__ import absolute_import, division, print_function
-
-import os
 import shutil
 from unittest import TestCase
+from pathlib import Path
 
 from picopt import cli
 
 TEST_FILES_SRC = 'tests/test_files'
 TEST_FILES_DST_ROOT = '/tmp'
-TEST_FILES_DST = os.path.join(TEST_FILES_DST_ROOT, 'picopt_tests')
-TEST_SMALL_COMIC = os.path.join(TEST_FILES_DST,
+TEST_FILES_DST = Path(TEST_FILES_DST_ROOT).joinpath('picopt_tests')
+TEST_SMALL_COMIC = Path(TEST_FILES_DST).joinpath(
                                 'comic_archives/test_small_cbz.cbz')
 
 
 class TestCLI(TestCase):
 
     def setUp(self):
-        if os.path.exists(TEST_FILES_DST):
+        if TEST_FILES_DST.exists():
             shutil.rmtree(TEST_FILES_DST)
         shutil.copytree(TEST_FILES_SRC, TEST_FILES_DST)
 
@@ -28,6 +26,6 @@ class TestCLI(TestCase):
 class TestCLISmallComic(TestCLI):
 
     def test_small_comic(self):
-        args = [None, '-rct', TEST_SMALL_COMIC]
+        args = [None, '-rct', str(TEST_SMALL_COMIC)]
         res = cli.run(args)
         self.assertTrue(res)

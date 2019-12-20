@@ -1,6 +1,4 @@
 """Settings class for picopt."""
-from __future__ import absolute_import, division, print_function
-
 import multiprocessing
 
 from . import extern

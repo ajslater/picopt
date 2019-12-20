@@ -1,25 +1,8 @@
 """Test handling files."""
-from __future__ import absolute_import, division, print_function
-
-import os
 from unittest import TestCase
+from pathlib import Path
 
 from picopt import files
-
-
-class TestReplaceExt(TestCase):
-
-    def replace_aux(self, file_base, old_ext, new_ext):
-        old_filename = f"{file_base}.{old_ext}"
-        new_filename = f"{file_base}.{new_ext}"
-        res = files.replace_ext(old_filename, new_ext)
-        self.assertEquals(new_filename, res)
-
-    def test_regular(self):
-        self.replace_aux('test_file', 'foo', 'bar')
-
-    def test_with_dots(self):
-        self.replace_aux('test.file', 'foo', 'bar')
 
 
 class TestCleanupAterOptimise(TestCase):
@@ -35,12 +18,12 @@ class TestCleanupAterOptimise(TestCase):
         return filename
 
     @classmethod
-    def cleanup_aux(self, old_size, new_size, old_format, new_format):
-        fn_old = self.create_file(self.TEST_FN_OLD, old_format, old_size)
-        fn_new = self.create_file(self.TEST_FN_NEW, new_format, new_size)
+    def cleanup_aux(cls, old_size, new_size, old_format, new_format):
+        fn_old = cls.create_file(cls.TEST_FN_OLD, old_format, old_size)
+        fn_new = cls.create_file(cls.TEST_FN_NEW, new_format, new_size)
         res = files._cleanup_after_optimize_aux(fn_old, fn_new,
                                                 old_format, new_format)
-        os.remove(res[0])
+        Path(res[0]).unlink()
         return res
 
     def test_small_big(self):
@@ -48,9 +31,9 @@ class TestCleanupAterOptimise(TestCase):
         new_size = 40
         old_format = 'png'
         new_format = 'png'
-        fn, b_in, b_out = self.cleanup_aux(old_size, new_size, old_format,
-                                           new_format)
-        self.assertTrue(fn.endswith(old_format))
+        path, b_in, b_out = self.cleanup_aux(old_size, new_size,
+                                             old_format, new_format)
+        self.assertTrue(path.suffix == '.'+old_format)
         self.assertEqual(old_size, b_in)
         self.assertEqual(old_size, b_out)
 
@@ -59,9 +42,9 @@ class TestCleanupAterOptimise(TestCase):
         new_size = 4
         old_format = 'bmp'
         new_format = 'png'
-        fn, b_in, b_out = self.cleanup_aux(old_size, new_size, old_format,
-                                           new_format)
-        self.assertTrue(fn.endswith(new_format))
+        path, b_in, b_out = self.cleanup_aux(old_size, new_size,
+                                             old_format, new_format)
+        self.assertTrue(path.suffix == '.'+new_format)
         self.assertEqual(old_size, b_in)
         self.assertEqual(new_size, b_out)
 
@@ -70,8 +53,8 @@ class TestCleanupAterOptimise(TestCase):
         new_size = 5
         old_format = 'bmp'
         new_format = 'png'
-        fn, b_in, b_out = self.cleanup_aux(old_size, new_size, old_format,
-                                           new_format)
-        self.assertTrue(fn.endswith(old_format))
+        path, b_in, b_out = self.cleanup_aux(old_size, new_size,
+                                             old_format, new_format)
+        self.assertTrue(path.suffix == '.'+old_format)
         self.assertEqual(old_size, b_in)
         self.assertEqual(old_size, b_out)

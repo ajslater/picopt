@@ -1,19 +1,10 @@
 """File utility operations."""
-from __future__ import absolute_import, division, print_function
-
-import os
+from pathlib import Path
 
 from . import PROGRAM_NAME, stats
 from .settings import Settings
 
 REMOVE_EXT = f'.{PROGRAM_NAME}-remove'
-
-
-def replace_ext(filename, new_ext):
-    """Replace the file extention."""
-    filename_base = os.path.splitext(filename)[0]
-    new_filename = f'{filename_base}.{new_ext}'
-    return new_filename
 
 
 def _cleanup_after_optimize_aux(filename, new_filename, old_format,
@@ -23,29 +14,26 @@ def _cleanup_after_optimize_aux(filename, new_filename, old_format,
     """
     bytes_in = 0
     bytes_out = 0
-    final_filename = filename
+    file_path = Path(filename)
+    final_path = file_path
     try:
-        bytes_in = os.stat(filename).st_size
-        bytes_out = os.stat(new_filename).st_size
+        new_path = Path(new_filename)
+        bytes_in = file_path.stat().st_size
+        bytes_out = new_path.stat().st_size
         if (bytes_out > 0) and ((bytes_out < bytes_in) or Settings.bigger):
             if old_format != new_format:
-                final_filename = replace_ext(filename,
-                                             new_format.lower())
-            rem_filename = filename + REMOVE_EXT
+                final_path = file_path.with_suffix('.'+new_format.lower())
             if not Settings.test:
-                os.rename(filename, rem_filename)
-                os.rename(new_filename, final_filename)
-                os.remove(rem_filename)
+                new_path.replace(final_path)
             else:
-                os.remove(new_filename)
-
+                new_path.unlink()
         else:
-            os.remove(new_filename)
+            new_path.unlink()
             bytes_out = bytes_in
     except OSError as ex:
         print(ex)
 
-    return final_filename, bytes_in, bytes_out
+    return final_path, bytes_in, bytes_out
 
 
 def cleanup_after_optimize(filename, new_filename, old_format, new_format):

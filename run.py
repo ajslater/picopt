@@ -1,9 +1,7 @@
 #!/usr/bin/env python
 """Development runner."""
-from __future__ import absolute_import, division, print_function
-
 import sys
 
-import picopt.cli
+from picopt.cli import run
 
-picopt.cli.run(sys.argv)
+run(sys.argv)
