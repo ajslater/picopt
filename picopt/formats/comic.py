@@ -23,7 +23,7 @@ OUT_EXT = _CBZ_EXT
 
 _ARCHIVE_TMP_DIR_PREFIX = PROGRAM_NAME+'_tmp_'
 _ARCHIVE_TMP_DIR_TEMPLATE = _ARCHIVE_TMP_DIR_PREFIX+'{}'
-_NEW_ARCHIVE_SUFFIX = '{}-optimized{}'.format(PROGRAM_NAME, OUT_EXT)
+_NEW_ARCHIVE_SUFFIX = f'{PROGRAM_NAME}-optimized{OUT_EXT}'
 
 
 def comics():
@@ -65,12 +65,12 @@ def comic_archive_uncompress(filename, image_format):
     Return the name of the working directory we uncompressed into.
     """
     if not Settings.comics:
-        report = ['Skipping archive file: {}'.format(filename)]
+        report = [f'Skipping archive file: {filename}']
         return None, ReportStats(filename, report=report)
 
     if Settings.verbose:
         truncated_filename = stats.truncate_cwd(filename)
-        print("Extracting {}...".format(truncated_filename), end='')
+        print(f"Extracting {truncated_filename}...", end='')
 
     # create the tmpdir
     tmp_dir = _get_archive_tmp_dir(filename)
@@ -86,7 +86,7 @@ def comic_archive_uncompress(filename, image_format):
         with rarfile.RarFile(filename, 'r') as rfile:
             rfile.extractall(tmp_dir)
     else:
-        report = '{} {} is not a good format'.format(filename, image_format)
+        report = f'{filename} {image_format} is not a good format'
         return None, ReportStats(filename, report=report)
 
     if Settings.verbose:

@@ -6,13 +6,13 @@ import os
 from . import PROGRAM_NAME, stats
 from .settings import Settings
 
-REMOVE_EXT = '.{}-remove'.format(PROGRAM_NAME)
+REMOVE_EXT = f'.{PROGRAM_NAME}-remove'
 
 
 def replace_ext(filename, new_ext):
     """Replace the file extention."""
     filename_base = os.path.splitext(filename)[0]
-    new_filename = '{}.{}'.format(filename_base, new_ext)
+    new_filename = f'{filename_base}.{new_ext}'
     return new_filename
 
 

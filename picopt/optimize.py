@@ -10,7 +10,7 @@ from .extern import ExtArgs
 from .formats import gif, jpeg, png
 from .settings import Settings
 
-TMP_SUFFIX = '.{}-optimized'.format(PROGRAM_NAME)
+TMP_SUFFIX = f'.{PROGRAM_NAME}-optimized'
 
 Settings.formats = png.CONVERTABLE_FORMATS | jpeg.FORMATS | gif.FORMATS
 Settings.to_png_formats = png.CONVERTABLE_FORMATS
@@ -30,7 +30,7 @@ def _optimize_image_external(filename, func, image_format, new_ext):
                                                 new_image_format)
     percent = stats.new_percent_saved(report_stats)
     if percent != 0:
-        report = '{}: {}'.format(func.__name__, percent)
+        report = f'{func.__name__}: {percent}'
     else:
         report = ''
     report_stats.report_list.append(report)

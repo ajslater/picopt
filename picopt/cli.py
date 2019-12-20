@@ -35,6 +35,8 @@ def get_arguments(args):
     programs_str = ', '.join([prog.__name__ for prog in PROGRAMS])
     description = "Uses "+programs_str+" if they are on the path."
     parser = argparse.ArgumentParser(usage=usage, description=description)
+    all_formats = ', '.join(sorted(ALL_FORMATS))
+    lossless_formats = ', '.join(png.LOSSLESS_FORMATS)
     parser.add_argument("-r", "--recurse", action="store_true",
                         dest="recurse", default=0,
                         help="Recurse down through directories ignoring the"
@@ -54,10 +56,9 @@ def get_arguments(args):
                         help="Also optimize comic book archives (cbz & cbr)")
     parser.add_argument("-f", "--formats", action="store", dest="formats",
                         default=DEFAULT_FORMATS,
-                        help="Only optimize images of the specifed '{}' "
-                        "delimited formats from: {}".format(
-                            FORMAT_DELIMETER,
-                            ', '.join(sorted(ALL_FORMATS))))
+                        help=f"Only optimize images of the specifed"
+                        "'{FORMAT_DELIMETER}' delimited formats from:"
+                        " {all_formats}")
     parser.add_argument("-O", "--disable_optipng", action="store_false",
                         dest="optipng", default=1,
                         help="Do not optimize with optipng")
@@ -84,11 +85,10 @@ def get_arguments(args):
                         dest="to_png_formats",
                         const=png.FORMATS,
                         default=png.CONVERTABLE_FORMATS,
-                        help="Do not convert other lossless formats like "
-                        " {} to PNG when optimizing. By default, {}"
-                        " does convert these formats to PNG".format(
-                            ', '.join(png.LOSSLESS_FORMATS),
-                            PROGRAM_NAME))
+                        help=f"Do not convert other lossless formats"
+                        "like {losselss_formats} to PNG when "
+                        "optimizing. By default, {PROGRAM_NAME}"
+                        " does convert these formats to PNG")
     parser.add_argument("-S", "--disable_follow_symlinks",
                         action="store_false",
                         dest="follow_symlinks", default=1,
