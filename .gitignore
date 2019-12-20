@@ -9,3 +9,4 @@ MANIFEST
 build
 dist
 test-results
+.DS_Store
