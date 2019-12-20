@@ -6,3 +6,16 @@ dist
 .ropeproject
 .mypy_cache
 .picopt_timestamp
+Dockerfile
+LICENSE
+MANIFEST*
+NEWS
+TODO
+build
+dist
+picopt.egg-info
+run.py
+test-results
+docker-compose.yaml
+.git*
+.DS_Store

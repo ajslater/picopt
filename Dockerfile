@@ -13,12 +13,10 @@ RUN apt install -y \
 
 RUN python3 /usr/lib/python3/dist-packages/easy_install.py pip
 RUN pip3 install poetry
+WORKDIR /opt/picopt
 COPY ci ci
 RUN ci/mozjpeg.sh
 RUN ci/pngout.sh
-
-# Build dir
-WORKDIR /opt/picopt
 COPY . .
 
 # Install
