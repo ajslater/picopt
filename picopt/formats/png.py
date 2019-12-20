@@ -15,26 +15,26 @@ _PNGOUT_ARGS = ['pngout', '-q', '-force', '-y']
 
 def optipng(ext_args):
     """Run the external program optipng on the file."""
-    args = _OPTIPNG_ARGS + [ext_args.new_filename]
+    args = _OPTIPNG_ARGS + [ext_args.new_fn]
     extern.run_ext(args)
     return _PNG_FORMAT
 
 
 def advpng(ext_args):
     """Run the external program advpng on the file."""
-    args = _ADVPNG_ARGS + [ext_args.new_filename]
+    args = _ADVPNG_ARGS + [ext_args.new_fn]
     extern.run_ext(args)
     return _PNG_FORMAT
 
 
 def pngout(ext_args):
     """Run the external program pngout on the file."""
-    # if png_bit_depth(ext_args.old_filename) == 16:
-    depth = png_bit_depth(ext_args.old_filename)
+    # if png_bit_depth(ext_args.old_fn) == 16:
+    depth = png_bit_depth(ext_args.old_fn)
     if depth in (16, None):
         print(f'Skipped pngout for {depth} bit PNG:')
     else:
-        args = _PNGOUT_ARGS + [ext_args.old_filename, ext_args.new_filename]
+        args = _PNGOUT_ARGS + [ext_args.old_fn, ext_args.new_fn]
         extern.run_ext(args)
     return _PNG_FORMAT
 

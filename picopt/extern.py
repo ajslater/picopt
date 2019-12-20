@@ -5,10 +5,10 @@ import subprocess
 class ExtArgs(object):
     """Arguments for external programs."""
 
-    def __init__(self, old_filename, new_filename):
+    def __init__(self, old_path, new_path):
         """Set arguments."""
-        self.old_filename = old_filename
-        self.new_filename = new_filename
+        self.old_fn = str(old_path)
+        self.new_fn = str(new_path)
 
 
 def does_external_program_run(prog, verbose):

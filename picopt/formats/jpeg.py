@@ -21,7 +21,7 @@ def mozjpeg(ext_args):
     else:
         args += ["-copy", "all"]
     args += ['-outfile']
-    args += [ext_args.new_filename, ext_args.old_filename]
+    args += [ext_args.new_fn, ext_args.old_fn]
     extern.run_ext(args)
     return _JPEG_FORMAT
 
@@ -36,7 +36,7 @@ def jpegtran(ext_args):
     if Settings.jpegtran_prog:
         args += ["-progressive"]
     args += ['-outfile']
-    args += [ext_args.new_filename, ext_args.old_filename]
+    args += [ext_args.new_fn, ext_args.old_fn]
     extern.run_ext(args)
     return _JPEG_FORMAT
 
@@ -48,7 +48,7 @@ def jpegrescan(ext_args):
         args += ['-t']
     if Settings.destroy_metadata:
         args += ['-s']
-    args += [ext_args.old_filename, ext_args.new_filename]
+    args += [ext_args.old_fn, ext_args.new_fn]
     extern.run_ext(args)
     return _JPEG_FORMAT
 

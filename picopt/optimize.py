@@ -14,16 +14,16 @@ Settings.formats = png.CONVERTABLE_FORMATS | jpeg.FORMATS | gif.FORMATS
 Settings.to_png_formats = png.CONVERTABLE_FORMATS
 
 
-def _optimize_image_external(filename, func, image_format, new_ext):
+def _optimize_image_external(path, func, image_format, new_ext):
     """Optimize the file with the external function."""
-    new_filename = filename + TMP_SUFFIX + new_ext
+    new_filename = path + TMP_SUFFIX + new_ext
     new_path = Path(new_filename).resolve
-    shutil.copy2(filename, new_filename)
+    shutil.copy2(path, new_path)
 
-    ext_args = ExtArgs(filename, new_path)
+    ext_args = ExtArgs(path, new_path)
     new_image_format = func(ext_args)
 
-    report_stats = files.cleanup_after_optimize(filename, new_path,
+    report_stats = files.cleanup_after_optimize(path, new_path,
                                                 image_format,
                                                 new_image_format)
     percent = stats.new_percent_saved(report_stats)
@@ -36,20 +36,20 @@ def _optimize_image_external(filename, func, image_format, new_ext):
     return report_stats
 
 
-def _optimize_with_progs(format_module, filename, image_format):
+def _optimize_with_progs(format_module, path, image_format):
     """
     Use the correct optimizing functions in sequence.
 
     And report back statistics.
     """
-    filesize_in = Path(filename).stat().st_size
+    filesize_in = path.stat().st_size
     report_stats = None
 
     for func in format_module.PROGRAMS:
         if not getattr(Settings, func.__name__):
             continue
         report_stats = _optimize_image_external(
-            filename, func, image_format, format_module.OUT_EXT)
+            path, func, image_format, format_module.OUT_EXT)
         filename = report_stats.final_filename
         if format_module.BEST_ONLY:
             break
@@ -86,7 +86,7 @@ def _get_format_module(image_format):
 def optimize_image(arg):
     """Optimize a given image from a filename."""
     try:
-        filename, image_format, settings = arg
+        path, image_format, settings = arg
 
         Settings.update(settings)
 
@@ -94,11 +94,11 @@ def optimize_image(arg):
 
         if format_module is None:
             if Settings.verbose > 1:
-                print(filename, image_format)  # image.mode)
+                print(path, image_format)  # image.mode)
                 print("\tFile format not selected.")
             return None
 
-        report_stats = _optimize_with_progs(format_module, filename,
+        report_stats = _optimize_with_progs(format_module, path,
                                             image_format)
         report_stats.nag_about_gifs = nag_about_gifs
         stats.report_saved(report_stats)
@@ -106,4 +106,4 @@ def optimize_image(arg):
     except Exception as exc:
         print(exc)
         traceback.print_exc()
-        return stats.ReportStats(filename, error="Optimizing Image")
+        return stats.ReportStats(path, error="Optimizing Image")
