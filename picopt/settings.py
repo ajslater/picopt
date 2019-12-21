@@ -1,5 +1,6 @@
 """Settings class for picopt."""
 import multiprocessing
+from typing import Set, List
 
 from . import extern
 
@@ -13,9 +14,9 @@ class Settings(object):
     comics = False
     destroy_metadata = False
     follow_symlinks = True
-    formats = set()
+    formats: Set[str] = set()
     gifsicle = True
-    ignore = []
+    ignore: List[str] = []
     jobs = multiprocessing.cpu_count()
     jpegrescan = True
     jpegrescan_multithread = False
@@ -25,12 +26,12 @@ class Settings(object):
     mozjpeg = True
     optimize_after = None
     optipng = True
-    paths = set()
+    paths: Set[str] = set()
     pngout = True
     record_timestamp = False
     recurse = False
     test = False
-    to_png_formats = set()
+    to_png_formats: Set[str] = set()
     verbose = 1
 
     @classmethod

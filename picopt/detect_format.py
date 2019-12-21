@@ -1,5 +1,5 @@
 """Detect file formats."""
-from PIL import Image
+from PIL import Image  # type: ignore
 
 from .formats import comic, gif
 from .settings import Settings

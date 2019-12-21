@@ -5,10 +5,7 @@ from picopt import detect_format
 from picopt.formats import comic
 from picopt.settings import Settings
 
-try:
-    from PIL import Image
-except ImportError:
-    import Image
+from PIL import Image  # type: ignore
 
 TEST_FILES_ROOT = 'tests/test_files/'
 IMAGES_ROOT = TEST_FILES_ROOT+'/images'

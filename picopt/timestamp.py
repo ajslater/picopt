@@ -1,15 +1,15 @@
 """Timestamp writer for keeping track of bulk optimizations."""
-import os
 import sys
 from datetime import datetime
 from pathlib import Path
+from typing import Dict, Set
 
 from . import PROGRAM_NAME
 from .settings import Settings
 
 RECORD_FILENAME = f'.{PROGRAM_NAME}_timestamp'
-TIMESTAMP_CACHE = {}
-OLD_TIMESTAMPS = set()
+TIMESTAMP_CACHE: Dict[str, int] = {}
+OLD_TIMESTAMPS: Set[str] = set()
 
 
 def _get_timestamp(dirname_full, remove):

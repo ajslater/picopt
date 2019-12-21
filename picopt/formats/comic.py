@@ -5,7 +5,7 @@ import traceback
 import zipfile
 from pathlib import Path
 
-import rarfile
+import rarfile  # type: ignore
 
 from .. import PROGRAM_NAME, files, stats
 from ..settings import Settings
