@@ -176,7 +176,7 @@ def _walk_all_files():
     for result in result_set:
         res = result.get()
         if res.error:
-            errors += [(res.final_filename, res.error)]
+            errors += [(res.final_path, res.error)]
             continue
         bytes_in += res.bytes_in
         bytes_out += res.bytes_out
