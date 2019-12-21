@@ -50,14 +50,14 @@ def _optimize_with_progs(format_module, path, image_format):
             continue
         report_stats = _optimize_image_external(
             path, func, image_format, format_module.OUT_EXT)
-        filename = report_stats.final_filename
+        path = report_stats.final_path
         if format_module.BEST_ONLY:
             break
 
     if report_stats is not None:
         report_stats.bytes_in = filesize_in
     else:
-        report_stats = stats.skip(image_format, filename)
+        report_stats = stats.skip(image_format, path)
 
     return report_stats
 

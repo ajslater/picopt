@@ -50,42 +50,40 @@ def get_comic_format(filename):
     return image_format
 
 
-def _get_archive_tmp_dir(filename):
+def _get_archive_tmp_dir(path):
     """Get the name of the working dir to use for this filename."""
-    path = Path(filename)
     return path.parent.joinpath(_ARCHIVE_TMP_DIR_PREFIX + path.name)
 
 
-def comic_archive_uncompress(filename, image_format):
+def comic_archive_uncompress(path, image_format):
     """
     Uncompress comic archives.
 
     Return the name of the working directory we uncompressed into.
     """
     if not Settings.comics:
-        report = [f'Skipping archive file: {filename}']
-        return None, ReportStats(filename, report=report)
+        report = [f'Skipping archive file: {path}']
+        return None, ReportStats(path, report=report)
 
     if Settings.verbose:
-        truncated_filename = Path(filename).relative_to(Path.cwd())
-        print(f"Extracting {truncated_filename}...", end='')
+        print(f"Extracting {path}...", end='')
 
     # create the tmpdir
-    tmp_dir = _get_archive_tmp_dir(filename)
+    tmp_dir = _get_archive_tmp_dir(path)
     if tmp_dir.exists():
         shutil.rmtree(tmp_dir)
     tmp_dir.mkdir()
 
     # extract archvie into the tmpdir
     if image_format == _CBZ_FORMAT:
-        with zipfile.ZipFile(filename, 'r') as zfile:
+        with zipfile.ZipFile(path, 'r') as zfile:
             zfile.extractall(tmp_dir)
     elif image_format == _CBR_FORMAT:
-        with rarfile.RarFile(filename, 'r') as rfile:
+        with rarfile.RarFile(path, 'r') as rfile:
             rfile.extractall(tmp_dir)
     else:
-        report = f'{filename} {image_format} is not a good format'
-        return None, ReportStats(filename, report=report)
+        report = f'{path} {image_format} is not a good format'
+        return None, ReportStats(path, report=report)
 
     if Settings.verbose:
         print('done')
@@ -116,12 +114,11 @@ def comic_archive_compress(args):
     When they're all done it creates the new archive and cleans up.
     """
     try:
-        filename, old_format, settings, nag_about_gifs = args
+        path, old_format, settings, nag_about_gifs = args
         Settings.update(settings)
-        tmp_dir = _get_archive_tmp_dir(filename)
+        tmp_dir = _get_archive_tmp_dir(path)
 
         # archive into new filename
-        path = Path(filename)
         suffix = _NEW_ARCHIVE_SUFFIX + path.suffix
         new_path = path.with_suffix(suffix)
 
@@ -135,8 +132,9 @@ def comic_archive_compress(args):
         if Settings.verbose:
             print('done.')
 
-        report_stats = files.cleanup_after_optimize(
-            filename, new_path, old_format, _CBZ_FORMAT)
+        report_stats = files.cleanup_after_optimize(path, new_path,
+                                                    old_format,
+                                                    _CBZ_FORMAT)
         report_stats.nag_about_gifs = nag_about_gifs
         stats.report_saved(report_stats)
         return report_stats

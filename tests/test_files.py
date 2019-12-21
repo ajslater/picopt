@@ -12,16 +12,15 @@ class TestCleanupAterOptimise(TestCase):
 
     @staticmethod
     def create_file(fn_template, ext, num_chars):
-        filename = fn_template.format(ext)
-        with open(filename, 'w') as test_file:
-            test_file.write('x' * num_chars)
-        return filename
+        path = Path(fn_template.format(ext))
+        path.write_text('x'*num_chars)
+        return path
 
     @classmethod
     def cleanup_aux(cls, old_size, new_size, old_format, new_format):
-        fn_old = cls.create_file(cls.TEST_FN_OLD, old_format, old_size)
-        fn_new = cls.create_file(cls.TEST_FN_NEW, new_format, new_size)
-        res = files._cleanup_after_optimize_aux(fn_old, fn_new,
+        old_path = cls.create_file(cls.TEST_FN_OLD, old_format, old_size)
+        new_path = cls.create_file(cls.TEST_FN_NEW, new_format, new_size)
+        res = files._cleanup_after_optimize_aux(old_path, new_path,
                                                 old_format, new_format)
         Path(res[0]).unlink()
         return res
@@ -44,6 +43,7 @@ class TestCleanupAterOptimise(TestCase):
         new_format = 'png'
         path, b_in, b_out = self.cleanup_aux(old_size, new_size,
                                              old_format, new_format)
+        print('Assert', path.suffix, '==', '.'+new_format)
         self.assertTrue(path.suffix == '.'+new_format)
         self.assertEqual(old_size, b_in)
         self.assertEqual(new_size, b_out)

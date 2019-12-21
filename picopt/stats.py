@@ -16,10 +16,10 @@ ABBREVS = (
 class ReportStats(object):
     """Container for reported stats from optimization operations."""
 
-    def __init__(self, final_filename, report=None, bytes_count=None,
+    def __init__(self, final_path, report=None, bytes_count=None,
                  nag_about_gifs=False, error=None):
         """Initialize required instance variables."""
-        self.final_filename = final_filename
+        self.final_path = final_path
         self.report_list = []
         self.error = error
         if report:
@@ -101,10 +101,9 @@ def report_saved(report_stats):
     """Record the percent saved & print it."""
     if Settings.verbose:
         report = ''
-        fn = report_stats.final_filename
-        truncated_filename = Path(fn).relative_to(Path.cwd())
+        path = report_stats.final_path
 
-        report += f'{truncated_filename}: '
+        report += f'{path}: '
         total = new_percent_saved(report_stats)
         if total:
             report += total
@@ -162,8 +161,8 @@ def report_totals(bytes_in, bytes_out, nag_about_gifs, errors):
         print(f"{error[0]}: {error[1]}")
 
 
-def skip(type_name, filename):
+def skip(type_name, path):
     """Provide reporting statistics for a skipped file."""
-    report = [f'Skipping {type_name} file: {filename}']
-    report_stats = ReportStats(filename, report=report)
+    report = [f'Skipping {type_name} file: {path}']
+    report_stats = ReportStats(path, report=report)
     return report_stats

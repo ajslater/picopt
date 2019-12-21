@@ -12,7 +12,7 @@ def _comic_archive_skip(report_stats):
     return report_stats
 
 
-def walk_comic_archive(filename_full, image_format, optimize_after):
+def walk_comic_archive(path, image_format, optimize_after):
     """
     Optimize a comic archive.
 
@@ -22,14 +22,14 @@ def walk_comic_archive(filename_full, image_format, optimize_after):
     and on waiting for the contents subprocesses to compress.
     """
     # uncompress archive
-    tmp_dir, report_stats = comic.comic_archive_uncompress(filename_full,
+    tmp_dir, report_stats = comic.comic_archive_uncompress(path,
                                                            image_format)
     if tmp_dir is None and report_stats:
         return Settings.pool.apply_async(_comic_archive_skip,
                                          args=report_stats)
 
     # optimize contents of archive
-    archive_mtime = Path(filename_full).stat().st_mtime
+    archive_mtime = path.stat().st_mtime
     result_set = walk_dir(tmp_dir, optimize_after, True, archive_mtime)
 
     # wait for archive contents to optimize before recompressing
@@ -39,7 +39,7 @@ def walk_comic_archive(filename_full, image_format, optimize_after):
         nag_about_gifs = nag_about_gifs or res.nag_about_gifs
 
     # recompress archive
-    args = (filename_full, image_format, Settings, nag_about_gifs)
+    args = (path, image_format, Settings, nag_about_gifs)
     return Settings.pool.apply_async(comic.comic_archive_compress,
                                      args=(args,))
 
