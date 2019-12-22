@@ -1,15 +1,20 @@
 """Detect file formats."""
-from PIL import Image  # type: ignore
+from pathlib import Path
+from typing import Callable, Optional, Set, Tuple
+
+from PIL import Image, ImageFile  # type: ignore
 
 from .formats import comic, gif
 from .settings import Settings
+from .extern import ExtArgs
 
 # Formats
 NONE_FORMAT = 'NONE'
 ERROR_FORMAT = 'ERROR'
 
 
-def _is_program_selected(progs):
+def _is_program_selected(
+        progs: Tuple[Callable[[ExtArgs], str], ...]) -> bool:
     """Determine if the program is enabled in the settings."""
     mode = False
     for prog in progs:
@@ -19,7 +24,8 @@ def _is_program_selected(progs):
     return mode
 
 
-def is_format_selected(image_format, formats, progs):
+def is_format_selected(image_format: str, formats: Set[str],
+                       progs: Tuple[Callable[[ExtArgs], str], ...]) -> bool:
     """Determine if the image format is selected by command line arguments."""
     intersection = formats & Settings.formats
     mode = _is_program_selected(progs)
@@ -27,7 +33,7 @@ def is_format_selected(image_format, formats, progs):
     return result
 
 
-def _is_image_sequenced(image):
+def _is_image_sequenced(image: ImageFile) -> bool:
     """Determine if the image is a sequenced image."""
     try:
         image.seek(1)
@@ -39,7 +45,7 @@ def _is_image_sequenced(image):
     return result
 
 
-def get_image_format(filename):
+def get_image_format(filename: Path) -> str:
     """Get the image format."""
     image = None
     bad_image = 1
@@ -66,7 +72,7 @@ def get_image_format(filename):
     return image_format
 
 
-def detect_file(filename):
+def detect_file(filename: Path) -> Optional[str]:
     """Decide what to do with the file."""
     image_format = get_image_format(filename)
 

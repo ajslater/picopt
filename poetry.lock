@@ -8,6 +8,14 @@ version = "1.4.0"
 
 [[package]]
 category = "dev"
+description = "Composable command line interface toolkit"
+name = "click"
+optional = false
+python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*"
+version = "7.0"
+
+[[package]]
+category = "dev"
 description = "Code coverage measurement for Python"
 name = "coverage"
 optional = false
@@ -76,6 +84,19 @@ test = ["pytest", "pytest-cov"]
 
 [[package]]
 category = "dev"
+description = "Generating type annotations from sampled production types"
+name = "monkeytype"
+optional = false
+python-versions = ">=3.6"
+version = "19.11.2"
+
+[package.dependencies]
+mypy-extensions = "*"
+retype = "*"
+stringcase = "*"
+
+[[package]]
+category = "dev"
 description = "Optional static typing for Python"
 name = "mypy"
 optional = false
@@ -113,6 +134,14 @@ name = "nose-pathmunge"
 optional = false
 python-versions = "*"
 version = "0.1.2"
+
+[[package]]
+category = "dev"
+description = "Utility library for gitignore style pattern matching of file paths."
+name = "pathspec"
+optional = false
+python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*"
+version = "0.6.0"
 
 [[package]]
 category = "dev"
@@ -169,12 +198,36 @@ python-versions = "*"
 version = "3.1"
 
 [[package]]
+category = "dev"
+description = "re-apply types from .pyi stub files to your codebase"
+name = "retype"
+optional = false
+python-versions = ">=3.6"
+version = "19.9.0"
+
+[package.dependencies]
+click = "*"
+pathspec = ">=0.5.9,<1"
+typed-ast = "*"
+
+[package.extras]
+testing = ["pytest (>=3.0.0,<5)", "pytest-cov (>=2.5.1,<3)"]
+
+[[package]]
 category = "main"
 description = "Python 2 and 3 compatibility utilities"
 name = "six"
 optional = false
 python-versions = ">=2.6, !=3.0.*, !=3.1.*"
 version = "1.13.0"
+
+[[package]]
+category = "dev"
+description = "String case converter."
+name = "stringcase"
+optional = false
+python-versions = "*"
+version = "1.2.0"
 
 [[package]]
 category = "dev"
@@ -193,13 +246,17 @@ python-versions = "*"
 version = "3.7.4.1"
 
 [metadata]
-content-hash = "9a20f0609f10c482c6fa5bf0ba83e7f9adfe4bf56738c53b38946c7db1f836ad"
+content-hash = "45b7c0a12788a5e5b7dea9cc23d618da5ce619ec338cb39c915df266b5defd7f"
 python-versions = "^3.6"
 
 [metadata.files]
 argparse = [
     {file = "argparse-1.4.0-py2.py3-none-any.whl", hash = "sha256:c31647edb69fd3d465a847ea3157d37bed1f95f19760b11a47aa91c04b666314"},
     {file = "argparse-1.4.0.tar.gz", hash = "sha256:62b089a55be1d8949cd2bc7e0df0bddb9e028faefc8c32038cc84862aefdd6e4"},
+]
+click = [
+    {file = "Click-7.0-py2.py3-none-any.whl", hash = "sha256:2335065e6395b9e67ca716de5f7526736bfa6ceead690adf616d925bdc622b13"},
+    {file = "Click-7.0.tar.gz", hash = "sha256:5b94b49521f6456670fdb30cd82a4eca9412788a93fa6dd6df72c94d5a8ff2d7"},
 ]
 coverage = [
     {file = "coverage-5.0-cp27-cp27m-macosx_10_12_x86_64.whl", hash = "sha256:9c871b006c878a890c6e44a5b2f3c6291335324b298c904dc0402ee92ee1f0be"},
@@ -254,6 +311,10 @@ mock = [
     {file = "mock-3.0.5-py2.py3-none-any.whl", hash = "sha256:d157e52d4e5b938c550f39eb2fd15610db062441a9c2747d3dbfa9298211d0f8"},
     {file = "mock-3.0.5.tar.gz", hash = "sha256:83657d894c90d5681d62155c82bda9c1187827525880eda8ff5df4ec813437c3"},
 ]
+monkeytype = [
+    {file = "MonkeyType-19.11.2-py3-none-any.whl", hash = "sha256:71da688939f08d19904462eef2e568a4f18f6133cc7e3c901ff5034c8ab5a538"},
+    {file = "MonkeyType-19.11.2.tar.gz", hash = "sha256:9f052b42851bc24603836ce3105166c8cc5edabeb25e8fcf256fa25777122618"},
+]
 mypy = [
     {file = "mypy-0.761-cp35-cp35m-macosx_10_6_x86_64.whl", hash = "sha256:7f672d02fffcbace4db2b05369142e0506cdcde20cea0e07c7c2171c4fd11dd6"},
     {file = "mypy-0.761-cp35-cp35m-manylinux1_x86_64.whl", hash = "sha256:87c556fb85d709dacd4b4cb6167eecc5bbb4f0a9864b69136a0d4640fdc76a36"},
@@ -281,6 +342,9 @@ nose = [
 ]
 nose-pathmunge = [
     {file = "nose-pathmunge-0.1.2.tar.gz", hash = "sha256:e9fe92878480d7bb6b116acb686cf72f6cb8bb12e24ad86fb2cc9ef25dad16b5"},
+]
+pathspec = [
+    {file = "pathspec-0.6.0.tar.gz", hash = "sha256:e285ccc8b0785beadd4c18e5708b12bb8fcf529a1e61215b3feff1d1e559ea5c"},
 ]
 pep8-naming = [
     {file = "pep8-naming-0.9.1.tar.gz", hash = "sha256:a33d38177056321a167decd6ba70b890856ba5025f0a8eca6a3eda607da93caf"},
@@ -333,9 +397,16 @@ python-dateutil = [
 rarfile = [
     {file = "rarfile-3.1.tar.gz", hash = "sha256:dc1062176c529f417522af7da1291a35b85c8017464e665aabce048cfe2659b6"},
 ]
+retype = [
+    {file = "retype-19.9.0-py3-none-any.whl", hash = "sha256:7d033b115f66e5327dea0a3fd7c9a3dbfa53841575daf27ce2ce409956d901d4"},
+    {file = "retype-19.9.0.tar.gz", hash = "sha256:846fd135d3ee33c1bad387602a405d808cb99a9a7a47299bfd0e1d25dfb2fedd"},
+]
 six = [
     {file = "six-1.13.0-py2.py3-none-any.whl", hash = "sha256:1f1b7d42e254082a9db6279deae68afb421ceba6158efa6131de7b3003ee93fd"},
     {file = "six-1.13.0.tar.gz", hash = "sha256:30f610279e8b2578cab6db20741130331735c781b56053c59c4076da27f06b66"},
+]
+stringcase = [
+    {file = "stringcase-1.2.0.tar.gz", hash = "sha256:48a06980661908efe8d9d34eab2b6c13aefa2163b3ced26972902e3bdfd87008"},
 ]
 typed-ast = [
     {file = "typed_ast-1.4.0-cp35-cp35m-manylinux1_i686.whl", hash = "sha256:262c247a82d005e43b5b7f69aff746370538e176131c32dda9cb0f324d27141e"},

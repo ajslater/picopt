@@ -7,9 +7,9 @@ from picopt.settings import Settings
 class TestSettingsUpdate(TestCase):
 
     class DummySettings(object):
-        bigger = True
+        bigger: bool = True
 
-    def test_update(self):
+    def test_update(self) -> None:
         self.assertFalse(Settings.bigger)
         Settings.update(self.DummySettings)
         self.assertTrue(Settings.bigger)
@@ -18,24 +18,24 @@ class TestSettingsUpdate(TestCase):
 class TestSettingsSetProgramDefaults(TestCase):
 
     @staticmethod
-    def true():
+    def true() -> None:
         pass
 
     @staticmethod
-    def false():
+    def false() -> None:
         pass
 
     @staticmethod
-    def DOESNOTEXIST():
+    def does_not_exist() -> None:
         pass
 
     class DummySettingsObject(Settings):
-        true = True
-        false = True
-        DOESNOTEXIST = True
+        true: bool = True
+        false: bool = True
+        DOESNOTEXIST: bool = True
 
-    def test_set_program_defaults(self):
-        programs = [self.true, self.false, self.DOESNOTEXIST]
+    def test_set_program_defaults(self) -> None:
+        programs = [self.true, self.false, self.does_not_exist]
 
         self.DummySettingsObject._set_program_defaults(programs)
 

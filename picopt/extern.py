@@ -1,5 +1,6 @@
 """Run external programs."""
 import subprocess
+from typing import Tuple
 
 
 class ExtArgs(object):
@@ -11,7 +12,7 @@ class ExtArgs(object):
         self.new_fn = str(new_path)
 
 
-def does_external_program_run(prog, verbose):
+def does_external_program_run(prog: str, verbose: int) -> bool:
     """Test to see if the external programs can be run."""
     try:
         with open('/dev/null') as null:
@@ -25,7 +26,7 @@ def does_external_program_run(prog, verbose):
     return result
 
 
-def run_ext(args):
+def run_ext(args: Tuple[str, ...]) -> None:
     """Run EXTERNAL program."""
     try:
         subprocess.check_call(args)

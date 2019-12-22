@@ -10,3 +10,4 @@ build
 dist
 test-results
 .DS_Store
+monkeytype.sqlite3

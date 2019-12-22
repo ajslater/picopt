@@ -2,11 +2,15 @@
 import shutil
 import traceback
 from pathlib import Path
+from types import ModuleType
+from typing import Callable, Tuple, Optional
+from argparse import Namespace
 
 from . import PROGRAM_NAME, detect_format, files, stats
 from .extern import ExtArgs
 from .formats import gif, jpeg, png
 from .settings import Settings
+from .stats import ReportStats
 
 TMP_SUFFIX = f'.{PROGRAM_NAME}-optimized'
 
@@ -14,10 +18,12 @@ Settings.formats = png.CONVERTABLE_FORMATS | jpeg.FORMATS | gif.FORMATS
 Settings.to_png_formats = png.CONVERTABLE_FORMATS
 
 
-def _optimize_image_external(path, func, image_format, new_ext):
+def _optimize_image_external(path: Path, func: Callable[[ExtArgs], str],
+                             image_format: str,
+                             new_ext: str) -> ReportStats:
     """Optimize the file with the external function."""
-    new_filename = path + TMP_SUFFIX + new_ext
-    new_path = Path(new_filename).resolve
+    new_filename = str(path) + TMP_SUFFIX + new_ext
+    new_path = Path(new_filename).resolve()
     shutil.copy2(path, new_path)
 
     ext_args = ExtArgs(path, new_path)
@@ -36,7 +42,8 @@ def _optimize_image_external(path, func, image_format, new_ext):
     return report_stats
 
 
-def _optimize_with_progs(format_module, path, image_format):
+def _optimize_with_progs(format_module: ModuleType, path: Path,
+                         image_format: str) -> ReportStats:
     """
     Use the correct optimizing functions in sequence.
 
@@ -62,7 +69,7 @@ def _optimize_with_progs(format_module, path, image_format):
     return report_stats
 
 
-def _get_format_module(image_format):
+def _get_format_module(image_format: str) -> Tuple[Optional[ModuleType], bool]:
     """Get the format module to use for optimizing the image."""
     format_module = None
     nag_about_gifs = False
@@ -83,7 +90,7 @@ def _get_format_module(image_format):
     return format_module, nag_about_gifs
 
 
-def optimize_image(arg):
+def optimize_image(arg: Tuple[Path, str, Namespace]) -> ReportStats:
     """Optimize a given image from a filename."""
     try:
         path, image_format, settings = arg
@@ -96,7 +103,7 @@ def optimize_image(arg):
             if Settings.verbose > 1:
                 print(path, image_format)  # image.mode)
                 print("\tFile format not selected.")
-            return None
+            return stats.ReportStats(path, error="File format not selcted.")
 
         report_stats = _optimize_with_progs(format_module, path,
                                             image_format)

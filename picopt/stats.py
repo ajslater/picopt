@@ -1,5 +1,6 @@
 """Statistics for the optimization operations."""
 from pathlib import Path
+from typing import List, Optional, Tuple
 
 from .settings import Settings
 
@@ -16,8 +17,10 @@ ABBREVS = (
 class ReportStats(object):
     """Container for reported stats from optimization operations."""
 
-    def __init__(self, final_path, report=None, bytes_count=None,
-                 nag_about_gifs=False, error=None):
+    def __init__(self, final_path: Path, report: Optional[str] = None,
+                 bytes_count: Optional[Tuple[int, int]] = None,
+                 nag_about_gifs: bool = False,
+                 error: Optional[str] = None):
         """Initialize required instance variables."""
         self.final_path = final_path
         self.report_list = []
@@ -34,7 +37,7 @@ class ReportStats(object):
         self.nag_about_gifs = nag_about_gifs
 
 
-def _humanize_bytes(num_bytes, precision=1):
+def _humanize_bytes(num_bytes: int, precision: int = 1) -> str:
     """
     Return a humanized string representation of a number of num_bytes.
 
@@ -70,7 +73,7 @@ def _humanize_bytes(num_bytes, precision=1):
     factor_suffix = 'bytes'
     for factor, suffix in ABBREVS:
         if num_bytes >= factor:
-            factored_bytes = num_bytes / factor
+            factored_bytes = int(num_bytes / factor)
             factor_suffix = suffix
             break
 
@@ -81,7 +84,7 @@ def _humanize_bytes(num_bytes, precision=1):
                                    prec=precision)
 
 
-def new_percent_saved(report_stats):
+def new_percent_saved(report_stats: ReportStats) -> str:
     """Spit out how much space the optimization saved."""
     size_in = report_stats.bytes_in
     if size_in > 0:
@@ -90,14 +93,14 @@ def new_percent_saved(report_stats):
         kb_saved = _humanize_bytes(size_in - size_out)
     else:
         ratio = 0
-        kb_saved = 0
+        kb_saved = f'0 {ABBREVS[-1]}'
     percent_saved = (1 - ratio) * 100
 
     result = '{:.{prec}f}% ({})'.format(percent_saved, kb_saved, prec=2)
     return result
 
 
-def report_saved(report_stats):
+def report_saved(report_stats: ReportStats) -> None:
     """Record the percent saved & print it."""
     if Settings.verbose:
         report = ''
@@ -118,7 +121,8 @@ def report_saved(report_stats):
         print(report)
 
 
-def report_totals(bytes_in, bytes_out, nag_about_gifs, errors):
+def report_totals(bytes_in: int, bytes_out: int, nag_about_gifs: bool,
+                  errors: List[str]) -> None:
     """Report the total number and percent of bytes saved."""
     if bytes_in:
         bytes_saved = bytes_in - bytes_out
@@ -161,8 +165,8 @@ def report_totals(bytes_in, bytes_out, nag_about_gifs, errors):
         print(f"{error[0]}: {error[1]}")
 
 
-def skip(type_name, path):
+def skip(type_name: str, path: Path) -> ReportStats:
     """Provide reporting statistics for a skipped file."""
-    report = [f'Skipping {type_name} file: {path}']
+    report = f'Skipping {type_name} file: {path}'
     report_stats = ReportStats(path, report=report)
     return report_stats

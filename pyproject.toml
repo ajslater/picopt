@@ -44,6 +44,7 @@ nose-pathmunge = "^0.1.2"
 pep8-naming = "^0.9.1"
 coverage = "^5.0"
 mypy = "^0.761"
+monkeytype = "^19.11.2"
 
 [tool.poetry.scripts]
 picopt = "picopt.cli:main"

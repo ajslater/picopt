@@ -1,18 +1,18 @@
 """Timestamp writer for keeping track of bulk optimizations."""
-import sys
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, Set
+from typing import Dict, Optional, Set, Tuple
 
 from . import PROGRAM_NAME
 from .settings import Settings
 
 RECORD_FILENAME = f'.{PROGRAM_NAME}_timestamp'
-TIMESTAMP_CACHE: Dict[str, int] = {}
-OLD_TIMESTAMPS: Set[str] = set()
+TIMESTAMP_CACHE: Dict[Path, Optional[float]] = {}
+OLD_TIMESTAMPS: Set[Path] = set()
 
 
-def _get_timestamp(dirname_full, remove):
+def _get_timestamp(dirname_full: Path,
+                   remove: bool) -> Optional[float]:
     """
     Get the timestamp from the timestamp file.
 
@@ -31,7 +31,8 @@ def _get_timestamp(dirname_full, remove):
     return mtime
 
 
-def _get_timestamp_cached(dirname_full, remove):
+def _get_timestamp_cached(dirname_full: Path,
+                          remove: bool) -> Optional[float]:
     """
     Get the timestamp from the cache or fill the cache
     Much quicker than reading the same files over and over
@@ -42,41 +43,41 @@ def _get_timestamp_cached(dirname_full, remove):
     return TIMESTAMP_CACHE[dirname_full]
 
 
-if sys.version > '3':
-    def max_none(lst):
-        """Max function that works in python 3."""
-        return max((x for x in lst if x is not None), default=None)
-else:
-    def max_none(lst):
-        """Max function from python 2."""
-        return max(lst)
+def max_none(lst: Tuple[Optional[float],
+                        Optional[float]]) -> Optional[float]:
+    """Max function that works in python 3."""
+    return max((x for x in lst if x is not None), default=None)
 
 
-def _max_timestamps(dirname_full, remove, compare_tstamp):
+def _max_timestamps(dirname_full: Path, remove: bool,
+                    compare_tstamp: Optional[float]) -> Optional[float]:
     """Compare a timestamp file to one passed in. Get the max."""
     tstamp = _get_timestamp_cached(dirname_full, remove)
     return max_none((tstamp, compare_tstamp))
 
 
-def _get_parent_timestamp(dirname, mtime):
+def _get_parent_timestamp(path: Path,
+                          mtime: Optional[float]) -> Optional[float]:
     """
     Get the timestamps up the directory tree. All the way to root.
 
     Because they affect every subdirectory.
     """
-    parent_path = Path(dirname).parent
+    parent_path = path.parent
 
     # max between the parent timestamp the one passed in
     mtime = _max_timestamps(parent_path, False, mtime)
 
-    if dirname != parent_path.parent:
+    if path != parent_path.parent:
         # this is only called if we're not at the root
         mtime = _get_parent_timestamp(parent_path, mtime)
 
     return mtime
 
 
-def get_walk_after(filename, optimize_after=None):
+def get_walk_after(filename: Path,
+                   optimize_after: Optional[float] = None) \
+                        -> Optional[float]:
     """
     Figure out the which mtime to check against.
 
@@ -91,11 +92,10 @@ def get_walk_after(filename, optimize_after=None):
     return _max_timestamps(dirname, True, optimize_after)
 
 
-def record_timestamp(pathname_full):
+def record_timestamp(full_path: Path) -> None:
     """Record the timestamp of running in a dotfile."""
     if Settings.test or Settings.list_only or not Settings.record_timestamp:
         return
-    full_path = Path(pathname_full)
     if not Settings.follow_symlinks and full_path.is_symlink():
         if Settings.verbose:
             print('Not setting timestamp because not following symlinks')
@@ -110,14 +110,13 @@ def record_timestamp(pathname_full):
         record_filepath.touch()
         if Settings.verbose:
             print(f"Set timestamp: {record_filepath}")
-        for fname in OLD_TIMESTAMPS:
-            path = Path(fname)
-            if fname.startswith(pathname_full) and \
+        for path in OLD_TIMESTAMPS:
+            if str(path).startswith(str(full_path)) and \
                not path.samefile(record_filepath):
                 # only remove timestamps below the curent path
                 # but don't remove the timestamp we just set!
                 path.unlink()
                 if Settings.verbose:
-                    print(f'Removed old timestamp: {fname}')
+                    print(f'Removed old timestamp: {path}')
     except IOError:
-        print(f"Could not set timestamp in {pathname_full}")
+        print(f"Could not set timestamp in {full_path}")

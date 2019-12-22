@@ -1,9 +1,10 @@
 #!/usr/bin/env python
 """Run pictures through image specific external optimizers."""
 import argparse
-import multiprocessing
 import time
+from argparse import Namespace
 from pathlib import Path
+from typing import Set, Tuple, Callable
 
 import dateutil.parser
 import pkg_resources
@@ -11,20 +12,21 @@ import pkg_resources
 from . import PROGRAM_NAME, walk
 from .formats import comic, gif, jpeg, png
 from .settings import Settings
+from .extern import ExtArgs
 
 DISTRIBUTION = pkg_resources.get_distribution(PROGRAM_NAME)
-# Programs
-PROGRAMS = set(png.PROGRAMS + gif.PROGRAMS +
-               jpeg.PROGRAMS)
+PROGRAMS: Set[Callable[[ExtArgs], str]] = set(png.PROGRAMS +
+                                              gif.PROGRAMS +
+                                              jpeg.PROGRAMS)
 
 FORMAT_DELIMETER = ','
 DEFAULT_FORMATS = 'ALL'
-ALL_DEFAULT_FORMATS = jpeg.FORMATS | gif.FORMATS | \
-                      png.CONVERTABLE_FORMATS
-ALL_FORMATS = ALL_DEFAULT_FORMATS | comic.FORMATS
+ALL_DEFAULT_FORMATS: Set[str] = jpeg.FORMATS | gif.FORMATS | \
+                                png.CONVERTABLE_FORMATS
+ALL_FORMATS: Set[str] = ALL_DEFAULT_FORMATS | comic.FORMATS
 
 
-def get_arguments(args):
+def get_arguments(args: Tuple[str, ...]) -> Namespace:
     """Parse the command line."""
     usage = "%(prog)s [arguments] [image files]"
     programs_str = ', '.join([prog.__name__ for prog in PROGRAMS])
@@ -116,13 +118,13 @@ def get_arguments(args):
     parser.add_argument("paths", metavar="path", type=str, nargs="+",
                         help="File or directory paths to optimize")
     parser.add_argument("-j", "--jobs", type=int, action="store",
-                        dest="jobs", default=multiprocessing.cpu_count(),
+                        dest="jobs", default=0,
                         help="Number of parallel jobs to run simultaneously.")
 
-    return parser.parse_args(args)
+    return parser.parse_args(args[1:])
 
 
-def process_arguments(arguments):
+def process_arguments(arguments: Namespace) -> None:
     """
     Recompute special cases for input arguments.
     Sets the global Settings singleton with the correct values from arguments.
@@ -180,21 +182,19 @@ def process_arguments(arguments):
     Settings.jpegrescan_multithread = not non_file_in_paths and \
         Settings.jobs - (files_in_paths*3) > -1
 
-    return arguments
 
-
-def run(args):
+def run(args: Tuple[str, ...]) -> bool:
     """Process command line arguments and walk inputs."""
-    raw_arguments = get_arguments(args[1:])
+    raw_arguments = get_arguments(args)
     process_arguments(raw_arguments)
     walk.run()
     return True
 
 
-def main():
+def main() -> None:
     """Main entry point."""
     import sys
-    run(sys.argv)
+    run(tuple(sys.argv))
 
 
 if __name__ == '__main__':

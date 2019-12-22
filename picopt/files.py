@@ -1,14 +1,16 @@
 """File utility operations."""
 from pathlib import Path
+from typing import Tuple
 
 from . import PROGRAM_NAME, stats
 from .settings import Settings
+from .stats import ReportStats
 
 REMOVE_EXT = f'.{PROGRAM_NAME}-remove'
 
 
-def _cleanup_after_optimize_aux(path, new_path, old_format,
-                                new_format):
+def _cleanup_after_optimize_aux(path: Path, new_path: Path, old_format: str,
+                                new_format: str) -> Tuple[Path, int, int]:
     """
     Replace old file with better one or discard new wasteful file.
     """
@@ -34,12 +36,13 @@ def _cleanup_after_optimize_aux(path, new_path, old_format,
     return final_path, bytes_in, bytes_out
 
 
-def cleanup_after_optimize(path, new_filename, old_format, new_format):
+def cleanup_after_optimize(path: Path, new_path: Path, old_format: str,
+                           new_format: str) -> ReportStats:
     """
     Replace old file with better one or discard new wasteful file.
 
     And report results using the stats module.
     """
     final_path, bytes_in, bytes_out = _cleanup_after_optimize_aux(
-        path, new_filename, old_format, new_format)
+        path, new_path, old_format, new_format)
     return stats.ReportStats(final_path, bytes_count=(bytes_in, bytes_out))
