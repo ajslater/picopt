@@ -4,36 +4,40 @@ import argparse
 import time
 from argparse import Namespace
 from pathlib import Path
-from typing import Set, Tuple, Callable
+from typing import Callable, Set, Tuple
 
 import dateutil.parser
 import pkg_resources
 
 from . import PROGRAM_NAME, walk
-from .formats import comic, gif, jpeg, png
-from .settings import Settings
 from .extern import ExtArgs
+from .formats.comic import Comic
+from .formats.gif import Gif
+from .formats.jpeg import Jpeg
+from .formats.png import Png
+from .settings import Settings
 
 DISTRIBUTION = pkg_resources.get_distribution(PROGRAM_NAME)
-PROGRAMS: Set[Callable[[ExtArgs], str]] = set(png.PROGRAMS +
-                                              gif.PROGRAMS +
-                                              jpeg.PROGRAMS)
+PROGRAMS: Set[Callable[[ExtArgs], str]] = set(Png.PROGRAMS +
+                                              Gif.PROGRAMS +
+                                              Jpeg.PROGRAMS)
 
 FORMAT_DELIMETER = ','
 DEFAULT_FORMATS = 'ALL'
-ALL_DEFAULT_FORMATS: Set[str] = jpeg.FORMATS | gif.FORMATS | \
-                                png.CONVERTABLE_FORMATS
-ALL_FORMATS: Set[str] = ALL_DEFAULT_FORMATS | comic.FORMATS
+ALL_DEFAULT_FORMATS: Set[str] = Jpeg.FORMATS | Gif.FORMATS | \
+                                Png.CONVERTABLE_FORMATS
+ALL_FORMATS: Set[str] = ALL_DEFAULT_FORMATS | Comic.FORMATS
 
 
 def get_arguments(args: Tuple[str, ...]) -> Namespace:
     """Parse the command line."""
     usage = "%(prog)s [arguments] [image files]"
-    programs_str = ', '.join([prog.__name__ for prog in PROGRAMS])
+    programs_str = ', '.join(
+        (prog.__func__.__name__ for prog in PROGRAMS))  # type: ignore
     description = f"Uses {programs_str} if they are on the path."
     parser = argparse.ArgumentParser(usage=usage, description=description)
     all_formats = ', '.join(sorted(ALL_FORMATS))
-    lossless_formats = ', '.join(png.LOSSLESS_FORMATS)
+    lossless_formats = ', '.join(Png.LOSSLESS_FORMATS)
     parser.add_argument("-r", "--recurse", action="store_true",
                         dest="recurse", default=0,
                         help="Recurse down through directories ignoring the"
@@ -80,8 +84,8 @@ def get_arguments(args: Tuple[str, ...]) -> Namespace:
                         help="disable optimizing animated GIFs")
     parser.add_argument("-Y", "--disable_convert_type", action="store_const",
                         dest="to_png_formats",
-                        const=png.FORMATS,
-                        default=png.CONVERTABLE_FORMATS,
+                        const=Png.FORMATS,
+                        default=Png.CONVERTABLE_FORMATS,
                         help="Do not convert other lossless formats"
                         f"like {lossless_formats} to PNG when "
                         f"optimizing. By default, {PROGRAM_NAME}"
@@ -138,13 +142,13 @@ def process_arguments(arguments: Namespace) -> None:
 
     if arguments.formats == DEFAULT_FORMATS:
         Settings.formats = arguments.to_png_formats | \
-            jpeg.FORMATS | gif.FORMATS
+            Jpeg.FORMATS | Gif.FORMATS
     else:
         Settings.formats = set(
             arguments.formats.upper().split(FORMAT_DELIMETER))
 
     if arguments.comics:
-        Settings.formats = Settings.formats | comic.FORMATS
+        Settings.formats = Settings.formats | Comic.FORMATS
 
     if Settings.verbose >= 0 or arguments.formats != DEFAULT_FORMATS:
         print("Optimizing formats:", *Settings.formats)

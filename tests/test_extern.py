@@ -18,4 +18,4 @@ class TestDoesExernalProgramRun(TestCase):
 class TestRunExt(TestCase):
 
     def test_true(self) -> None:
-        extern.run_ext('true')
+        extern.run_ext(('true',))

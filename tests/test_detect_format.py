@@ -1,10 +1,11 @@
 """Test detect file formats."""
 from pathlib import Path
-from typing import Callable, Set, Tuple
+from typing import Callable, Optional, Set, Tuple
 from unittest import TestCase
 
 from picopt import detect_format
-from picopt.formats import comic
+from picopt.extern import ExtArgs
+from picopt.formats.comic import Comic
 from picopt.settings import Settings
 from PIL import Image  # type: ignore
 
@@ -16,8 +17,9 @@ COMIC_ROOT = TEST_FILES_ROOT+'/comic_archives'
 
 class TestIsProgramSelected(TestCase):
 
-    def pngout(self) -> None:
-        pass
+    @staticmethod
+    def pngout(args: ExtArgs) -> str:
+        return 'foo'
 
     programs = (pngout,)
 
@@ -26,7 +28,7 @@ class TestIsProgramSelected(TestCase):
         self.assertTrue(res)
 
     def test_empty(self) -> None:
-        res = detect_format._is_program_selected([])
+        res = detect_format._is_program_selected(tuple())
         self.assertFalse(res)
 
 
@@ -34,13 +36,15 @@ class TestIsFormatSelected(TestCase):
 
     formats: Set[str] = set(['GIF'])
 
-    def pngout(self) -> None:
-        pass
+    @staticmethod
+    def pngout(args: ExtArgs) -> str:
+        return ''
 
-    def comics(self) -> None:
-        pass
+    @staticmethod
+    def comics(args: ExtArgs) -> str:
+        return ''
 
-    programs: Tuple[Callable] = (pngout, comics)
+    programs: Tuple[Callable[[ExtArgs], str], ...] = (pngout, comics)
 
     def test_gif(self) -> None:
         res = detect_format.is_format_selected('GIF', self.formats,
@@ -110,7 +114,7 @@ class TestDetectFile(TestCase):
         list_only: bool = False
 
     def _test_type(self, root: str, filename: str,
-                   image_type: str) -> None:
+                   image_type: Optional[str]) -> None:
         path = Path(root+'/'+filename)
         res = detect_format.detect_file(path)
         print(res)
@@ -132,9 +136,9 @@ class TestDetectFile(TestCase):
         self._test_type(INVALID_ROOT, 'test_gif.gif', None)
 
     def test_detect_file_cbr(self) -> None:
-        Settings.formats = Settings.formats | comic.FORMATS
+        Settings.formats = Settings.formats | Comic.FORMATS
         self._test_type(COMIC_ROOT, 'test_cbr.cbr', 'CBR')
 
     def test_detect_file_cbz(self) -> None:
-        Settings.formats = Settings.formats | comic.FORMATS
+        Settings.formats = Settings.formats | Comic.FORMATS
         self._test_type(COMIC_ROOT, 'test_cbz.cbz', 'CBZ')

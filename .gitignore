@@ -11,3 +11,4 @@ dist
 test-results
 .DS_Store
 monkeytype.sqlite3
+test_files

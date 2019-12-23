@@ -6,7 +6,7 @@ from pathlib import Path
 from typing import Any, List, Optional, Set, Tuple
 
 from . import detect_format, optimize, stats, timestamp
-from .formats import comic
+from .formats.comic import Comic
 from .settings import Settings
 from .stats import ReportStats
 
@@ -27,7 +27,7 @@ def walk_comic_archive(path: Path, image_format: str,
     and on waiting for the contents subprocesses to compress.
     """
     # uncompress archive
-    tmp_dir, report_stats = comic.comic_archive_uncompress(path,
+    tmp_dir, report_stats = Comic.comic_archive_uncompress(path,
                                                            image_format)
     if tmp_dir is None:
         return Settings.pool.apply_async(_comic_archive_skip,
@@ -45,7 +45,7 @@ def walk_comic_archive(path: Path, image_format: str,
 
     # recompress archive
     args = (path, image_format, Settings, nag_about_gifs)
-    return Settings.pool.apply_async(comic.comic_archive_compress,
+    return Settings.pool.apply_async(Comic.comic_archive_compress,
                                      args=(args,))
 
 
@@ -120,8 +120,8 @@ def walk_file(filename: Path, walk_after: Optional[float],
         print(f"{path}: {image_format}")
         return result_set
 
-    if detect_format.is_format_selected(image_format, comic.FORMATS,
-                                        comic.PROGRAMS):
+    if detect_format.is_format_selected(image_format, Comic.FORMATS,
+                                        Comic.PROGRAMS):
         # comic archive
         result_set.add(walk_comic_archive(path, image_format, walk_after))
     else:

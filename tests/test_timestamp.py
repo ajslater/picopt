@@ -6,12 +6,12 @@ from unittest import TestCase
 from picopt import timestamp
 from picopt.settings import Settings
 
-TEST_FILES_ROOT = 'tests/test_files'
-COMIC_ROOT = TEST_FILES_ROOT+'/comic_archives'
+TEST_FILES_ROOT = Path('tests/test_files')
+COMIC_ROOT = TEST_FILES_ROOT.joinpath('comic_archives')
 
 
 def _get_timestamp_setup() -> Tuple[Path, float]:
-    record_path = Path(TEST_FILES_ROOT).joinpath(timestamp.RECORD_FILENAME)
+    record_path = TEST_FILES_ROOT.joinpath(timestamp.RECORD_FILENAME)
     record_path.touch()
     return record_path, record_path.stat().st_mtime
 

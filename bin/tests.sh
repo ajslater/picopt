@@ -5,3 +5,4 @@ poetry run nosetests \
     --cover-package=picopt \
     --with-xunit \
     --xunit-file=/tmp/test-results/nose/noseresults.xml
+poetry run mypy picopt tests

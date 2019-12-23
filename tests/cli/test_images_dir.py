@@ -23,7 +23,7 @@ class TestCLI(TestCase):
 class TestCLIImages(TestCLI):
 
     def test_walk_images(self) -> None:
-        args = [None] + list(map(str, TEST_FILES_DST.glob('*')))
+        args = tuple('') + tuple(map(str, TEST_FILES_DST.glob('*')))
         res = cli.run(args)
         self.assertTrue(res)
 
@@ -31,6 +31,6 @@ class TestCLIImages(TestCLI):
 class TestCLIEverything(TestCLI):
 
     def test_all_once(self) -> None:
-        args = [None, '-rct', str(TEST_FILES_DST)]
+        args = ('', '-rct', str(TEST_FILES_DST))
         res = cli.run(args)
         self.assertTrue(res)

@@ -7,7 +7,7 @@ from typing import Callable, List, Optional, Set
 from . import extern
 
 
-class Settings(object):
+class Settings(Namespace):
     """Global settings class."""
 
     advpng: bool = False
@@ -46,16 +46,19 @@ class Settings(object):
             setattr(cls, key, val)
 
     @classmethod
-    def _set_program_defaults(cls, programs: Set[Callable]) -> None:
+    def _set_program_defaults(
+            cls, programs: Set[Callable[[extern.ExtArgs], str]]) -> None:
         """Run the external program tester on the required binaries."""
         for program in programs:
-            val = getattr(cls, program.__name__) \
-                and extern.does_external_program_run(program.__name__,
-                                                     Settings.verbose)
-            setattr(cls, program.__name__, val)
+            prog_name = program.__func__.__name__  # type: ignore
+            val = getattr(cls, prog_name) \
+                and extern.does_external_program_run(
+                        prog_name, Settings.verbose)
+            setattr(cls, prog_name, val)
 
     @classmethod
-    def config_program_reqs(cls, programs: Set[Callable]) -> None:
+    def config_program_reqs(
+            cls, programs: Set[Callable[[extern.ExtArgs], str]]) -> None:
         """Run the program tester and determine if we can do anything."""
         cls._set_program_defaults(programs)
 

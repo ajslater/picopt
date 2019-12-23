@@ -4,9 +4,10 @@ from typing import Callable, Optional, Set, Tuple
 
 from PIL import Image, ImageFile  # type: ignore
 
-from .formats import comic, gif
-from .settings import Settings
 from .extern import ExtArgs
+from .formats.comic import Comic
+from .formats.gif import Gif
+from .settings import Settings
 
 # Formats
 NONE_FORMAT = 'NONE'
@@ -18,7 +19,7 @@ def _is_program_selected(
     """Determine if the program is enabled in the settings."""
     mode = False
     for prog in progs:
-        if getattr(Settings, prog.__name__):
+        if getattr(Settings, prog.__func__.__name__):  # type: ignore
             mode = True
             break
     return mode
@@ -60,10 +61,10 @@ def get_image_format(filename: Path) -> str:
         pass
 
     if sequenced:
-        image_format = gif.SEQUENCED_TEMPLATE.format(image_format)
+        image_format = Gif.SEQUENCED_TEMPLATE.format(image_format)
     elif image is None or bad_image or image_format == NONE_FORMAT:
         image_format = ERROR_FORMAT
-        comic_format = comic.get_comic_format(filename)
+        comic_format = Comic.get_comic_format(filename)
         if comic_format:
             image_format = comic_format
         if (Settings.verbose > 1) and image_format == ERROR_FORMAT and \
