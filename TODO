@@ -8,7 +8,6 @@
 - Test recursive opt timestamps
 
 ## Architecture:
-- format modules should not be modules they should classes and inherit from a sensible superclass
 - Change main process into an event loop so comics don't block as much
 - Dynamically link in libraries instead of using command line procs
 - Rewrite in rust with clibs dynamically linked.
