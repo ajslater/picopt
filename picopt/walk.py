@@ -49,18 +49,19 @@ def walk_comic_archive(path: Path, image_format: str,
                                      args=(args,))
 
 
-def _is_skippable(filename_full: Path) -> bool:
+def _is_skippable(full_path: Path) -> bool:
     """Handle things that are not optimizable files."""
 
     # File types
-    full_path = Path(filename_full)
     if not Settings.follow_symlinks and full_path.is_symlink():
+        if Settings.verbose > 1:
+            print(full_path, 'is a symlink, skipping.')
         return True
     if full_path.name == timestamp.RECORD_FILENAME:
         return True
     if not full_path.exists():
         if Settings.verbose:
-            print(filename_full, 'was not found.')
+            print(full_path, 'was not found.')
         return True
 
     return False
@@ -86,10 +87,8 @@ def walk_file(filename: Path, walk_after: Optional[float],
               archive_mtime: Optional[float] = None) \
                       -> Set[AsyncResult]:
     """Optimize an individual file."""
-    path = Path(filename).resolve(strict=True)
-
+    path = Path(filename)
     result_set: Set[AsyncResult] = set()
-
     if _is_skippable(path):
         return result_set
 
