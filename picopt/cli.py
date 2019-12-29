@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 """Run pictures through image specific external optimizers."""
 import argparse
 import time
