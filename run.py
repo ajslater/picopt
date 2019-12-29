@@ -4,4 +4,5 @@ import sys
 
 from picopt.cli import run
 
-run(sys.argv)
+if __name__ == '__main__':
+    run(sys.argv)
