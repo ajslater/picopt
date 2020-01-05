@@ -1,8 +1,8 @@
 #!/bin/sh
-mkdir -p /tmp/test-results/nose
-poetry run nosetests \
-    --with-coverage \
-    --cover-package=picopt \
-    --with-xunit \
-    --xunit-file=/tmp/test-results/nose/noseresults.xml
+mkdir -p test-results
+poetry run coverage run -m pytest --junitxml=test-results/junit.xml
+poetry run coverage combine
+poetry run coverage report
+poetry run coverage xml
+poetry run coverage html
 poetry run mypy picopt tests

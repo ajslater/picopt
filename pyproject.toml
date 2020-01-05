@@ -35,14 +35,25 @@ argparse = "^1.4"
 rarfile = "^3.1"
 python-dateutil = "^2.8"
 Pillow = "^6 || ^7"
-pytest = "^5.3.2"
 
 [tool.poetry.dev-dependencies]
 flake8 = "^3.7"
-pep8-naming = "^0.9"
-coverage = "^5.0"
-mypy = "^0.761"
 monkeytype = "^19.11"
+mypy = "^0.761"
+pep8-naming = "^0.9"
+pytest = "^5.3"
+coverage = {extras = ["toml"], version = "^5.0.1"}
 
 [tool.poetry.scripts]
 picopt = "picopt.cli:main"
+
+[tool.coverage.run]
+source = ["picopt"]
+branch = true
+#concurrency = ["multiprocessing"]
+
+[tool.coverage.html]
+directory = "test-results/coverage"
+
+[tool.coverage.xml]
+output = "test-results/coverage.xml"
