@@ -1,2 +1,2 @@
 #!/bin/sh
-docker run -tiv /tmp/test-results:/tmp/test-results picopt-builder bin/tests.sh
+docker run -tiv /home/circleci/project/test-results:/opt/picopt/test-results picopt-builder bin/tests.sh
