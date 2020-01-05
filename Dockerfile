@@ -1,5 +1,7 @@
 FROM ubuntu:eoan
 
+ENV DEBIAN_FRONTEND noninteractive
+
 RUN apt update
 Run apt dist-upgrade -y
 RUN apt install -y \
