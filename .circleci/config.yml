@@ -8,5 +8,5 @@ jobs:
       - run: ci/test.sh
       - store_test_results:
             path: test-results
-        store_artifacts:
+      - store_artifacts:
             path: test-results/coverage
