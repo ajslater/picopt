@@ -10,6 +10,7 @@
 ## Architecture:
 - Change main process into an event loop so comics don't block as much
 - Dynamically link in libraries instead of using command line procs
+- - Doesn't work for closed source like pngout
 - Rewrite in rust with clibs dynamically linked.
 
 ## Packaging:
@@ -18,6 +19,7 @@
 ## Formats:
 - SVG - svgo
 - PDF would be cool, but difficult due to non-standard image formats and lack of easy PDF exploders/bundlers.
+- EPUB?
 
 ## Features:
 - Ignore path flag
