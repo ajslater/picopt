@@ -17,7 +17,7 @@ def _comic_archive_skip(report_stats: Tuple[ReportStats]) -> ReportStats:
 
 def walk_comic_archive(path: Path, image_format: str,
                        optimize_after: Optional[float]) \
-                            -> AsyncResult:
+                            -> AsyncResult: # noqa
     """
     Optimize a comic archive.
 
@@ -51,7 +51,6 @@ def walk_comic_archive(path: Path, image_format: str,
 
 def _is_skippable(full_path: Path) -> bool:
     """Handle things that are not optimizable files."""
-
     # File types
     if not Settings.follow_symlinks and full_path.is_symlink():
         if Settings.verbose > 1:
@@ -85,7 +84,7 @@ def _is_older_than_timestamp(path: Path, walk_after: Optional[float],
 def walk_file(filename: Path, walk_after: Optional[float],
               recurse: Optional[int] = None,
               archive_mtime: Optional[float] = None) \
-                      -> Set[AsyncResult]:
+                      -> Set[AsyncResult]: # noqa
     """Optimize an individual file."""
     path = Path(filename)
     result_set: Set[AsyncResult] = set()
@@ -134,7 +133,7 @@ def walk_file(filename: Path, walk_after: Optional[float],
 def walk_dir(dir_path: Path, walk_after: Optional[float],
              recurse: Optional[int] = None,
              archive_mtime: Optional[float] = None) \
-                    -> Set[multiprocessing.pool.AsyncResult]:
+                    -> Set[multiprocessing.pool.AsyncResult]: # noqa
     """Recursively optimize a directory."""
     if recurse is None:
         recurse = Settings.recurse

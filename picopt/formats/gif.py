@@ -9,6 +9,7 @@ _GIFSICLE_ARGS = ['gifsicle', '--optimize=3', '--batch']
 
 
 class Gif(Format):
+    """GIF format class."""
 
     SEQUENCED_TEMPLATE = '{} SEQUENCED'
     FORMATS = set([SEQUENCED_TEMPLATE.format(_GIF_FORMAT), _GIF_FORMAT])

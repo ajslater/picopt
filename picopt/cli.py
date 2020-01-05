@@ -131,6 +131,7 @@ def get_arguments(args: Tuple[str, ...]) -> Namespace:
 def process_arguments(arguments: Namespace) -> None:
     """
     Recompute special cases for input arguments.
+
     Sets the global Settings singleton with the correct values from arguments.
     """
     Settings.update(arguments)
@@ -196,7 +197,7 @@ def run(args: Tuple[str, ...]) -> bool:
 
 
 def main() -> None:
-    """Main entry point."""
+    """CLI entry point."""
     import sys
     run(tuple(sys.argv))
 

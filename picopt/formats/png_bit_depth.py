@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
-"""get the bit depth of a png image manually."
-   This should really be a part of Pillow
+"""
+Get the bit depth of a png image manually.
+
+This should really be a part of Pillow
 """
 import struct
 from pathlib import Path
@@ -10,12 +12,12 @@ PNG_HEADER = (b'\x89', b'P', b'N', b'G', b'\r', b'\n', b'\x1a', b'\n')
 
 
 def unpack(fmt_type, length, file_desc):
-    """unpack unformation from a file according to format string & length"""
+    """Unpack unformation from a file according to format string & length."""
     return struct.unpack(fmt_type*length, file_desc.read(length))
 
 
 def png_bit_depth(path: Path) -> Optional[int]:
-    """if a file is a png, get the bit depth from the standard position."""
+    """If a file is a png, get the bit depth from the standard position."""
     with open(path, 'rb') as img:
         img.seek(0)
         header = unpack('c', 8, img)
@@ -29,7 +31,7 @@ def png_bit_depth(path: Path) -> Optional[int]:
 
 
 def main(filename: str) -> None:
-    """stand alone cli tool for getting png bit depth."""
+    """Stand alone cli tool for getting png bit depth."""
     bit_depth = png_bit_depth(Path(filename))
     print(bit_depth)
 

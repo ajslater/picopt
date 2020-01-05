@@ -35,7 +35,7 @@ class TestCleanupAterOptimise(TestCase):
         new_format = 'png'
         path, b_in, b_out = self.cleanup_aux(old_size, new_size,
                                              old_format, new_format)
-        self.assertTrue(path.suffix == '.'+old_format)
+        self.assertEqual(path.suffix, '.'+old_format)
         self.assertEqual(old_size, b_in)
         self.assertEqual(old_size, b_out)
 
@@ -47,7 +47,7 @@ class TestCleanupAterOptimise(TestCase):
         path, b_in, b_out = self.cleanup_aux(old_size, new_size,
                                              old_format, new_format)
         print('Assert', path.suffix, '==', '.'+new_format)
-        self.assertTrue(path.suffix == '.'+new_format)
+        self.assertEqual(path.suffix, '.'+new_format)
         self.assertEqual(old_size, b_in)
         self.assertEqual(new_size, b_out)
 
@@ -58,6 +58,6 @@ class TestCleanupAterOptimise(TestCase):
         new_format = 'png'
         path, b_in, b_out = self.cleanup_aux(old_size, new_size,
                                              old_format, new_format)
-        self.assertTrue(path.suffix == '.'+old_format)
+        self.assertEqual(path.suffix, '.'+old_format)
         self.assertEqual(old_size, b_in)
         self.assertEqual(old_size, b_out)

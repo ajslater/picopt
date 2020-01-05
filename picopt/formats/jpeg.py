@@ -12,6 +12,7 @@ _JPEGRESCAN_ARGS = ['jpegrescan']
 
 
 class Jpeg(Format):
+    """JPEG format class."""
 
     BEST_ONLY = True
     FORMATS = set([_JPEG_FORMAT])

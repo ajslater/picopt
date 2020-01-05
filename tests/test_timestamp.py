@@ -21,7 +21,7 @@ class TestTimestamp(TestCase):
     def test_get_timestamp_ne(self) -> None:
         path = Path(TEST_FILES_ROOT).joinpath('BLARGH')
         res = timestamp._get_timestamp(path, False)
-        self.assertEqual(res, None)
+        self.assertIsNone(res)
 
     def test_get_timestamp_no_remove(self) -> None:
         record_filename, mtime = _get_timestamp_setup()
@@ -37,4 +37,4 @@ class TestTimestamp(TestCase):
         res = timestamp._get_timestamp(TEST_FILES_ROOT, True)
 
         self.assertEqual(res, mtime)
-        self.assertTrue(record_filename in timestamp.OLD_TIMESTAMPS)
+        self.assertIn(record_filename, timestamp.OLD_TIMESTAMPS)

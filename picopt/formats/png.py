@@ -10,6 +10,8 @@ _PNGOUT_ARGS = ['pngout', '-q', '-force', '-y']
 
 
 class Png(Format):
+    """PNG format class."""
+
     FORMATS = set([_PNG_FORMAT])
     LOSSLESS_FORMATS = set(('PNM', 'PPM', 'BMP', 'GIF'))
     CONVERTABLE_FORMATS = LOSSLESS_FORMATS | FORMATS

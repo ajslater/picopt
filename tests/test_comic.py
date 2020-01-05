@@ -20,7 +20,7 @@ class TestGetComicFormat(TestCase):
 
     def test_dir(self) -> None:
         res = Comic.get_comic_format(Path(COMIC_ROOT))
-        self.assertEqual(res, None)
+        self.assertIsNone(res)
 
 
 class TestGetArchiveTmpDir(TestCase):

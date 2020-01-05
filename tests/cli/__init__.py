@@ -1,1 +1,1 @@
-"""CLI Tests Init"""
+"""CLI Tests Init."""

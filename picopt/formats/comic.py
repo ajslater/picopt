@@ -24,6 +24,7 @@ _NEW_ARCHIVE_SUFFIX: str = f'.{PROGRAM_NAME}-optimized'
 
 
 class Comic(Format):
+    """Comic format class."""
 
     BEST_ONLY: bool = False
     OUT_EXT: str = _CBZ_EXT
@@ -32,7 +33,7 @@ class Comic(Format):
     @staticmethod
     def comics():
         """
-        Dummy Comic optimizer.
+        Do nothing comic optimizer.
 
         Not used because comics are special and use walk.walk_comic_archive
         But currently neccissary to keep detect_format._is_program_selected()
@@ -61,7 +62,7 @@ class Comic(Format):
 
     @staticmethod
     def comic_archive_uncompress(path: Path, image_format: str) \
-            -> Tuple[Optional[Path], Optional[ReportStats]]:
+            -> Tuple[Optional[Path], Optional[ReportStats]]: # noqa
         """
         Uncompress comic archives.
 
@@ -115,7 +116,7 @@ class Comic(Format):
     @staticmethod
     def comic_archive_compress(args) -> ReportStats:
         """
-        Called back by every optimization inside a comic archive.
+        Call back by every optimization inside a comic archive.
 
         When they're all done it creates the new archive and cleans up.
         """

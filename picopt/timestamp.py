@@ -34,7 +34,8 @@ def _get_timestamp(dirname_full: Path,
 def _get_timestamp_cached(dirname_full: Path,
                           remove: bool) -> Optional[float]:
     """
-    Get the timestamp from the cache or fill the cache
+    Get the timestamp from the cache or fill the cache.
+
     Much quicker than reading the same files over and over
     """
     if dirname_full not in TIMESTAMP_CACHE:
@@ -77,7 +78,7 @@ def _get_parent_timestamp(path: Path,
 
 def get_walk_after(filename: Path,
                    optimize_after: Optional[float] = None) \
-                        -> Optional[float]:
+                        -> Optional[float]: # noqa
     """
     Figure out the which mtime to check against.
 

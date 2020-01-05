@@ -11,9 +11,7 @@ REMOVE_EXT = f'.{PROGRAM_NAME}-remove'
 
 def _cleanup_after_optimize_aux(path: Path, new_path: Path, old_format: str,
                                 new_format: str) -> Tuple[Path, int, int]:
-    """
-    Replace old file with better one or discard new wasteful file.
-    """
+    """Replace old file with better one or discard new wasteful file."""
     bytes_in = 0
     bytes_out = 0
     final_path = path
