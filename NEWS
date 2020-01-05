@@ -1,3 +1,6 @@
+v2.0.2
+* Use pytest instead of nosetest
+
 v2.0.1
 * Pillow 7 compatibility
 
