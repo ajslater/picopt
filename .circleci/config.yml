@@ -7,4 +7,4 @@ jobs:
       - run: ci/build.sh
       - run: ci/test.sh
       - store_test_results:
-            path: /opt/picopt/test-results
+            path: test-results
