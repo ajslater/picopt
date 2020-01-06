@@ -5,22 +5,26 @@ from typing import List, Optional, Tuple
 from .settings import Settings
 
 ABBREVS = (
-    (1 << int(50), 'PiB'),
-    (1 << int(40), 'TiB'),
-    (1 << int(30), 'GiB'),
-    (1 << int(20), 'MiB'),
-    (1 << int(10), 'kiB'),
-    (1, 'bytes')
+    (1 << int(50), "PiB"),
+    (1 << int(40), "TiB"),
+    (1 << int(30), "GiB"),
+    (1 << int(20), "MiB"),
+    (1 << int(10), "kiB"),
+    (1, "bytes"),
 )
 
 
 class ReportStats(object):
     """Container for reported stats from optimization operations."""
 
-    def __init__(self, final_path: Path, report: Optional[str] = None,
-                 bytes_count: Optional[Tuple[int, int]] = None,
-                 nag_about_gifs: bool = False,
-                 error: Optional[str] = None):
+    def __init__(
+        self,
+        final_path: Path,
+        report: Optional[str] = None,
+        bytes_count: Optional[Tuple[int, int]] = None,
+        nag_about_gifs: bool = False,
+        error: Optional[str] = None,
+    ):
         """Initialize required instance variables."""
         self.final_path = final_path
         self.report_list = []
@@ -65,12 +69,12 @@ def _humanize_bytes(num_bytes: int, precision: int = 1) -> str:
     '1.3 GB'
     """
     if num_bytes == 0:
-        return 'no bytes'
+        return "no bytes"
     if num_bytes == 1:
-        return '1 byte'
+        return "1 byte"
 
     factored_bytes = 0
-    factor_suffix = 'bytes'
+    factor_suffix = "bytes"
     for factor, suffix in ABBREVS:
         if num_bytes >= factor:
             factored_bytes = int(num_bytes / factor)
@@ -80,8 +84,7 @@ def _humanize_bytes(num_bytes: int, precision: int = 1) -> str:
     if factored_bytes == 1:
         precision = 0
 
-    return '{:.{prec}f} {}'.format(factored_bytes, factor_suffix,
-                                   prec=precision)
+    return "{:.{prec}f} {}".format(factored_bytes, factor_suffix, prec=precision)
 
 
 def new_percent_saved(report_stats: ReportStats) -> str:
@@ -93,41 +96,42 @@ def new_percent_saved(report_stats: ReportStats) -> str:
         kb_saved = _humanize_bytes(size_in - size_out)
     else:
         ratio = 0
-        kb_saved = f'0 {ABBREVS[-1]}'
+        kb_saved = f"0 {ABBREVS[-1]}"
     percent_saved = (1 - ratio) * 100
 
-    result = '{:.{prec}f}% ({})'.format(percent_saved, kb_saved, prec=2)
+    result = "{:.{prec}f}% ({})".format(percent_saved, kb_saved, prec=2)
     return result
 
 
 def report_saved(report_stats: ReportStats) -> None:
     """Record the percent saved & print it."""
     if Settings.verbose:
-        report = ''
+        report = ""
         path = report_stats.final_path
 
-        report += f'{path}: '
+        report += f"{path}: "
         total = new_percent_saved(report_stats)
         if total:
             report += total
         else:
-            report += '0%'
+            report += "0%"
         if Settings.test:
-            report += ' could be saved.'
+            report += " could be saved."
         if Settings.verbose > 1:
-            tools_report = ', '.join(report_stats.report_list)
+            tools_report = ", ".join(report_stats.report_list)
             if tools_report:
-                report += '\n\t' + tools_report
+                report += "\n\t" + tools_report
         print(report)
 
 
-def report_totals(bytes_in: int, bytes_out: int, nag_about_gifs: bool,
-                  errors: List[str]) -> None:
+def report_totals(
+    bytes_in: int, bytes_out: int, nag_about_gifs: bool, errors: List[str]
+) -> None:
     """Report the total number and percent of bytes saved."""
     if bytes_in:
         bytes_saved = bytes_in - bytes_out
         percent_bytes_saved = bytes_saved / bytes_in * 100
-        msg = ''
+        msg = ""
         if Settings.test:
             if percent_bytes_saved > 0:
                 msg += "Could save"
@@ -143,7 +147,8 @@ def report_totals(bytes_in: int, bytes_out: int, nag_about_gifs: bool,
             else:
                 msg = "Lost"
         msg += " a total of {} or {:.{prec}f}%".format(
-            _humanize_bytes(bytes_saved), percent_bytes_saved, prec=2)
+            _humanize_bytes(bytes_saved), percent_bytes_saved, prec=2
+        )
         if Settings.verbose:
             print(msg)
             if Settings.test:
@@ -154,8 +159,7 @@ def report_totals(bytes_in: int, bytes_out: int, nag_about_gifs: bool,
             print("Didn't optimize any files.")
 
     if nag_about_gifs and Settings.verbose:
-        print("Most animated GIFS would be better off converted to"
-              " HTML5 video")
+        print("Most animated GIFS would be better off converted to" " HTML5 video")
 
     if not errors:
         return
@@ -167,6 +171,6 @@ def report_totals(bytes_in: int, bytes_out: int, nag_about_gifs: bool,
 
 def skip(type_name: str, path: Path) -> ReportStats:
     """Provide reporting statistics for a skipped file."""
-    report = f'Skipping {type_name} file: {path}'
+    report = f"Skipping {type_name} file: {path}"
     report_stats = ReportStats(path, report=report)
     return report_stats

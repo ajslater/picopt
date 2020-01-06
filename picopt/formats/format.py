@@ -10,4 +10,4 @@ class Format(object):
     PROGRAMS: Tuple[Callable[[ExtArgs], str], ...] = tuple()
     BEST_ONLY: bool = True
     FORMATS: Set[str] = set()
-    OUT_EXT: str = 'xxx'
+    OUT_EXT: str = "xxx"

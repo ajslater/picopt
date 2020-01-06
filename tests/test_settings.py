@@ -9,7 +9,6 @@ from picopt.settings import Settings
 
 
 class TestSettingsUpdate(TestCase):
-
     def test_update(self) -> None:
         args = Namespace(bigger=True)
         self.assertFalse(Settings.bigger)
@@ -20,21 +19,20 @@ class TestSettingsUpdate(TestCase):
 class DummyFormat(Format):
     @staticmethod
     def true(args: ExtArgs) -> str:
-        return 'foo'
+        return "foo"
 
     @staticmethod
     def false(args: ExtArgs) -> str:
-        return 'foo'
+        return "foo"
 
     @staticmethod
     def does_not_exist(args: ExtArgs) -> str:
-        return 'foo'
+        return "foo"
 
     PROGRAMS = (true, false, does_not_exist)
 
 
 class TestSettingsSetProgramDefaults(TestCase):
-
     class DummySettingsObject(Settings):
         true: bool = True
         false: bool = True

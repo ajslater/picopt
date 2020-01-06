@@ -6,8 +6,8 @@ from unittest import TestCase
 from picopt import timestamp
 from picopt.settings import Settings
 
-TEST_FILES_ROOT = Path('tests/test_files')
-COMIC_ROOT = TEST_FILES_ROOT.joinpath('comic_archives')
+TEST_FILES_ROOT = Path("tests/test_files")
+COMIC_ROOT = TEST_FILES_ROOT.joinpath("comic_archives")
 
 
 def _get_timestamp_setup() -> Tuple[Path, float]:
@@ -17,9 +17,8 @@ def _get_timestamp_setup() -> Tuple[Path, float]:
 
 
 class TestTimestamp(TestCase):
-
     def test_get_timestamp_ne(self) -> None:
-        path = Path(TEST_FILES_ROOT).joinpath('BLARGH')
+        path = Path(TEST_FILES_ROOT).joinpath("BLARGH")
         res = timestamp._get_timestamp(path, False)
         self.assertIsNone(res)
 

@@ -41,24 +41,26 @@ class Settings(Namespace):
     def update(cls, settings: Namespace) -> None:
         """Update settings with a dict."""
         for key, val in settings.__dict__.items():
-            if key.startswith('_'):
+            if key.startswith("_"):
                 continue
             setattr(cls, key, val)
 
     @classmethod
     def _set_program_defaults(
-            cls, programs: Set[Callable[[extern.ExtArgs], str]]) -> None:
+        cls, programs: Set[Callable[[extern.ExtArgs], str]]
+    ) -> None:
         """Run the external program tester on the required binaries."""
         for program in programs:
             prog_name = program.__func__.__name__  # type: ignore
-            val = getattr(cls, prog_name) \
-                and extern.does_external_program_run(
-                        prog_name, Settings.verbose)
+            val = getattr(cls, prog_name) and extern.does_external_program_run(
+                prog_name, Settings.verbose
+            )
             setattr(cls, prog_name, val)
 
     @classmethod
     def config_program_reqs(
-            cls, programs: Set[Callable[[extern.ExtArgs], str]]) -> None:
+        cls, programs: Set[Callable[[extern.ExtArgs], str]]
+    ) -> None:
         """Run the program tester and determine if we can do anything."""
         cls._set_program_defaults(programs)
 

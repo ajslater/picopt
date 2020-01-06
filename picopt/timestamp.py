@@ -6,13 +6,12 @@ from typing import Dict, Optional, Set, Tuple
 from . import PROGRAM_NAME
 from .settings import Settings
 
-RECORD_FILENAME = f'.{PROGRAM_NAME}_timestamp'
+RECORD_FILENAME = f".{PROGRAM_NAME}_timestamp"
 TIMESTAMP_CACHE: Dict[Path, Optional[float]] = {}
 OLD_TIMESTAMPS: Set[Path] = set()
 
 
-def _get_timestamp(dirname_full: Path,
-                   remove: bool) -> Optional[float]:
+def _get_timestamp(dirname_full: Path, remove: bool) -> Optional[float]:
     """
     Get the timestamp from the timestamp file.
 
@@ -25,14 +24,13 @@ def _get_timestamp(dirname_full: Path,
 
     mtime = record_path.stat().st_mtime
     mtime_str = datetime.fromtimestamp(mtime)
-    print(f'Found timestamp {dirname_full}:{mtime_str}')
+    print(f"Found timestamp {dirname_full}:{mtime_str}")
     if Settings.record_timestamp and remove:
         OLD_TIMESTAMPS.add(record_path)
     return mtime
 
 
-def _get_timestamp_cached(dirname_full: Path,
-                          remove: bool) -> Optional[float]:
+def _get_timestamp_cached(dirname_full: Path, remove: bool) -> Optional[float]:
     """
     Get the timestamp from the cache or fill the cache.
 
@@ -44,21 +42,20 @@ def _get_timestamp_cached(dirname_full: Path,
     return TIMESTAMP_CACHE[dirname_full]
 
 
-def max_none(lst: Tuple[Optional[float],
-                        Optional[float]]) -> Optional[float]:
+def max_none(lst: Tuple[Optional[float], Optional[float]]) -> Optional[float]:
     """Max function that works in python 3."""
     return max((x for x in lst if x is not None), default=None)
 
 
-def _max_timestamps(dirname_full: Path, remove: bool,
-                    compare_tstamp: Optional[float]) -> Optional[float]:
+def _max_timestamps(
+    dirname_full: Path, remove: bool, compare_tstamp: Optional[float]
+) -> Optional[float]:
     """Compare a timestamp file to one passed in. Get the max."""
     tstamp = _get_timestamp_cached(dirname_full, remove)
     return max_none((tstamp, compare_tstamp))
 
 
-def _get_parent_timestamp(path: Path,
-                          mtime: Optional[float]) -> Optional[float]:
+def _get_parent_timestamp(path: Path, mtime: Optional[float]) -> Optional[float]:
     """
     Get the timestamps up the directory tree. All the way to root.
 
@@ -76,9 +73,9 @@ def _get_parent_timestamp(path: Path,
     return mtime
 
 
-def get_walk_after(filename: Path,
-                   optimize_after: Optional[float] = None) \
-                        -> Optional[float]: # noqa
+def get_walk_after(
+    filename: Path, optimize_after: Optional[float] = None
+) -> Optional[float]:  # noqa
     """
     Figure out the which mtime to check against.
 
@@ -99,11 +96,11 @@ def record_timestamp(full_path: Path) -> None:
         return
     if not Settings.follow_symlinks and full_path.is_symlink():
         if Settings.verbose:
-            print('Not setting timestamp because not following symlinks')
+            print("Not setting timestamp because not following symlinks")
         return
     if not full_path.is_dir():
         if Settings.verbose:
-            print('Not setting timestamp for a non-directory')
+            print("Not setting timestamp for a non-directory")
         return
 
     record_filepath = full_path.joinpath(RECORD_FILENAME)
@@ -112,12 +109,13 @@ def record_timestamp(full_path: Path) -> None:
         if Settings.verbose:
             print(f"Set timestamp: {record_filepath}")
         for path in OLD_TIMESTAMPS:
-            if str(path).startswith(str(full_path)) and \
-               not path.samefile(record_filepath):
+            if str(path).startswith(str(full_path)) and not path.samefile(
+                record_filepath
+            ):
                 # only remove timestamps below the curent path
                 # but don't remove the timestamp we just set!
                 path.unlink()
                 if Settings.verbose:
-                    print(f'Removed old timestamp: {path}')
+                    print(f"Removed old timestamp: {path}")
     except IOError:
         print(f"Could not set timestamp in {full_path}")

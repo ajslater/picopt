@@ -15,8 +15,8 @@ class ExtArgs(object):
 def does_external_program_run(prog: str, verbose: int) -> bool:
     """Test to see if the external programs can be run."""
     try:
-        with open('/dev/null') as null:
-            subprocess.call([prog, '-h'], stdout=null, stderr=null)
+        with open("/dev/null") as null:
+            subprocess.call([prog, "-h"], stdout=null, stderr=null)
         result = True
     except OSError:
         if verbose > 1:

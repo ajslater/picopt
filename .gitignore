@@ -1,6 +1,7 @@
 *.egg-info
 *.pyc
 *~
+.DS_Store
 .coverage
 .mypy_cache
 .picopt_timestamp
@@ -8,7 +9,6 @@
 MANIFEST
 build
 dist
-test-results
-.DS_Store
 monkeytype.sqlite3
+test-results
 test_files
