@@ -70,7 +70,7 @@ class Comic(Format):
     @staticmethod
     def comic_archive_uncompress(
         path: Path, image_format: str
-    ) -> Tuple[Optional[Path], Optional[ReportStats]]:  # noqa
+    ) -> Tuple[Optional[Path], Optional[ReportStats]]:
         """
         Uncompress comic archives.
 

@@ -25,7 +25,7 @@ def _comic_archive_skip(report_stats: Tuple[ReportStats]) -> ReportStats:
 
 def walk_comic_archive(
     path: Path, image_format: str, optimize_after: Optional[float]
-) -> AsyncResult:  # noqa
+) -> AsyncResult:
     """
     Optimize a comic archive.
 
@@ -92,7 +92,7 @@ def walk_file(
     walk_after: Optional[float],
     recurse: Optional[int] = None,
     archive_mtime: Optional[float] = None,
-) -> Set[AsyncResult]:  # noqa
+) -> Set[AsyncResult]:
     """Optimize an individual file."""
     path = Path(filename)
     result_set: Set[AsyncResult] = set()
@@ -141,7 +141,7 @@ def walk_dir(
     walk_after: Optional[float],
     recurse: Optional[int] = None,
     archive_mtime: Optional[float] = None,
-) -> Set[multiprocessing.pool.AsyncResult]:  # noqa
+) -> Set[multiprocessing.pool.AsyncResult]:
     """Recursively optimize a directory."""
     if recurse is None:
         recurse = Settings.recurse

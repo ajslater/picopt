@@ -79,7 +79,7 @@ def _get_parent_timestamp(path: Path, mtime: Optional[float]) -> Optional[float]
 
 def get_walk_after(
     filename: Path, optimize_after: Optional[float] = None
-) -> Optional[float]:  # noqa
+) -> Optional[float]:
     """
     Figure out the which mtime to check against.
 
