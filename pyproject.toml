@@ -24,7 +24,6 @@ classifiers = [
 ]
 packages = [
     { include = "picopt" },
-    { include = "bin", format = "sdist" },
     { include = "ci", format = "sdist" },
     { include = "tests", format = "sdist" },
 ]

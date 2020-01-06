@@ -1,5 +1,6 @@
 v2.0.2
 * Use pytest instead of nosetest
+* Require formating with black
 
 v2.0.1
 * Pillow 7 compatibility
