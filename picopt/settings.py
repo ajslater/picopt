@@ -1,8 +1,12 @@
 """Settings class for picopt."""
 import multiprocessing
+
 from argparse import Namespace
 from multiprocessing.pool import Pool
-from typing import Callable, List, Optional, Set
+from typing import Callable
+from typing import List
+from typing import Optional
+from typing import Set
 
 from . import extern
 

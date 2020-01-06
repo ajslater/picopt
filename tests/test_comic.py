@@ -4,6 +4,7 @@ from unittest import TestCase
 
 from picopt.formats.comic import Comic
 
+
 TEST_FILES_ROOT = "tests/test_files"
 COMIC_ROOT = TEST_FILES_ROOT + "/comic_archives"
 

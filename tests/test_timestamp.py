@@ -6,6 +6,7 @@ from unittest import TestCase
 from picopt import timestamp
 from picopt.settings import Settings
 
+
 TEST_FILES_ROOT = Path("tests/test_files")
 COMIC_ROOT = TEST_FILES_ROOT.joinpath("comic_archives")
 

@@ -1,9 +1,11 @@
 """Test comic format."""
 import shutil
+
 from pathlib import Path
 from unittest import TestCase
 
 from picopt import cli
+
 
 TEST_FILES_SRC: str = "tests/test_files"
 TEST_FILES_DST_ROOT: str = "/tmp"

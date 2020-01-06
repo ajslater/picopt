@@ -1,10 +1,14 @@
 """Timestamp writer for keeping track of bulk optimizations."""
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, Optional, Set, Tuple
+from typing import Dict
+from typing import Optional
+from typing import Set
+from typing import Tuple
 
 from . import PROGRAM_NAME
 from .settings import Settings
+
 
 RECORD_FILENAME = f".{PROGRAM_NAME}_timestamp"
 TIMESTAMP_CACHE: Dict[Path, Optional[float]] = {}

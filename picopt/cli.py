@@ -2,20 +2,25 @@
 """Run pictures through image specific external optimizers."""
 import argparse
 import time
+
 from argparse import Namespace
 from pathlib import Path
-from typing import Callable, Set, Tuple
+from typing import Callable
+from typing import Set
+from typing import Tuple
 
 import dateutil.parser
 import pkg_resources
 
-from . import PROGRAM_NAME, walk
+from . import PROGRAM_NAME
+from . import walk
 from .extern import ExtArgs
 from .formats.comic import Comic
 from .formats.gif import Gif
 from .formats.jpeg import Jpeg
 from .formats.png import Png
 from .settings import Settings
+
 
 DISTRIBUTION = pkg_resources.get_distribution(PROGRAM_NAME)
 PROGRAMS: Set[Callable[[ExtArgs], str]] = set(

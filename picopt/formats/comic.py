@@ -2,15 +2,22 @@
 import os
 import shutil
 import zipfile
+
 from pathlib import Path
-from typing import Callable, Optional, Set, Tuple
+from typing import Callable
+from typing import Optional
+from typing import Set
+from typing import Tuple
 
 import rarfile  # type: ignore
 
-from .. import PROGRAM_NAME, files, stats
+from .. import PROGRAM_NAME
+from .. import files
+from .. import stats
 from ..settings import Settings
 from ..stats import ReportStats
 from .format import Format
+
 
 _CBZ_FORMAT: str = "CBZ"
 _CBR_FORMAT: str = "CBR"

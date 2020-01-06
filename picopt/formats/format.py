@@ -1,5 +1,7 @@
 """Format Superclass."""
-from typing import Callable, Set, Tuple
+from typing import Callable
+from typing import Set
+from typing import Tuple
 
 from ..extern import ExtArgs
 

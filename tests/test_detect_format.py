@@ -1,6 +1,9 @@
 """Test detect file formats."""
 from pathlib import Path
-from typing import Callable, Optional, Set, Tuple
+from typing import Callable
+from typing import Optional
+from typing import Set
+from typing import Tuple
 from unittest import TestCase
 
 from PIL import Image  # type: ignore
@@ -9,6 +12,7 @@ from picopt import detect_format
 from picopt.extern import ExtArgs
 from picopt.formats.comic import Comic
 from picopt.settings import Settings
+
 
 TEST_FILES_ROOT = "tests/test_files/"
 IMAGES_ROOT = TEST_FILES_ROOT + "/images"

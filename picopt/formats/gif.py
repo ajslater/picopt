@@ -1,8 +1,10 @@
 """Gif format."""
-from typing import Callable, Tuple
+from typing import Callable
+from typing import Tuple
 
 from .. import extern
 from .format import Format
+
 
 _GIF_FORMAT = "GIF"
 _GIFSICLE_ARGS = ["gifsicle", "--optimize=3", "--batch"]

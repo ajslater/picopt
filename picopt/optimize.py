@@ -1,11 +1,18 @@
 """Optimize a file."""
 import shutil
 import traceback
+
 from argparse import Namespace
 from pathlib import Path
-from typing import Callable, Optional, Tuple, Type
+from typing import Callable
+from typing import Optional
+from typing import Tuple
+from typing import Type
 
-from . import PROGRAM_NAME, detect_format, files, stats
+from . import PROGRAM_NAME
+from . import detect_format
+from . import files
+from . import stats
 from .extern import ExtArgs
 from .formats.format import Format
 from .formats.gif import Gif
@@ -13,6 +20,7 @@ from .formats.jpeg import Jpeg
 from .formats.png import Png
 from .settings import Settings
 from .stats import ReportStats
+
 
 TMP_SUFFIX = f".{PROGRAM_NAME}-optimized"
 

@@ -1,13 +1,18 @@
 """Detect file formats."""
 from pathlib import Path
-from typing import Callable, Optional, Set, Tuple
+from typing import Callable
+from typing import Optional
+from typing import Set
+from typing import Tuple
 
-from PIL import Image, ImageFile  # type: ignore
+from PIL import Image  # type: ignore
+from PIL import ImageFile
 
 from .extern import ExtArgs
 from .formats.comic import Comic
 from .formats.gif import Gif
 from .settings import Settings
+
 
 # Formats
 NONE_FORMAT = "NONE"

@@ -1,11 +1,19 @@
 """Walk the directory trees and files and call the optimizers."""
 import multiprocessing
 import os
+
 from multiprocessing.pool import AsyncResult
 from pathlib import Path
-from typing import Any, List, Optional, Set, Tuple
+from typing import Any
+from typing import List
+from typing import Optional
+from typing import Set
+from typing import Tuple
 
-from . import detect_format, optimize, stats, timestamp
+from . import detect_format
+from . import optimize
+from . import stats
+from . import timestamp
 from .formats.comic import Comic
 from .settings import Settings
 from .stats import ReportStats

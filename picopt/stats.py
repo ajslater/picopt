@@ -1,8 +1,11 @@
 """Statistics for the optimization operations."""
 from pathlib import Path
-from typing import List, Optional, Tuple
+from typing import List
+from typing import Optional
+from typing import Tuple
 
 from .settings import Settings
+
 
 ABBREVS = (
     (1 << int(50), "PiB"),

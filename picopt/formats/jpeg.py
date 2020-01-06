@@ -5,6 +5,7 @@ from .. import extern
 from ..settings import Settings
 from .format import Format
 
+
 _JPEG_FORMAT = "JPEG"
 _MOZJPEG_ARGS = ["mozjpeg"]
 _JPEGTRAN_ARGS = ["jpegtran", "-optimize"]

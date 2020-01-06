@@ -2,9 +2,11 @@
 from pathlib import Path
 from typing import Tuple
 
-from . import PROGRAM_NAME, stats
+from . import PROGRAM_NAME
+from . import stats
 from .settings import Settings
 from .stats import ReportStats
+
 
 REMOVE_EXT = f".{PROGRAM_NAME}-remove"
 

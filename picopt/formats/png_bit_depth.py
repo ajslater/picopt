@@ -5,8 +5,10 @@ Get the bit depth of a png image manually.
 This should really be a part of Pillow
 """
 import struct
+
 from pathlib import Path
 from typing import Optional
+
 
 PNG_HEADER = (b"\x89", b"P", b"N", b"G", b"\r", b"\n", b"\x1a", b"\n")
 
