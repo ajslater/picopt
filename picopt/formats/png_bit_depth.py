@@ -29,7 +29,7 @@ def png_bit_depth(path: Path) -> Optional[int]:
 
         img.seek(24)  # bit depth offset
         depth = unpack("b", 1, img)[0]
-        return depth
+        return int(depth)
 
 
 def main(filename: str) -> None:

@@ -5,7 +5,7 @@ from typing import Optional
 from typing import Set
 from typing import Tuple
 
-from PIL import Image  # type: ignore
+from PIL import Image
 from PIL import ImageFile
 
 from .extern import ExtArgs

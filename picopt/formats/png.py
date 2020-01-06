@@ -1,4 +1,6 @@
 """PNG format."""
+from pathlib import Path
+
 from .. import extern
 from .format import Format
 from .png_bit_depth import png_bit_depth
@@ -37,7 +39,7 @@ class Png(Format):
     def pngout(ext_args: extern.ExtArgs) -> str:
         """Run the external program pngout on the file."""
         # if png_bit_depth(ext_args.old_fn) == 16:
-        depth = png_bit_depth(ext_args.old_fn)
+        depth = png_bit_depth(Path(ext_args.old_fn))
         if depth in (16, None):
             print(f"Skipped pngout for {depth} bit PNG:")
         else:

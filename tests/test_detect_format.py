@@ -6,7 +6,7 @@ from typing import Set
 from typing import Tuple
 from unittest import TestCase
 
-from PIL import Image  # type: ignore
+from PIL import Image
 
 from picopt import detect_format
 from picopt.extern import ExtArgs

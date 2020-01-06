@@ -9,7 +9,7 @@ from typing import Optional
 from typing import Set
 from typing import Tuple
 
-import rarfile  # type: ignore
+import rarfile
 
 from .. import PROGRAM_NAME
 from .. import files
