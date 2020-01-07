@@ -53,21 +53,18 @@ def _is_image_sequenced(image: ImageFile) -> bool:
 
 def get_image_format(filename: Path) -> str:
     """Get the image format."""
-    image = None
-    bad_image = 1
-    image_format = NONE_FORMAT
-    sequenced = False
     try:
         bad_image = Image.open(filename).verify()
+        if bad_image:
+            raise AttributeError
         image = Image.open(filename)
-        image_format = image.format
+        image_format = str(image.format)
+        if image_format == NONE_FORMAT:
+            raise AttributeError
         sequenced = _is_image_sequenced(image)
-    except (OSError, IOError, AttributeError):
-        pass
-
-    if sequenced:
-        image_format = Gif.SEQUENCED_TEMPLATE.format(image_format)
-    elif image is None or bad_image or image_format == NONE_FORMAT:
+        if sequenced:
+            image_format = Gif.SEQUENCED_TEMPLATE.format(image_format)
+    except (OSError, AttributeError):
         image_format = ERROR_FORMAT
         comic_format = Comic.get_comic_format(filename)
         if comic_format:

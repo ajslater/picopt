@@ -34,6 +34,7 @@ argparse = "^1.4"
 rarfile = "^3.1"
 python-dateutil = "^2.8"
 Pillow = "^6 || ^7"
+pytest-flake8 = "^1.0.4"
 
 [tool.poetry.dev-dependencies]
 flake8 = "^3.7"
@@ -60,13 +61,3 @@ directory = "test-results/coverage"
 
 [tool.coverage.xml]
 output = "test-results/coverage.xml"
-
-#[tool.isort]
-#line_length = 88
-#force_single_line = true
-#atomic = true
-#include_trailing_comma = true
-#lines_after_imports = 2
-#lines_between_types = 1
-#multi_line_output = 3
-#use_parentheses = true
