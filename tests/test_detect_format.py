@@ -14,6 +14,7 @@ from picopt.formats.comic import Comic
 from picopt.settings import Settings
 
 
+__all__ = ()  # hides module from pydocstring
 TEST_FILES_ROOT = "tests/test_files/"
 IMAGES_ROOT = TEST_FILES_ROOT + "/images"
 INVALID_ROOT = TEST_FILES_ROOT + "/invalid"

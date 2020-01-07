@@ -7,6 +7,7 @@ from unittest import TestCase
 from picopt import cli
 
 
+__all__ = ()
 TEST_FILES_SRC: str = "tests/test_files"
 TEST_FILES_DST_ROOT: str = "/tmp"
 TEST_FILES_DST: Path = Path(TEST_FILES_DST_ROOT).joinpath("picopt_tests")

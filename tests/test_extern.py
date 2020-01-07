@@ -4,6 +4,9 @@ from unittest import TestCase
 from picopt import extern
 
 
+__all__ = ()  # hides module from pydocstring
+
+
 class TestDoesExernalProgramRun(TestCase):
     def test_true(self) -> None:
         res = extern.does_external_program_run("true", True)

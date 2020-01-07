@@ -6,6 +6,9 @@ from unittest import TestCase
 from picopt import files
 
 
+__all__ = ()  # hides module from pydocstring
+
+
 class TestCleanupAterOptimise(TestCase):
 
     TEST_FN_OLD: str = "/tmp/TEST_FILE_OLD.{}"

@@ -37,14 +37,15 @@ Pillow = "^6 || ^7"
 
 [tool.poetry.dev-dependencies]
 flake8 = "^3.7"
-monkeytype = "^19.11"
-mypy = "^0.761"
+flake8-black = "^0.1.1"
+flake8-bugbear = "^20.1.2"
+black = "^19.10b0"
+coverage = {extras = ["toml"], version = "^5.0"}
 pep8-naming = "^0.9"
 pytest = "^5.3"
-coverage = {extras = ["toml"], version = "^5.0"}
-black = "^19.10b0"
-flake8-black = "^0.1.1"
 pytest-isort = "^0.3.1"
+mypy = "^0.761"
+monkeytype = "^19.11"
 
 [tool.poetry.scripts]
 picopt = "picopt.cli:main"
@@ -60,12 +61,12 @@ directory = "test-results/coverage"
 [tool.coverage.xml]
 output = "test-results/coverage.xml"
 
-[tool.isort]
-line_length = 88
-force_single_line = true
-atomic = true
-include_trailing_comma = true
-lines_after_imports = 2
-lines_between_types = 1
-multi_line_output = 3
-use_parentheses = true
+#[tool.isort]
+#line_length = 88
+#force_single_line = true
+#atomic = true
+#include_trailing_comma = true
+#lines_after_imports = 2
+#lines_between_types = 1
+#multi_line_output = 3
+#use_parentheses = true

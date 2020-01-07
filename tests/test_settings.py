@@ -8,6 +8,9 @@ from picopt.formats.format import Format
 from picopt.settings import Settings
 
 
+__all__ = ()
+
+
 class TestSettingsUpdate(TestCase):
     def test_update(self) -> None:
         args = Namespace(bigger=True)
