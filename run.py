@@ -6,4 +6,4 @@ from picopt.cli import run
 
 
 if __name__ == "__main__":
-    run(sys.argv)
+    run(tuple(sys.argv))
