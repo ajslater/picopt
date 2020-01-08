@@ -1,6 +1,7 @@
 """Test stats commands."""
 from pathlib import Path
 
+from picopt import settings
 from picopt import stats
 
 
@@ -40,3 +41,24 @@ def test_new_percent_saved():
     rep = stats.ReportStats(PATH, bytes_count=(0, 0))
     res = stats.new_percent_saved(rep)
     assert res == "0.00% (0 bytes)"
+
+
+def test_report_saved():
+    rep = stats.ReportStats(PATH, bytes_count=(2028, 1024), report="a")
+    settings.Settings.verbose = 2
+    stats.report_saved(rep)
+
+    settings.Settings.test = True
+    stats.report_saved(rep)
+    settings.Settings.test = False
+    # TODO check actual strings
+
+
+def test_report_totals():
+    settings.Settings.verbose = 2
+    stats.report_totals(2048, 1024, True, ["a1", "b2"])
+
+    settings.Settings.test = True
+    stats.report_totals(2048, 1024, True, ["a1", "b2"])
+    settings.Settings.test = False
+    # TODO check actual strings
