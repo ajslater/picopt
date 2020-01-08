@@ -106,9 +106,9 @@ def new_percent_saved(report_stats: ReportStats) -> str:
     return result
 
 
-def report_saved(report_stats: ReportStats) -> None:
+def report_saved(settings: Settings, report_stats: ReportStats) -> None:
     """Record the percent saved & print it."""
-    if Settings.verbose:
+    if settings.verbose:
         report = ""
         path = report_stats.final_path
 
@@ -118,9 +118,9 @@ def report_saved(report_stats: ReportStats) -> None:
             report += total
         else:
             report += "0%"
-        if Settings.test:
+        if settings.test:
             report += " could be saved."
-        if Settings.verbose > 1:
+        if settings.verbose > 1:
             tools_report = ", ".join(report_stats.report_list)
             if tools_report:
                 report += "\n\t" + tools_report
@@ -128,14 +128,18 @@ def report_saved(report_stats: ReportStats) -> None:
 
 
 def report_totals(
-    bytes_in: int, bytes_out: int, nag_about_gifs: bool, errors: List[str]
+    settings: Settings,
+    bytes_in: int,
+    bytes_out: int,
+    nag_about_gifs: bool,
+    errors: List[str],
 ) -> None:
     """Report the total number and percent of bytes saved."""
     if bytes_in:
         bytes_saved = bytes_in - bytes_out
         percent_bytes_saved = bytes_saved / bytes_in * 100
         msg = ""
-        if Settings.test:
+        if settings.test:
             if percent_bytes_saved > 0:
                 msg += "Could save"
             elif percent_bytes_saved == 0:
@@ -152,16 +156,16 @@ def report_totals(
         msg += " a total of {} or {:.{prec}f}%".format(
             _humanize_bytes(bytes_saved), percent_bytes_saved, prec=2
         )
-        if Settings.verbose:
+        if settings.verbose:
             print(msg)
-            if Settings.test:
+            if settings.test:
                 print("Test run did not change any files.")
 
     else:
-        if Settings.verbose:
+        if settings.verbose:
             print("Didn't optimize any files.")
 
-    if nag_about_gifs and Settings.verbose:
+    if nag_about_gifs and settings.verbose:
         print("Most animated GIFS would be better off converted to" " HTML5 video")
 
     if not errors:

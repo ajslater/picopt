@@ -1,8 +1,9 @@
 """Test stats commands."""
+from argparse import Namespace
 from pathlib import Path
 
-from picopt import settings
 from picopt import stats
+from picopt.settings import Settings
 
 
 __all__ = ()  # hides module from pydocstring
@@ -45,21 +46,18 @@ def test_new_percent_saved():
 
 def test_report_saved():
     rep = stats.ReportStats(PATH, bytes_count=(2028, 1024), report="a")
-    settings.Settings.verbose = 2
-    stats.report_saved(rep)
+    settings = Settings(None, Namespace(verbose=2))
+    stats.report_saved(settings, rep)
 
-    settings.Settings.test = True
-    stats.report_saved(rep)
-    settings.Settings.test = False
+    settings = Settings(None, Namespace(test=True))
+    stats.report_saved(settings, rep)
     # TODO check actual strings
-    # TODO reset settings? singleton Settings isn't so great
 
 
 def test_report_totals():
-    settings.Settings.verbose = 2
-    stats.report_totals(2048, 1024, True, ["a1", "b2"])
+    settings = Settings(None, Namespace(verbose=2))
+    stats.report_totals(settings, 2048, 1024, True, ["a1", "b2"])
 
-    settings.Settings.test = True
-    stats.report_totals(2048, 1024, True, ["a1", "b2"])
-    settings.Settings.test = False
+    settings = Settings(None, Namespace(test=True))
+    stats.report_totals(settings, 2048, 1024, True, ["a1", "b2"])
     # TODO check actual strings

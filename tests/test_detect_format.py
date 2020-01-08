@@ -19,21 +19,22 @@ TEST_FILES_ROOT = "tests/test_files/"
 IMAGES_ROOT = TEST_FILES_ROOT + "/images"
 INVALID_ROOT = TEST_FILES_ROOT + "/invalid"
 COMIC_ROOT = TEST_FILES_ROOT + "/comic_archives"
+SETTINGS = Settings(set(), None)
 
 
 class TestIsProgramSelected(TestCase):
     @staticmethod
-    def pngout(args: ExtArgs) -> str:
+    def pngout(settings: Settings, args: ExtArgs) -> str:
         return "foo"
 
     programs = (pngout,)
 
     def test_pngout(self) -> None:
-        res = detect_format._is_program_selected(self.programs)
+        res = detect_format._is_program_selected(SETTINGS, self.programs)
         self.assertTrue(res)
 
     def test_empty(self) -> None:
-        res = detect_format._is_program_selected(tuple())
+        res = detect_format._is_program_selected(SETTINGS, tuple())
         self.assertFalse(res)
 
 
@@ -42,25 +43,32 @@ class TestIsFormatSelected(TestCase):
     formats: Set[str] = set(["GIF"])
 
     @staticmethod
-    def pngout(args: ExtArgs) -> str:
+    def pngout(settings: Settings, args: ExtArgs) -> str:
         return ""
 
     @staticmethod
-    def comics(args: ExtArgs) -> str:
+    def comics(settings: Settings, args: ExtArgs) -> str:
         return ""
 
-    programs: Tuple[Callable[[ExtArgs], str], ...] = (pngout, comics)
+    programs: Tuple[Callable[[Settings, ExtArgs], str], ...] = (pngout, comics)
 
     def test_gif(self) -> None:
-        res = detect_format.is_format_selected("GIF", self.formats, self.programs)
+        print(SETTINGS.formats)
+        res = detect_format.is_format_selected(
+            SETTINGS, "GIF", self.formats, self.programs
+        )
         self.assertTrue(res)
 
     def test_cbz_in_settings(self) -> None:
-        res = detect_format.is_format_selected("CBZ", self.formats, self.programs)
+        res = detect_format.is_format_selected(
+            SETTINGS, "CBZ", self.formats, self.programs
+        )
         self.assertFalse(res)
 
     def test_cbz_not_in_settings(self) -> None:
-        res = detect_format.is_format_selected("CBZ", set(["CBR"]), self.programs)
+        res = detect_format.is_format_selected(
+            SETTINGS, "CBZ", set(["CBR"]), self.programs
+        )
         self.assertFalse(res)
 
 
@@ -79,7 +87,7 @@ class TestIsImageSequenced(TestCase):
 class TestGetImageFormat(TestCase):
     def _test_type(self, root: str, filename: str, image_type: str) -> None:
         path = Path(root + "/" + filename)
-        res = detect_format.get_image_format(path)
+        res = detect_format.get_image_format(SETTINGS, path)
         print(res)
         self.assertEqual(res, image_type)
 
@@ -111,31 +119,35 @@ class TestDetectFile(TestCase):
         comics: bool = True
         list_only: bool = False
 
-    def _test_type(self, root: str, filename: str, image_type: Optional[str]) -> None:
+    def _test_type(
+        self, settings, root: str, filename: str, image_type: Optional[str]
+    ) -> None:
         path = Path(root + "/" + filename)
-        res = detect_format.detect_file(path)
+        res = detect_format.detect_file(settings, path)
         print(res)
         self.assertEqual(res, image_type)
 
     def test_detect_file_jpg(self) -> None:
-        self._test_type(IMAGES_ROOT, "test_jpg.jpg", "JPEG")
+        self._test_type(SETTINGS, IMAGES_ROOT, "test_jpg.jpg", "JPEG")
 
     def test_detect_file_png(self) -> None:
-        self._test_type(IMAGES_ROOT, "test_png.png", "PNG")
+        self._test_type(SETTINGS, IMAGES_ROOT, "test_png.png", "PNG")
 
     def test_detect_file_gif(self) -> None:
-        self._test_type(IMAGES_ROOT, "test_gif.gif", "GIF")
+        self._test_type(SETTINGS, IMAGES_ROOT, "test_gif.gif", "GIF")
 
     def test_detect_file_txt(self) -> None:
-        self._test_type(IMAGES_ROOT, "test_txt.txt", None)
+        self._test_type(SETTINGS, IMAGES_ROOT, "test_txt.txt", None)
 
     def test_detect_file_invalid(self) -> None:
-        self._test_type(INVALID_ROOT, "test_gif.gif", None)
+        self._test_type(SETTINGS, INVALID_ROOT, "test_gif.gif", None)
 
     def test_detect_file_cbr(self) -> None:
-        Settings.formats = Settings.formats | Comic.FORMATS
-        self._test_type(COMIC_ROOT, "test_cbr.cbr", "CBR")
+        settings = Settings(namespace=SETTINGS)
+        settings.formats |= Comic.FORMATS
+        self._test_type(settings, COMIC_ROOT, "test_cbr.cbr", "CBR")
 
     def test_detect_file_cbz(self) -> None:
-        Settings.formats = Settings.formats | Comic.FORMATS
-        self._test_type(COMIC_ROOT, "test_cbz.cbz", "CBZ")
+        settings = Settings(namespace=SETTINGS)
+        settings.formats |= Comic.FORMATS
+        self._test_type(settings, COMIC_ROOT, "test_cbz.cbz", "CBZ")

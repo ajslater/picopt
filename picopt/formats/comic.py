@@ -14,6 +14,7 @@ import rarfile
 from .. import PROGRAM_NAME
 from .. import files
 from .. import stats
+from ..extern import ExtArgs
 from ..settings import Settings
 from ..stats import ReportStats
 from .format import Format
@@ -38,7 +39,7 @@ class Comic(Format):
     FORMATS: Set[str] = set((_CBZ_FORMAT, _CBR_FORMAT))
 
     @staticmethod
-    def comics():
+    def comics(_, __) -> str:
         """
         Do nothing comic optimizer.
 
@@ -46,9 +47,9 @@ class Comic(Format):
         But currently neccissary to keep detect_format._is_program_selected()
         working
         """
-        pass
+        return _CBZ_FORMAT
 
-    PROGRAMS: Tuple[Callable] = (comics,)
+    PROGRAMS: Tuple[Callable[[Settings, ExtArgs], str], ...] = (comics,)
 
     @staticmethod
     def get_comic_format(path: Path) -> Optional[str]:
@@ -69,18 +70,18 @@ class Comic(Format):
 
     @staticmethod
     def comic_archive_uncompress(
-        path: Path, image_format: str
+        settings: Settings, path: Path, image_format: str
     ) -> Tuple[Optional[Path], Optional[ReportStats]]:
         """
         Uncompress comic archives.
 
         Return the name of the working directory we uncompressed into.
         """
-        if not Settings.comics:
+        if not settings.comics:
             report = f"Skipping archive file: {path}"
             return None, ReportStats(path, report=report)
 
-        if Settings.verbose:
+        if settings.verbose:
             print(f"Extracting {path}...", end="")
 
         # create the tmpdir
@@ -100,21 +101,23 @@ class Comic(Format):
             report = f"{path} {image_format} is not a good format"
             return None, ReportStats(path, report=report)
 
-        if Settings.verbose:
+        if settings.verbose:
             print("done")
 
         return tmp_dir, None
 
     @staticmethod
-    def _comic_archive_write_zipfile(new_path: Path, tmp_path: Path) -> None:
+    def _comic_archive_write_zipfile(
+        settings: Settings, new_path: Path, tmp_path: Path
+    ) -> None:
         """Zip up the files in the tempdir into the new filename."""
-        if Settings.verbose:
+        if settings.verbose:
             print("Rezipping archive", end="")
         with zipfile.ZipFile(new_path, "w", compression=zipfile.ZIP_DEFLATED) as new_zf:
             for root, _, filenames in os.walk(tmp_path):
                 root_path = Path(root)
                 for fname in filenames:
-                    if Settings.verbose:
+                    if settings.verbose:
                         print(".", end="")
                     full_path = root_path.joinpath(fname)
                     archive_path = full_path.relative_to(tmp_path)
@@ -129,28 +132,27 @@ class Comic(Format):
         """
         try:
             path, old_format, settings, nag_about_gifs = args
-            Settings.update(settings)
             tmp_path = Comic._get_archive_tmp_dir(path)
 
             # archive into new filename
             suffix = _NEW_ARCHIVE_SUFFIX + path.suffix
             new_path = path.with_suffix(suffix)
 
-            Comic._comic_archive_write_zipfile(new_path, tmp_path)
+            Comic._comic_archive_write_zipfile(settings, new_path, tmp_path)
 
             # Cleanup tmpdir
             if tmp_path.exists():
-                if Settings.verbose:
+                if settings.verbose:
                     print(".", end="")
                 shutil.rmtree(tmp_path)
-            if Settings.verbose:
+            if settings.verbose:
                 print("done.")
 
             report_stats = files.cleanup_after_optimize(
-                path, new_path, old_format, _CBZ_FORMAT
+                settings, path, new_path, old_format, _CBZ_FORMAT
             )
             report_stats.nag_about_gifs = nag_about_gifs
-            stats.report_saved(report_stats)
+            stats.report_saved(settings, report_stats)
             return report_stats
         except Exception as exc:
             print(exc)

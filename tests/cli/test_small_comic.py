@@ -29,5 +29,4 @@ class TestCLI(TestCase):
 class TestCLISmallComic(TestCLI):
     def test_small_comic(self) -> None:
         args = ("", "-rct", str(TEST_SMALL_COMIC))
-        res = cli.run(args)
-        self.assertTrue(res)
+        cli.run(args)

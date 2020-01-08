@@ -4,6 +4,9 @@ from pathlib import Path
 from picopt import cli
 
 
+# from picopt.settings import Settings
+
+
 __all__ = ()  # hides module from pydocstring
 
 TYPE_NAME = "png"
@@ -17,7 +20,7 @@ def test_get_arguments():
     assert arguments.verbose == -1
     assert arguments.advpng
     assert arguments.comics
-    assert arguments.formats == "ALL"
+    assert arguments.formats == set()
     assert not arguments.optipng
     assert not arguments.pngout
     assert not arguments.jpegrescan

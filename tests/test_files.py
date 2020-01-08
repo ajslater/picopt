@@ -4,9 +4,11 @@ from typing import Tuple
 from unittest import TestCase
 
 from picopt import files
+from picopt.settings import Settings
 
 
 __all__ = ()  # hides module from pydocstring
+SETTINGS = Settings()
 
 
 class TestCleanupAterOptimise(TestCase):
@@ -27,7 +29,7 @@ class TestCleanupAterOptimise(TestCase):
         old_path = cls.create_file(cls.TEST_FN_OLD, old_format, old_size)
         new_path = cls.create_file(cls.TEST_FN_NEW, new_format, new_size)
         res = files._cleanup_after_optimize_aux(
-            old_path, new_path, old_format, new_format
+            SETTINGS, old_path, new_path, old_format, new_format
         )
         Path(res[0]).unlink()
         return res

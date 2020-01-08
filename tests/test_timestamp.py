@@ -10,6 +10,7 @@ from picopt.settings import Settings
 __all__ = ()
 TEST_FILES_ROOT = Path("tests/test_files")
 COMIC_ROOT = TEST_FILES_ROOT.joinpath("comic_archives")
+SETTINGS = Settings()
 
 
 def _get_timestamp_setup() -> Tuple[Path, float]:
@@ -21,12 +22,12 @@ def _get_timestamp_setup() -> Tuple[Path, float]:
 class TestTimestamp(TestCase):
     def test_get_timestamp_ne(self) -> None:
         path = Path(TEST_FILES_ROOT).joinpath("BLARGH")
-        res = timestamp._get_timestamp(path, False)
+        res = timestamp._get_timestamp(SETTINGS, path, False)
         self.assertIsNone(res)
 
     def test_get_timestamp_no_remove(self) -> None:
         record_filename, mtime = _get_timestamp_setup()
-        res = timestamp._get_timestamp(TEST_FILES_ROOT, False)
+        res = timestamp._get_timestamp(SETTINGS, TEST_FILES_ROOT, False)
 
         self.assertEqual(res, mtime)
         self.assertTrue(Path(record_filename).exists())
@@ -35,7 +36,7 @@ class TestTimestamp(TestCase):
         record_filename, mtime = _get_timestamp_setup()
 
         Settings.record_timestamp = True
-        res = timestamp._get_timestamp(TEST_FILES_ROOT, True)
+        res = timestamp._get_timestamp(SETTINGS, TEST_FILES_ROOT, True)
 
         self.assertEqual(res, mtime)
         self.assertIn(record_filename, timestamp.OLD_TIMESTAMPS)

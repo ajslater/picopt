@@ -1,7 +1,10 @@
 """PNG format."""
 from pathlib import Path
+from typing import Callable
+from typing import Tuple
 
 from .. import extern
+from ..settings import Settings
 from .format import Format
 from .png_bit_depth import png_bit_depth
 
@@ -22,21 +25,21 @@ class Png(Format):
     BEST_ONLY = False
 
     @staticmethod
-    def optipng(ext_args: extern.ExtArgs) -> str:
+    def optipng(_, ext_args: extern.ExtArgs) -> str:
         """Run the external program optipng on the file."""
         args = tuple(_OPTIPNG_ARGS + [ext_args.new_fn])
         extern.run_ext(args)
         return _PNG_FORMAT
 
     @staticmethod
-    def advpng(ext_args: extern.ExtArgs) -> str:
+    def advpng(_, ext_args: extern.ExtArgs) -> str:
         """Run the external program advpng on the file."""
         args = tuple(_ADVPNG_ARGS + [ext_args.new_fn])
         extern.run_ext(args)
         return _PNG_FORMAT
 
     @staticmethod
-    def pngout(ext_args: extern.ExtArgs) -> str:
+    def pngout(_, ext_args: extern.ExtArgs) -> str:
         """Run the external program pngout on the file."""
         # if png_bit_depth(ext_args.old_fn) == 16:
         depth = png_bit_depth(Path(ext_args.old_fn))
@@ -47,4 +50,8 @@ class Png(Format):
             extern.run_ext(args)
         return _PNG_FORMAT
 
-    PROGRAMS = (optipng, advpng, pngout)
+    PROGRAMS: Tuple[Callable[[Settings, extern.ExtArgs], str], ...] = (
+        optipng,
+        advpng,
+        pngout,
+    )

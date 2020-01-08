@@ -1,15 +1,12 @@
 #!/usr/bin/env python3
 """Run pictures through image specific external optimizers."""
 import argparse
-import time
 
 from argparse import Namespace
-from pathlib import Path
 from typing import Callable
 from typing import Set
 from typing import Tuple
 
-import dateutil.parser
 import pkg_resources
 
 from . import PROGRAM_NAME
@@ -22,15 +19,19 @@ from .formats.png import Png
 from .settings import Settings
 
 
+FORMAT_DELIMETER = ","
 DISTRIBUTION = pkg_resources.get_distribution(PROGRAM_NAME)
-PROGRAMS: Set[Callable[[ExtArgs], str]] = set(
+PROGRAMS: Set[Callable[[Settings, ExtArgs], str]] = set(
     Png.PROGRAMS + Gif.PROGRAMS + Jpeg.PROGRAMS
 )
 
-FORMAT_DELIMETER = ","
-DEFAULT_FORMATS = "ALL"
 ALL_DEFAULT_FORMATS: Set[str] = Jpeg.FORMATS | Gif.FORMATS | Png.CONVERTABLE_FORMATS
 ALL_FORMATS: Set[str] = ALL_DEFAULT_FORMATS | Comic.FORMATS
+
+
+def csv_set(csv_str: str) -> Set[str]:
+    """Convert csv string from argparse to a list."""
+    return set(csv_str.upper().split(FORMAT_DELIMETER))
 
 
 def get_arguments(args: Tuple[str, ...]) -> Namespace:
@@ -87,9 +88,10 @@ def get_arguments(args: Tuple[str, ...]) -> Namespace:
     parser.add_argument(
         "-f",
         "--formats",
+        type=csv_set,
         action="store",
         dest="formats",
-        default=DEFAULT_FORMATS,
+        default=set(),
         help="Only optimize images of the specifed"
         f"'{FORMAT_DELIMETER}' delimited formats from:"
         f" {all_formats}",
@@ -247,71 +249,11 @@ def get_arguments(args: Tuple[str, ...]) -> Namespace:
     return parser.parse_args(args[1:])
 
 
-def process_arguments(arguments: Namespace) -> None:
-    """
-    Recompute special cases for input arguments.
-
-    Sets the global Settings singleton with the correct values from arguments.
-    """
-    Settings.update(arguments)
-
-    Settings.config_program_reqs(PROGRAMS)
-
-    Settings.verbose = arguments.verbose + 1
-    Settings.paths = set(arguments.paths)
-
-    if arguments.formats == DEFAULT_FORMATS:
-        Settings.formats = arguments.to_png_formats | Jpeg.FORMATS | Gif.FORMATS
-    else:
-        Settings.formats = set(arguments.formats.upper().split(FORMAT_DELIMETER))
-
-    if arguments.comics:
-        Settings.formats = Settings.formats | Comic.FORMATS
-
-    if Settings.verbose >= 0 or arguments.formats != DEFAULT_FORMATS:
-        print("Optimizing formats:", *Settings.formats)
-
-    if arguments.optimize_after is not None:
-        try:
-            after_dt = dateutil.parser.parse(arguments.optimize_after)
-            if Settings.verbose >= 0:
-                print("Optimizing after", after_dt)
-            Settings.optimize_after = time.mktime(after_dt.timetuple())
-        except Exception as ex:
-            print(ex)
-            print("Could not parse date to optimize after.")
-            exit(1)
-
-    if arguments.jobs < 1:
-        Settings.jobs = 1
-
-    # Make a rough guess about weather or not to invoke multithreding
-    # jpegrescan '-t' uses three threads
-    # one off multithread switch because this is the only one right now
-    files_in_paths = 0
-    non_file_in_paths = False
-    for filename in arguments.paths:
-        path = Path(filename)
-        if path.is_file():
-            files_in_paths += 1
-
-        elif path.exists():
-            non_file_in_paths = True
-        else:
-            print(f"'{filename}' does not exist.")
-            exit(1)
-
-    Settings.jpegrescan_multithread = (
-        not non_file_in_paths and Settings.jobs - (files_in_paths * 3) > -1
-    )
-
-
-def run(args: Tuple[str, ...]) -> bool:
+def run(args: Tuple[str, ...]) -> None:
     """Process command line arguments and walk inputs."""
-    raw_arguments = get_arguments(args)
-    process_arguments(raw_arguments)
-    walk.run()
-    return True
+    arguments = get_arguments(args)
+    settings = Settings(PROGRAMS, arguments)
+    walk.run(settings)
 
 
 def main() -> None:

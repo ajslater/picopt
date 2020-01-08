@@ -4,12 +4,13 @@ from typing import Set
 from typing import Tuple
 
 from ..extern import ExtArgs
+from ..settings import Settings
 
 
 class Format(object):
     """Format superclass."""
 
-    PROGRAMS: Tuple[Callable[[ExtArgs], str], ...] = tuple()
+    PROGRAMS: Tuple[Callable[[Settings, ExtArgs], str], ...] = tuple()
     BEST_ONLY: bool = True
     FORMATS: Set[str] = set()
     OUT_EXT: str = "xxx"

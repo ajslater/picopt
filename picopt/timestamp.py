@@ -15,7 +15,9 @@ TIMESTAMP_CACHE: Dict[Path, Optional[float]] = {}
 OLD_TIMESTAMPS: Set[Path] = set()
 
 
-def _get_timestamp(dirname_full: Path, remove: bool) -> Optional[float]:
+def _get_timestamp(
+    settings: Settings, dirname_full: Path, remove: bool
+) -> Optional[float]:
     """
     Get the timestamp from the timestamp file.
 
@@ -29,19 +31,21 @@ def _get_timestamp(dirname_full: Path, remove: bool) -> Optional[float]:
     mtime = record_path.stat().st_mtime
     mtime_str = datetime.fromtimestamp(mtime)
     print(f"Found timestamp {dirname_full}:{mtime_str}")
-    if Settings.record_timestamp and remove:
+    if settings.record_timestamp and remove:
         OLD_TIMESTAMPS.add(record_path)
     return mtime
 
 
-def _get_timestamp_cached(dirname_full: Path, remove: bool) -> Optional[float]:
+def _get_timestamp_cached(
+    settings: Settings, dirname_full: Path, remove: bool
+) -> Optional[float]:
     """
     Get the timestamp from the cache or fill the cache.
 
     Much quicker than reading the same files over and over
     """
     if dirname_full not in TIMESTAMP_CACHE:
-        mtime = _get_timestamp(dirname_full, remove)
+        mtime = _get_timestamp(settings, dirname_full, remove)
         TIMESTAMP_CACHE[dirname_full] = mtime
     return TIMESTAMP_CACHE[dirname_full]
 
@@ -52,14 +56,19 @@ def max_none(lst: Tuple[Optional[float], Optional[float]]) -> Optional[float]:
 
 
 def _max_timestamps(
-    dirname_full: Path, remove: bool, compare_tstamp: Optional[float]
+    settings: Settings,
+    dirname_full: Path,
+    remove: bool,
+    compare_tstamp: Optional[float],
 ) -> Optional[float]:
     """Compare a timestamp file to one passed in. Get the max."""
-    tstamp = _get_timestamp_cached(dirname_full, remove)
+    tstamp = _get_timestamp_cached(settings, dirname_full, remove)
     return max_none((tstamp, compare_tstamp))
 
 
-def _get_parent_timestamp(path: Path, mtime: Optional[float]) -> Optional[float]:
+def _get_parent_timestamp(
+    settings: Settings, path: Path, mtime: Optional[float]
+) -> Optional[float]:
     """
     Get the timestamps up the directory tree. All the way to root.
 
@@ -68,49 +77,49 @@ def _get_parent_timestamp(path: Path, mtime: Optional[float]) -> Optional[float]
     parent_path = path.parent
 
     # max between the parent timestamp the one passed in
-    mtime = _max_timestamps(parent_path, False, mtime)
+    mtime = _max_timestamps(settings, parent_path, False, mtime)
 
     if path != parent_path.parent:
         # this is only called if we're not at the root
-        mtime = _get_parent_timestamp(parent_path, mtime)
+        mtime = _get_parent_timestamp(settings, parent_path, mtime)
 
     return mtime
 
 
 def get_walk_after(
-    filename: Path, optimize_after: Optional[float] = None
+    settings: Settings, filename: Path, optimize_after: Optional[float] = None
 ) -> Optional[float]:
     """
     Figure out the which mtime to check against.
 
     If we have to look up the path return that.
     """
-    if Settings.optimize_after is not None:
-        return Settings.optimize_after
+    if settings.optimize_after is not None:
+        return settings.optimize_after
 
     dirname = Path(filename).parent
     if optimize_after is None:
-        optimize_after = _get_parent_timestamp(dirname, optimize_after)
-    return _max_timestamps(dirname, True, optimize_after)
+        optimize_after = _get_parent_timestamp(settings, dirname, optimize_after)
+    return _max_timestamps(settings, dirname, True, optimize_after)
 
 
-def record_timestamp(full_path: Path) -> None:
+def record_timestamp(settings: Settings, full_path: Path) -> None:
     """Record the timestamp of running in a dotfile."""
-    if Settings.test or Settings.list_only or not Settings.record_timestamp:
+    if settings.test or settings.list_only or not settings.record_timestamp:
         return
-    if not Settings.follow_symlinks and full_path.is_symlink():
-        if Settings.verbose:
+    if not settings.follow_symlinks and full_path.is_symlink():
+        if settings.verbose:
             print("Not setting timestamp because not following symlinks")
         return
     if not full_path.is_dir():
-        if Settings.verbose:
+        if settings.verbose:
             print("Not setting timestamp for a non-directory")
         return
 
     record_filepath = full_path.joinpath(RECORD_FILENAME)
     try:
         record_filepath.touch()
-        if Settings.verbose:
+        if settings.verbose:
             print(f"Set timestamp: {record_filepath}")
         for path in OLD_TIMESTAMPS:
             if str(path).startswith(str(full_path)) and not path.samefile(
@@ -119,7 +128,7 @@ def record_timestamp(full_path: Path) -> None:
                 # only remove timestamps below the curent path
                 # but don't remove the timestamp we just set!
                 path.unlink()
-                if Settings.verbose:
+                if settings.verbose:
                     print(f"Removed old timestamp: {path}")
     except IOError:
         print(f"Could not set timestamp in {full_path}")
