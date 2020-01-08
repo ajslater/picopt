@@ -98,8 +98,8 @@ def new_percent_saved(report_stats: ReportStats) -> str:
         ratio = size_out / size_in
         kb_saved = _humanize_bytes(size_in - size_out)
     else:
-        ratio = 0
-        kb_saved = f"0 {ABBREVS[-1]}"
+        ratio = 1
+        kb_saved = f"0 {ABBREVS[-1][1]}"
     percent_saved = (1 - ratio) * 100
 
     result = "{:.{prec}f}% ({})".format(percent_saved, kb_saved, prec=2)
