@@ -13,6 +13,11 @@ TYPE_NAME = "png"
 PATH = Path("dummyPath")
 
 
+def test_csv_set() -> None:
+    res = cli.csv_set("a,b,c,d")
+    assert res == set(("A", "B", "C", "D"))
+
+
 def test_get_arguments() -> None:
     args = ("picopt", "-rvQacOPJEZTGYSbtNlM", str(PATH))
     arguments = cli.get_arguments(args)
@@ -37,10 +42,14 @@ def test_get_arguments() -> None:
     assert arguments.paths[0] == str(PATH)
 
 
-# def test_process_arguments():
-#    args = ("picopt", "-rvQacOPJEZTGYSbtNlM", str(PATH))
-#    arguments = cli.get_arguments(args)
-#    cli.process_arguments(arguments)
-#
-#    assert Settings.verbose == 0
-# TODO this passes but fucks up settings forevermore
+def test_main():
+    import sys
+
+    sys.argv = ["picopt", "-h"]
+    try:
+        cli.main()
+    except SystemExit as exc:
+        assert exc.code == 0
+
+
+# TODO import test run from the cli directory probably
