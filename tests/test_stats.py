@@ -52,6 +52,7 @@ def test_report_saved():
     stats.report_saved(rep)
     settings.Settings.test = False
     # TODO check actual strings
+    # TODO reset settings? singleton Settings isn't so great
 
 
 def test_report_totals():
