@@ -50,7 +50,7 @@ class Settings(Namespace):
         self,
         programs: Optional[Set[Callable]] = None,
         namespace: Optional[Namespace] = None,
-    ):
+    ) -> None:
         """Initialize settings object with arguments namespace."""
         self._update(namespace)
         self._config_program_reqs(programs)
@@ -61,7 +61,7 @@ class Settings(Namespace):
         self.jobs = max(self.jobs, 1)
         self._set_jpegrescan_threading()
 
-    def _update_optimize_after(self):
+    def _update_optimize_after(self) -> None:
         if self.optimize_after is None:
             return
         try:
@@ -74,7 +74,7 @@ class Settings(Namespace):
             print("Could not parse date to optimize after.")
             exit(1)
 
-    def _update_formats(self):
+    def _update_formats(self) -> None:
         """Update the format list from to_png_formats & comics flag."""
         from .formats.comic import Comic
         from .formats.gif import Gif
@@ -90,7 +90,7 @@ class Settings(Namespace):
 
         print("Optimizing formats:", *self.formats)
 
-    def _set_jpegrescan_threading(self):
+    def _set_jpegrescan_threading(self) -> None:
         """
         Make a rough guess about weather or not to invoke multithreading.
 

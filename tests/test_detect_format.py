@@ -120,7 +120,7 @@ class TestDetectFile(TestCase):
         list_only: bool = False
 
     def _test_type(
-        self, settings, root: str, filename: str, image_type: Optional[str]
+        self, settings: Settings, root: str, filename: str, image_type: Optional[str]
     ) -> None:
         path = Path(root + "/" + filename)
         res = detect_format.detect_file(settings, path)

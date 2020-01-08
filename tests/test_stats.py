@@ -12,7 +12,7 @@ TYPE_NAME = "png"
 PATH = Path("dummyPath")
 
 
-def test_skip():
+def test_skip() -> None:
     res = stats.skip(TYPE_NAME, PATH)
     assert res.final_path == PATH
     assert res.report_list == [f"Skipping {TYPE_NAME} file: {PATH}"]
@@ -20,7 +20,7 @@ def test_skip():
     assert not res.nag_about_gifs
 
 
-def test_humanize_bytes():
+def test_humanize_bytes() -> None:
     hum = stats._humanize_bytes(0)
     assert hum == "no bytes"
 
@@ -34,7 +34,7 @@ def test_humanize_bytes():
     assert hum == "10.0 kiB"
 
 
-def test_new_percent_saved():
+def test_new_percent_saved() -> None:
     rep = stats.ReportStats(PATH, bytes_count=(2048, 1024))
     res = stats.new_percent_saved(rep)
     assert res == "50.00% (1 kiB)"
@@ -44,7 +44,7 @@ def test_new_percent_saved():
     assert res == "0.00% (0 bytes)"
 
 
-def test_report_saved():
+def test_report_saved() -> None:
     rep = stats.ReportStats(PATH, bytes_count=(2028, 1024), report="a")
     settings = Settings(None, Namespace(verbose=2))
     stats.report_saved(settings, rep)
@@ -54,7 +54,7 @@ def test_report_saved():
     # TODO check actual strings
 
 
-def test_report_totals():
+def test_report_totals() -> None:
     settings = Settings(None, Namespace(verbose=2))
     stats.report_totals(settings, 2048, 1024, True, ["a1", "b2"])
 

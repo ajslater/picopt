@@ -13,7 +13,7 @@ TYPE_NAME = "png"
 PATH = Path("dummyPath")
 
 
-def test_get_arguments():
+def test_get_arguments() -> None:
     args = ("picopt", "-rvQacOPJEZTGYSbtNlM", str(PATH))
     arguments = cli.get_arguments(args)
     assert arguments.recurse

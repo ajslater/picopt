@@ -27,7 +27,7 @@ class ReportStats(object):
         bytes_count: Optional[Tuple[int, int]] = None,
         nag_about_gifs: bool = False,
         error: Optional[str] = None,
-    ):
+    ) -> None:
         """Initialize required instance variables."""
         self.final_path = final_path
         self.report_list = []
