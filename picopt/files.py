@@ -2,13 +2,9 @@
 from pathlib import Path
 from typing import Tuple
 
-from . import PROGRAM_NAME
 from . import stats
 from .settings import Settings
 from .stats import ReportStats
-
-
-REMOVE_EXT = f".{PROGRAM_NAME}-remove"
 
 
 def _cleanup_after_optimize_aux(
@@ -24,10 +20,10 @@ def _cleanup_after_optimize_aux(
         if (bytes_out > 0) and ((bytes_out < bytes_in) or settings.bigger):
             if old_format != new_format:
                 final_path = path.with_suffix("." + new_format.lower())
-            if not settings.test:
-                new_path.replace(final_path)
-            else:
+            if settings.test:
                 new_path.unlink()
+            else:
+                new_path.replace(final_path)
         else:
             new_path.unlink()
             bytes_out = bytes_in
