@@ -56,11 +56,10 @@ class Comic(Format):
         """Return the comic format if it is a comic archive."""
         image_format = None
         filename_ext = path.suffix.lower()
-        if filename_ext in _COMIC_EXTS:
-            if zipfile.is_zipfile(path):
-                image_format = _CBZ_FORMAT
-            elif rarfile.is_rarfile(path):
-                image_format = _CBR_FORMAT
+        if filename_ext == _CBZ_EXT and zipfile.is_zipfile(path):
+            image_format = _CBZ_FORMAT
+        if filename_ext == _CBR_EXT and rarfile.is_rarfile(path):
+            image_format = _CBR_FORMAT
         return image_format
 
     @staticmethod
