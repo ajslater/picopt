@@ -9,15 +9,15 @@ from picopt.settings import Settings
 
 
 __all__ = ()  # hides module from pydocstring
-TEST_FILES_ROOT = "tests/test_files/"
-IMAGES_ROOT = TEST_FILES_ROOT + "/images"
+TEST_FILES_ROOT = Path("tests/test_files")
+IMAGES_ROOT = TEST_FILES_ROOT / "images"
 SETTINGS = Settings()
 
 
 def _setup_jpeg():
     old_path = Path("/tmp/old.jpeg")
     new_path = Path("/tmp/new.jpeg")
-    test_fn_src = Path(IMAGES_ROOT + "/test_jpg.jpg")
+    test_fn_src = IMAGES_ROOT / "test_jpg.jpg"
     shutil.copy(test_fn_src, old_path)
     args = ExtArgs(str(old_path), str(new_path))
     return args

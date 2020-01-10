@@ -36,17 +36,14 @@ def _optimize_image_external(
     new_path = Path(new_filename).resolve()
     shutil.copy2(path, new_path)
 
-    ext_args = ExtArgs(path, new_path)
-    new_image_format = func.__func__(ext_args)  # type: ignore
+    ext_args = ExtArgs(str(path), str(new_path))
+    new_image_format = func.__func__(settings, ext_args)  # type: ignore
 
     report_stats = files.cleanup_after_optimize(
         settings, path, new_path, image_format, new_image_format
     )
     percent = stats.new_percent_saved(report_stats)
-    if percent != 0:
-        report = f"{func.__func__.__name__}: {percent}"  # type: ignore
-    else:
-        report = ""
+    report = f"{func.__func__.__name__}: {percent}"  # type: ignore
     report_stats.report_list.append(report)
 
     return report_stats
@@ -115,9 +112,9 @@ def optimize_image(arg: Tuple[Path, str, Settings]) -> ReportStats:
 
         if format_cls is None:
             if settings.verbose > 1:
-                print(path, image_format)  # image.mode)
+                print(path, image_format)
                 print("\tFile format not selected.")
-            return stats.ReportStats(path, error="File format not selcted.")
+            return stats.ReportStats(path, error="File format not selected.")
 
         report_stats = _optimize_with_progs(settings, format_cls, path, image_format)
         report_stats.nag_about_gifs = nag_about_gifs
