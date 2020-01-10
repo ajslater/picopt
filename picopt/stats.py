@@ -38,8 +38,8 @@ class ReportStats(object):
             self.bytes_in = bytes_count[0]
             self.bytes_out = bytes_count[1]
         else:
-            self.bytes_count = 0
-            self.bytes_count = 0
+            self.bytes_in = 0
+            self.bytes_out = 0
 
         self.nag_about_gifs = nag_about_gifs
 
