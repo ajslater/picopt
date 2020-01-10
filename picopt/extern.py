@@ -7,7 +7,7 @@ from typing import Tuple
 class ExtArgs(object):
     """Arguments for external programs."""
 
-    def __init__(self, old_path, new_path):
+    def __init__(self, old_path: str, new_path: str):
         """Set arguments."""
         self.old_fn = str(old_path)
         self.new_fn = str(new_path)
