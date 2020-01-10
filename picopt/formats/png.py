@@ -11,7 +11,7 @@ from .png_bit_depth import png_bit_depth
 
 _PNG_FORMAT = "PNG"
 _OPTIPNG_ARGS = ["optipng", "-o6", "-fix", "-preserve", "-force", "-quiet"]
-_ADVPNG_ARGS = ["advpng", "-z", "-4", "-f"]
+# _ADVPNG_ARGS = ["advpng", "-z", "-4", "-f"]
 _PNGOUT_ARGS = ["pngout", "-q", "-force", "-y"]
 
 
@@ -31,12 +31,12 @@ class Png(Format):
         extern.run_ext(args)
         return _PNG_FORMAT
 
-    @staticmethod
-    def advpng(_, ext_args: extern.ExtArgs) -> str:
-        """Run the external program advpng on the file."""
-        args = tuple(_ADVPNG_ARGS + [ext_args.new_fn])
-        extern.run_ext(args)
-        return _PNG_FORMAT
+    #    @staticmethod
+    #    def advpng(_, ext_args: extern.ExtArgs) -> str:
+    #        """Run the external program advpng on the file."""
+    #        args = tuple(_ADVPNG_ARGS + [ext_args.new_fn])
+    #        extern.run_ext(args)
+    #        return _PNG_FORMAT
 
     @staticmethod
     def pngout(_, ext_args: extern.ExtArgs) -> str:
@@ -52,6 +52,6 @@ class Png(Format):
 
     PROGRAMS: Tuple[Callable[[Settings, extern.ExtArgs], str], ...] = (
         optipng,
-        advpng,
+        # advpng,
         pngout,
     )

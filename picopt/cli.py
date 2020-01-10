@@ -69,14 +69,14 @@ def get_arguments(args: Tuple[str, ...]) -> Namespace:
         const=-1,
         help="Display little to no output",
     )
-    parser.add_argument(
-        "-a",
-        "--enable_advpng",
-        action="store_true",
-        dest="advpng",
-        default=0,
-        help="Optimize with advpng (disabled by default)",
-    )
+    #    parser.add_argument(
+    #        "-a",
+    #        "--enable_advpng",
+    #        action="store_true",
+    #        dest="advpng",
+    #        default=0,
+    #        help="Optimize with advpng (disabled by default)",
+    #    )
     parser.add_argument(
         "-c",
         "--comics",

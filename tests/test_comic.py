@@ -1,4 +1,4 @@
-"""Test comic format."""
+"""Test comic format module."""
 import shutil
 
 from pathlib import Path

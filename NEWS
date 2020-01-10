@@ -1,4 +1,5 @@
-v2.0.2
+v2.1.0
+* Remove adv support. It was inferior to other methods anyway.
 * Use pytest instead of nosetest
 * Require formating with black & isort
 

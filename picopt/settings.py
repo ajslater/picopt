@@ -19,7 +19,7 @@ class Settings(Namespace):
     """Global settings class."""
 
     DEFAULT_FORMATS = "ALL"
-    advpng: bool = False
+    # advpng: bool = False
     archive_name: Optional[str] = None
     bigger: bool = False
     comics: bool = False
@@ -142,7 +142,7 @@ class Settings(Namespace):
         """Run the program tester and determine if we can do anything."""
         self._set_program_defaults(programs)
 
-        do_png = self.optipng or self.pngout or self.advpng
+        do_png = self.optipng or self.pngout  # or self.advpng
         do_jpeg = self.mozjpeg or self.jpegrescan or self.jpegtran
 
         do_comics = self.comics

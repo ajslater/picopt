@@ -1,4 +1,4 @@
-"""Test running external commands."""
+"""Test jpeg module."""
 import shutil
 
 from pathlib import Path

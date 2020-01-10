@@ -1,4 +1,4 @@
-"""Test stats commands."""
+"""Test cli module."""
 from pathlib import Path
 
 from picopt import cli
@@ -19,11 +19,11 @@ def test_csv_set() -> None:
 
 
 def test_get_arguments() -> None:
-    args = ("picopt", "-rvQacOPJEZTGYSbtNlM", str(PATH))
+    args = ("picopt", "-rvQcOPJEZTGYSbtNlM", str(PATH))
     arguments = cli.get_arguments(args)
     assert arguments.recurse
     assert arguments.verbose == -1
-    assert arguments.advpng
+    # assert arguments.advpng
     assert arguments.comics
     assert arguments.formats == set()
     assert not arguments.optipng

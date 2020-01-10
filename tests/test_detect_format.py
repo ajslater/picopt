@@ -1,4 +1,4 @@
-"""Test detect file formats."""
+"""Test detect file format module."""
 from pathlib import Path
 from typing import Callable
 from typing import Optional

@@ -32,13 +32,13 @@ def png_bit_depth(path: Path) -> Optional[int]:
         return int(depth)
 
 
-def main(filename: str) -> None:
+def main() -> None:
     """Stand alone cli tool for getting png bit depth."""
-    bit_depth = png_bit_depth(Path(filename))
+    import sys
+
+    bit_depth = png_bit_depth(Path(sys.argv[1]))
     print(bit_depth)
 
 
 if __name__ == "__main__":
-    import sys
-
-    main(sys.argv[1])
+    main()

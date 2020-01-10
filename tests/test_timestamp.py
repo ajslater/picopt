@@ -1,4 +1,4 @@
-"""Test comic format."""
+"""Test timestamp module."""
 from pathlib import Path
 from typing import Tuple
 from unittest import TestCase

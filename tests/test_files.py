@@ -1,4 +1,4 @@
-"""Test handling files."""
+"""Test handling files module."""
 from pathlib import Path
 from typing import Tuple
 from unittest import TestCase

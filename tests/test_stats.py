@@ -1,4 +1,4 @@
-"""Test stats commands."""
+"""Test stats module."""
 from argparse import Namespace
 from pathlib import Path
 
