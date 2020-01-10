@@ -110,14 +110,14 @@ def walk_file(
         return result_set
 
     # Check image format
-    try:
-        image_format = detect_format.detect_file(settings, path)
-    except Exception:
-        res = settings.pool.apply_async(
-            stats.ReportStats, (path,), {"error": "Detect Format"}
-        )
-        result_set.add(res)
-        image_format = None
+    #    try:
+    image_format = detect_format.detect_file(settings, path)
+    #    except Exception:
+    #        res = settings.pool.apply_async(
+    #            stats.ReportStats, (path,), {"error": "Detect Format"}
+    #        )
+    #        result_set.add(res)
+    #        image_format = None
 
     if not image_format:
         return result_set

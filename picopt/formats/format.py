@@ -7,6 +7,9 @@ from ..extern import ExtArgs
 from ..settings import Settings
 
 
+ANIMATED_FORMAT_PREFIX = "ANIMATED_"
+
+
 class Format(object):
     """Format superclass."""
 

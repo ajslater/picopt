@@ -4,18 +4,19 @@ from typing import Tuple
 
 from .. import extern
 from ..settings import Settings
+from .format import ANIMATED_FORMAT_PREFIX
 from .format import Format
 
 
 _GIF_FORMAT = "GIF"
+_ANIMATED_GIF_FORMAT = ANIMATED_FORMAT_PREFIX + _GIF_FORMAT
 _GIFSICLE_ARGS = ["gifsicle", "--optimize=3", "--batch"]
 
 
 class Gif(Format):
     """GIF format class."""
 
-    SEQUENCED_TEMPLATE = "{} SEQUENCED"
-    FORMATS = set([SEQUENCED_TEMPLATE.format(_GIF_FORMAT), _GIF_FORMAT])
+    FORMATS = set([_GIF_FORMAT, _ANIMATED_GIF_FORMAT])
     BEST_ONLY = True
     OUT_EXT = "." + _GIF_FORMAT.lower()
 
