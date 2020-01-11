@@ -11,7 +11,6 @@ from picopt.settings import Settings
 
 
 __all__ = ()  # Hides module from docstring linting
-
 TEST_FILES_ROOT = Path("tests/test_files")
 IMAGES_ROOT = TEST_FILES_ROOT / "images"
 JPEG_SRC = IMAGES_ROOT / "test_jpg.jpg"
@@ -19,6 +18,7 @@ PNG_SRC = IMAGES_ROOT / "test_png.png"
 TMP_PATH = Path("/tmp")
 OLD_PATH_JPEG = TMP_PATH / "old.jpeg"
 OLD_PATH_PNG = TMP_PATH / "old.png"
+NEW_SIZE = 87922
 
 
 def _setup_optimize(fmt="JPEG"):
@@ -44,7 +44,7 @@ def test_optimize_image_external():
     old_path.unlink()
     assert res.final_path == old_path
     assert res.bytes_in == old_size
-    assert res.bytes_out == 623259  # could change. maybe just > 0
+    assert res.bytes_out == NEW_SIZE
 
 
 def test_optimize_with_progs():
@@ -55,7 +55,7 @@ def test_optimize_with_progs():
     old_path.unlink()
     assert res.final_path == old_path
     assert res.bytes_in == old_size
-    assert res.bytes_out == 623259  # could change. maybe just > 0
+    assert res.bytes_out == NEW_SIZE
 
 
 def test_optimize_with_progs_no_best():
@@ -113,7 +113,7 @@ def test_optimize_image():
     res = optimize.optimize_image(args)
     assert res.final_path == old_path
     assert res.bytes_in == old_size
-    assert res.bytes_out == 623259
+    assert res.bytes_out == NEW_SIZE
     old_path.unlink()
 
 
