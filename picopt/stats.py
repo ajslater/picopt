@@ -73,21 +73,29 @@ def _humanize_bytes(num_bytes: int, precision: int = 1) -> str:
     """
     if num_bytes == 0:
         return "no bytes"
-    if num_bytes == 1:
-        return "1 byte"
 
-    factored_bytes = 0
-    factor_suffix = "bytes"
-    for factor, suffix in ABBREVS:
-        if num_bytes >= factor:
-            factored_bytes = int(num_bytes / factor)
-            factor_suffix = suffix
-            break
+    if num_bytes < 0:
+        neg = "-"
+    else:
+        neg = ""
+
+    abs_num_bytes = abs(num_bytes)
+
+    if abs_num_bytes == 1:
+        factor_suffix = "byte"
+        factored_bytes = 1
+    else:
+        factor_suffix = "bytes"
+        factored_bytes = 0
+        for factor, suffix in ABBREVS:
+            if abs_num_bytes >= factor:
+                factored_bytes = int(abs_num_bytes / factor)
+                factor_suffix = suffix
+                break
 
     if factored_bytes == 1:
         precision = 0
-
-    return "{:.{prec}f} {}".format(factored_bytes, factor_suffix, prec=precision)
+    return f"{neg}{factored_bytes:.{precision}f} {factor_suffix}"
 
 
 def new_percent_saved(report_stats: ReportStats) -> str:
@@ -106,24 +114,26 @@ def new_percent_saved(report_stats: ReportStats) -> str:
     return result
 
 
+def _report_saved(settings: Settings, report_stats: ReportStats) -> str:
+    """Return the percent saved."""
+    report = ""
+    path = report_stats.final_path
+
+    report += f"{path}: "
+    report += new_percent_saved(report_stats)
+    if settings.test:
+        report += " could be saved."
+    if settings.verbose > 1:
+        tools_report = ", ".join(report_stats.report_list)
+        if tools_report:
+            report += "\n\t" + tools_report
+    return report
+
+
 def report_saved(settings: Settings, report_stats: ReportStats) -> None:
     """Record the percent saved & print it."""
     if settings.verbose:
-        report = ""
-        path = report_stats.final_path
-
-        report += f"{path}: "
-        total = new_percent_saved(report_stats)
-        if total:
-            report += total
-        else:
-            report += "0%"
-        if settings.test:
-            report += " could be saved."
-        if settings.verbose > 1:
-            tools_report = ", ".join(report_stats.report_list)
-            if tools_report:
-                report += "\n\t" + tools_report
+        report = _report_saved(settings, report_stats)
         print(report)
 
 
