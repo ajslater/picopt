@@ -57,22 +57,14 @@ class Settings(Namespace):
         self.verbose += 1
         self.paths = set(self.paths)
         self._update_formats()
-        self._update_optimize_after()
         self.jobs = max(self.jobs, 1)
         self._set_jpegrescan_threading()
 
-    def _update_optimize_after(self) -> None:
-        if self.optimize_after is None:
-            return
-        try:
-            after_dt = dateutil.parser.parse(str(self.optimize_after))
-            self.optimize_after = time.mktime(after_dt.timetuple())
-            if self.verbose:
-                print("Optimizing after", after_dt)
-        except Exception as ex:
-            print(ex)
-            print("Could not parse date to optimize after.")
-            exit(1)
+    @staticmethod
+    def parse_date_string(date_str: str) -> float:
+        """Turn a datetime string into an epoch float."""
+        after_dt = dateutil.parser.parse(date_str)
+        return time.mktime(after_dt.timetuple())
 
     def _update_formats(self) -> None:
         """Update the format list from to_png_formats & comics flag."""
@@ -102,11 +94,8 @@ class Settings(Namespace):
             path = Path(filename)
             if path.is_file():
                 files_in_paths += 1
-            elif path.exists():
-                non_file_in_paths = True
             else:
-                print(f"'{filename}' does not exist.")
-                exit(1)
+                non_file_in_paths = True
 
         self.jpegrescan_multithread = (
             not non_file_in_paths and self.jobs - (files_in_paths * 3) > -1
@@ -136,17 +125,12 @@ class Settings(Namespace):
             )
             setattr(self, prog_name, val)
 
-    def _config_program_reqs(
-        self, programs: Optional[Set[Callable[[extern.ExtArgs], str]]]
-    ) -> None:
+    def _config_program_reqs(self, programs: Optional[Set[Callable]]) -> None:
         """Run the program tester and determine if we can do anything."""
         self._set_program_defaults(programs)
 
         do_png = self.optipng or self.pngout  # or self.advpng
         do_jpeg = self.mozjpeg or self.jpegrescan or self.jpegtran
-
         do_comics = self.comics
 
-        if not (do_png or do_jpeg or do_comics):
-            print("All optimizers are not available or disabled.")
-            exit(1)
+        self.can_do = do_png or do_jpeg or do_comics

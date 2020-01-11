@@ -1,6 +1,7 @@
 """Walk the directory trees and files and call the optimizers."""
 import multiprocessing
 import os
+import time
 
 from multiprocessing.pool import AsyncResult
 from pathlib import Path
@@ -207,8 +208,15 @@ def _walk_all_files(settings: Settings) -> Tuple[Set[Path], int, int, bool, List
     return record_dirs, bytes_in, bytes_out, nag_about_gifs, errors
 
 
-def run(settings: Settings) -> None:
+def run(settings: Settings) -> bool:
     """Use preconfigured settings to optimize files."""
+    if not settings.can_do:
+        print("All optimizers are not available or disabled.")
+        return False
+
+    if settings.optimize_after is not None and settings.verbose:
+        print("Optimizing after", time.ctime(settings.optimize_after))
+
     # Setup Multiprocessing
     if settings.jobs:
         settings.pool.terminate()
@@ -227,3 +235,4 @@ def run(settings: Settings) -> None:
 
     # Finish by reporting totals
     stats.report_totals(settings, bytes_in, bytes_out, nag_about_gifs, errors)
+    return True

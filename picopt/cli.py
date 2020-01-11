@@ -194,6 +194,7 @@ def get_arguments(args: Tuple[str, ...]) -> Namespace:
         "--optimize_after",
         action="store",
         dest="optimize_after",
+        type=Settings.parse_date_string,
         default=None,
         help="only optimize files after the specified "
         "timestamp. Supercedes .picopt_timestamp file.",
@@ -249,18 +250,20 @@ def get_arguments(args: Tuple[str, ...]) -> Namespace:
     return parser.parse_args(args[1:])
 
 
-def run(args: Tuple[str, ...]) -> None:
+def run(args: Tuple[str, ...]) -> bool:
     """Process command line arguments and walk inputs."""
     arguments = get_arguments(args)
     settings = Settings(PROGRAMS, arguments)
-    walk.run(settings)
+    return walk.run(settings)
 
 
 def main() -> None:
     """CLI entry point."""
     import sys
 
-    run(tuple(sys.argv))
+    res = run(tuple(sys.argv))
+    if not res:
+        sys.exit(1)
 
 
 if __name__ == "__main__":

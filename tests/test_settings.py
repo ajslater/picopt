@@ -1,57 +1,105 @@
 """Test the settings module."""
 from argparse import Namespace
-from typing import List
-from unittest import TestCase
+from pathlib import Path
 
-from picopt.extern import ExtArgs
-from picopt.formats.format import Format
+from picopt.formats.gif import Gif
+from picopt.formats.png import Png
 from picopt.settings import Settings
 
 
 __all__ = ()
+FORMATS = set(["ANIMATED_GIF", "PNG", "PNM", "BMP", "PPM", "JPEG", "GIF"])
+TEST_PROGS = set(Png.PROGRAMS + Gif.PROGRAMS)
 
 
-class TestSettingsUpdate(TestCase):
-    def test_update(self) -> None:
-        args = Namespace(bigger=True)
-        settings = Settings()
-        self.assertFalse(settings.bigger)
-        settings._update(args)
-        self.assertTrue(settings.bigger)
+def test_parse_date_string():
+    res = Settings.parse_date_string("1/10/2020 10:25:03pm")
+    assert res == 1578723903.0
 
 
-class DummyFormat(Format):
-    @staticmethod
-    def true(settings: Settings, args: ExtArgs) -> str:
-        return "foo"
-
-    @staticmethod
-    def false(settings: Settings, args: ExtArgs) -> str:
-        return "foo"
-
-    @staticmethod
-    def does_not_exist(settings: Settings, args: ExtArgs) -> str:
-        return "foo"
-
-    PROGRAMS = (true, false, does_not_exist)
+def test_update_formats():
+    settings = Settings()
+    settings._update_formats()
+    assert settings.formats == FORMATS
 
 
-class TestSettingsSetProgramDefaults(TestCase):
-    class DummySettingsObject(Settings):
-        true: bool = True
-        false: bool = True
-        does_not_exist: bool = True
+def test_update_formats_to_png():
+    settings = Settings()
+    settings.to_png_formats = set(["PNG"])
+    settings._update_formats()
+    assert settings.formats == FORMATS
 
-    def test_set_program_defaults(self) -> None:
 
-        programs = DummyFormat.PROGRAMS
-        dso = self.DummySettingsObject()
-        dso._set_program_defaults(set(programs))
+def test_update_formats_png():
+    settings = Settings()
+    png_only = set(["PNG"])
+    settings.formats = png_only
+    settings._update_formats()
+    assert settings.formats == png_only
 
-        names: List[str] = []
-        for program in programs:
-            names += [program.__func__.__name__]  # type: ignore
 
-        self.assertTrue(getattr(dso, names[0]))
-        self.assertTrue(getattr(dso, names[1]))
-        self.assertFalse(getattr(dso, names[2]))
+def test_update_formats_comics():
+    settings = Settings()
+    settings.comics = True
+    settings._update_formats()
+    assert settings.formats == FORMATS | set(["CBZ", "CBR"])
+
+
+def test_set_jpegrescan_threading_one():
+    settings = Settings()
+    paths = set(["tests/test_files/images/test_png.png"])
+    settings.paths = paths
+    assert settings.jpegrescan_multithread
+
+
+def test_set_jpegrescan_threading_many():
+    settings = Settings()
+    paths = Path("tests/test_files/images").glob("*.png")
+    strs = [str(path) for path in paths]
+    settings.paths = set(strs)
+    settings._set_jpegrescan_threading()
+    assert settings.jpegrescan_multithread
+
+
+def test_set_jpegrescan_threading_files_dir():
+    settings = Settings()
+    settings.paths = set(["tests/test_files/images"])
+    settings._set_jpegrescan_threading()
+    assert not settings.jpegrescan_multithread
+
+
+def test_set_jpegrescan_threading_files_invalid():
+    settings = Settings()
+    settings.paths = set(["XXX"])
+    settings._set_jpegrescan_threading()
+    assert not settings.jpegrescan_multithread
+
+
+def test_update() -> None:
+    args = Namespace(bigger=True)
+    settings = Settings()
+    assert not settings.bigger
+    settings._update(args)
+    assert settings.bigger
+
+
+def test_update_underscore() -> None:
+    args = Namespace(_fake=True)
+    settings = Settings()
+    assert not hasattr(settings, "_fake")
+    settings._update(args)
+    assert not hasattr(settings, "_fake")
+
+
+def test_set_program_defaults():
+    settings = Settings()
+    settings._set_program_defaults(TEST_PROGS)
+    for program in TEST_PROGS:
+        name = program.__func__.__name__  # type: ignore
+        assert getattr(settings, name)
+
+
+def test_config_program_reqs():
+    settings = Settings()
+    settings._config_program_reqs(TEST_PROGS)
+    assert settings.can_do
