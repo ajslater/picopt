@@ -3,7 +3,6 @@ import multiprocessing
 import time
 
 from argparse import Namespace
-from multiprocessing.pool import Pool
 from pathlib import Path
 from typing import Callable
 from typing import List
@@ -44,7 +43,6 @@ class Settings(Namespace):
     test: bool = False
     to_png_formats: Set[str] = set()
     verbose: int = 1
-    pool: Pool = multiprocessing.Pool()
 
     def __init__(
         self,

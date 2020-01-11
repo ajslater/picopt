@@ -1,4 +1,7 @@
 """Test cli module."""
+import shutil
+import sys
+
 from pathlib import Path
 
 from picopt import cli
@@ -43,13 +46,19 @@ def test_get_arguments() -> None:
 
 
 def test_main():
-    import sys
+    old_path = Path("/tmp/old.jpg")
+    shutil.copy("tests/test_files/images/test_jpg.jpg", old_path)
+    old_size = old_path.stat().st_size
+    sys.argv = ["picopt", str(old_path)]
+    cli.main()
+    assert old_path.is_file()
+    assert old_path.stat().st_size < old_size
+    old_path.unlink()
 
-    sys.argv = ["picopt", "-h"]
+
+def test_main_err():
+    sys.argv = ["picopt", "-OPJZTG", "XXX"]
     try:
         cli.main()
     except SystemExit as exc:
-        assert exc.code == 0
-
-
-# TODO import test run from the cli directory probably
+        assert exc.code == 1
