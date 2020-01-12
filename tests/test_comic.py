@@ -63,7 +63,8 @@ def test_comic_archive_uncompress_cbz():
     # comic_size = comic_path.stat().st_size
     uncomp_dir = Path(COMIC_ROOT + "/" + "picopt_tmp_" + comic_fn)
 
-    shutil.rmtree(uncomp_dir)
+    if uncomp_dir.exists():
+        shutil.rmtree(uncomp_dir)
     res = Comic.comic_archive_uncompress(settings, comic_path, "CBZ")
     assert res[0] == uncomp_dir
     assert res[1] is None
