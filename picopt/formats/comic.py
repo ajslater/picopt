@@ -65,7 +65,8 @@ class Comic(Format):
     @staticmethod
     def _get_archive_tmp_dir(path: Path) -> Path:
         """Get the name of the working dir to use for this filename."""
-        return path.parent.joinpath(_ARCHIVE_TMP_DIR_PREFIX + path.name)
+        filename = _ARCHIVE_TMP_DIR_PREFIX + path.name
+        return path.parent / filename
 
     @staticmethod
     def comic_archive_uncompress(
@@ -118,7 +119,7 @@ class Comic(Format):
                 for fname in filenames:
                     if settings.verbose:
                         print(".", end="")
-                    full_path = root_path.joinpath(fname)
+                    full_path = root_path / fname
                     archive_path = full_path.relative_to(tmp_path)
                     new_zf.write(full_path, archive_path, zipfile.ZIP_DEFLATED)
 
