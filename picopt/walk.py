@@ -19,6 +19,7 @@ from . import timestamp
 from .formats.comic import Comic
 from .settings import Settings
 from .stats import ReportStats
+from .timestamp import Timestamp
 
 
 def _comic_archive_skip(report_stats: Tuple[ReportStats]) -> ReportStats:
@@ -28,6 +29,7 @@ def _comic_archive_skip(report_stats: Tuple[ReportStats]) -> ReportStats:
 def walk_comic_archive(
     settings: Settings,
     pool: Pool,
+    tso: Timestamp,
     path: Path,
     image_format: str,
     optimize_after: Optional[float],
@@ -47,7 +49,9 @@ def walk_comic_archive(
 
     # optimize contents of archive
     archive_mtime = path.stat().st_mtime
-    result_set = walk_dir(settings, pool, tmp_dir, optimize_after, True, archive_mtime)
+    result_set = walk_dir(
+        settings, pool, tso, tmp_dir, optimize_after, True, archive_mtime
+    )
 
     # wait for archive contents to optimize before recompressing
     nag_about_gifs = False
@@ -87,7 +91,7 @@ def _is_older_than_timestamp(
     # is newer. This helps if you have a new archive that you
     # collected from someone who put really old files in it that
     # should still be optimised
-    mtime = timestamp.max_none((path.stat().st_mtime, archive_mtime))
+    mtime = Timestamp.max_none((path.stat().st_mtime, archive_mtime))
     if mtime is None:
         return False
     return mtime <= walk_after
@@ -96,6 +100,7 @@ def _is_older_than_timestamp(
 def walk_file(
     settings: Settings,
     pool: Pool,
+    tso: timestamp.Timestamp,
     filename: Path,
     walk_after: Optional[float],
     recurse: Optional[int] = None,
@@ -107,11 +112,11 @@ def walk_file(
     if _is_skippable(settings, path):
         return result_set
 
-    walk_after = timestamp.get_walk_after(settings, path, walk_after)
+    walk_after = tso.get_walk_after(path, walk_after)
 
     # File is a directory
     if path.is_dir():
-        return walk_dir(settings, pool, path, walk_after, recurse, archive_mtime)
+        return walk_dir(settings, pool, tso, path, walk_after, recurse, archive_mtime)
 
     if _is_older_than_timestamp(path, walk_after, archive_mtime):
         return result_set
@@ -139,7 +144,7 @@ def walk_file(
     ):
         # comic archive
         result_set.add(
-            walk_comic_archive(settings, pool, path, image_format, walk_after)
+            walk_comic_archive(settings, pool, tso, path, image_format, walk_after)
         )
     else:
         # regular image
@@ -151,6 +156,7 @@ def walk_file(
 def walk_dir(
     settings: Settings,
     pool: Pool,
+    tso: Timestamp,
     dir_path: Path,
     walk_after: Optional[float],
     recurse: Optional[int] = None,
@@ -170,7 +176,7 @@ def walk_dir(
             full_path = root_path / filename
             try:
                 results = walk_file(
-                    settings, pool, full_path, walk_after, recurse, archive_mtime
+                    settings, pool, tso, full_path, walk_after, recurse, archive_mtime
                 )
                 result_set = result_set.union(results)
             except Exception:
@@ -181,7 +187,7 @@ def walk_dir(
 
 
 def _walk_all_files(
-    settings: Settings, pool: Pool
+    settings: Settings, pool: Pool, tso: Timestamp
 ) -> Tuple[Set[Path], int, int, bool, List[Any]]:
     """
     Optimize the files from the arugments list in two batches.
@@ -194,13 +200,13 @@ def _walk_all_files(
     result_set: Set[AsyncResult] = set()
 
     for filename in settings.paths:
+        path = Path(filename)
         # Record dirs to put timestamps in later
-        full_path = Path(filename).resolve()
-        if settings.recurse and full_path.is_dir():
-            record_dirs.add(full_path)
+        if settings.recurse and path.is_dir():
+            record_dirs.add(path)
 
-        walk_after = timestamp.get_walk_after(settings, full_path)
-        results = walk_file(settings, pool, full_path, walk_after, settings.recurse)
+        walk_after = tso.get_walk_after(path)
+        results = walk_file(settings, pool, tso, path, walk_after, settings.recurse)
         result_set = result_set.union(results)
 
     bytes_in = 0
@@ -230,10 +236,11 @@ def run(settings: Settings) -> bool:
 
     # Setup Multiprocessing
     pool = Pool(settings.jobs)
+    tso = Timestamp(settings)
 
     # Optimize Files
     record_dirs, bytes_in, bytes_out, nag_about_gifs, errors = _walk_all_files(
-        settings, pool
+        settings, pool, tso
     )
 
     # Shut down multiprocessing
@@ -242,7 +249,7 @@ def run(settings: Settings) -> bool:
 
     # Write timestamps
     for filename in record_dirs:
-        timestamp.record_timestamp(settings, filename)
+        tso.record_timestamp(filename)
 
     # Finish by reporting totals
     stats.report_totals(settings, bytes_in, bytes_out, nag_about_gifs, errors)
