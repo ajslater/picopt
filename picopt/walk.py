@@ -167,7 +167,7 @@ def walk_dir(
     for root, _, filenames in os.walk(dir_path):
         root_path = Path(root)
         for filename in filenames:
-            full_path = root_path.joinpath(filename)
+            full_path = root_path / filename
             try:
                 results = walk_file(
                     settings, pool, full_path, walk_after, recurse, archive_mtime
