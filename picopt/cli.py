@@ -254,7 +254,8 @@ def run(args: Tuple[str, ...]) -> bool:
     """Process command line arguments and walk inputs."""
     arguments = get_arguments(args)
     settings = Settings(PROGRAMS, arguments)
-    return walk.run(settings)
+    wob = walk.Walk(settings)
+    return wob.run()
 
 
 def main() -> None:
