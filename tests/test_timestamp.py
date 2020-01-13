@@ -1,5 +1,4 @@
 """Test timestamp module."""
-import fcntl
 import shutil
 
 from pathlib import Path
@@ -11,7 +10,7 @@ from picopt.timestamp import Timestamp
 
 
 __all__ = ()
-TMP_ROOT = Path("/tmp/picopt-timestamp")
+TMP_ROOT = Path("/tmp/picopt-test_timestamp")
 DEEP_TMP = TMP_ROOT / "deep"
 DEEP_TMP_FILE = TMP_ROOT / "deep/file"
 TEST_FILES_ROOT = Path("tests/test_files")
@@ -219,6 +218,19 @@ def test_remove_old_timestamp():
     _teardown()
 
 
+def test_remove_old_timestamp_skip():
+    deep_record_path, _, tso = _setup(DEEP_TMP)
+    tso._settings.record_timestamp = True
+    parent_record_path = TMP_ROOT / timestamp.RECORD_FILENAME
+    parent_record_path.touch()
+    tso._get_timestamp_cached(DEEP_TMP, True)
+    removed = tso._remove_old_timestamps(TMP_ROOT, parent_record_path)
+    assert not deep_record_path.exists()
+    assert len(removed) == 1
+    assert removed[deep_record_path] is None
+    _teardown()
+
+
 def test_remove_old_timestamp_quiet():
     deep_record_path, _, tso = _setup(DEEP_TMP)
     tso._settings.record_timestamp = True
@@ -289,12 +301,10 @@ def test_record_timestamp_set_not_quiet():
 def test_record_timestamp_set_error():
     record_path, tso = _setup_record()
     tso._settings.record_timestamp = True
-    deep_record_path = DEEP_TMP / timestamp.RECORD_FILENAME
-    with open(deep_record_path, "w+") as record_file:
-        fcntl.flock(record_file, fcntl.LOCK_EX | fcntl.LOCK_NB)
-        tso.record_timestamp(DEEP_TMP)
-        fcntl.flock(record_file, fcntl.LOCK_UN)
-    assert deep_record_path.exists()
+    bad_dir = DEEP_TMP / "XXXX" / "does_not_exist"
+    bad_record_path = bad_dir / timestamp.RECORD_FILENAME
+    tso.record_timestamp(bad_dir)
+    assert not bad_record_path.exists()
     _teardown()
 
 
