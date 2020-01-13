@@ -142,7 +142,7 @@ def report_totals(
     bytes_in: int,
     bytes_out: int,
     nag_about_gifs: bool,
-    errors: List[str],
+    errors: List[Tuple[Path, str]],
 ) -> None:
     """Report the total number and percent of bytes saved."""
     if bytes_in:

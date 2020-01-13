@@ -92,41 +92,52 @@ def test_report_saved_test() -> None:
 
 def test_report_totals_verbose() -> None:
     settings = Settings(None, Namespace(verbose=2))
-    stats.report_totals(settings, 2048, 1024, True, ["a1", "b2"])
+    stats.report_totals(settings, 2048, 1024, True, [])
 
 
 def test_report_totals_test() -> None:
     settings = Settings(None, Namespace(test=True))
-    stats.report_totals(settings, 2048, 1024, True, ["a1", "b2"])
+    stats.report_totals(settings, 2048, 1024, True, [])
 
 
 def test_report_totals_test_zero() -> None:
     settings = Settings(None, Namespace(test=True))
-    stats.report_totals(settings, 2048, 2048, True, ["a1", "b2"])
+    stats.report_totals(settings, 2048, 2048, True, [])
 
 
 def test_report_totals_test_neg() -> None:
     settings = Settings(None, Namespace(test=True))
-    stats.report_totals(settings, 1024, 2048, True, ["a1", "b2"])
+    stats.report_totals(settings, 1024, 2048, True, [])
 
 
 def test_report_totals_zero() -> None:
     settings = Settings(None, Namespace())
-    stats.report_totals(settings, 2048, 2048, True, ["a1", "b2"])
+    stats.report_totals(settings, 2048, 2048, True, [])
+
+
+def test_report_totals_bytes_in_zero() -> None:
+    settings = Settings(None, Namespace())
+    stats.report_totals(settings, 0, 2048, True, [])
 
 
 def test_report_totals_neg() -> None:
     settings = Settings(None, Namespace())
-    stats.report_totals(settings, 1024, 2048, True, ["a1", "b2"])
+    stats.report_totals(settings, 1024, 2048, True, [])
 
 
 def test_report_totals_zero_quiet() -> None:
     settings = Settings(None, Namespace(test=True))
     settings.verbose = 0
-    stats.report_totals(settings, 2048, 2028, True, ["a1", "b2"])
+    stats.report_totals(settings, 2048, 2028, True, [])
+
+
+def test_report_totals_errors() -> None:
+    settings = Settings(None, Namespace())
+    errors = [(PATH, "dummyError")]
+    stats.report_totals(settings, 0, 2048, True, errors)
 
 
 def test_report_noop_quiet() -> None:
     settings = Settings(None, Namespace(test=True))
     settings.verbose = 0
-    stats.report_totals(settings, 0, 0, True, ["a1", "b2"])
+    stats.report_totals(settings, 0, 0, True, [])
