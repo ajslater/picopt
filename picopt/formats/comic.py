@@ -139,10 +139,9 @@ class Comic(Format):
             Comic._comic_archive_write_zipfile(settings, new_path, tmp_path)
 
             # Cleanup tmpdir
-            if tmp_path.exists():
-                if settings.verbose:
-                    print(".", end="")
-                shutil.rmtree(tmp_path)
+            if settings.verbose:
+                print(".", end="")
+            shutil.rmtree(tmp_path)
             if settings.verbose:
                 print("done.")
 
