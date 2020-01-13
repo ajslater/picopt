@@ -69,12 +69,7 @@ def _setup_uncompress(fmt: str):
     comic_fn = "test" + src.suffix
     comic_path = TMP_ROOT / comic_fn
     shutil.copy(src, comic_path)
-
-    # comic_size = comic_path.stat().st_size
     uncomp_dir = TMP_ROOT / Path("picopt_tmp_" + comic_fn)
-    if uncomp_dir.exists():
-        shutil.rmtree(uncomp_dir)
-
     return comic_path, fmt, uncomp_dir, Settings()
 
 
@@ -93,6 +88,16 @@ def test_comic_archive_uncompress_unset():
 def test_comic_archive_uncompress_cbz():
     comic_path, fmt, uncomp_dir, settings = _setup_uncompress("CBZ")
     settings.comics = True
+    res = Comic.comic_archive_uncompress(settings, comic_path, fmt)
+    assert res[0] == uncomp_dir
+    assert res[1] is None
+    _teardown()
+
+
+def test_comic_archive_uncompress_cbz_dirty():
+    comic_path, fmt, uncomp_dir, settings = _setup_uncompress("CBZ")
+    settings.comics = True
+    uncomp_dir.mkdir(exist_ok=True)
     res = Comic.comic_archive_uncompress(settings, comic_path, fmt)
     assert res[0] == uncomp_dir
     assert res[1] is None
