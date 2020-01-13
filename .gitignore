@@ -2,7 +2,7 @@
 *.pyc
 *~
 .DS_Store
-.coverage
+.coverage*
 .mypy_cache
 .picopt_timestamp
 .ropeproject
