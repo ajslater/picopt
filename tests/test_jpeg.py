@@ -11,80 +11,72 @@ from picopt.settings import Settings
 __all__ = ()  # hides module from pydocstring
 TEST_FILES_ROOT = Path("tests/test_files")
 IMAGES_ROOT = TEST_FILES_ROOT / "images"
-SETTINGS = Settings()
+TMP_ROOT = Path("/tmp/picopt-test_jpeg")
+JPEG_SRC = IMAGES_ROOT / "test_jpg.jpg"
+TEST_OLD_JPEG = TMP_ROOT / "old.jpeg"
+TEST_NEW_JPEG = TMP_ROOT / "new.jpeg"
 
 
 def _setup_jpeg():
-    old_path = Path("/tmp/old.jpeg")
-    new_path = Path("/tmp/new.jpeg")
-    test_fn_src = IMAGES_ROOT / "test_jpg.jpg"
-    shutil.copy(test_fn_src, old_path)
-    args = ExtArgs(str(old_path), str(new_path))
-    return args
+    TMP_ROOT.mkdir(exist_ok=True)
+    shutil.copy(JPEG_SRC, TEST_OLD_JPEG)
+    args = ExtArgs(str(TEST_OLD_JPEG), str(TEST_NEW_JPEG))
+    return args, Settings()
 
 
-def _rm(fn):
-    path = Path(fn)
-    if path.exists:
-        path.unlink()
-
-
-def _teardown_jpeg(args):
-    _rm(args.old_fn)
-    _rm(args.new_fn)
+def _teardown(args):
+    if TMP_ROOT.exists():
+        shutil.rmtree(TMP_ROOT)
 
 
 def test_mozjpeg():
-    args = _setup_jpeg()
-    res = jpeg.Jpeg.mozjpeg(SETTINGS, args)
+    args, settings = _setup_jpeg()
+    res = jpeg.Jpeg.mozjpeg(settings, args)
     assert res == "JPEG"
     assert Path(args.new_fn).is_file()
-    _teardown_jpeg(args)
+    _teardown(args)
 
 
 def test_mozjpeg_destroy_metadata():
-    args = _setup_jpeg()
-    settings = Settings()
+    args, settings = _setup_jpeg()
     settings.destroy_metadata = True
     res = jpeg.Jpeg.mozjpeg(settings, args)
     assert res == "JPEG"
     assert Path(args.new_fn).is_file()
-    _teardown_jpeg(args)
+    _teardown(args)
 
 
 def test_jpegtran():
-    args = _setup_jpeg()
-    res = jpeg.Jpeg.jpegtran(SETTINGS, args)
+    args, settings = _setup_jpeg()
+    res = jpeg.Jpeg.jpegtran(settings, args)
     assert res == "JPEG"
     assert Path(args.new_fn).is_file()
-    _teardown_jpeg(args)
+    _teardown(args)
 
 
 def test_jpegtran_options():
-    args = _setup_jpeg()
-    settings = Settings()
+    args, settings = _setup_jpeg()
     settings.destroy_metadata = True
     settings.jpegtran_prog = False
     res = jpeg.Jpeg.jpegtran(settings, args)
     assert res == "JPEG"
     assert Path(args.new_fn).is_file()
-    _teardown_jpeg(args)
+    _teardown(args)
 
 
 def test_jpegrescan():
-    args = _setup_jpeg()
-    res = jpeg.Jpeg.jpegrescan(SETTINGS, args)
+    args, settings = _setup_jpeg()
+    res = jpeg.Jpeg.jpegrescan(settings, args)
     assert res == "JPEG"
     assert Path(args.new_fn).is_file()
-    _teardown_jpeg(args)
+    _teardown(args)
 
 
 def test_jpegrescan_options():
-    args = _setup_jpeg()
-    settings = Settings()
+    args, settings = _setup_jpeg()
     settings.destroy_metadata = True
     settings.jpegrescan_multithread = False
     res = jpeg.Jpeg.jpegrescan(settings, args)
     assert res == "JPEG"
     assert Path(args.new_fn).is_file()
-    _teardown_jpeg(args)
+    _teardown(args)

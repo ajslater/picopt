@@ -13,7 +13,9 @@ from picopt import cli
 __all__ = ()  # hides module from pydocstring
 
 TYPE_NAME = "png"
-PATH = Path("/tmp/picopt_test-cli")
+TMP_ROOT = Path("/tmp/picopt_test-cli")
+TEST_ROOT = Path("tests/test_files")
+JPEG_SRC = TEST_ROOT / "images/test_jpg.jpg"
 
 
 def test_csv_set() -> None:
@@ -22,7 +24,7 @@ def test_csv_set() -> None:
 
 
 def test_get_arguments() -> None:
-    args = ("picopt", "-rvQcOPJEZTGYSbtNlM", str(PATH))
+    args = ("picopt", "-rvQcOPJEZTGYSbtNlM", str(TMP_ROOT))
     arguments = cli.get_arguments(args)
     assert arguments.recurse
     assert arguments.verbose == -1
@@ -42,18 +44,28 @@ def test_get_arguments() -> None:
     assert arguments.test
     assert arguments.list_only
     assert arguments.destroy_metadata
-    assert arguments.paths[0] == str(PATH)
+    assert arguments.paths[0] == str(TMP_ROOT)
+
+
+def _setup():
+    TMP_ROOT.mkdir(exist_ok=True)
+
+
+def _teardown():
+    if TMP_ROOT.exists():
+        shutil.rmtree(TMP_ROOT)
 
 
 def test_main():
-    old_path = Path("/tmp/old.jpg")
-    shutil.copy("tests/test_files/images/test_jpg.jpg", old_path)
+    _setup()
+    old_path = TMP_ROOT / "old.jpg"
+    shutil.copy(JPEG_SRC, old_path)
     old_size = old_path.stat().st_size
     sys.argv = ["picopt", str(old_path)]
     cli.main()
     assert old_path.is_file()
     assert old_path.stat().st_size < old_size
-    old_path.unlink()
+    _teardown()
 
 
 def test_main_err():

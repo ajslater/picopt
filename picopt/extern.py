@@ -9,8 +9,8 @@ class ExtArgs(object):
 
     def __init__(self, old_path: str, new_path: str):
         """Set arguments."""
-        self.old_fn = str(old_path)
-        self.new_fn = str(new_path)
+        self.old_fn: str = str(old_path)
+        self.new_fn: str = str(new_path)
 
 
 def does_external_program_run(prog: str, verbose: int) -> bool:

@@ -15,13 +15,13 @@ TEST_FILES_ROOT = Path("tests/test_files")
 IMAGES_ROOT = TEST_FILES_ROOT / "images"
 JPEG_SRC = IMAGES_ROOT / "test_jpg.jpg"
 PNG_SRC = IMAGES_ROOT / "test_png.png"
-TMP_PATH = Path("/tmp")
+TMP_PATH = Path("/tmp/picopt-test_optimize")
 OLD_PATH_JPEG = TMP_PATH / "old.jpeg"
 OLD_PATH_PNG = TMP_PATH / "old.png"
 NEW_SIZE = 87922
 
 
-def _setup_optimize(fmt="JPEG"):
+def _setup(fmt="JPEG"):
     if fmt == "PNG":
         src = PNG_SRC
         old_path = OLD_PATH_PNG
@@ -29,48 +29,55 @@ def _setup_optimize(fmt="JPEG"):
         src = JPEG_SRC
         old_path = OLD_PATH_JPEG
 
+    TMP_PATH.mkdir(exist_ok=True)
     shutil.copy(src, old_path)
 
     return old_path
 
 
+def _teardown():
+    if TMP_PATH.exists():
+        shutil.rmtree(TMP_PATH)
+
+
 def test_optimize_image_external():
-    old_path = _setup_optimize()
+    old_path = _setup()
     old_size = old_path.stat().st_size
     func = Jpeg.PROGRAMS[0]
     res = optimize._optimize_image_external(
         Settings(), old_path, func, "JPEG", old_path.suffix
     )
-    old_path.unlink()
     assert res.final_path == old_path
     assert res.bytes_in == old_size
     assert res.bytes_out == NEW_SIZE
+    _teardown()
 
 
 def test_optimize_with_progs():
     fmt = "JPEG"
-    old_path = _setup_optimize(fmt)
+    old_path = _setup(fmt)
     old_size = old_path.stat().st_size
     res = optimize._optimize_with_progs(Settings(), Jpeg, old_path, fmt)
-    old_path.unlink()
     assert res.final_path == old_path
     assert res.bytes_in == old_size
     assert res.bytes_out == NEW_SIZE
+    _teardown()
 
 
 def test_optimize_with_progs_no_best():
     fmt = "PNG"
-    old_path = _setup_optimize(fmt)
+    old_path = _setup(fmt)
     old_size = old_path.stat().st_size
     res = optimize._optimize_with_progs(Settings(), Png, old_path, fmt)
     old_path.unlink()
     assert res.final_path == old_path
     assert res.bytes_in == old_size
     assert res.bytes_out == 4379  # could change. maybe just > 0
+    _teardown()
 
 
 def test_optimize_with_all_progs_disabled():
-    old_path = _setup_optimize()
+    old_path = _setup()
     settings = Settings()
     settings.mozjpeg = False
     settings.jpegtran = False
@@ -80,6 +87,7 @@ def test_optimize_with_all_progs_disabled():
     assert res.final_path == old_path
     assert res.bytes_in == 0
     assert res.bytes_out == 0
+    _teardown()
 
 
 def test_get_format_module_png():
@@ -107,29 +115,29 @@ def test_get_format_module_invalid():
 
 
 def test_optimize_image():
-    old_path = _setup_optimize()
+    old_path = _setup()
     old_size = old_path.stat().st_size
     args = (old_path, "JPEG", Settings())
     res = optimize.optimize_image(args)
     assert res.final_path == old_path
     assert res.bytes_in == old_size
     assert res.bytes_out == NEW_SIZE
-    old_path.unlink()
+    _teardown()
 
 
 def test_optimize_image_none():
-    old_path = _setup_optimize()
+    old_path = _setup()
     args = (old_path, "", Settings())
     res = optimize.optimize_image(args)
     assert res.final_path == old_path
     assert res.bytes_in == 0
     assert res.bytes_out == 0
     assert res.error == "File format not selected."
-    old_path.unlink()
+    _teardown()
 
 
 def test_optimize_image_none_quiet():
-    old_path = _setup_optimize()
+    old_path = _setup()
     settings = Settings()
     settings.verbose = 1
     args = (old_path, "", settings)
@@ -138,7 +146,7 @@ def test_optimize_image_none_quiet():
     assert res.bytes_in == 0
     assert res.bytes_out == 0
     assert res.error == "File format not selected."
-    old_path.unlink()
+    _teardown()
 
 
 def test_optimize_image_error():
@@ -149,3 +157,4 @@ def test_optimize_image_error():
     assert res.bytes_in == 0
     assert res.bytes_out == 0
     assert res.error == "Optimizing Image"
+    _teardown()

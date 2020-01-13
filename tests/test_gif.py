@@ -15,13 +15,17 @@ TMP_ROOT = Path("/tmp/picopt-test_gif")
 OLD_PATH = TMP_ROOT / "old.gif"
 
 
+def _setup():
+    TMP_ROOT.mkdir(exist_ok=True)
+
+
 def _teardown():
     if TMP_ROOT.exists():
         shutil.rmtree(TMP_ROOT)
 
 
 def test_gifiscle():
-    TMP_ROOT.mkdir(exist_ok=True)
+    _setup()
     shutil.copy(TEST_GIF_SRC, OLD_PATH)
     args = ExtArgs("", str(OLD_PATH))
     res = gif.Gif.gifsicle(None, args)
