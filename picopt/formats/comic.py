@@ -28,7 +28,7 @@ _CBZ_EXT: str = ".cbz"
 _COMIC_EXTS: Set[str] = set((_CBR_EXT, _CBZ_EXT))
 
 _ARCHIVE_TMP_DIR_PREFIX: str = PROGRAM_NAME + "_tmp_"
-_NEW_ARCHIVE_SUFFIX: str = f".{PROGRAM_NAME}-optimized"
+_NEW_ARCHIVE_SUFFIX: str = f".{PROGRAM_NAME}-optimized-cbz"
 
 
 class Comic(Format):
@@ -131,13 +131,11 @@ class Comic(Format):
         When they're all done it creates the new archive and cleans up.
         """
         try:
-            path, old_format, settings, nag_about_gifs = args
-            tmp_path = Comic._get_archive_tmp_dir(path)
+            old_path, old_format, settings, nag_about_gifs = args
+            tmp_path = Comic._get_archive_tmp_dir(old_path)
 
             # archive into new filename
-            suffix = _NEW_ARCHIVE_SUFFIX + path.suffix
-            new_path = path.with_suffix(suffix)
-
+            new_path = old_path.with_suffix(_NEW_ARCHIVE_SUFFIX)
             Comic._comic_archive_write_zipfile(settings, new_path, tmp_path)
 
             # Cleanup tmpdir
@@ -149,7 +147,7 @@ class Comic(Format):
                 print("done.")
 
             report_stats = files.cleanup_after_optimize(
-                settings, path, new_path, old_format, _CBZ_FORMAT
+                settings, old_path, new_path, old_format, _CBZ_FORMAT
             )
             report_stats.nag_about_gifs = nag_about_gifs
             stats.report_saved(settings, report_stats)

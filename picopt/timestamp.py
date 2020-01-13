@@ -120,6 +120,9 @@ class Timestamp(object):
         if self._settings.optimize_after is not None:
             return self._settings.optimize_after
 
+        if path.is_file():
+            path = path.parent
+
         if optimize_after is None:
             optimize_after = self._get_parent_timestamp(path, None)
         after = self._max_timestamps(path, True, optimize_after)

@@ -61,8 +61,8 @@ def detect_file(settings: Settings, path: Path) -> Optional[str]:
 
     if image_format not in settings.formats:
         image_format = None
-
-    print(settings.verbose > 1, not settings.list_only)
-    if settings.verbose > 1 and not settings.list_only:
-        print(path, image_format, "is not an enabled image or " "comic archive type.")
+        if settings.verbose > 1 and not settings.list_only:
+            print(
+                path, image_format, "is not an enabled image or " "comic archive type."
+            )
     return image_format

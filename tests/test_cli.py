@@ -13,7 +13,7 @@ from picopt import cli
 __all__ = ()  # hides module from pydocstring
 
 TYPE_NAME = "png"
-PATH = Path("dummyPath")
+PATH = Path("/tmp/picopt_test-cli")
 
 
 def test_csv_set() -> None:
