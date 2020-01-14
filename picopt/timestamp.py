@@ -85,6 +85,11 @@ class Timestamp(object):
 
         return removed
 
+    @staticmethod
+    def max_none(lst: Tuple[Optional[float], Optional[float]]) -> Optional[float]:
+        """Max function that works in python 3."""
+        return max((x for x in lst if x is not None), default=None)
+
     def _max_timestamps(
         self, path: Path, remove: bool, compare_tstamp: Optional[float]
     ) -> Optional[float]:
@@ -128,26 +133,7 @@ class Timestamp(object):
         after = self._max_timestamps(path, True, optimize_after)
         return after
 
-    def record_timestamp(self, full_path: Path) -> None:
-        """Record the timestamp of running in a dotfile."""
-        record, reason = self._should_record_timestamp(full_path)
-        if not record:
-            if self._settings.verbose:
-                print(reason)
-            return
-
-        record_filepath = self._record_timestamp(full_path)
-        if record_filepath is None:
-            return
-
-        self._remove_old_timestamps(full_path, record_filepath)
-
-    @staticmethod
-    def max_none(lst: Tuple[Optional[float], Optional[float]]) -> Optional[float]:
-        """Max function that works in python 3."""
-        return max((x for x in lst if x is not None), default=None)
-
-    def _should_record_timestamp(self, full_path: Path) -> Tuple[bool, str]:
+    def _should_record_timestamp(self, path: Path) -> Tuple[bool, str]:
         """Determine if we should we record a timestamp at all."""
         record = True
         reason = _REASON_DEFAULT
@@ -157,12 +143,13 @@ class Timestamp(object):
             or not self._settings.record_timestamp
         ):
             record = False
-        elif not self._settings.follow_symlinks and full_path.is_symlink():
+        elif not self._settings.follow_symlinks and path.is_symlink():
             record = False
             reason = _REASON_SYMLINK
-        elif not full_path.is_dir():
+        elif not path.exists() or not path.is_dir():
             record = False
             reason = _REASON_NONDIR
+
         return record, reason
 
     def _record_timestamp(self, full_path: Path) -> Optional[Path]:
@@ -176,3 +163,17 @@ class Timestamp(object):
             print(f"Could not set timestamp in {full_path}: {err.strerror}")
             return None
         return record_filepath
+
+    def record_timestamp(self, full_path: Path) -> None:
+        """Record the timestamp of running in a dotfile."""
+        record, reason = self._should_record_timestamp(full_path)
+        if not record:
+            if self._settings.verbose:
+                print(reason)
+            return
+
+        record_filepath = self._record_timestamp(full_path)
+        if record_filepath is None:
+            return
+
+        self._remove_old_timestamps(full_path, record_filepath)

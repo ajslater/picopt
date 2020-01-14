@@ -13,7 +13,6 @@ __all__ = ()
 TMP_ROOT = Path("/tmp/picopt-test_timestamp")
 DEEP_TMP = TMP_ROOT / "deep"
 DEEP_TMP_FILE = TMP_ROOT / "deep/file"
-TEST_FILES_ROOT = Path("tests/test_files")
 
 
 def _setup(path: Path = TMP_ROOT) -> Tuple[Path, float, Timestamp]:
@@ -144,6 +143,15 @@ def test_get_walk_after_settings_tstamp():
     assert res == tstamp
 
 
+def test_get_walk_after_settings_file():
+    record_path, mtime, tso = _setup()
+    tstamp = mtime + 100
+    path = TMP_ROOT / "text.txt"
+    path.touch()
+    res = tso.get_walk_after(path, tstamp)
+    assert res == tstamp
+
+
 def test_should_record_timestamp_unset():
     tso = Timestamp(Settings())
     res, reason = tso._should_record_timestamp(TMP_ROOT)
@@ -224,10 +232,9 @@ def test_remove_old_timestamp_skip():
     parent_record_path = TMP_ROOT / timestamp.RECORD_FILENAME
     parent_record_path.touch()
     tso._get_timestamp_cached(DEEP_TMP, True)
-    removed = tso._remove_old_timestamps(TMP_ROOT, parent_record_path)
-    assert not deep_record_path.exists()
-    assert len(removed) == 1
-    assert removed[deep_record_path] is None
+    removed = tso._remove_old_timestamps(TMP_ROOT, deep_record_path)
+    assert deep_record_path.exists()
+    assert len(removed) == 0
     _teardown()
 
 
@@ -301,10 +308,15 @@ def test_record_timestamp_set_not_quiet():
 def test_record_timestamp_set_error():
     record_path, tso = _setup_record()
     tso._settings.record_timestamp = True
-    bad_dir = DEEP_TMP / "XXXX" / "does_not_exist"
-    bad_record_path = bad_dir / timestamp.RECORD_FILENAME
-    tso.record_timestamp(bad_dir)
-    assert not bad_record_path.exists()
+    # import fcntl
+
+    deep_record_path = DEEP_TMP / timestamp.RECORD_FILENAME
+    # with open(record_path, "w+") as record_file:
+    # fcntl.flock(record_file, fcntl.LOCK_EX | fcntl.LOCK_NB)
+    shutil.rmtree(DEEP_TMP)
+    tso.record_timestamp(DEEP_TMP)
+    # fcntl.flock(record_file, fcntl.LOCK_UN)
+    assert not deep_record_path.exists()
     _teardown()
 
 
