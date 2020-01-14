@@ -1,19 +1,17 @@
 """Test png module."""
 import shutil
 
-from pathlib import Path
-
 from picopt.extern import ExtArgs
 from picopt.formats.png import Png
+from tests import IMAGES_DIR
+from tests import get_test_dir
 
 
 __all__ = ()  # hides module from pydocstring
-TEST_FILES_ROOT = Path("tests/test_files")
-IMAGES_ROOT = TEST_FILES_ROOT / "images"
-TMP_DIR = Path("/tmp/picopt-test_png")
+TMP_DIR = get_test_dir()
 TMP_OLD_PATH = TMP_DIR / "old.png"
-TEST_SRC_PATH = IMAGES_ROOT / "test_png.png"
-TEST_SRC_PATH_16 = IMAGES_ROOT / "test_png_16rgba.png"
+TEST_SRC_PATH = IMAGES_DIR / "test_png.png"
+TEST_SRC_PATH_16 = IMAGES_DIR / "test_png_16rgba.png"
 
 
 def _setup(use_16=False):

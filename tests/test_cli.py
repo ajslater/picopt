@@ -2,20 +2,15 @@
 import shutil
 import sys
 
-from pathlib import Path
-
 from picopt import cli
-
-
-# from picopt.settings import Settings
+from tests import IMAGES_DIR
+from tests import get_test_dir
 
 
 __all__ = ()  # hides module from pydocstring
-
 TYPE_NAME = "png"
-TMP_ROOT = Path("/tmp/picopt_test-cli")
-TEST_ROOT = Path("tests/test_files")
-JPEG_SRC = TEST_ROOT / "images/test_jpg.jpg"
+TMP_ROOT = get_test_dir()
+JPEG_SRC = IMAGES_DIR / "test_jpg.jpg"
 
 
 def test_csv_set() -> None:

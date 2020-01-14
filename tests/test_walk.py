@@ -6,15 +6,15 @@ from pathlib import Path
 from picopt.settings import Settings
 from picopt.stats import ReportStats
 from picopt.walk import Walk
+from tests import COMIC_DIR
+from tests import IMAGES_DIR
+from tests import get_test_dir
 
 
 __all__ = ()  # hides module from pydocstring
-TEST_FILES_ROOT = Path("tests/test_files")
-IMAGES_ROOT = TEST_FILES_ROOT / "images"
-COMICS_ROOT = TEST_FILES_ROOT / "comic_archives"
-TEST_CBR_SRC = COMICS_ROOT / "test_cbr.cbr"
-TEST_GIF_SRC = IMAGES_ROOT / "test_gif.gif"
-TMP_ROOT = Path("/tmp/picopt-test_walk")
+TEST_CBR_SRC = COMIC_DIR / "test_cbr.cbr"
+TEST_GIF_SRC = IMAGES_DIR / "test_gif.gif"
+TMP_ROOT = get_test_dir()
 OLD_PATH = TMP_ROOT / "old.gif"
 
 

@@ -1,6 +1,5 @@
 """Test running external commands."""
 from subprocess import CalledProcessError
-from unittest import TestCase
 
 from picopt import extern
 
@@ -13,26 +12,27 @@ def test_extargs_class():
     assert type(eac) == extern.ExtArgs
 
 
-class TestDoesExernalProgramRun(TestCase):
-    def test_true(self) -> None:
-        res = extern.does_external_program_run("true", 1)
-        self.assertTrue(res)
-
-    def test_garbage(self) -> None:
-        res = extern.does_external_program_run("asdkfjadskl", 1)
-        self.assertFalse(res)
-
-    def test_garbage_verbose(self) -> None:
-        res = extern.does_external_program_run("asdkfjadskl", 2)
-        self.assertFalse(res)
+def test_does_run_true() -> None:
+    res = extern.does_external_program_run("true", 1)
+    assert res
 
 
-class TestRunExt(TestCase):
-    def test_true(self) -> None:
-        extern.run_ext(("true",))
+def test_does_run_garbage() -> None:
+    res = extern.does_external_program_run("asdkfjadskl", 1)
+    assert not res
 
-    def test_bad(self) -> None:
-        try:
-            extern.run_ext(("false",))
-        except CalledProcessError:
-            pass
+
+def test_does_run_garbage_verbose() -> None:
+    res = extern.does_external_program_run("asdkfjadskl", 2)
+    assert not res
+
+
+def test_run_ext_true() -> None:
+    extern.run_ext(("true",))
+
+
+def test_run_ext_bad() -> None:
+    try:
+        extern.run_ext(("false",))
+    except CalledProcessError:
+        pass

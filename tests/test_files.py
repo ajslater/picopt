@@ -6,10 +6,11 @@ from typing import Tuple
 
 from picopt import files
 from picopt.settings import Settings
+from tests import get_test_dir
 
 
 __all__ = ()  # hides module from pydocstring
-TMP_DIR = Path("/tmp/picopt-test_files")
+TMP_DIR = get_test_dir()
 TEST_FILE_OLD = TMP_DIR / "test"
 TEST_FILE_NEW = TMP_DIR / "test-NEW"
 _BMP_FORMAT = "BMP"

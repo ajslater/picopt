@@ -8,16 +8,16 @@ from picopt.formats.gif import Gif
 from picopt.formats.jpeg import Jpeg
 from picopt.formats.png import Png
 from picopt.settings import Settings
+from tests import IMAGES_DIR
+from tests import get_test_dir
 
 
 __all__ = ()  # Hides module from docstring linting
-TEST_FILES_ROOT = Path("tests/test_files")
-IMAGES_ROOT = TEST_FILES_ROOT / "images"
-JPEG_SRC = IMAGES_ROOT / "test_jpg.jpg"
-PNG_SRC = IMAGES_ROOT / "test_png.png"
-TMP_PATH = Path("/tmp/picopt-test_optimize")
-OLD_PATH_JPEG = TMP_PATH / "old.jpeg"
-OLD_PATH_PNG = TMP_PATH / "old.png"
+JPEG_SRC = IMAGES_DIR / "test_jpg.jpg"
+PNG_SRC = IMAGES_DIR / "test_png.png"
+TMP_ROOT = get_test_dir()
+OLD_PATH_JPEG = TMP_ROOT / "old.jpeg"
+OLD_PATH_PNG = TMP_ROOT / "old.png"
 NEW_SIZE = 87922
 
 
@@ -29,15 +29,15 @@ def _setup(fmt="JPEG"):
         src = JPEG_SRC
         old_path = OLD_PATH_JPEG
 
-    TMP_PATH.mkdir(exist_ok=True)
+    TMP_ROOT.mkdir(exist_ok=True)
     shutil.copy(src, old_path)
 
     return old_path
 
 
 def _teardown():
-    if TMP_PATH.exists():
-        shutil.rmtree(TMP_PATH)
+    if TMP_ROOT.exists():
+        shutil.rmtree(TMP_ROOT)
 
 
 def test_optimize_image_external():

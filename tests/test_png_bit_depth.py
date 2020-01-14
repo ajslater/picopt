@@ -1,17 +1,14 @@
 """Test png bit depth utility module."""
 import sys
 
-from pathlib import Path
-
 from picopt.formats import png_bit_depth
+from tests import IMAGES_DIR
 
 
 __all__ = ()  # hides module from pydocstring
-TEST_FILES_ROOT = Path("tests/test_files")
-IMAGES_ROOT = TEST_FILES_ROOT / "images"
-TEST_SRC_PATH = IMAGES_ROOT / "test_png.png"
-TEST_SRC_PATH_16 = IMAGES_ROOT / "test_png_16rgba.png"
-TEST_SRC_PATH_JPG = IMAGES_ROOT / "test_jpg.jpg"
+TEST_SRC_PATH = IMAGES_DIR / "test_png.png"
+TEST_SRC_PATH_16 = IMAGES_DIR / "test_png_16rgba.png"
+TEST_SRC_PATH_JPG = IMAGES_DIR / "test_jpg.jpg"
 
 
 def test_unpack_c():

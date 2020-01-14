@@ -7,10 +7,11 @@ from typing import Tuple
 from picopt import timestamp
 from picopt.settings import Settings
 from picopt.timestamp import Timestamp
+from tests import get_test_dir
 
 
 __all__ = ()
-TMP_ROOT = Path("/tmp/picopt-test_timestamp")
+TMP_ROOT = get_test_dir()
 DEEP_TMP = TMP_ROOT / "deep"
 DEEP_TMP_FILE = TMP_ROOT / "deep/file"
 
@@ -308,14 +309,9 @@ def test_record_timestamp_set_not_quiet():
 def test_record_timestamp_set_error():
     record_path, tso = _setup_record()
     tso._settings.record_timestamp = True
-    # import fcntl
-
     deep_record_path = DEEP_TMP / timestamp.RECORD_FILENAME
-    # with open(record_path, "w+") as record_file:
-    # fcntl.flock(record_file, fcntl.LOCK_EX | fcntl.LOCK_NB)
     shutil.rmtree(DEEP_TMP)
     tso.record_timestamp(DEEP_TMP)
-    # fcntl.flock(record_file, fcntl.LOCK_UN)
     assert not deep_record_path.exists()
     _teardown()
 

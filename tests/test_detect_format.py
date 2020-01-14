@@ -10,13 +10,12 @@ from picopt import detect_format
 from picopt.extern import ExtArgs
 from picopt.formats.comic import Comic
 from picopt.settings import Settings
+from tests import COMIC_DIR
+from tests import IMAGES_DIR
+from tests import INVALID_DIR
 
 
 __all__ = ()  # hides module from pydocstring
-TEST_FILES_ROOT = "tests/test_files/"
-IMAGES_ROOT = TEST_FILES_ROOT + "/images"
-INVALID_ROOT = TEST_FILES_ROOT + "/invalid"
-COMIC_ROOT = TEST_FILES_ROOT + "/comic_archives"
 
 
 class TestIsProgramSelected(TestCase):
@@ -77,37 +76,37 @@ class TestIsFormatSelected(TestCase):
 
 
 class TestGetImageFormat(TestCase):
-    def _test_type(self, root: str, filename: str, image_type: Optional[str]) -> None:
-        path = Path(root + "/" + filename)
+    def _test_type(self, root: Path, filename: str, image_type: Optional[str]) -> None:
+        path = root / filename
         res = detect_format.get_image_format(path)
         self.assertEqual(res, image_type)
 
     def test_get_image_format_jpg(self) -> None:
-        self._test_type(IMAGES_ROOT, "test_jpg.jpg", "JPEG")
+        self._test_type(IMAGES_DIR, "test_jpg.jpg", "JPEG")
 
     def test_get_image_format_png(self) -> None:
-        self._test_type(IMAGES_ROOT, "test_png.png", "PNG")
+        self._test_type(IMAGES_DIR, "test_png.png", "PNG")
 
     def test_get_image_format_gif(self) -> None:
-        self._test_type(IMAGES_ROOT, "test_gif.gif", "GIF")
+        self._test_type(IMAGES_DIR, "test_gif.gif", "GIF")
 
     def test_get_image_format_animated_gif(self) -> None:
-        self._test_type(IMAGES_ROOT, "test_animated_gif.gif", "ANIMATED_GIF")
+        self._test_type(IMAGES_DIR, "test_animated_gif.gif", "ANIMATED_GIF")
 
     def test_get_image_format_txt(self) -> None:
-        self._test_type(IMAGES_ROOT, "test_txt.txt", None)
+        self._test_type(IMAGES_DIR, "test_txt.txt", None)
 
     def test_get_image_format_invalid(self) -> None:
-        self._test_type(INVALID_ROOT, "test_gif.gif", None)
+        self._test_type(INVALID_DIR, "test_gif.gif", None)
 
     def test_get_image_format_cbr(self) -> None:
-        self._test_type(COMIC_ROOT, "test_cbr.cbr", "CBR")
+        self._test_type(COMIC_DIR, "test_cbr.cbr", "CBR")
 
     def test_get_image_format_cbz(self) -> None:
-        self._test_type(COMIC_ROOT, "test_cbz.cbz", "CBZ")
+        self._test_type(COMIC_DIR, "test_cbz.cbz", "CBZ")
 
     def test_get_image_format_unsupported(self) -> None:
-        self._test_type(INVALID_ROOT, "test_mpeg.mpeg", "MPEG")
+        self._test_type(INVALID_DIR, "test_mpeg.mpeg", "MPEG")
 
 
 class TestDetectFile(TestCase):
@@ -117,41 +116,41 @@ class TestDetectFile(TestCase):
         list_only: bool = False
 
     def _test_type(
-        self, settings: Settings, root: str, filename: str, image_type: Optional[str]
+        self, settings: Settings, root: Path, filename: str, image_type: Optional[str]
     ) -> None:
-        path = Path(root + "/" + filename)
+        path = root / filename
         res = detect_format.detect_file(settings, path)
         print(res)
         self.assertEqual(res, image_type)
 
     def test_detect_file_jpg(self) -> None:
-        self._test_type(Settings(), IMAGES_ROOT, "test_jpg.jpg", "JPEG")
+        self._test_type(Settings(), IMAGES_DIR, "test_jpg.jpg", "JPEG")
 
     def test_detect_file_png(self) -> None:
-        self._test_type(Settings(), IMAGES_ROOT, "test_png.png", "PNG")
+        self._test_type(Settings(), IMAGES_DIR, "test_png.png", "PNG")
 
     def test_detect_file_gif(self) -> None:
-        self._test_type(Settings(), IMAGES_ROOT, "test_gif.gif", "GIF")
+        self._test_type(Settings(), IMAGES_DIR, "test_gif.gif", "GIF")
 
     def test_detect_file_txt(self) -> None:
         settings = Settings(namespace=Settings())
         settings.verbose = 2
-        self._test_type(settings, IMAGES_ROOT, "test_txt.txt", None)
+        self._test_type(settings, IMAGES_DIR, "test_txt.txt", None)
 
     def test_detect_file_txt_quiet(self) -> None:
         settings = Settings(namespace=Settings())
         settings.verbose = 0
-        self._test_type(settings, IMAGES_ROOT, "test_txt.txt", None)
+        self._test_type(settings, IMAGES_DIR, "test_txt.txt", None)
 
     def test_detect_file_invalid(self) -> None:
-        self._test_type(Settings(), INVALID_ROOT, "test_gif.gif", None)
+        self._test_type(Settings(), INVALID_DIR, "test_gif.gif", None)
 
     def test_detect_file_cbr(self) -> None:
         settings = Settings(namespace=Settings())
         settings.formats |= Comic.FORMATS
-        self._test_type(settings, COMIC_ROOT, "test_cbr.cbr", "CBR")
+        self._test_type(settings, COMIC_DIR, "test_cbr.cbr", "CBR")
 
     def test_detect_file_cbz(self) -> None:
         settings = Settings(namespace=Settings())
         settings.formats |= Comic.FORMATS
-        self._test_type(settings, COMIC_ROOT, "test_cbz.cbz", "CBZ")
+        self._test_type(settings, COMIC_DIR, "test_cbz.cbz", "CBZ")

@@ -6,13 +6,13 @@ from pathlib import Path
 from picopt.extern import ExtArgs
 from picopt.formats import jpeg
 from picopt.settings import Settings
+from tests import IMAGES_DIR
+from tests import get_test_dir
 
 
 __all__ = ()  # hides module from pydocstring
-TEST_FILES_ROOT = Path("tests/test_files")
-IMAGES_ROOT = TEST_FILES_ROOT / "images"
-TMP_ROOT = Path("/tmp/picopt-test_jpeg")
-JPEG_SRC = IMAGES_ROOT / "test_jpg.jpg"
+TMP_ROOT = get_test_dir()
+JPEG_SRC = IMAGES_DIR / "test_jpg.jpg"
 TEST_OLD_JPEG = TMP_ROOT / "old.jpeg"
 TEST_NEW_JPEG = TMP_ROOT / "new.jpeg"
 

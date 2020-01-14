@@ -5,14 +5,14 @@ from pathlib import Path
 
 from picopt.formats.comic import Comic
 from picopt.settings import Settings
+from tests import COMIC_DIR
+from tests import get_test_dir
 
 
 __all__ = ()  # hides module from pydocstring
-TEST_FILES_ROOT = Path("tests/test_files")
-COMIC_ROOT = TEST_FILES_ROOT / "comic_archives"
-TEST_CBR_SRC = COMIC_ROOT / "test_cbr.cbr"
-TEST_CBZ_SRC = COMIC_ROOT / "test_cbz.cbz"
-TMP_ROOT = Path("/tmp/picopt-test-comic")
+TEST_CBR_SRC = COMIC_DIR / "test_cbr.cbr"
+TEST_CBZ_SRC = COMIC_DIR / "test_cbz.cbz"
+TMP_ROOT = get_test_dir()
 TEST_CBZ = TMP_ROOT / "test.cbz"
 TEST_ZIP_SIZE = 117
 
@@ -45,12 +45,12 @@ def test_get_comic_format_cbr() -> None:
 
 
 def test_get_comic_format_neither() -> None:
-    src = COMIC_ROOT / "test_cbr.xxx"
+    src = COMIC_DIR / "test_cbr.xxx"
     _test_get_comic_fmt(src, None)
 
 
 def test_get_comic_format_dir() -> None:
-    res = Comic.get_comic_format(Path(COMIC_ROOT))
+    res = Comic.get_comic_format(COMIC_DIR)
     assert res is None
 
 
