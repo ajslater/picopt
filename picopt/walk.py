@@ -70,18 +70,18 @@ class Walk(object):
         args = (path, image_format, self._settings, nag_about_gifs)
         return set([self._pool.apply_async(Comic.comic_archive_compress, args=(args,))])
 
-    def _is_skippable(self, full_path: Path) -> bool:
+    def _is_skippable(self, path: Path) -> bool:
         """Handle things that are not optimizable files."""
         # File types
-        if not self._settings.follow_symlinks and full_path.is_symlink():
+        if not self._settings.follow_symlinks and path.is_symlink():
             if self._settings.verbose > 1:
-                print(full_path, "is a symlink, skipping.")
+                print(path, "is a symlink, skipping.")
             return True
-        if full_path.name == timestamp.RECORD_FILENAME:
+        if path.name == timestamp.RECORD_FILENAME:
             return True
-        if not full_path.exists():
+        if not path.exists():
             if self._settings.verbose:
-                print(full_path, "was not found.")
+                print(path, "was not found.")
             return True
 
         return False
@@ -98,9 +98,7 @@ class Walk(object):
         # collected from someone who put really old files in it that
         # should still be optimised
         mtime = Timestamp.max_none((path.stat().st_mtime, archive_mtime))
-        if mtime is None:
-            return False
-        return mtime <= walk_after
+        return mtime is not None and mtime <= walk_after
 
     def walk_file(
         self,
