@@ -32,7 +32,8 @@ class Timestamp(object):
         Optionally mark it for removal if we're going to write another one.
         """
         record_path = path / RECORD_FILENAME
-        print("looking for", record_path)
+        if self._settings.verbose > 1:
+            print("looking for", record_path)
         if not record_path.exists():
             return None
 
