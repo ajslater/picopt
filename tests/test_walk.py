@@ -1,6 +1,7 @@
 """Test gif module."""
 import shutil
 
+from argparse import Namespace
 from pathlib import Path
 
 from picopt.settings import Settings
@@ -15,6 +16,7 @@ from tests import get_test_dir
 __all__ = ()  # hides module from pydocstring
 TEST_CBR_SRC = COMIC_DIR / "test_cbr.cbr"
 TEST_GIF_SRC = IMAGES_DIR / "test_gif.gif"
+TEST_JPG_SRC = IMAGES_DIR / "test_jpg.jpg"
 TMP_ROOT = get_test_dir()
 OLD_PATH = TMP_ROOT / "old.gif"
 
@@ -198,3 +200,194 @@ def test_is_older_than_timestamp_older_archive():
     res = Walk._is_older_than_timestamp(path, walk_after, archive_mtime)
     assert not res
     _teardown()
+
+
+def test_walk_file_older_than():
+    _teardown()
+    TMP_ROOT.mkdir()
+    path = TMP_ROOT / "text.txt"
+    path.touch()
+    walk_after = path.stat().st_mtime
+    wos = Walk(Settings())
+    res = wos.walk_file(path, walk_after)
+    assert len(res) == 0
+    _teardown()
+
+
+def test_walk_file_list_only():
+    _teardown()
+    TMP_ROOT.mkdir()
+    path = TMP_ROOT / "test.jpg"
+    shutil.copy(TEST_JPG_SRC, path)
+    path.touch()
+    settings = Settings()
+    settings.list_only = True
+    wos = Walk(settings)
+    res = wos.walk_file(path, None)
+    assert len(res) == 0
+    _teardown()
+
+
+def test_walk_file_comic():
+    _teardown()
+    TMP_ROOT.mkdir()
+    path = TMP_ROOT / "test.cbr"
+    shutil.copy(TEST_CBR_SRC, path)
+    settings = Settings(None, Namespace(comics=True, bigger=True))
+    wos = Walk(settings)
+    res = wos.walk_file(path, None)
+    assert len(res) == 1
+    rep = res.pop().get()
+    wos._pool.close()
+    wos._pool.join()
+    assert rep.final_path == path.with_suffix(".cbz")
+    _teardown()
+
+
+def test_walk_file_dir():
+    _teardown()
+    dir_path = TMP_ROOT / "deep"
+    dir_path.mkdir(parents=True)
+    path = dir_path / "test.txt"
+    path.touch()
+    settings = Settings()
+    wos = Walk(settings)
+    res = wos.walk_file(dir_path, None)
+    assert len(res) == 0
+    _teardown()
+
+
+def test_walk_dir_unset():
+    _teardown()
+    dir_path = TMP_ROOT / "deep"
+    dir_path.mkdir(parents=True)
+    settings = Settings()
+    wos = Walk(settings)
+    res = wos.walk_dir(dir_path, None)
+    assert len(res) == 0
+    _teardown()
+
+
+def test_walk_dir_recurse():
+    _teardown()
+    dir_path = TMP_ROOT / "deep"
+    dir_path.mkdir(parents=True)
+    settings = Settings()
+    wos = Walk(settings)
+    res = wos.walk_dir(dir_path, None, True)
+    assert len(res) == 0
+    _teardown()
+
+
+# def test_walk_dir_error():
+#    _teardown()
+#    dir_path = TMP_ROOT / "deep"
+#    dir_path.mkdir(parents=True)
+#    path = dir_path / "test.txt"
+#    path.touch()
+#    settings = Settings()
+#    wos = Walk(settings)
+#    exception = None
+#    try:
+#        res = wos.walk_dir(dir_path, None)
+#    except Exception as exc:
+#        exception = exc
+#    assert isinstance(exception, Exception)
+#    _teardown()
+
+
+def test_walk_all_files_empty():
+    _teardown()
+    wos = Walk(Settings())
+    record_dirs, bytes_in, bytes_out, nag, errors = wos._walk_all_files()
+    assert len(record_dirs) == 0
+    assert bytes_in == 0
+    assert bytes_out == 0
+    assert not nag
+    assert len(errors) == 0
+    _teardown()
+
+
+def test_walk_all_files_one():
+    _teardown()
+    TMP_ROOT.mkdir()
+    path = TMP_ROOT / "test.jpg"
+    shutil.copy(TEST_JPG_SRC, path)
+    wos = Walk(Settings(None, Namespace(paths=[TMP_ROOT], recurse=True)))
+    record_dirs, bytes_in, bytes_out, nag, errors = wos._walk_all_files()
+    assert len(record_dirs) == 1
+    assert bytes_in == 97373
+    assert bytes_out == 87922
+    assert not nag
+    assert len(errors) == 0
+    _teardown()
+
+
+def test_walk_all_files_two():
+    _teardown()
+    root1 = TMP_ROOT / "dir1"
+    root1.mkdir(parents=True)
+    path1 = root1 / "test.jpg"
+    shutil.copy(TEST_JPG_SRC, path1)
+    root2 = TMP_ROOT / "dir2"
+    root2.mkdir()
+    path2 = root2 / "test.jpg"
+    shutil.copy(TEST_JPG_SRC, path2)
+    wos = Walk(Settings(None, Namespace(paths=[root1, root2], recurse=True)))
+    record_dirs, bytes_in, bytes_out, nag, errors = wos._walk_all_files()
+    assert len(record_dirs) == 2
+    assert bytes_in == 194746
+    assert bytes_out == 175844
+    assert not nag
+    assert len(errors) == 0
+    _teardown()
+
+
+def test_walk_all_files_error():
+    _teardown()
+    TMP_ROOT.mkdir()
+    path = TMP_ROOT / "test.gif"
+    shutil.copy(TEST_GIF_SRC, path)
+    settings = Settings(
+        None,
+        Namespace(
+            paths=[TMP_ROOT], gifsicle=False, optipng=False, pngout=False, recurse=True
+        ),
+    )
+    wos = Walk(settings)
+    record_dirs, bytes_in, bytes_out, nag, errors = wos._walk_all_files()
+    assert len(record_dirs) == 1
+    assert bytes_in == 0
+    assert bytes_out == 0
+    assert not nag
+    assert len(errors) == 1
+    _teardown()
+
+
+def test_run():
+    _teardown()
+    settings = Settings()
+    settings.can_do = False
+    wos = Walk(settings)
+    res = wos.run()
+    assert not res
+
+
+def test_run_optimize_after():
+    _teardown()
+    settings = Settings()
+    settings.optimize_after = 3000
+    wos = Walk(settings)
+    res = wos.run()
+    assert res
+
+
+def test_run_record_timestamp():
+    _teardown()
+    TMP_ROOT.mkdir()
+    settings = Settings(
+        None, Namespace(record_timestamp=True, paths=[TMP_ROOT], recurse=True)
+    )
+    wos = Walk(settings)
+    res = wos.run()
+    assert res
