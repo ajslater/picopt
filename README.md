@@ -49,7 +49,7 @@ somewhere in the path. This installation example is for OS X:
 You may find Linux instructions on [Andrew Welch's blog](https://nystudio107.com/blog/installing-mozjpeg-on-ubuntu-16-04-forge)
 
 #### pngout
-pngout is a useful compression to use after optipng. It is not packaged for linux, but you may find the latest binary version [on JonoF's site](http://www.jonof.id.au/kenutils). Picopt looks for the binary to be called `picopt`
+pngout is a useful compression to use after optipng. It is not packaged for linux, but you may find the latest binary version [on JonoF's site](http://www.jonof.id.au/kenutils). Picopt looks for the binary to be called `pngout`
 
 ### Picopt python package
     pip install picopt
