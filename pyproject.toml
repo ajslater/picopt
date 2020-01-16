@@ -4,7 +4,7 @@ build-backend = ["poetry.masonry.api"]
 
 [tool.poetry]
 name = "picopt"
-version = "2.0.1"
+version = "2.1.0"
 description = "A multi format lossless image optimizer that uses external tools"
 license = "GPL-2.0-only"
 authors = ["AJ Slater <aj@slater.net>"]
@@ -24,31 +24,29 @@ classifiers = [
 ]
 packages = [
     { include = "picopt" },
-    { include = "ci", format = "sdist" },
     { include = "tests", format = "sdist" },
 ]
+include = ["NEWS"]
 
 [tool.poetry.dependencies]
 python = "^3.6"
-argparse = "^1.4"
 rarfile = "^3.1"
 python-dateutil = "^2.8"
 Pillow = "^6 || ^7"
 
 [tool.poetry.dev-dependencies]
 flake8 = "^3.7"
-flake8-black = "^0.1.1"
-flake8-bugbear = "^20.1.2"
-#black = "^19.10b0"
+flake8-black = "^0.1"
+flake8-bugbear = "^20.1"
 coverage = {extras = ["toml"], version = "^5.0"}
 pep8-naming = "^0.9"
 pytest = "^5.3"
-pytest-black = "^0.3.7"
-pytest-cov = "^2.8.1"
-pytest-flake8 = "^1.0.4"
-pytest-isort = "^0.3.1"
-pytest-monkeytype = "^1.0.5"
-pytest-mypy = "^0.4.2"
+pytest-black = "^0.3"
+pytest-cov = "^2.8"
+pytest-flake8 = "^1.0"
+pytest-isort = "^0.3"
+pytest-monkeytype = "^1.0"
+pytest-mypy = "^0.4"
 mypy = "^0.761"
 monkeytype = "^19.11"
 

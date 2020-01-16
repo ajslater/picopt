@@ -8,14 +8,6 @@ python-versions = "*"
 version = "1.4.3"
 
 [[package]]
-category = "main"
-description = "Python command-line parsing library"
-name = "argparse"
-optional = false
-python-versions = "*"
-version = "1.4.0"
-
-[[package]]
 category = "dev"
 description = "Atomic file writes."
 marker = "python_version >= \"3.5\" and sys_platform == \"win32\" or sys_platform == \"win32\""
@@ -528,17 +520,13 @@ docs = ["sphinx", "jaraco.packaging (>=3.2)", "rst.linker (>=1.9)"]
 testing = ["pathlib2", "contextlib2", "unittest2"]
 
 [metadata]
-content-hash = "81e4558863d2bf6ccb723f19fbbb4cc479156941e64acfb3701b11b74fb1f05a"
+content-hash = "91b66ef6f40651e2bdd10f422c17447d268ba57165c44479b65d8c77efc4b1c5"
 python-versions = "^3.6"
 
 [metadata.files]
 appdirs = [
     {file = "appdirs-1.4.3-py2.py3-none-any.whl", hash = "sha256:d8b24664561d0d34ddfaec54636d502d7cea6e29c3eaf68f3df6180863e2166e"},
     {file = "appdirs-1.4.3.tar.gz", hash = "sha256:9e5896d1372858f8dd3344faf4e5014d21849c756c8d5701f78f8a103b372d92"},
-]
-argparse = [
-    {file = "argparse-1.4.0-py2.py3-none-any.whl", hash = "sha256:c31647edb69fd3d465a847ea3157d37bed1f95f19760b11a47aa91c04b666314"},
-    {file = "argparse-1.4.0.tar.gz", hash = "sha256:62b089a55be1d8949cd2bc7e0df0bddb9e028faefc8c32038cc84862aefdd6e4"},
 ]
 atomicwrites = [
     {file = "atomicwrites-1.3.0-py2.py3-none-any.whl", hash = "sha256:03472c30eb2c5d1ba9227e4c2ca66ab8287fbfbbda3888aa93dc2e28fc6811b4"},
