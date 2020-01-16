@@ -53,7 +53,7 @@ def _cleanup_aux(
     )
     assert not new_path.exists()
     if old_format != new_format:
-        new_path = old_path.with_suffix("." + new_format)
+        new_path = old_path.with_suffix(_fmt_to_suffix(new_format))
     else:
         new_path = old_path
     return res, old_path, new_path
@@ -84,7 +84,7 @@ def test_big_small() -> None:
     )
     assert new_path.is_file()
     assert not old_path.exists()
-    assert new_path == old_path.with_suffix("." + new_format)
+    assert new_path == old_path.with_suffix(_fmt_to_suffix(new_format))
     assert old_size == b_in
     assert new_size == b_out
     _teardown()
