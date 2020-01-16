@@ -41,7 +41,7 @@ def _cleanup_aux(
     new_format: str,
     settings: Settings,
     cause_error: bool = False,
-) -> Tuple[Path, int, int]:
+) -> Tuple[Tuple[Path, int, int], Path, Path]:
     if cause_error:
         old_path = TMP_DIR / "old"
         new_path = TMP_DIR / "new"
@@ -51,9 +51,12 @@ def _cleanup_aux(
     res = files._cleanup_after_optimize_aux(
         settings, old_path, new_path, old_format, new_format
     )
-    if res[0].exists():
-        Path(res[0]).unlink()
-    return res
+    assert not new_path.exists()
+    if old_format != new_format:
+        new_path = old_path.with_suffix("." + new_format)
+    else:
+        new_path = old_path
+    return res, old_path, new_path
 
 
 def test_small_big() -> None:
@@ -61,12 +64,13 @@ def test_small_big() -> None:
     new_size = 40
     old_format = _PNG_FORMAT
     new_format = _PNG_FORMAT
-    path, b_in, b_out = _cleanup_aux(
+    (path, b_in, b_out), old_path, new_path = _cleanup_aux(
         old_size, new_size, old_format, new_format, Settings()
     )
-    assert path.suffix == _fmt_to_suffix(old_format)
+    assert old_path.is_file()
     assert old_size == b_in
     assert old_size == b_out
+    assert old_path.stat().st_size == old_size
     _teardown()
 
 
@@ -75,10 +79,12 @@ def test_big_small() -> None:
     new_size = 4
     old_format = _BMP_FORMAT
     new_format = _PNG_FORMAT
-    path, b_in, b_out = _cleanup_aux(
+    (path, b_in, b_out), old_path, new_path = _cleanup_aux(
         old_size, new_size, old_format, new_format, Settings()
     )
-    assert path.suffix == _fmt_to_suffix(new_format)
+    assert new_path.is_file()
+    assert not old_path.exists()
+    assert new_path == old_path.with_suffix("." + new_format)
     assert old_size == b_in
     assert new_size == b_out
     _teardown()
@@ -89,10 +95,12 @@ def test_small_small() -> None:
     new_size = 5
     old_format = _BMP_FORMAT
     new_format = _PNG_FORMAT
-    path, b_in, b_out = _cleanup_aux(
+    (path, b_in, b_out), old_path, new_path = _cleanup_aux(
         old_size, new_size, old_format, new_format, Settings()
     )
-    assert path.suffix == _fmt_to_suffix(old_format)
+    assert not new_path.is_file()
+    assert old_path.exists()
+    assert new_path == old_path.with_suffix("." + new_format)
     assert old_size == b_in
     assert old_size == b_out
     _teardown()
@@ -105,10 +113,12 @@ def test_small_big_format_change_bigger() -> None:
     new_format = _PNG_FORMAT
     settings = Settings()
     settings.bigger = True
-    path, b_in, b_out = _cleanup_aux(
+    (path, b_in, b_out), old_path, new_path = _cleanup_aux(
         old_size, new_size, old_format, new_format, settings
     )
-    assert path.suffix == _fmt_to_suffix(new_format)
+    assert new_path.is_file()
+    assert not old_path.exists()
+    assert new_path == old_path.with_suffix("." + new_format)
     assert old_size == b_in
     assert new_size == b_out
     _teardown()
@@ -121,12 +131,15 @@ def test_small_big_bigger() -> None:
     new_format = _PNG_FORMAT
     settings = Settings()
     settings.bigger = True
-    path, b_in, b_out = _cleanup_aux(
+    (path, b_in, b_out), old_path, new_path = _cleanup_aux(
         old_size, new_size, old_format, new_format, settings
     )
-    assert path.suffix == _fmt_to_suffix(new_format)
+    print(new_path)
+    assert old_path.is_file()
+    assert new_path == old_path
     assert old_size == b_in
     assert new_size == b_out
+    assert new_size == old_path.stat().st_size
     _teardown()
 
 
@@ -138,7 +151,7 @@ def test_os_error() -> None:
     settings = Settings()
     settings.bigger = True
     settings.test = True
-    path, b_in, b_out = _cleanup_aux(
+    (path, b_in, b_out), old_path, new_path = _cleanup_aux(
         old_size, new_size, old_format, new_format, settings, True
     )
     assert path.suffix == ""

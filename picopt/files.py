@@ -23,6 +23,8 @@ def _cleanup_after_optimize_aux(
             if old_format != new_format:
                 final_path = old_path.with_suffix("." + new_format.lower())
             new_path.replace(final_path)
+            if final_path != old_path:
+                old_path.unlink()
         else:
             new_path.unlink()
             bytes_out = bytes_in
