@@ -78,7 +78,7 @@ class Settings(Namespace):
         if self.comics:
             self.formats |= Comic.FORMATS
 
-        print("Optimizing formats:", *self.formats)
+        print("Optimizing formats:", *sorted(self.formats))
 
     def _set_jpegrescan_threading(self) -> None:
         """
