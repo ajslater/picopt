@@ -12,7 +12,7 @@ from .format import Format
 _JPEG_FORMAT = "JPEG"
 _MOZJPEG_ARGS = ["mozjpeg"]
 _JPEGTRAN_ARGS = ["jpegtran", "-optimize"]
-_JPEGRESCAN_ARGS = ["jpegrescan"]
+# _JPEGRESCAN_ARGS = ["jpegrescan"]
 
 
 class Jpeg(Format):
@@ -50,20 +50,20 @@ class Jpeg(Format):
         extern.run_ext(tuple(args))
         return _JPEG_FORMAT
 
-    @staticmethod
-    def jpegrescan(settings: Settings, ext_args: extern.ExtArgs) -> str:
-        """Run the EXTERNAL program jpegrescan."""
-        args = copy.copy(_JPEGRESCAN_ARGS)
-        if settings.jpegrescan_multithread:
-            args += ["-t"]
-        if settings.destroy_metadata:
-            args += ["-s"]
-        args += [ext_args.old_fn, ext_args.new_fn]
-        extern.run_ext(tuple(args))
-        return _JPEG_FORMAT
+    #    @staticmethod
+    #    def jpegrescan(settings: Settings, ext_args: extern.ExtArgs) -> str:
+    #        """Run the EXTERNAL program jpegrescan."""
+    #        args = copy.copy(_JPEGRESCAN_ARGS)
+    #        if settings.jpegrescan_multithread:
+    #            args += ["-t"]
+    #        if settings.destroy_metadata:
+    #            args += ["-s"]
+    #        args += [ext_args.old_fn, ext_args.new_fn]
+    #        extern.run_ext(tuple(args))
+    #        return _JPEG_FORMAT
 
     PROGRAMS: Tuple[Callable[[Settings, extern.ExtArgs], str], ...] = (
         mozjpeg,
-        jpegrescan,
+        #        jpegrescan,
         jpegtran,
     )

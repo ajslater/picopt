@@ -100,7 +100,7 @@ def test_small_small() -> None:
     )
     assert not new_path.is_file()
     assert old_path.exists()
-    assert new_path == old_path.with_suffix("." + new_format)
+    assert new_path == old_path.with_suffix(_fmt_to_suffix(new_format))
     assert old_size == b_in
     assert old_size == b_out
     _teardown()
@@ -118,7 +118,7 @@ def test_small_big_format_change_bigger() -> None:
     )
     assert new_path.is_file()
     assert not old_path.exists()
-    assert new_path == old_path.with_suffix("." + new_format)
+    assert new_path == old_path.with_suffix(_fmt_to_suffix(new_format))
     assert old_size == b_in
     assert new_size == b_out
     _teardown()

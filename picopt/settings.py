@@ -3,7 +3,6 @@ import multiprocessing
 import time
 
 from argparse import Namespace
-from pathlib import Path
 from typing import Callable
 from typing import List
 from typing import Optional
@@ -28,8 +27,8 @@ class Settings(Namespace):
     gifsicle: bool = True
     ignore: List[str] = []
     jobs: int = multiprocessing.cpu_count()
-    jpegrescan: bool = True
-    jpegrescan_multithread: bool = False
+    #    jpegrescan: bool = True
+    #    jpegrescan_multithread: bool = False
     jpegtran: bool = True
     jpegtran_prog: bool = True
     list_only: bool = False
@@ -56,7 +55,8 @@ class Settings(Namespace):
         self.paths = set(self.paths)
         self._update_formats()
         self.jobs = max(self.jobs, 1)
-        self._set_jpegrescan_threading()
+
+    #        self._set_jpegrescan_threading()
 
     @staticmethod
     def parse_date_string(date_str: str) -> float:
@@ -80,24 +80,24 @@ class Settings(Namespace):
 
         print("Optimizing formats:", *sorted(self.formats))
 
-    def _set_jpegrescan_threading(self) -> None:
-        """
-        Make a rough guess about weather or not to invoke multithreading.
-
-        jpegrescan '-t' uses three threads
-        """
-        files_in_paths = 0
-        non_file_in_paths = False
-        for filename in self.paths:
-            path = Path(filename)
-            if path.is_file():
-                files_in_paths += 1
-            else:
-                non_file_in_paths = True
-
-        self.jpegrescan_multithread = (
-            not non_file_in_paths and self.jobs - (files_in_paths * 3) > -1
-        )
+    #    def _set_jpegrescan_threading(self) -> None:
+    #        """
+    #        Make a rough guess about weather or not to invoke multithreading.
+    #
+    #        jpegrescan '-t' uses three threads
+    #        """
+    #        files_in_paths = 0
+    #        non_file_in_paths = False
+    #        for filename in self.paths:
+    #            path = Path(filename)
+    #            if path.is_file():
+    #                files_in_paths += 1
+    #            else:
+    #                non_file_in_paths = True
+    #
+    #        self.jpegrescan_multithread = (
+    #            not non_file_in_paths and self.jobs - (files_in_paths * 3) > -1
+    #        )
 
     def _update(self, namespace: Optional[Namespace]) -> None:
         """Update settings with a dict."""
@@ -128,7 +128,7 @@ class Settings(Namespace):
         self._set_program_defaults(programs)
 
         do_png = self.optipng or self.pngout  # or self.advpng
-        do_jpeg = self.mozjpeg or self.jpegrescan or self.jpegtran
+        do_jpeg = self.mozjpeg or self.jpegtran  # of self.jpegrescan
         do_comics = self.comics
 
         self.can_do = do_png or do_jpeg or do_comics

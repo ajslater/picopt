@@ -81,7 +81,7 @@ def test_optimize_with_all_progs_disabled() -> None:
     settings = Settings()
     settings.mozjpeg = False
     settings.jpegtran = False
-    settings.jpegrescan = False
+    #    settings.jpegrescan = False
     res = optimize._optimize_with_progs(settings, Jpeg, old_path, "JPEG")
     old_path.unlink()
     assert res.final_path == old_path

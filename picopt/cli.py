@@ -112,14 +112,14 @@ def get_arguments(args: Tuple[str, ...]) -> Namespace:
         default=1,
         help="Do not optimize with pngout",
     )
-    parser.add_argument(
-        "-J",
-        "--disable_jpegrescan",
-        action="store_false",
-        dest="jpegrescan",
-        default=1,
-        help="Do not optimize with jpegrescan",
-    )
+    #    parser.add_argument(
+    #        "-J",
+    #        "--disable_jpegrescan",
+    #        action="store_false",
+    #        dest="jpegrescan",
+    #        default=1,
+    #        help="Do not optimize with jpegrescan",
+    #    )
     parser.add_argument(
         "-E",
         "--disable_progressive",

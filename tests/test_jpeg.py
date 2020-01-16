@@ -65,19 +65,19 @@ def test_jpegtran_options() -> None:
     _teardown(args)
 
 
-def test_jpegrescan() -> None:
-    args, settings = _setup_jpeg()
-    res = jpeg.Jpeg.jpegrescan(settings, args)
-    assert res == "JPEG"
-    assert Path(args.new_fn).is_file()
-    _teardown(args)
+# def test_jpegrescan() -> None:
+#    args, settings = _setup_jpeg()
+#    res = jpeg.Jpeg.jpegrescan(settings, args)
+#    assert res == "JPEG"
+#    assert Path(args.new_fn).is_file()
+#    _teardown(args)
 
 
-def test_jpegrescan_options() -> None:
-    args, settings = _setup_jpeg()
-    settings.destroy_metadata = True
-    settings.jpegrescan_multithread = False
-    res = jpeg.Jpeg.jpegrescan(settings, args)
-    assert res == "JPEG"
-    assert Path(args.new_fn).is_file()
-    _teardown(args)
+# def test_jpegrescan_options() -> None:
+#   args, settings = _setup_jpeg()
+#    settings.destroy_metadata = True
+#    settings.jpegrescan_multithread = False
+#    res = jpeg.Jpeg.jpegrescan(settings, args)
+#    assert res == "JPEG"
+#    assert Path(args.new_fn).is_file()
+#    _teardown(args)

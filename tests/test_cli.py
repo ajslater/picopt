@@ -19,7 +19,7 @@ def test_csv_set() -> None:
 
 
 def test_get_arguments() -> None:
-    args = ("picopt", "-rvQcOPJEZTGYSbtNlM", str(TMP_ROOT))
+    args = ("picopt", "-rvQcOPEZTGYSbtNlM", str(TMP_ROOT))
     arguments = cli.get_arguments(args)
     assert arguments.recurse
     assert arguments.verbose == -1
@@ -28,7 +28,7 @@ def test_get_arguments() -> None:
     assert arguments.formats == set()
     assert not arguments.optipng
     assert not arguments.pngout
-    assert not arguments.jpegrescan
+    #    assert not arguments.jpegrescan
     assert not arguments.mozjpeg
     assert not arguments.jpegtran
     assert not arguments.gifsicle
@@ -64,7 +64,7 @@ def test_main() -> None:
 
 
 def test_main_err() -> None:
-    sys.argv = ["picopt", "-OPJZTG", "XXX"]
+    sys.argv = ["picopt", "-OPZTG", "XXX"]
     try:
         cli.main()
     except SystemExit as exc:

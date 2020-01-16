@@ -8,6 +8,7 @@ RUN apt install -y \
     curl \
     gifsicle \
     git \
+    libjpeg-progs \
     optipng \
     python3-setuptools \
     python3-venv \
