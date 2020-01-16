@@ -2,6 +2,7 @@ v2.1.0
 * Remove adv support. It was inferior to other methods anyway.
 * Use pytest instead of nosetest
 * Require formating with black & isort
+* Don't preserve ctime/mtime when making new pngs
 
 v2.0.1
 * Pillow 7 compatibility
