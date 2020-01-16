@@ -11,7 +11,7 @@ from .png_bit_depth import png_bit_depth
 
 
 _PNG_FORMAT = "PNG"
-_OPTIPNG_ARGS = ["optipng", "-o6", "-fix", "-preserve", "-force", "-quiet"]
+_OPTIPNG_ARGS = ["optipng", "-o6", "-fix", "-force", "-quiet"]
 # _ADVPNG_ARGS = ["advpng", "-z", "-4", "-f"]
 _PNGOUT_ARGS = ["pngout", "-q", "-force", "-y"]
 
