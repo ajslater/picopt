@@ -14,7 +14,7 @@ TEST_SRC_PATH = IMAGES_DIR / "test_png.png"
 TEST_SRC_PATH_16 = IMAGES_DIR / "test_png_16rgba.png"
 
 
-def _setup(use_16=False):
+def _setup(use_16: bool = False) -> ExtArgs:
     if use_16:
         src_path = TEST_SRC_PATH_16
     else:
@@ -25,12 +25,12 @@ def _setup(use_16=False):
     return args
 
 
-def _teardown(args):
+def _teardown(args: ExtArgs) -> None:
     if TMP_DIR.exists():
         shutil.rmtree(TMP_DIR)
 
 
-def test_optipng():
+def test_optipng() -> None:
     args = _setup()
     res = Png.optipng(None, args)
     assert res == "PNG"
@@ -44,14 +44,14 @@ def test_optipng():
 #    _teardown(args)
 
 
-def test_pngout():
+def test_pngout() -> None:
     args = _setup()
     res = Png.pngout(None, args)
     assert res == "PNG"
     _teardown(args)
 
 
-def test_pngout_16():
+def test_pngout_16() -> None:
     args = _setup(True)
     res = Png.pngout(None, args)
     assert res == "PNG"

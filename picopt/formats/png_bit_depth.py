@@ -7,13 +7,18 @@ This should really be a part of Pillow
 import struct
 
 from pathlib import Path
+from typing import BinaryIO
 from typing import Optional
+from typing import Tuple
+from typing import Union
 
 
 PNG_HEADER = (b"\x89", b"P", b"N", b"G", b"\r", b"\n", b"\x1a", b"\n")
 
 
-def unpack(fmt_type, length, file_desc):
+def unpack(
+    fmt_type: str, length: int, file_desc: BinaryIO
+) -> Union[Tuple[bytes, ...], Tuple[int]]:
     """Unpack unformation from a file according to format string & length."""
     return struct.unpack(fmt_type * length, file_desc.read(length))
 

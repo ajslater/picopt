@@ -19,7 +19,7 @@ _REASON_NONDIR = "Not setting timestamp for a non-directory"
 class Timestamp(object):
     """Timestamp object to hold settings and caches."""
 
-    def __init__(self, settings: Settings):
+    def __init__(self, settings: Settings) -> None:
         """Initialize instance variables."""
         self._settings = settings
         self._timestamp_cache: Dict[Path, Optional[float]] = {}

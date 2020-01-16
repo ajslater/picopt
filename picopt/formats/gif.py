@@ -3,6 +3,7 @@ from typing import Callable
 from typing import Tuple
 
 from .. import extern
+from ..extern import ExtArgs
 from ..settings import Settings
 from .format import ANIMATED_FORMAT_PREFIX
 from .format import Format
@@ -21,10 +22,10 @@ class Gif(Format):
     OUT_EXT = "." + _GIF_FORMAT.lower()
 
     @staticmethod
-    def gifsicle(_, ext_args: extern.ExtArgs) -> str:
+    def gifsicle(_: Settings, ext_args: ExtArgs) -> str:
         """Run the EXTERNAL program gifsicle."""
         args = tuple(_GIFSICLE_ARGS + [ext_args.new_fn])
         extern.run_ext(args)
         return _GIF_FORMAT
 
-    PROGRAMS: Tuple[Callable[[Settings, extern.ExtArgs], str], ...] = (gifsicle,)
+    PROGRAMS: Tuple[Callable[[Settings, ExtArgs], str], ...] = (gifsicle,)

@@ -33,7 +33,7 @@ def _setup_record() -> Tuple[Path, Timestamp]:
     return record_path, Timestamp(Settings())
 
 
-def _teardown():
+def _teardown() -> None:
     if TMP_ROOT.exists():
         shutil.rmtree(TMP_ROOT)
 
@@ -62,7 +62,7 @@ def test_get_timestamp_remove() -> None:
     _teardown()
 
 
-def test_get_timestamp_cached():
+def test_get_timestamp_cached() -> None:
     record_path, mtime, tso = _setup()
     assert TMP_ROOT not in tso._timestamp_cache
     res = tso._get_timestamp_cached(TMP_ROOT, False)
@@ -74,29 +74,29 @@ def test_get_timestamp_cached():
     _teardown()
 
 
-def test_max_none_nums():
+def test_max_none_nums() -> None:
     res = Timestamp.max_none((1, 2))
     assert res == 2
 
 
-def test_max_none_none():
+def test_max_none_none() -> None:
     res = Timestamp.max_none((1, None))
     assert res == 1
 
 
-def test_max_none_none_none():
+def test_max_none_none_none() -> None:
     res = Timestamp.max_none((None, None))
     assert res is None
 
 
-def test_max_timestamps_none():
+def test_max_timestamps_none() -> None:
     record_path, mtime, tso = _setup()
     res = tso._max_timestamps(TMP_ROOT, False, None)
     assert res == mtime
     _teardown()
 
 
-def test_max_timestamps_tstamp():
+def test_max_timestamps_tstamp() -> None:
     record_path, mtime, tso = _setup()
     tstamp = mtime + 100
     res = tso._max_timestamps(TMP_ROOT, False, tstamp)
@@ -104,7 +104,7 @@ def test_max_timestamps_tstamp():
     _teardown()
 
 
-def test_get_parent_timestamp_none():
+def test_get_parent_timestamp_none() -> None:
     record_path, mtime, tso = _setup()
     DEEP_TMP.mkdir()
     res = tso._get_parent_timestamp(DEEP_TMP, None)
@@ -112,7 +112,7 @@ def test_get_parent_timestamp_none():
     _teardown()
 
 
-def test_get_parent_timestamp_tstamp():
+def test_get_parent_timestamp_tstamp() -> None:
     record_path, mtime, tso = _setup()
     DEEP_TMP.mkdir()
     tstamp = mtime + 100
@@ -121,7 +121,7 @@ def test_get_parent_timestamp_tstamp():
     _teardown()
 
 
-def test_get_walk_after_none():
+def test_get_walk_after_none() -> None:
     record_path, mtime, tso = _setup()
     assert record_path.exists()
     print("made:", record_path)
@@ -129,7 +129,7 @@ def test_get_walk_after_none():
     assert res == mtime
 
 
-def test_get_walk_after_settings():
+def test_get_walk_after_settings() -> None:
     record_path, mtime, tso = _setup()
     oatime = mtime + 100
     tso._settings.optimize_after = oatime
@@ -137,14 +137,14 @@ def test_get_walk_after_settings():
     assert res == oatime
 
 
-def test_get_walk_after_settings_tstamp():
+def test_get_walk_after_settings_tstamp() -> None:
     record_path, mtime, tso = _setup()
     tstamp = mtime + 100
     res = tso.get_walk_after(TMP_ROOT, tstamp)
     assert res == tstamp
 
 
-def test_get_walk_after_settings_file():
+def test_get_walk_after_settings_file() -> None:
     record_path, mtime, tso = _setup()
     tstamp = mtime + 100
     path = TMP_ROOT / "text.txt"
@@ -153,14 +153,14 @@ def test_get_walk_after_settings_file():
     assert res == tstamp
 
 
-def test_should_record_timestamp_unset():
+def test_should_record_timestamp_unset() -> None:
     tso = Timestamp(Settings())
     res, reason = tso._should_record_timestamp(TMP_ROOT)
     assert not res
     assert reason == timestamp._REASON_DEFAULT
 
 
-def test_should_record_timestamp_set_symlink():
+def test_should_record_timestamp_set_symlink() -> None:
     record_path, tso = _setup_record()
     tso._settings.record_timestamp = True
     tso._settings.follow_symlinks = False
@@ -171,7 +171,7 @@ def test_should_record_timestamp_set_symlink():
     _teardown()
 
 
-def test_should_record_timestamp_set_symlink_quiet():
+def test_should_record_timestamp_set_symlink_quiet() -> None:
     record_path, tso = _setup_record()
     tso._settings.record_timestamp = True
     tso._settings.follow_symlinks = False
@@ -183,7 +183,7 @@ def test_should_record_timestamp_set_symlink_quiet():
     _teardown()
 
 
-def test_should_record_timestamp_set_file():
+def test_should_record_timestamp_set_file() -> None:
     record_path, tso = _setup_record()
     tso._settings.record_timestamp = True
     DEEP_TMP_FILE.touch()
@@ -193,7 +193,7 @@ def test_should_record_timestamp_set_file():
     _teardown()
 
 
-def test_should_record_timestamp_set_file_quiet():
+def test_should_record_timestamp_set_file_quiet() -> None:
     record_path, tso = _setup_record()
     tso._settings.record_timestamp = True
     tso._settings.verbose = 0
@@ -204,7 +204,7 @@ def test_should_record_timestamp_set_file_quiet():
     _teardown()
 
 
-def test_should_record_timestamp_true():
+def test_should_record_timestamp_true() -> None:
     record_path, tso = _setup_record()
     tso._settings.record_timestamp = True
     tso._settings.verbose = 0
@@ -214,7 +214,7 @@ def test_should_record_timestamp_true():
     _teardown()
 
 
-def test_remove_old_timestamp():
+def test_remove_old_timestamp() -> None:
     deep_record_path, _, tso = _setup(DEEP_TMP)
     tso._settings.record_timestamp = True
     parent_record_path = TMP_ROOT / timestamp.RECORD_FILENAME
@@ -227,7 +227,7 @@ def test_remove_old_timestamp():
     _teardown()
 
 
-def test_remove_old_timestamp_skip():
+def test_remove_old_timestamp_skip() -> None:
     deep_record_path, _, tso = _setup(DEEP_TMP)
     tso._settings.record_timestamp = True
     parent_record_path = TMP_ROOT / timestamp.RECORD_FILENAME
@@ -239,7 +239,7 @@ def test_remove_old_timestamp_skip():
     _teardown()
 
 
-def test_remove_old_timestamp_quiet():
+def test_remove_old_timestamp_quiet() -> None:
     deep_record_path, _, tso = _setup(DEEP_TMP)
     tso._settings.record_timestamp = True
     tso._settings.verbose = 0
@@ -253,7 +253,7 @@ def test_remove_old_timestamp_quiet():
     _teardown()
 
 
-def test_remove_old_timestamp_error():
+def test_remove_old_timestamp_error() -> None:
     deep_record_path, _, tso = _setup(DEEP_TMP)
     tso._settings.record_timestamp = True
     parent_record_path = TMP_ROOT / timestamp.RECORD_FILENAME
@@ -268,7 +268,7 @@ def test_remove_old_timestamp_error():
     _teardown()
 
 
-def test_record_timestamp_set():
+def test_record_timestamp_set() -> None:
     record_path, tso = _setup_record()
     tso._settings.record_timestamp = True
     tso.record_timestamp(DEEP_TMP)
@@ -277,7 +277,7 @@ def test_record_timestamp_set():
     _teardown()
 
 
-def test_record_timestamp_set_quiet():
+def test_record_timestamp_set_quiet() -> None:
     record_path, tso = _setup_record()
     tso._settings.record_timestamp = True
     tso._settings.verbose = 0
@@ -287,7 +287,7 @@ def test_record_timestamp_set_quiet():
     _teardown()
 
 
-def test_record_timestamp_set_not():
+def test_record_timestamp_set_not() -> None:
     record_path, tso = _setup_record()
     tso._settings.record_timestamp = False
     tso.record_timestamp(DEEP_TMP)
@@ -296,7 +296,7 @@ def test_record_timestamp_set_not():
     _teardown()
 
 
-def test_record_timestamp_set_not_quiet():
+def test_record_timestamp_set_not_quiet() -> None:
     record_path, tso = _setup_record()
     tso._settings.record_timestamp = False
     tso._settings.verbose = 0
@@ -306,7 +306,7 @@ def test_record_timestamp_set_not_quiet():
     _teardown()
 
 
-def test_record_timestamp_set_error():
+def test_record_timestamp_set_error() -> None:
     record_path, tso = _setup_record()
     tso._settings.record_timestamp = True
     deep_record_path = DEEP_TMP / timestamp.RECORD_FILENAME
@@ -316,7 +316,7 @@ def test_record_timestamp_set_error():
     _teardown()
 
 
-def test_record_timestamp_set_remove():
+def test_record_timestamp_set_remove() -> None:
     deep_record_path, deep_mtime, tso = _setup(DEEP_TMP)
     tso._settings.record_timestamp = True
     tso._get_timestamp_cached(DEEP_TMP, True)

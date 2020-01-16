@@ -21,7 +21,7 @@ OLD_PATH_PNG = TMP_ROOT / "old.png"
 NEW_SIZE = 87922
 
 
-def _setup(fmt="JPEG"):
+def _setup(fmt: str = "JPEG") -> Path:
     if fmt == "PNG":
         src = PNG_SRC
         old_path = OLD_PATH_PNG
@@ -32,15 +32,15 @@ def _setup(fmt="JPEG"):
     TMP_ROOT.mkdir(exist_ok=True)
     shutil.copy(src, old_path)
 
-    return old_path
+    return Path(old_path)
 
 
-def _teardown():
+def _teardown() -> None:
     if TMP_ROOT.exists():
         shutil.rmtree(TMP_ROOT)
 
 
-def test_optimize_image_external():
+def test_optimize_image_external() -> None:
     old_path = _setup()
     old_size = old_path.stat().st_size
     func = Jpeg.PROGRAMS[0]
@@ -53,7 +53,7 @@ def test_optimize_image_external():
     _teardown()
 
 
-def test_optimize_with_progs():
+def test_optimize_with_progs() -> None:
     fmt = "JPEG"
     old_path = _setup(fmt)
     old_size = old_path.stat().st_size
@@ -64,7 +64,7 @@ def test_optimize_with_progs():
     _teardown()
 
 
-def test_optimize_with_progs_no_best():
+def test_optimize_with_progs_no_best() -> None:
     fmt = "PNG"
     old_path = _setup(fmt)
     old_size = old_path.stat().st_size
@@ -76,7 +76,7 @@ def test_optimize_with_progs_no_best():
     _teardown()
 
 
-def test_optimize_with_all_progs_disabled():
+def test_optimize_with_all_progs_disabled() -> None:
     old_path = _setup()
     settings = Settings()
     settings.mozjpeg = False
@@ -90,31 +90,31 @@ def test_optimize_with_all_progs_disabled():
     _teardown()
 
 
-def test_get_format_module_png():
+def test_get_format_module_png() -> None:
     cls, nag = optimize._get_format_module(Settings(), "PNG")
     assert cls == Png
     assert not nag
 
 
-def test_get_format_module_jpeg():
+def test_get_format_module_jpeg() -> None:
     cls, nag = optimize._get_format_module(Settings(), "JPEG")
     assert cls == Jpeg
     assert not nag
 
 
-def test_get_format_module_gif():
+def test_get_format_module_gif() -> None:
     cls, nag = optimize._get_format_module(Settings(), "ANIMATED_GIF")
     assert cls == Gif
     assert nag
 
 
-def test_get_format_module_invalid():
+def test_get_format_module_invalid() -> None:
     cls, nag = optimize._get_format_module(Settings(), "")
     assert cls is None
     assert not nag
 
 
-def test_optimize_image():
+def test_optimize_image() -> None:
     old_path = _setup()
     old_size = old_path.stat().st_size
     args = (old_path, "JPEG", Settings())
@@ -125,7 +125,7 @@ def test_optimize_image():
     _teardown()
 
 
-def test_optimize_image_none():
+def test_optimize_image_none() -> None:
     old_path = _setup()
     args = (old_path, "", Settings())
     res = optimize.optimize_image(args)
@@ -136,7 +136,7 @@ def test_optimize_image_none():
     _teardown()
 
 
-def test_optimize_image_none_quiet():
+def test_optimize_image_none_quiet() -> None:
     old_path = _setup()
     settings = Settings()
     settings.verbose = 1
@@ -149,7 +149,7 @@ def test_optimize_image_none_quiet():
     _teardown()
 
 
-def test_optimize_image_error():
+def test_optimize_image_error() -> None:
     old_path = Path("")
     args = (old_path, "JPEG", Settings())
     res = optimize.optimize_image(args)

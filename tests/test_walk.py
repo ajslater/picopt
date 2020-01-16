@@ -26,7 +26,7 @@ def _teardown():
         shutil.rmtree(TMP_ROOT)
 
 
-def test_comic_archive_skip():
+def test_comic_archive_skip() -> None:
     wob = Walk(Settings())
     path = Path("xxx")
     rep = ReportStats(path)
@@ -34,7 +34,7 @@ def test_comic_archive_skip():
     assert res.final_path == path
 
 
-def test_walk_comic_archive_skip():
+def test_walk_comic_archive_skip() -> None:
     _teardown()
     TMP_ROOT.mkdir()
     cbr = TMP_ROOT / "test.cbr"
@@ -55,7 +55,7 @@ def test_walk_comic_archive_skip():
     _teardown()
 
 
-def test_walk_comic_archive_bigger():
+def test_walk_comic_archive_bigger() -> None:
     _teardown()
     TMP_ROOT.mkdir()
     cbr = TMP_ROOT / "test.cbr"
@@ -78,7 +78,7 @@ def test_walk_comic_archive_bigger():
     _teardown()
 
 
-def test_is_skippable_unset():
+def test_is_skippable_unset() -> None:
     _teardown()
     TMP_ROOT.mkdir()
     path = TMP_ROOT / "test.txt"
@@ -90,7 +90,7 @@ def test_is_skippable_unset():
     _teardown()
 
 
-def test_is_skippable_symlink():
+def test_is_skippable_symlink() -> None:
     _teardown()
     TMP_ROOT.mkdir()
     path = TMP_ROOT / "test.txt"
@@ -103,7 +103,7 @@ def test_is_skippable_symlink():
     _teardown()
 
 
-def test_is_skippable_symlink_quiet():
+def test_is_skippable_symlink_quiet() -> None:
     _teardown()
     TMP_ROOT.mkdir()
     path = TMP_ROOT / "test.txt"
@@ -117,7 +117,7 @@ def test_is_skippable_symlink_quiet():
     _teardown()
 
 
-def test_is_skippable_timestamp():
+def test_is_skippable_timestamp() -> None:
     _teardown()
     TMP_ROOT.mkdir()
     path = TMP_ROOT / RECORD_FILENAME
@@ -129,7 +129,7 @@ def test_is_skippable_timestamp():
     _teardown()
 
 
-def test_is_skippable_dne():
+def test_is_skippable_dne() -> None:
     _teardown()
     TMP_ROOT.mkdir()
     path = TMP_ROOT / "test.txt"
@@ -140,7 +140,7 @@ def test_is_skippable_dne():
     _teardown()
 
 
-def test_is_skippable_quiet():
+def test_is_skippable_quiet() -> None:
     _teardown()
     TMP_ROOT.mkdir()
     path = TMP_ROOT / "test.txt"
@@ -152,12 +152,12 @@ def test_is_skippable_quiet():
     _teardown()
 
 
-def test_is_older_than_timestamp_none():
+def test_is_older_than_timestamp_none() -> None:
     res = Walk._is_older_than_timestamp(TMP_ROOT, None, None)
     assert not res
 
 
-def test_is_older_than_timestamp_older():
+def test_is_older_than_timestamp_older() -> None:
     _teardown()
     TMP_ROOT.mkdir()
     path = TMP_ROOT / "test.txt"
@@ -168,7 +168,7 @@ def test_is_older_than_timestamp_older():
     _teardown()
 
 
-def test_is_older_than_timestamp_same():
+def test_is_older_than_timestamp_same() -> None:
     _teardown()
     TMP_ROOT.mkdir()
     path = TMP_ROOT / "test.txt"
@@ -179,7 +179,7 @@ def test_is_older_than_timestamp_same():
     _teardown()
 
 
-def test_is_older_than_timestamp_newer():
+def test_is_older_than_timestamp_newer() -> None:
     _teardown()
     TMP_ROOT.mkdir()
     path = TMP_ROOT / "test.txt"
@@ -190,7 +190,7 @@ def test_is_older_than_timestamp_newer():
     _teardown()
 
 
-def test_is_older_than_timestamp_older_archive():
+def test_is_older_than_timestamp_older_archive() -> None:
     _teardown()
     TMP_ROOT.mkdir()
     path = TMP_ROOT / "test.txt"
@@ -202,7 +202,7 @@ def test_is_older_than_timestamp_older_archive():
     _teardown()
 
 
-def test_walk_file_older_than():
+def test_walk_file_older_than() -> None:
     _teardown()
     TMP_ROOT.mkdir()
     path = TMP_ROOT / "text.txt"
@@ -214,7 +214,7 @@ def test_walk_file_older_than():
     _teardown()
 
 
-def test_walk_file_list_only():
+def test_walk_file_list_only() -> None:
     _teardown()
     TMP_ROOT.mkdir()
     path = TMP_ROOT / "test.jpg"
@@ -228,7 +228,7 @@ def test_walk_file_list_only():
     _teardown()
 
 
-def test_walk_file_comic():
+def test_walk_file_comic() -> None:
     _teardown()
     TMP_ROOT.mkdir()
     path = TMP_ROOT / "test.cbr"
@@ -244,7 +244,7 @@ def test_walk_file_comic():
     _teardown()
 
 
-def test_walk_file_dir():
+def test_walk_file_dir() -> None:
     _teardown()
     dir_path = TMP_ROOT / "deep"
     dir_path.mkdir(parents=True)
@@ -257,7 +257,7 @@ def test_walk_file_dir():
     _teardown()
 
 
-def test_walk_dir_unset():
+def test_walk_dir_unset() -> None:
     _teardown()
     dir_path = TMP_ROOT / "deep"
     dir_path.mkdir(parents=True)
@@ -268,7 +268,7 @@ def test_walk_dir_unset():
     _teardown()
 
 
-def test_walk_dir_recurse():
+def test_walk_dir_recurse() -> None:
     _teardown()
     dir_path = TMP_ROOT / "deep"
     dir_path.mkdir(parents=True)
@@ -296,7 +296,7 @@ def test_walk_dir_recurse():
 #    _teardown()
 
 
-def test_walk_all_files_empty():
+def test_walk_all_files_empty() -> None:
     _teardown()
     wos = Walk(Settings())
     record_dirs, bytes_in, bytes_out, nag, errors = wos._walk_all_files()
@@ -308,7 +308,7 @@ def test_walk_all_files_empty():
     _teardown()
 
 
-def test_walk_all_files_one():
+def test_walk_all_files_one() -> None:
     _teardown()
     TMP_ROOT.mkdir()
     path = TMP_ROOT / "test.jpg"
@@ -323,7 +323,7 @@ def test_walk_all_files_one():
     _teardown()
 
 
-def test_walk_all_files_two():
+def test_walk_all_files_two() -> None:
     _teardown()
     root1 = TMP_ROOT / "dir1"
     root1.mkdir(parents=True)
@@ -343,7 +343,7 @@ def test_walk_all_files_two():
     _teardown()
 
 
-def test_walk_all_files_error():
+def test_walk_all_files_error() -> None:
     _teardown()
     TMP_ROOT.mkdir()
     path = TMP_ROOT / "test.gif"
@@ -364,7 +364,7 @@ def test_walk_all_files_error():
     _teardown()
 
 
-def test_run():
+def test_run() -> None:
     _teardown()
     settings = Settings()
     settings.can_do = False
@@ -373,7 +373,7 @@ def test_run():
     assert not res
 
 
-def test_run_optimize_after():
+def test_run_optimize_after() -> None:
     _teardown()
     settings = Settings()
     settings.optimize_after = 3000
@@ -382,7 +382,7 @@ def test_run_optimize_after():
     assert res
 
 
-def test_run_record_timestamp():
+def test_run_record_timestamp() -> None:
     _teardown()
     TMP_ROOT.mkdir()
     settings = Settings(

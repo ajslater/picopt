@@ -42,16 +42,16 @@ def test_get_arguments() -> None:
     assert arguments.paths[0] == str(TMP_ROOT)
 
 
-def _setup():
+def _setup() -> None:
     TMP_ROOT.mkdir(exist_ok=True)
 
 
-def _teardown():
+def _teardown() -> None:
     if TMP_ROOT.exists():
         shutil.rmtree(TMP_ROOT)
 
 
-def test_main():
+def test_main() -> None:
     _setup()
     old_path = TMP_ROOT / "old.jpg"
     shutil.copy(JPEG_SRC, old_path)
@@ -63,7 +63,7 @@ def test_main():
     _teardown()
 
 
-def test_main_err():
+def test_main_err() -> None:
     sys.argv = ["picopt", "-OPJZTG", "XXX"]
     try:
         cli.main()

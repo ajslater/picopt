@@ -7,7 +7,7 @@ from picopt import extern
 __all__ = ()  # hides module from pydocstring
 
 
-def test_extargs_class():
+def test_extargs_class() -> None:
     eac = extern.ExtArgs("a", "b")
     assert type(eac) == extern.ExtArgs
 

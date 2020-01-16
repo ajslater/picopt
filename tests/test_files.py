@@ -17,7 +17,7 @@ _BMP_FORMAT = "BMP"
 _PNG_FORMAT = "PNG"
 
 
-def _fmt_to_suffix(fmt: str):
+def _fmt_to_suffix(fmt: str) -> str:
     return "." + fmt.lower()
 
 
@@ -29,7 +29,7 @@ def _create_file(path: Path, fmt: str, num_chars: int) -> Path:
     return path
 
 
-def _teardown():
+def _teardown() -> None:
     if TMP_DIR.exists():
         shutil.rmtree(TMP_DIR)
 

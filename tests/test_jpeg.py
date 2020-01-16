@@ -2,6 +2,7 @@
 import shutil
 
 from pathlib import Path
+from typing import Tuple
 
 from picopt.extern import ExtArgs
 from picopt.formats import jpeg
@@ -17,19 +18,19 @@ TEST_OLD_JPEG = TMP_ROOT / "old.jpeg"
 TEST_NEW_JPEG = TMP_ROOT / "new.jpeg"
 
 
-def _setup_jpeg():
+def _setup_jpeg() -> Tuple[ExtArgs, Settings]:
     TMP_ROOT.mkdir(exist_ok=True)
     shutil.copy(JPEG_SRC, TEST_OLD_JPEG)
     args = ExtArgs(str(TEST_OLD_JPEG), str(TEST_NEW_JPEG))
     return args, Settings()
 
 
-def _teardown(args):
+def _teardown(args: ExtArgs) -> None:
     if TMP_ROOT.exists():
         shutil.rmtree(TMP_ROOT)
 
 
-def test_mozjpeg():
+def test_mozjpeg() -> None:
     args, settings = _setup_jpeg()
     res = jpeg.Jpeg.mozjpeg(settings, args)
     assert res == "JPEG"
@@ -37,7 +38,7 @@ def test_mozjpeg():
     _teardown(args)
 
 
-def test_mozjpeg_destroy_metadata():
+def test_mozjpeg_destroy_metadata() -> None:
     args, settings = _setup_jpeg()
     settings.destroy_metadata = True
     res = jpeg.Jpeg.mozjpeg(settings, args)
@@ -46,7 +47,7 @@ def test_mozjpeg_destroy_metadata():
     _teardown(args)
 
 
-def test_jpegtran():
+def test_jpegtran() -> None:
     args, settings = _setup_jpeg()
     res = jpeg.Jpeg.jpegtran(settings, args)
     assert res == "JPEG"
@@ -54,7 +55,7 @@ def test_jpegtran():
     _teardown(args)
 
 
-def test_jpegtran_options():
+def test_jpegtran_options() -> None:
     args, settings = _setup_jpeg()
     settings.destroy_metadata = True
     settings.jpegtran_prog = False
@@ -64,7 +65,7 @@ def test_jpegtran_options():
     _teardown(args)
 
 
-def test_jpegrescan():
+def test_jpegrescan() -> None:
     args, settings = _setup_jpeg()
     res = jpeg.Jpeg.jpegrescan(settings, args)
     assert res == "JPEG"
@@ -72,7 +73,7 @@ def test_jpegrescan():
     _teardown(args)
 
 
-def test_jpegrescan_options():
+def test_jpegrescan_options() -> None:
     args, settings = _setup_jpeg()
     settings.destroy_metadata = True
     settings.jpegrescan_multithread = False

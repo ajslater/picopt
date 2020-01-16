@@ -25,7 +25,7 @@ from .timestamp import Timestamp
 class Walk(object):
     """Walk object for storing state of a walk run."""
 
-    def __init__(self, settings: Settings):
+    def __init__(self, settings: Settings) -> None:
         """Set the settings and initialize the threadpool & Timstamp."""
         self._settings = settings
         self._pool = Pool(self._settings.jobs)

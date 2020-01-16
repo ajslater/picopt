@@ -8,6 +8,7 @@ from typing import Callable
 from typing import Optional
 from typing import Set
 from typing import Tuple
+from typing import Union
 
 import rarfile
 
@@ -39,7 +40,7 @@ class Comic(Format):
     FORMATS: Set[str] = set((_CBZ_FORMAT, _CBR_FORMAT))
 
     @staticmethod
-    def comics(_, __) -> str:
+    def comics(_: Settings, __: ExtArgs) -> str:
         """
         Do nothing comic optimizer.
 
@@ -124,7 +125,9 @@ class Comic(Format):
                     new_zf.write(full_path, archive_path, zipfile.ZIP_DEFLATED)
 
     @staticmethod
-    def comic_archive_compress(args) -> ReportStats:
+    def comic_archive_compress(
+        args: Union[Tuple[Path, str, Settings, bool], Tuple[Path, str, Settings, bool]]
+    ) -> ReportStats:
         """
         Call back by every optimization inside a comic archive.
 
