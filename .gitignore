@@ -11,4 +11,3 @@ build
 dist
 monkeytype.sqlite3
 test-results
-test_files
