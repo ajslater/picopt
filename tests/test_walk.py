@@ -2,7 +2,6 @@
 import shutil
 
 from argparse import Namespace
-from pathlib import Path
 
 from picopt.settings import Settings
 from picopt.stats import ReportStats
@@ -28,10 +27,11 @@ def _teardown():
 
 def test_comic_archive_skip() -> None:
     wob = Walk(Settings())
-    path = Path("xxx")
+    path = TMP_ROOT / "xxx"
     rep = ReportStats(path)
     res = wob._comic_archive_skip((rep,))
     assert res.final_path == path
+    _teardown()
 
 
 def test_walk_comic_archive_skip() -> None:
@@ -155,6 +155,7 @@ def test_is_skippable_quiet() -> None:
 def test_is_older_than_timestamp_none() -> None:
     res = Walk._is_older_than_timestamp(TMP_ROOT, None, None)
     assert not res
+    _teardown()
 
 
 def test_is_older_than_timestamp_older() -> None:
@@ -371,6 +372,7 @@ def test_run() -> None:
     wos = Walk(settings)
     res = wos.run()
     assert not res
+    _teardown()
 
 
 def test_run_optimize_after() -> None:
@@ -380,6 +382,7 @@ def test_run_optimize_after() -> None:
     wos = Walk(settings)
     res = wos.run()
     assert res
+    _teardown()
 
 
 def test_run_record_timestamp() -> None:
@@ -391,3 +394,4 @@ def test_run_record_timestamp() -> None:
     wos = Walk(settings)
     res = wos.run()
     assert res
+    _teardown()
