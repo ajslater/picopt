@@ -2,9 +2,9 @@ FROM ubuntu:19.10
 
 ENV DEBIAN_FRONTEND noninteractive
 
-RUN apt update
-Run apt dist-upgrade -y
-RUN apt install -y \
+RUN apt-get update
+Run apt-get dist-upgrade -y
+RUN apt-get install -y \
     curl \
     gifsicle \
     git \
