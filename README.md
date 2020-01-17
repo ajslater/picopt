@@ -7,9 +7,9 @@ Picopt depends on Python [PIL](http://www.pythonware.com/products/pil/) to ident
 
 The actual image optimization is accomplished by external programs.
 
-To optimize JPEG images. Picopt needs one of [mozjpeg](https://github.com/mozilla/mozjpeg), [jpegrescan](https://github.com/kud/jpegrescan) or [jpegtran](http://jpegclub.org/jpegtran/) on the path. in order of preference.
+To optimize JPEG images. Picopt needs one of [mozjpeg](https://github.com/mozilla/mozjpeg) or [jpegtran](http://jpegclub.org/jpegtran/) on the path. in order of preference.
 
-To optimize lossless images like PNG, PNM, GIF, and BMP, picopt requires either [optipng](http://optipng.sourceforge.net/), [advpng](http://advancemame.sourceforge.net/doc-advpng.html) or [pngout](http://advsys.net/ken/utils.htm) be on the path. Optipng provides the most advantage, but best results are acheived by using pngout as well. Advpng support is disabled by default and must be explicitly enabled on the command line.
+To optimize lossless images like PNG, PNM, GIF, and BMP, picopt requires either [optipng](http://optipng.sourceforge.net/) or [pngout](http://advsys.net/ken/utils.htm) be on the path. Optipng provides the most advantage, but best results are acheived by using pngout as well.
 
 Animated GIFs are optimized with [gifsicle](http://www.lcdf.org/gifsicle/) if it is available. Picopt nag you to convert your file to [HTML5 video](http://gfycat.com/about), but does not provide this service itself.
 
@@ -39,23 +39,17 @@ if you don't want to install mozjpeg using the instructions below then use jpegt
     yum install libjpeg-progs
 
 #### MozJPEG
-mozjpeg offers better compression than libjpeg-progs' jpegtran. As of Oct 2015 it may or
+mozjpeg offers better compression than libjpeg-progs' jpegtran. As of Jan 2020 it may or
 may not be packaged for your \*nix, but even when it is, picopt requires
 that its separately compiled version of jpegtran be symlinked to 'mozjpeg'
 somewhere in the path. This installation example is for OS X:
 
-    ln -s /usr/local/Cellar/mozjpeg/3.1/bin/jpegtran /usr/local/bin/mozjpeg
+    ln -s /usr/local/Cellar/mozjpeg/3.3/bin/jpegtran /usr/local/bin/mozjpeg
 
-You may find Linux instructions at [Robert Walter's Blog](http://www.robertwalter.de/blog/2015/04/08/mozjpeg-3-0-0-on-debian-and-ubuntu/)
-
-#### jpegrescan
-If you can't install MozJPEG, jpegrescan is a better jpeg optimizer than jpegtran contained in libjpeg-progs, unfortunately it also remains unpackaged :(
-
-    git clone https://github.com/kud/jpegrescan.git
-    ln -s jpegrescan/jpegrescan /usr/local/bin/jpegrescan
+You may find Linux instructions on [Andrew Welch's blog](https://nystudio107.com/blog/installing-mozjpeg-on-ubuntu-16-04-forge)
 
 #### pngout
-pngout is a useful compression to use after optipng. It is not packaged for linux, but you may find the latest binary version [on JonoF's site](http://www.jonof.id.au/kenutils). Picopt looks for the binary to be called `picopt`
+pngout is a useful compression to use after optipng. It is not packaged for linux, but you may find the latest binary version [on JonoF's site](http://www.jonof.id.au/kenutils). Picopt looks for the binary to be called `pngout`
 
 ### Picopt python package
     pip install picopt
@@ -101,8 +95,8 @@ Picopt automatically uses timestamp files if it detects them in or above the cur
 Packaged For
 ------------
 
-* [PyPI](https://pypi.python.org/pypi/picopt/)
-* [Arch Linux](https://aur.archlinux.org/packages/picopt/)
+  * [PyPI](https://pypi.python.org/pypi/picopt/)
+  * [Arch Linux](https://aur.archlinux.org/packages/picopt/)
 
 Alternatives
 ------------

@@ -1,11 +1,14 @@
-FROM ubuntu:eoan
+FROM ubuntu:19.10
 
-RUN apt update
-Run apt dist-upgrade -y
-RUN apt install -y \
+ENV DEBIAN_FRONTEND noninteractive
+
+RUN apt-get update
+Run apt-get dist-upgrade -y
+RUN apt-get install -y \
     curl \
     gifsicle \
     git \
+    libjpeg-progs \
     optipng \
     python3-setuptools \
     python3-venv \
@@ -13,7 +16,7 @@ RUN apt install -y \
 
 RUN python3 /usr/lib/python3/dist-packages/easy_install.py pip
 RUN pip3 install poetry
-WORKDIR /opt/picopt
+WORKDIR /opt/picopt/
 COPY ci ci
 RUN ci/mozjpeg.sh
 RUN ci/pngout.sh

@@ -1,14 +1,13 @@
 *.egg-info
 *.pyc
 *~
-.coverage
+.DS_Store
+.coverage*
 .mypy_cache
 .picopt_timestamp
 .ropeproject
 MANIFEST
 build
 dist
-test-results
-.DS_Store
 monkeytype.sqlite3
-test_files
+test-results

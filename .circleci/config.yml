@@ -7,5 +7,6 @@ jobs:
       - run: ci/build.sh
       - run: ci/test.sh
       - store_test_results:
-            path: /tmp/test-results
-
+            path: test-results
+      - store_artifacts:
+            path: test-results/coverage

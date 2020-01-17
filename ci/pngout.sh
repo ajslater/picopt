@@ -2,9 +2,10 @@
 # pngout
 set -euo pipefail
 
-URL=http://static.jonof.id.au/dl/kenutils/pngout-20150319-linux-static.tar.gz 
-TARBALL="$(dirname "$0")/pngout-20150319-linux-static.tar.gz"
-BIN_NAME=pngout-20150319-linux-static/x86_64/pngout-static
+RELEASE=pngout-20200115-linux-static
+URL=http://static.jonof.id.au/dl/kenutils/$RELEASE.tar.gz 
+TARBALL="$(dirname "$0")/$RELEASE.tar.gz"
+BIN_NAME=$RELEASE/amd64/pngout-static
 DEST=/usr/local/bin/pngout
 
 if [ -f "$TARBALL" ]; then

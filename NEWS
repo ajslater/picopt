@@ -1,3 +1,10 @@
+v2.1.0
+* Remove adv support. It was inferior to other methods anyway.
+* Remove jpegrescan support. Inferior to mozjpeg
+* Don't preserve ctime/mtime when making new pngs
+* Use pytest instead of nosetest
+* Require formating with black & isort
+
 v2.0.1
 * Pillow 7 compatibility
 

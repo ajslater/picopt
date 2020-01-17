@@ -1,2 +1,2 @@
 """Picopt init and module constants."""
-PROGRAM_NAME = 'picopt'
+PROGRAM_NAME = "picopt"
