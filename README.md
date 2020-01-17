@@ -95,8 +95,8 @@ Picopt automatically uses timestamp files if it detects them in or above the cur
 Packaged For
 ------------
 
-* [PyPI](https://pypi.python.org/pypi/picopt/)
-* [Arch Linux](https://aur.archlinux.org/packages/picopt/)
+  * [PyPI](https://pypi.python.org/pypi/picopt/)
+  * [Arch Linux](https://aur.archlinux.org/packages/picopt/)
 
 Alternatives
 ------------
