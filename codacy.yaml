@@ -1,0 +1,6 @@
+engines:
+ prospector:
+   enabled: true
+   python_version: 3
+exclude_paths:
+  - 'tests/**'
