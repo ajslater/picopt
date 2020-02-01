@@ -49,6 +49,8 @@ pytest-monkeytype = "^1.0"
 pytest-mypy = "^0.4"
 mypy = "^0.761"
 monkeytype = "^19.11"
+vulture = "^1.2"
+radon = "^4.1.0"
 
 [tool.poetry.scripts]
 picopt = "picopt.cli:main"
