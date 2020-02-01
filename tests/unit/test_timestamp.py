@@ -317,7 +317,7 @@ def test_record_timestamp_set_error() -> None:
 
 
 def test_record_timestamp_set_remove() -> None:
-    deep_record_path, deep_mtime, tso = _setup(DEEP_TMP)
+    deep_record_path, _, tso = _setup(DEEP_TMP)
     tso._settings.record_timestamp = True
     tso._get_timestamp_cached(DEEP_TMP, True)
     assert deep_record_path.exists()

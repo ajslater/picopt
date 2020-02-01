@@ -5,4 +5,4 @@ poetry run pytest
 # pytest-cov leaves .coverage.$HOST.$PID.$RAND files around while coverage itself doesn't
 poetry run coverage erase
 poetry run vulture .
-poetry run radon mi -nc
+poetry run radon mi -nc .
