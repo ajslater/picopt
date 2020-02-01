@@ -4,7 +4,7 @@ build-backend = ["poetry.masonry.api"]
 
 [tool.poetry]
 name = "picopt"
-version = "2.1.0"
+version = "2.1.1_rc0"
 description = "A multi format lossless image optimizer that uses external tools"
 license = "GPL-2.0-only"
 authors = ["AJ Slater <aj@slater.net>"]
