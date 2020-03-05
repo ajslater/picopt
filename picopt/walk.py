@@ -170,6 +170,7 @@ class Walk(object):
 
         for root, _, filenames in os.walk(dir_path):
             root_path = Path(root)
+            filenames.sort()
             for filename in filenames:
                 full_path = root_path / filename
                 try:
