@@ -1,5 +1,6 @@
-v2.1.1_rc0
+v2.2.0_rc0
 * check code with vulture and radon
+* walk in alphabetical order
 
 v2.1.0
 * Remove adv support. It was inferior to other methods anyway.
