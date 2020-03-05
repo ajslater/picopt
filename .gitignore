@@ -11,3 +11,4 @@ build
 dist
 monkeytype.sqlite3
 test-results
+__pycache__
