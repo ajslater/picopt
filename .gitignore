@@ -7,8 +7,8 @@
 .picopt_timestamp
 .ropeproject
 MANIFEST
+__pycache__
 build
 dist
 monkeytype.sqlite3
 test-results
-__pycache__

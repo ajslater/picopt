@@ -1,7 +1,6 @@
 [[package]]
 category = "dev"
 description = "A small Python module for determining appropriate platform-specific dirs, e.g. a \"user data dir\"."
-marker = "python_version >= \"3.6\""
 name = "appdirs"
 optional = false
 python-versions = "*"
@@ -481,7 +480,6 @@ version = "3.1"
 [[package]]
 category = "dev"
 description = "Alternative regular expression module, to replace re."
-marker = "python_version >= \"3.6\""
 name = "regex"
 optional = false
 python-versions = "*"
