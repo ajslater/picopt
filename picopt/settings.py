@@ -4,7 +4,6 @@ import time
 
 from argparse import Namespace
 from typing import Callable
-from typing import List
 from typing import Optional
 from typing import Set
 
@@ -16,16 +15,13 @@ from . import extern
 class Settings(Namespace):
     """Global settings class."""
 
-    DEFAULT_FORMATS = "ALL"
     # advpng: bool = False
-    archive_name: Optional[str] = None
     bigger: bool = False
     comics: bool = False
     destroy_metadata: bool = False
     follow_symlinks: bool = True
     formats: Set[str] = set()
     gifsicle: bool = True
-    ignore: List[str] = []
     jobs: int = multiprocessing.cpu_count()
     #    jpegrescan: bool = True
     #    jpegrescan_multithread: bool = False

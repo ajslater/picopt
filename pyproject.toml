@@ -4,7 +4,7 @@ build-backend = ["poetry.masonry.api"]
 
 [tool.poetry]
 name = "picopt"
-version = "2.1.0"
+version = "2.2.0"
 description = "A multi format lossless image optimizer that uses external tools"
 license = "GPL-2.0-only"
 authors = ["AJ Slater <aj@slater.net>"]
@@ -49,6 +49,8 @@ pytest-monkeytype = "^1.0"
 pytest-mypy = "^0.4"
 mypy = "^0.761"
 monkeytype = "^19.11"
+vulture = "^1.2"
+radon = "^4.1"
 
 [tool.poetry.scripts]
 picopt = "picopt.cli:main"

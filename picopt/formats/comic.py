@@ -117,6 +117,7 @@ class Comic(Format):
         with zipfile.ZipFile(new_path, "w", compression=zipfile.ZIP_DEFLATED) as new_zf:
             for root, _, filenames in os.walk(tmp_path):
                 root_path = Path(root)
+                filenames.sort()
                 for fname in filenames:
                     if settings.verbose:
                         print(".", end="")

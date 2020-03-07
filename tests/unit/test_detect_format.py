@@ -110,11 +110,6 @@ class TestGetImageFormat(TestCase):
 
 
 class TestDetectFile(TestCase):
-    class DummySettings(object):
-        formats: Set[str] = set(["CBR", "CBZ"])
-        comics: bool = True
-        list_only: bool = False
-
     def _test_type(
         self, settings: Settings, root: Path, filename: str, image_type: Optional[str]
     ) -> None:
