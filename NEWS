@@ -1,3 +1,6 @@
+v2.2.1-rc0
+* Preserve comments in comic archives
+
 v2.2.0
 * Walk in alphabetical order
 * Check code with vulture and radon
