@@ -128,14 +128,14 @@ class Comic(Format):
             for root, _, filenames in os.walk(tmp_path):
                 root_path = Path(root)
                 filenames.sort()
-                for fname in filenames:
+                for fname in sorted(filenames):
                     if settings.verbose:
                         print(".", end="")
                     full_path = root_path / fname
                     archive_path = full_path.relative_to(tmp_path)
                     new_zf.write(full_path, archive_path, zipfile.ZIP_DEFLATED)
-                    if comment:
-                        new_zf.comment = comment
+            if comment:
+                new_zf.comment = comment
 
     @staticmethod
     def comic_archive_compress(
