@@ -1,4 +1,4 @@
-FROM ubuntu:19.10
+FROM ubuntu:focal
 
 ENV DEBIAN_FRONTEND noninteractive
 
