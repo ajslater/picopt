@@ -29,6 +29,7 @@
 
 ## Future:
 - When Apple fully supports WebP or AVIF, offer that for everything and prefer it to png.
+-- https://developer.apple.com/documentation/safari-release-notes/safari-14-beta-release-notes
 -- And maybe jpg?
 -- https://caniuse.com/#feat=webp
 -- https://caniuse.com/#feat=av1
