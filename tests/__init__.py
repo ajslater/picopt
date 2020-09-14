@@ -14,7 +14,7 @@ TMP_ROOT = "/tmp"
 def get_test_dir():
     """Return a module specific tmpdir."""
     frame = inspect.currentframe()
-    if frame:
+    if frame and frame.f_back:
         caller = frame.f_back
         module_name = caller.f_globals["__name__"]
     else:
