@@ -77,7 +77,8 @@ class Walk(object):
             if self._settings.verbose > 1:
                 print(path, "is a symlink, skipping.")
             return True
-        if path.name == timestamp.RECORD_FILENAME:
+        if path.name == timestamp.OLD_TIMESTAMP_FN:
+            self._tso.upgrade_old_timestamp(path)
             return True
         if not path.exists():
             if self._settings.verbose:
@@ -200,6 +201,7 @@ class Walk(object):
             # Record dirs to put timestamps in later
             if self._settings.recurse and path.is_dir():
                 record_dirs.add(path)
+                self._tso.upgrade_old_parent_timestamps(path)
 
             walk_after = self._tso.get_walk_after(path)
             # TODO is passing this recurse argument neccissary?
@@ -245,7 +247,7 @@ class Walk(object):
         self._pool.join()
 
         # Write timestamps
-        for filename in record_dirs:
+        for filename in sorted(record_dirs):
             self._tso.record_timestamp(filename)
 
         # Finish by reporting totals

@@ -5,7 +5,7 @@ from argparse import Namespace
 
 from picopt.settings import Settings
 from picopt.stats import ReportStats
-from picopt.timestamp import RECORD_FILENAME
+from picopt.timestamp import OLD_TIMESTAMP_FN
 from picopt.walk import Walk
 from tests import COMIC_DIR
 from tests import IMAGES_DIR
@@ -120,7 +120,7 @@ def test_is_skippable_symlink_quiet() -> None:
 def test_is_skippable_timestamp() -> None:
     _teardown()
     TMP_ROOT.mkdir()
-    path = TMP_ROOT / RECORD_FILENAME
+    path = TMP_ROOT / OLD_TIMESTAMP_FN
     path.touch()
     settings = Settings()
     wob = Walk(settings)

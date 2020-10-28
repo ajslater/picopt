@@ -3,17 +3,17 @@ from datetime import datetime
 from pathlib import Path
 from typing import Dict
 from typing import Optional
-from typing import Set
 from typing import Tuple
 
-from . import PROGRAM_NAME
-from .settings import Settings
+from ruamel.yaml import YAML
+
+from picopt import PROGRAM_NAME
+from picopt.settings import Settings
 
 
-RECORD_FILENAME = f".{PROGRAM_NAME}_timestamp"
-_REASON_DEFAULT = ""
-_REASON_SYMLINK = "Not setting timestamp because not following symlinks"
-_REASON_NONDIR = "Not setting timestamp for a non-directory"
+OLD_TIMESTAMP_FN = f".{PROGRAM_NAME}_timestamp"
+TIMESTAMP_FN = "timestamps.yaml"
+yaml = YAML()
 
 
 class Timestamp(object):
@@ -22,80 +22,25 @@ class Timestamp(object):
     def __init__(self, settings: Settings) -> None:
         """Initialize instance variables."""
         self._settings = settings
-        self._timestamp_cache: Dict[Path, Optional[float]] = {}
-        self._old_timestamps: Set[Path] = set()
+        self._timestamps_path = settings.config_path / TIMESTAMP_FN
+        self._timestamps = self._load_timestamps()
 
-    def _get_timestamp(self, path: Path, remove: bool) -> Optional[float]:
-        """
-        Get the timestamp from the timestamp file.
+    def _get_timestamp(self, path: Path) -> Optional[float]:
+        """Get the timestamp from the cache."""
+        mtime: Optional[float] = None
+        while path != path.parent:
+            mtime = self._timestamps.get(path)
+            if mtime is not None:
+                break
+            path = path.parent
 
-        Optionally mark it for removal if we're going to write another one.
-        """
-        record_path = path / RECORD_FILENAME
-        if self._settings.verbose > 1:
-            print("looking for", record_path)
-        if not record_path.exists():
-            return None
-
-        mtime = record_path.stat().st_mtime
-        mtime_str = datetime.fromtimestamp(mtime)
-        print(f"Found timestamp {path}:{mtime_str}")
-        if self._settings.record_timestamp and remove:
-            self._old_timestamps.add(record_path)
         return mtime
 
-    def _get_timestamp_cached(self, path: Path, remove: bool) -> Optional[float]:
-        """
-        Get the timestamp from the cache or fill the cache.
-
-        Much quicker than reading the same files over and over
-        """
-        if path not in self._timestamp_cache:
-            mtime = self._get_timestamp(path, remove)
-            self._timestamp_cache[path] = mtime
-        return self._timestamp_cache[path]
-
-    def _remove_old_timestamps(
-        self, full_path: Path, record_filepath: Path
-    ) -> Dict[Path, Optional[OSError]]:
-        """Remove old timestamps after setting a new one."""
-        removed: Dict[Path, Optional[OSError]] = {}
-        for path in self._old_timestamps:
-            # only remove timestamps below the curent path
-            # but don't remove the timestamp we just set!
-            if (
-                not path.exists()
-                or full_path not in path.parents
-                or path.samefile(record_filepath)
-            ):
-                continue
-            try:
-                path.unlink()
-                removed[path] = None
-            except OSError as err:
-                removed[path] = err
-
-        if not self._settings.verbose:
-            return removed
-
-        for path, error in removed.items():
-            if error is None:
-                print(f"Removed old timestamp: {path}")
-            else:
-                print(f"Could not remove old timestamp: {path}: {error.strerror}")
-
-        return removed
-
-    @staticmethod
-    def max_none(lst: Tuple[Optional[float], Optional[float]]) -> Optional[float]:
-        """Max function that works in python 3."""
-        return max((x for x in lst if x is not None), default=None)
-
     def _max_timestamps(
-        self, path: Path, remove: bool, compare_tstamp: Optional[float]
+        self, path: Path, compare_tstamp: Optional[float]
     ) -> Optional[float]:
         """Compare a timestamp file to one passed in. Get the max."""
-        tstamp = self._get_timestamp_cached(path, remove)
+        tstamp = self._get_timestamp(path)
         return self.max_none((tstamp, compare_tstamp))
 
     def _get_parent_timestamp(
@@ -107,7 +52,7 @@ class Timestamp(object):
         Because they affect every subdirectory.
         """
         # max between the parent timestamp the one passed in
-        mtime = self._max_timestamps(path, False, mtime)
+        mtime = self._max_timestamps(path, mtime)
 
         if path != path.parent:
             # recurse up if we're not at the root
@@ -115,12 +60,69 @@ class Timestamp(object):
 
         return mtime
 
+    def _should_record_timestamp(self, path: Path) -> bool:
+        """Determine if we should we record a timestamp at all."""
+        # TODO simplify
+        record = True
+        if (
+            self._settings.test
+            or self._settings.list_only
+            or not self._settings.record_timestamp
+        ):
+            record = False
+        elif not self._settings.follow_symlinks and path.is_symlink():
+            record = False
+        elif not path.exists():
+            record = False
+
+        return record
+
+    def record_timestamp(
+        self, full_path: Path, mtime: Optional[float] = None
+    ) -> Optional[float]:
+        """Record the timestamp."""
+        if not self._should_record_timestamp(full_path):
+            return None
+        if mtime is None:
+            mtime = datetime.now().timestamp()
+        self._timestamps[full_path] = mtime
+        self._dump_timestamps()
+        return mtime
+
+    def _load_timestamps(self):
+        timestamps: Dict = {}
+        try:
+            yaml_timestamps: Optional[Dict] = yaml.load(self._timestamps_path)
+            if yaml_timestamps:
+                for path_str, timestamp in yaml_timestamps.items():
+                    timestamps[Path(path_str)] = timestamp
+        except OSError:
+            pass
+        return timestamps
+
+    def _dumpable_timestamps(self):
+        dumpable_timestamps = {}
+        for path, timestamp in self._timestamps.items():
+            dumpable_timestamps[str(path)] = timestamp
+        return dumpable_timestamps
+
+    def _dump_timestamps(self):
+        # Could do with unsafe YAML, but this seems better
+        dumpable_timestamps = self._dumpable_timestamps()
+        yaml.dump(dumpable_timestamps, self._timestamps_path)
+
+    @staticmethod
+    def max_none(lst: Tuple[Optional[float], Optional[float]]) -> Optional[float]:
+        """Max function that works in python 3."""
+        return max((x for x in lst if x is not None), default=None)
+
     def get_walk_after(
         self, path: Path, optimize_after: Optional[float] = None
     ) -> Optional[float]:
         """
         Figure out the which mtime to check against.
 
+        Passes in optimize_after from above to compare against
         If we have to look up the path return that.
         """
         if self._settings.optimize_after is not None:
@@ -131,50 +133,48 @@ class Timestamp(object):
 
         if optimize_after is None:
             optimize_after = self._get_parent_timestamp(path, None)
-        after = self._max_timestamps(path, True, optimize_after)
+        after = self._max_timestamps(path, optimize_after)
         return after
 
-    def _should_record_timestamp(self, path: Path) -> Tuple[bool, str]:
-        """Determine if we should we record a timestamp at all."""
-        record = True
-        reason = _REASON_DEFAULT
-        if (
-            self._settings.test
-            or self._settings.list_only
-            or not self._settings.record_timestamp
-        ):
-            record = False
-        elif not self._settings.follow_symlinks and path.is_symlink():
-            record = False
-            reason = _REASON_SYMLINK
-        elif not path.exists() or not path.is_dir():
-            record = False
-            reason = _REASON_NONDIR
-
-        return record, reason
-
-    def _record_timestamp(self, full_path: Path) -> Optional[Path]:
-        """Record the timestamp utilitiy without extra actios."""
-        record_filepath = full_path / RECORD_FILENAME
-        try:
-            record_filepath.touch()
-            if self._settings.verbose:
-                print(f"Set timestamp: {record_filepath}")
-        except OSError as err:
-            print(f"Could not set timestamp in {full_path}: {err.strerror}")
+    def upgrade_old_timestamp(self, path: Path) -> Optional[float]:
+        """Get the timestamp from a old style timestamp file."""
+        old_timestamp_path = path / OLD_TIMESTAMP_FN
+        if self._settings.verbose > 2:
+            print("looking for", old_timestamp_path)
+        if not old_timestamp_path.exists():
             return None
-        return record_filepath
 
-    def record_timestamp(self, full_path: Path) -> None:
-        """Record the timestamp of running in a dotfile."""
-        record, reason = self._should_record_timestamp(full_path)
-        if not record:
-            if self._settings.verbose:
-                print(reason)
-            return
+        mtime = old_timestamp_path.stat().st_mtime
+        mtime_str = datetime.fromtimestamp(mtime)
+        print(f"Found old style timestamp {path}:{mtime_str}")
+        self.record_timestamp(path, mtime)
+        try:
+            old_timestamp_path.unlink()
+        except OSError:
+            print(f"Could not remove old timestamp: {old_timestamp_path}")
+        return mtime
 
-        record_filepath = self._record_timestamp(full_path)
-        if record_filepath is None:
-            return
+    def upgrade_old_parent_timestamps(self, path: Path) -> Optional[float]:
+        """Walk up to the root eating old style timestamps."""
+        if path.is_file():
+            path = path.parent
 
-        self._remove_old_timestamps(full_path, record_filepath)
+        path_mtime = self.upgrade_old_timestamp(path)
+        if path.parent != path:
+            parent_mtime = self.upgrade_old_parent_timestamps(path.parent)
+            path_mtime = self.max_none((parent_mtime, path_mtime))
+        return path_mtime
+
+    def compact_timestamps(self, root_path: Path) -> None:
+        """Compact the timestamp cache and dump it."""
+        max_timestamp = None
+        delete_keys = set()
+        for path in self._timestamps.keys():
+            if root_path in path.parents:
+                timestamp = self._timestamps.get(path)
+                delete_keys.add(path)
+                max_timestamp = self.max_none((timestamp, max_timestamp))
+        for path in delete_keys:
+            del self._timestamps[path]
+        self._timestamps[root_path] = max_timestamp
+        self._dump_timestamps()

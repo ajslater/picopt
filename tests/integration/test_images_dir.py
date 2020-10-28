@@ -8,6 +8,7 @@ from tests import get_test_dir
 
 __all__ = ()
 TMP_ROOT = get_test_dir()
+ARGS = ("", "--config", str(TMP_ROOT))
 
 
 def setup() -> None:
@@ -22,7 +23,7 @@ def teardown() -> None:
 
 def test_walk_images() -> None:
     setup()
-    args = tuple("") + tuple(map(str, TMP_ROOT.glob("*")))
+    args = ARGS + tuple(map(str, TMP_ROOT.glob("*")))
     res = cli.run(args)
     assert res
     teardown()
@@ -30,7 +31,7 @@ def test_walk_images() -> None:
 
 def test_all_once() -> None:
     setup()
-    args = ("", "-rct", str(TMP_ROOT))
+    args = ARGS + ("-rct", str(TMP_ROOT))
     res = cli.run(args)
     assert res
     teardown()

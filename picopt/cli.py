@@ -246,6 +246,14 @@ def get_arguments(args: Tuple[str, ...]) -> Namespace:
         default=0,
         help="Number of parallel jobs to run simultaneously.",
     )
+    parser.add_argument(
+        "-C",
+        "--config",
+        type=str,
+        action="store",
+        default=Settings.config_path,
+        help=f"Path to the config directory. Defaults to {Settings.config_path}",
+    )
 
     return parser.parse_args(args[1:])
 

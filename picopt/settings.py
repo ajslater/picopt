@@ -3,12 +3,14 @@ import multiprocessing
 import time
 
 from argparse import Namespace
+from pathlib import Path
 from typing import Callable
 from typing import Optional
 from typing import Set
 
 import dateutil.parser
 
+from . import PROGRAM_NAME
 from . import extern
 
 
@@ -38,6 +40,7 @@ class Settings(Namespace):
     test: bool = False
     to_png_formats: Set[str] = set()
     verbose: int = 1
+    config_path: Path = Path.home() / PROGRAM_NAME
 
     def __init__(
         self,
@@ -46,13 +49,13 @@ class Settings(Namespace):
     ) -> None:
         """Initialize settings object with arguments namespace."""
         self._update(namespace)
+        self.config_path.mkdir(parents=True, exist_ok=True)
         self._config_program_reqs(programs)
         self.verbose += 1
         self.paths = set(self.paths)
         self._update_formats()
         self.jobs = max(self.jobs, 1)
-
-    #        self._set_jpegrescan_threading()
+        # self._set_jpegrescan_threading()
 
     @staticmethod
     def parse_date_string(date_str: str) -> float:
