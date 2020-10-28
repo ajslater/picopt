@@ -222,7 +222,7 @@ class Walk(object):
                 errors += [(res.final_path, res.error)]
                 continue
             # APPEND EVERY FILE'S TIMESTAMP
-            # self._tso.record_timestamp(res.final_path)
+            self._tso.record_timestamp(res.final_path)
             bytes_in += res.bytes_in
             bytes_out += res.bytes_out
             nag_about_gifs = nag_about_gifs or res.nag_about_gifs
@@ -255,6 +255,7 @@ class Walk(object):
         # Write timestamps
         for dirname in sorted(record_dirs):
             self._tso.record_timestamp(dirname)
+            self._tso.compact_timestamps(dirname)
 
         self._tso._dump_timestamps()  # XXX PRIVATE
 

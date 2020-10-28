@@ -13,16 +13,18 @@ from picopt.settings import Settings
 
 OLD_TIMESTAMP_FN = f".{PROGRAM_NAME}_timestamp"
 TIMESTAMP_FN = "timestamps.yaml"
-yaml = YAML()
 
 
 class Timestamp(object):
     """Timestamp object to hold settings and caches."""
 
+    yaml = YAML()
+
     def __init__(self, settings: Settings) -> None:
         """Initialize instance variables."""
         self._settings = settings
         self._timestamps_path = settings.config_path / TIMESTAMP_FN
+        self.yaml.allow_duplicate_keys = True
         self._timestamps = self._load_timestamps()
 
     def _get_timestamp(self, path: Path) -> Optional[float]:
@@ -86,14 +88,14 @@ class Timestamp(object):
         if mtime is None:
             mtime = datetime.now().timestamp()
         self._timestamps[full_path] = mtime
-        # self._dump_append(full_path, mtime)
+        self._dump_append(full_path, mtime)
         return mtime
 
     def _load_timestamps(self):
         timestamps: Dict = {}
         try:
             print(f"TS PATH {self._timestamps_path}")
-            yaml_timestamps: Optional[Dict] = yaml.load(self._timestamps_path)
+            yaml_timestamps: Optional[Dict] = self.yaml.load(self._timestamps_path)
             if yaml_timestamps:
                 for path_str, timestamp in yaml_timestamps.items():
                     timestamps[Path(path_str)] = timestamp
@@ -114,7 +116,7 @@ class Timestamp(object):
     def _dump_timestamps(self):
         # Could do with unsafe YAML, but this seems better
         dumpable_timestamps = self._dumpable_timestamps()
-        yaml.dump(dumpable_timestamps, self._timestamps_path)
+        self.yaml.dump(dumpable_timestamps, self._timestamps_path)
 
     @staticmethod
     def max_none(lst: Tuple[Optional[float], Optional[float]]) -> Optional[float]:
