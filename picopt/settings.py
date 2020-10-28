@@ -10,8 +10,14 @@ from typing import Set
 
 import dateutil.parser
 
+from ruamel.yaml import YAML
+
 from . import PROGRAM_NAME
 from . import extern
+
+
+RC_FN = f".{PROGRAM_NAME}rc"
+TIMESTAMP_FN = "timestamps.yaml"
 
 
 class Settings(Namespace):
@@ -40,7 +46,8 @@ class Settings(Namespace):
     test: bool = False
     to_png_formats: Set[str] = set()
     verbose: int = 1
-    config_path: Path = Path.home() / ".config" / PROGRAM_NAME
+    timestamp_path: Path = Path.home() / ".config" / PROGRAM_NAME / TIMESTAMP_FN
+    rc_path: Path = Path.cwd() / RC_FN
 
     def __init__(
         self,
@@ -48,14 +55,43 @@ class Settings(Namespace):
         namespace: Optional[Namespace] = None,
     ) -> None:
         """Initialize settings object with arguments namespace."""
+        self.yaml = YAML()
+        if namespace and hasattr(namespace, "rc_path"):
+            self.rc_path = namespace.rc_path
+        rc_settings = self.load_rc(self.rc_path)
+        # rc settings write over defaulst
+        self._update(rc_settings)
+        # passed in args overwrite rc
         self._update(namespace)
-        self.config_path.mkdir(parents=True, exist_ok=True)
         self._config_program_reqs(programs)
         self.verbose += 1
         self.paths = set(self.paths)
         self._update_formats()
         self.jobs = max(self.jobs, 1)
         # self._set_jpegrescan_threading()
+
+    def load_rc(self, rc_path=None):
+        """Load an rc file, searching recursively upwards."""
+        if rc_path is None:
+            rc_path = self.rc_path
+
+        if rc_path.is_dir():
+            rc_path = rc_path / RC_FN
+
+        if rc_path.is_file():
+            rc_settings = self.yaml.load(rc_path)
+            if rc_settings.formats:
+                rc_settings.formats = set(rc_settings.formats)
+            if rc_settings.paths:
+                rc_settings.paths = set(rc_settings.paths)
+            if rc_settings.to_png_formats:
+                rc_settings.to_png_formats = set(rc_settings.to_png_formats)
+            return rc_settings
+
+        if rc_path.parent != rc_path.parent.parent:
+            return self.load_rc(rc_path.parent.parent)
+
+        return {}
 
     @staticmethod
     def parse_date_string(date_str: str) -> float:

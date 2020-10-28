@@ -250,8 +250,8 @@ def get_arguments(args: Tuple[str, ...]) -> Namespace:
         "--config",
         type=str,
         action="store",
-        default=Settings.config_path,
-        help=f"Path to the config directory. Defaults to {Settings.config_path}",
+        default=None,
+        help=f"Path to the config directory. Defaults to {Settings.rc_path}",
     )
 
     return parser.parse_args(args[1:])

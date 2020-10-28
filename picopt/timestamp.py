@@ -12,7 +12,6 @@ from picopt.settings import Settings
 
 
 OLD_TIMESTAMP_FN = f".{PROGRAM_NAME}_timestamp"
-TIMESTAMP_FN = "timestamps.yaml"
 
 
 class Timestamp(object):
@@ -23,7 +22,7 @@ class Timestamp(object):
     def __init__(self, settings: Settings) -> None:
         """Initialize instance variables."""
         self._settings = settings
-        self._timestamps_path = settings.config_path / TIMESTAMP_FN
+        self._timestamps_path = settings.timestamp_path
         self.yaml.allow_duplicate_keys = True
         self._timestamps = self._load_timestamps()
 
