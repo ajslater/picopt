@@ -1,4 +1,6 @@
-v2.2.1-rc0
+v3.0.0-rc0
+* Timestamps are now kept in centralized files. Picopt will covert and clean up old style timestamps it finds.
+* Recording timestamps is now the default behavior
 * Preserve comments in comic archives
 
 v2.2.0
