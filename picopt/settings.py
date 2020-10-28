@@ -16,8 +16,8 @@ from . import PROGRAM_NAME
 from . import extern
 
 
-RC_FN = f".{PROGRAM_NAME}rc"
-TIMESTAMP_FN = "timestamps.yaml"
+RC_FN = f".{PROGRAM_NAME}rc.yaml"
+TIMESTAMPS_FN = f".{PROGRAM_NAME}_timestamps.yaml"
 
 
 class Settings(Namespace):
@@ -46,7 +46,7 @@ class Settings(Namespace):
     test: bool = False
     to_png_formats: Set[str] = set()
     verbose: int = 1
-    timestamp_path: Path = Path.home() / ".config" / PROGRAM_NAME / TIMESTAMP_FN
+    timestamps_path: Path = Path.cwd() / TIMESTAMPS_FN
     rc_path: Path = Path.cwd() / RC_FN
 
     def __init__(
@@ -70,7 +70,7 @@ class Settings(Namespace):
         self.jobs = max(self.jobs, 1)
         # self._set_jpegrescan_threading()
 
-    def load_rc(self, rc_path=None):
+    def load_rc(self, rc_path: Optional[Path] = None):
         """Load an rc file, searching recursively upwards."""
         if rc_path is None:
             rc_path = self.rc_path

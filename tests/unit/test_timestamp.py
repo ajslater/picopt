@@ -6,7 +6,7 @@ from datetime import datetime
 
 from ruamel.yaml import YAML
 
-from picopt.settings import TIMESTAMP_FN
+from picopt.settings import TIMESTAMPS_FN
 from picopt.settings import Settings
 from picopt.timestamp import OLD_TIMESTAMP_FN
 from picopt.timestamp import Timestamp
@@ -15,10 +15,10 @@ from tests import get_test_dir
 
 __all__ = ()
 TMP_ROOT = get_test_dir()
-TIMESTAMP_PATH = TMP_ROOT / TIMESTAMP_FN
+TIMESTAMP_PATH = TMP_ROOT / TIMESTAMPS_FN
 MTIME = datetime.now().timestamp()
 TIMESTAMPS = {str(TMP_ROOT): MTIME}
-SETTINGS = Settings(namespace=Namespace(timestamp_path=TIMESTAMP_PATH))
+SETTINGS = Settings(namespace=Namespace(timestamps_path=TIMESTAMP_PATH))
 
 
 class TestTimestamp:
@@ -34,8 +34,7 @@ class TestTimestamp:
         self.tso = Timestamp(SETTINGS)
 
     def teardown_method(self) -> None:
-        if self.path.exists():
-            shutil.rmtree(self.path)
+        shutil.rmtree(self.path)
 
     def _setup_old_timestamp(self) -> None:
         self.old_timestamp_path.touch()

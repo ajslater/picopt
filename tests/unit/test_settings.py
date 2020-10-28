@@ -1,7 +1,8 @@
 """Test the settings module."""
+import shutil
+
 from argparse import Namespace
 from sys import platform
-import shutil
 
 from ruamel.yaml import YAML
 

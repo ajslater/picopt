@@ -8,6 +8,7 @@ from typing import Tuple
 from ruamel.yaml import YAML
 
 from picopt import PROGRAM_NAME
+from picopt.settings import TIMESTAMPS_FN
 from picopt.settings import Settings
 
 
@@ -22,7 +23,6 @@ class Timestamp(object):
     def __init__(self, settings: Settings) -> None:
         """Initialize instance variables."""
         self._settings = settings
-        self._timestamps_path = settings.timestamp_path
         self.yaml.allow_duplicate_keys = True
         self._timestamps = self._load_timestamps()
 
@@ -90,20 +90,33 @@ class Timestamp(object):
         self._dump_append(full_path, mtime)
         return mtime
 
-    def _load_timestamps(self):
+    def _load_timestamps(self, timestamps_path: Optional[Path] = None):
+        if timestamps_path is None:
+            timestamps_path = self._settings.timestamps_path
+
+        if timestamps_path.is_dir():
+            timestamps_path = timestamps_path / TIMESTAMPS_FN
+
         timestamps: Dict = {}
-        try:
-            print(f"TS PATH {self._timestamps_path}")
-            yaml_timestamps: Optional[Dict] = self.yaml.load(self._timestamps_path)
-            if yaml_timestamps:
-                for path_str, timestamp in yaml_timestamps.items():
-                    timestamps[Path(path_str)] = timestamp
-        except OSError:
-            pass
+        if timestamps_path.is_file():
+            try:
+                yaml_timestamps: Optional[Dict] = self.yaml.load(
+                    self._settings.timestamps_path
+                )
+                if yaml_timestamps:
+                    for path_str, timestamp in yaml_timestamps.items():
+                        timestamps[Path(path_str)] = timestamp
+            except OSError:
+                pass
+            return timestamps
+
+        if timestamps_path.parent != timestamps_path.parent.parent:
+            return self._load_timestamps(timestamps_path.parent.parent)
+
         return timestamps
 
     def _dump_append(self, path, mtime):
-        with open(self._timestamps_path, "a") as tsf:
+        with open(self._settings.timestamps_path, "a") as tsf:
             tsf.write(f"{path}: {mtime}\n")
 
     def _dumpable_timestamps(self):
@@ -115,7 +128,7 @@ class Timestamp(object):
     def _dump_timestamps(self):
         # Could do with unsafe YAML, but this seems better
         dumpable_timestamps = self._dumpable_timestamps()
-        self.yaml.dump(dumpable_timestamps, self._timestamps_path)
+        self.yaml.dump(dumpable_timestamps, self._settings.timestamps_path)
 
     @staticmethod
     def max_none(lst: Tuple[Optional[float], Optional[float]]) -> Optional[float]:
