@@ -86,12 +86,13 @@ class Timestamp(object):
         if mtime is None:
             mtime = datetime.now().timestamp()
         self._timestamps[full_path] = mtime
-        self._dump_timestamps()
+        # self._dump_append(full_path, mtime)
         return mtime
 
     def _load_timestamps(self):
         timestamps: Dict = {}
         try:
+            print(f"TS PATH {self._timestamps_path}")
             yaml_timestamps: Optional[Dict] = yaml.load(self._timestamps_path)
             if yaml_timestamps:
                 for path_str, timestamp in yaml_timestamps.items():
@@ -99,6 +100,10 @@ class Timestamp(object):
         except OSError:
             pass
         return timestamps
+
+    def _dump_append(self, path, mtime):
+        with open(self._timestamps_path, "a") as tsf:
+            tsf.write(f"{path}: {mtime}\n")
 
     def _dumpable_timestamps(self):
         dumpable_timestamps = {}
@@ -154,14 +159,14 @@ class Timestamp(object):
             print(f"Could not remove old timestamp: {old_timestamp_path}")
         return mtime
 
-    def upgrade_old_parent_timestamps(self, path: Path) -> Optional[float]:
+    def _upgrade_old_parent_timestamps(self, path: Path) -> Optional[float]:
         """Walk up to the root eating old style timestamps."""
         if path.is_file():
             path = path.parent
 
         path_mtime = self.upgrade_old_timestamp(path)
         if path.parent != path:
-            parent_mtime = self.upgrade_old_parent_timestamps(path.parent)
+            parent_mtime = self._upgrade_old_parent_timestamps(path.parent)
             path_mtime = self.max_none((parent_mtime, path_mtime))
         return path_mtime
 

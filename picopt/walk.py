@@ -201,8 +201,12 @@ class Walk(object):
             # Record dirs to put timestamps in later
             if self._settings.recurse and path.is_dir():
                 record_dirs.add(path)
-                self._tso.upgrade_old_parent_timestamps(path)
+                self._tso._upgrade_old_parent_timestamps(path)  # XXX Private
 
+        self._tso._dump_timestamps()  # XXX PRIVATE
+
+        for filename in self._settings.paths:
+            path = Path(filename)
             walk_after = self._tso.get_walk_after(path)
             # TODO is passing this recurse argument neccissary?
             results = self.walk_file(path, walk_after, self._settings.recurse)
@@ -217,6 +221,8 @@ class Walk(object):
             if res.error:
                 errors += [(res.final_path, res.error)]
                 continue
+            # APPEND EVERY FILE'S TIMESTAMP
+            # self._tso.record_timestamp(res.final_path)
             bytes_in += res.bytes_in
             bytes_out += res.bytes_out
             nag_about_gifs = nag_about_gifs or res.nag_about_gifs
@@ -247,8 +253,10 @@ class Walk(object):
         self._pool.join()
 
         # Write timestamps
-        for filename in sorted(record_dirs):
-            self._tso.record_timestamp(filename)
+        for dirname in sorted(record_dirs):
+            self._tso.record_timestamp(dirname)
+
+        self._tso._dump_timestamps()  # XXX PRIVATE
 
         # Finish by reporting totals
         stats.report_totals(self._settings, bytes_in, bytes_out, nag_about_gifs, errors)

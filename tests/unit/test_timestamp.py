@@ -69,7 +69,7 @@ class TestTimestamp:
     def test_upgrade_old_parent_timestamps(self) -> None:
         self._setup_old_timestamp()
         assert self.old_timestamp_path.exists()
-        mtime = self.tso.upgrade_old_parent_timestamps(self.deep)
+        mtime = self.tso._upgrade_old_parent_timestamps(self.deep)
         res = self.tso._get_timestamp(self.deep)
         assert res == mtime
         assert not self.old_timestamp_path.exists()

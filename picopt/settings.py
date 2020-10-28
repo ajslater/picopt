@@ -40,7 +40,7 @@ class Settings(Namespace):
     test: bool = False
     to_png_formats: Set[str] = set()
     verbose: int = 1
-    config_path: Path = Path.home() / PROGRAM_NAME
+    config_path: Path = Path.home() / ".config" / PROGRAM_NAME
 
     def __init__(
         self,
