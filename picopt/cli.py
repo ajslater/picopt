@@ -181,13 +181,12 @@ def get_arguments(args: Tuple[str, ...]) -> Namespace:
         help="Save optimized files that are larger than " "the originals",
     )
     parser.add_argument(
-        "-t",
-        "--record_timestamp",
-        action="store_true",
+        "-I",
+        "--no_timestamp",
+        action="store_false",
         dest="record_timestamp",
-        default=0,
-        help="Store the time of the optimization of full "
-        "directories in directory local dotfiles.",
+        default=True,
+        help="Do not record the optimization time in a timestamp file.",
     )
     parser.add_argument(
         "-D",

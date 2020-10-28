@@ -35,7 +35,7 @@ class Settings(Namespace):
     optipng: bool = True
     paths: Set[str] = set()
     pngout: bool = True
-    record_timestamp: bool = False
+    record_timestamp: bool = True
     recurse: bool = False
     test: bool = False
     to_png_formats: Set[str] = set()

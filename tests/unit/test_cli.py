@@ -19,7 +19,7 @@ def test_csv_set() -> None:
 
 
 def test_get_arguments() -> None:
-    args = ("picopt", "-rvQcOPEZTGYSbtNlM", str(TMP_ROOT))
+    args = ("picopt", "-rvQcOPEZTGYSbINlM", str(TMP_ROOT))
     arguments = cli.get_arguments(args)
     assert arguments.recurse
     assert arguments.verbose == -1
@@ -35,7 +35,7 @@ def test_get_arguments() -> None:
     assert arguments.to_png_formats == set(["PNG"])
     assert not arguments.follow_symlinks
     assert arguments.bigger
-    assert arguments.record_timestamp
+    assert not arguments.record_timestamp
     assert arguments.test
     assert arguments.list_only
     assert arguments.destroy_metadata

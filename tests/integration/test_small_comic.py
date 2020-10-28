@@ -25,7 +25,7 @@ def test_small_comic() -> None:
     setup()
     path = TMP_ROOT / "test.cbz"
     shutil.copy(SRC_CBZ, path)
-    args = ("", "-rct", str(path))
+    args = ("", "-rc", str(path))
     res = cli.run(args)
     assert res
     teardown()

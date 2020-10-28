@@ -27,7 +27,7 @@ class TestImagesDir:
         assert res
 
     def test_all_once(self) -> None:
-        args = ARGS + ("-rct", str(TMP_ROOT))
+        args = ARGS + ("-rc", str(TMP_ROOT))
         print(f"{args=}")
         res = cli.run(args)
         assert res
