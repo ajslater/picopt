@@ -3,6 +3,7 @@ FROM ajslater/picopt-builder:latest
 ENV DEBIAN_FRONTEND noninteractive
 
 # hadolint ignore=DL3008
+USER root
 RUN apt-get update \
     && apt-get dist-upgrade -y \
     && apt-get install -y --no-install-recommends \
@@ -18,12 +19,17 @@ RUN apt-get update \
     && rm -rf /var/lib/apt/lists/*
 
 #RUN python3 /usr/lib/python3/dist-packages/easy_install.py pip
+USER circleci
 # hadolint ignore=DL3013
 RUN pip3 install poetry
 WORKDIR /opt/picopt/
 COPY ci ci
+
+USER root
 RUN ci/mozjpeg.sh
 RUN ci/pngout.sh
+
+USER circleci
 COPY . .
 
 # Install
