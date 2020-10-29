@@ -50,7 +50,7 @@ workflows:
                             - circleci
                             - release
                             - master
-            - requires:
-                - build
+                requires:
+                    - build
     version: 2.1
 
