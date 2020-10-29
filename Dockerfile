@@ -22,7 +22,6 @@ RUN apt-get update \
 USER circleci
 # hadolint ignore=DL3013
 RUN pip3 install poetry
-WORKDIR /opt/picopt/
 COPY ci ci
 
 USER root
