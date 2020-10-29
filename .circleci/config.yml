@@ -1,7 +1,6 @@
 jobs:
     build:
-        docker:
-            - image: cimg/python:3.9
+        machine: true
         steps:
             - checkout
             - run: ci/build.sh
