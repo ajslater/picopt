@@ -1,14 +1,23 @@
 jobs:
     build:
-        machine: true
+        docker:
+            - image: cimg/base
         steps:
             - checkout
-            - run: ci/build.sh
-            - run: ci/test.sh
+            - setup_remote_docker
+            - run: 
+                command: ci/install.sh
+                name: Install Build Dependancies
+            - run: 
+                command: ci/test.sh
+                name: Test
             - store_test_results:
                 path: test-results
             - store_artifacts:
                 path: test-results/coverage
+            - run:
+                command: ci/build.sh
+                name: Build
             - persist_to_workspace:
                 paths:
                     - ./README.md
@@ -26,7 +35,7 @@ jobs:
                 command: pip install poetry
                 name: Install poetry
             - run:
-                command: ./ci/publish-pypi.sh
+                command: ci/publish-pypi.sh
                 name: Publish Package to PyPi
 version: 2.1
 workflows:

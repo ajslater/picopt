@@ -1,2 +1,6 @@
 #!/bin/sh
-docker build -t picopt-builder .
+mkdir -p dist
+docker run -ti \
+    -v dist:/project/dist \
+    picopt-builder \
+    ./build.sh

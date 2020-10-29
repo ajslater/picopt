@@ -1,5 +1,6 @@
 #!/bin/sh
+mkdir -p test-results
 docker run -ti \
-    -v /home/circleci/project/test-results:/project/picopt/test-results \
+    -v test-results:/project/test-results \
     picopt-builder \
     ./test.sh
