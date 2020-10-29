@@ -6,6 +6,7 @@ v3.0.0-rc0
 - Picopt will covert and clean up old style timestamps.
 - Timestamps are now recorded after optimizing every image, preserving progress.
 - Preserves comments when optimizing comic archives
+- Support python v3.9 & Pillow v8
 
 v2.2.0
 
