@@ -1,5 +1,6 @@
-v2.2.1-rc0
+v2.2.1
 * Preserve comments in comic archives
+* Support Python v3.9 and Pillow v8
 
 v2.2.0
 * Walk in alphabetical order

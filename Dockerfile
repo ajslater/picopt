@@ -1,4 +1,4 @@
-FROM ubuntu:groovy
+FROM ajslater/picopt-builder:latest
 
 ENV DEBIAN_FRONTEND noninteractive
 
@@ -17,7 +17,7 @@ RUN apt-get update \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
-RUN python3 /usr/lib/python3/dist-packages/easy_install.py pip
+#RUN python3 /usr/lib/python3/dist-packages/easy_install.py pip
 # hadolint ignore=DL3013
 RUN pip3 install poetry
 WORKDIR /opt/picopt/
