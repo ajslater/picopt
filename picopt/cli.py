@@ -260,7 +260,6 @@ def get_arguments(args: Tuple[str, ...]) -> Namespace:
 def run(args: Tuple[str, ...]) -> bool:
     """Process command line arguments and walk inputs."""
     arguments = get_arguments(args)
-    print(f"{arguments=}")
     settings = Settings(PROGRAMS, arguments)
     wob = walk.Walk(settings)
     return wob.run()

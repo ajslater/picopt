@@ -48,6 +48,7 @@ class Settings(Namespace):
     verbose: int = 1
     timestamps_path: Path = Path.cwd() / TIMESTAMPS_FN
     rc_path: Path = Path.cwd() / RC_FN
+    SET_ATTRS = set(("formats", "paths", "to_png_formats"))
 
     def __init__(
         self,
@@ -60,15 +61,20 @@ class Settings(Namespace):
             self.rc_path = namespace.rc_path
         rc_settings = self.load_rc(self.rc_path)
         # rc settings write over defaulst
-        self._update(rc_settings)
+        self._update(Namespace(**rc_settings))
         # passed in args overwrite rc
         self._update(namespace)
-        self._config_program_reqs(programs)
         self.verbose += 1
         self.paths = set(self.paths)
         self._update_formats()
         self.jobs = max(self.jobs, 1)
         # self._set_jpegrescan_threading()
+
+    @staticmethod
+    def attr_to_set(rc_settings, attr):
+        """Transform yaml list into a python set."""
+        if hasattr(rc_settings, attr):
+            setattr(rc_settings, attr, set(getattr(rc_settings, attr)))
 
     def load_rc(self, rc_path: Optional[Path] = None):
         """Load an rc file, searching recursively upwards."""
@@ -80,12 +86,8 @@ class Settings(Namespace):
 
         if rc_path.is_file():
             rc_settings = self.yaml.load(rc_path)
-            if rc_settings.formats:
-                rc_settings.formats = set(rc_settings.formats)
-            if rc_settings.paths:
-                rc_settings.paths = set(rc_settings.paths)
-            if rc_settings.to_png_formats:
-                rc_settings.to_png_formats = set(rc_settings.to_png_formats)
+            for attr in self.SET_ATTRS:
+                self.attr_to_set(rc_settings, attr)
             return rc_settings
 
         if rc_path.parent != rc_path.parent.parent:

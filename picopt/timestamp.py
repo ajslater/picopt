@@ -100,12 +100,16 @@ class Timestamp(object):
         timestamps: Dict = {}
         if timestamps_path.is_file():
             try:
+                print(f"{self._settings.timestamps_path=}")
                 yaml_timestamps: Optional[Dict] = self.yaml.load(
                     self._settings.timestamps_path
                 )
                 if yaml_timestamps:
                     for path_str, timestamp in yaml_timestamps.items():
-                        timestamps[Path(path_str)] = timestamp
+                        try:
+                            timestamps[Path(path_str)] = float(timestamp)
+                        except Exception:
+                            print(f"Invalid timestamp for {path_str}: {timestamp}")
             except OSError:
                 pass
             return timestamps

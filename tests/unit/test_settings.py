@@ -8,6 +8,7 @@ from ruamel.yaml import YAML
 
 from picopt.formats.gif import Gif
 from picopt.formats.png import Png
+from picopt.settings import RC_FN
 from picopt.settings import Settings
 from tests import get_test_dir
 
@@ -15,7 +16,7 @@ from tests import get_test_dir
 __all__ = ()
 FORMATS = set(["ANIMATED_GIF", "PNG", "PNM", "BMP", "PPM", "JPEG", "GIF"])
 TEST_PROGS = set(Png.PROGRAMS + Gif.PROGRAMS)
-RC_PATH = get_test_dir() / ".picoptrc"
+RC_PATH = get_test_dir() / RC_FN
 RC_SETTINGS = {"jpegtran": False}
 TMP_ROOT = get_test_dir()
 
@@ -108,8 +109,10 @@ class TestRCSettings:
     yaml = YAML()
 
     def setup_method(self):
-        self.settings = Settings(namespace=Namespace(rc_path=TMP_ROOT))
+        self.teardown_method()
+        TMP_ROOT.mkdir(parents=True)
         self.yaml.dump(RC_SETTINGS, RC_PATH)
+        self.settings = Settings(namespace=Namespace(rc_path=TMP_ROOT))
 
     def teardown_method(self):
         if TMP_ROOT.is_dir():
