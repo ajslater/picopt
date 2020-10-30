@@ -1,5 +1,5 @@
 #!/bin/bash
-# pngout
+# install pngout binary
 set -euo pipefail
 
 RELEASE=pngout-20200115-linux-static

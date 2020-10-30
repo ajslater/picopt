@@ -1,5 +1,5 @@
 #!/bin/bash
-# mozjpeg
+# install mozjpeg package and link it
 set -euo pipefail
 
 DEB=ci/mozjpeg_3.3.1-1_amd64.deb

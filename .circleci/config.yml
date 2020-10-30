@@ -11,6 +11,9 @@ jobs:
             - run: 
                 command: docker-compose up picopt-lint
                 name: Lint
+            - run:
+                command: ci/create-output-dirs.sh
+                name: Create Output Dirs
             - run: 
                 command: docker-compose up picopt-test
                 name: Test
