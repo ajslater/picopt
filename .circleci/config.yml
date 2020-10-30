@@ -6,17 +6,20 @@ jobs:
             - checkout
             - setup_remote_docker
             - run: 
-                command: ci/install.sh
+                command: docker-compose build picopt-build-builder
                 name: Install Build Dependancies
             - run: 
-                command: ci/test.sh
+                command: docker-compose up picopt-lint
+                name: Lint
+            - run: 
+                command: docker-compose up picopt-test
                 name: Test
             - store_test_results:
                 path: test-results
             - store_artifacts:
                 path: test-results/coverage
             - run:
-                command: ci/build.sh
+                command: docker-compose up picopt-build
                 name: Build
             - persist_to_workspace:
                 paths:

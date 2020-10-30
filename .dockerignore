@@ -6,14 +6,13 @@
 **/.ropeproject
 *.egg-info
 .git*
-Dockerfile
+*Dockerfile
 LICENSE
 MANIFEST
 MANIFEST*
-NEWS
+NEWS.md
 TODO
 build
-dist
 dist
 docker-compose.yaml
 run.py
