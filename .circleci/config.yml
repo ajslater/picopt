@@ -1,70 +1,67 @@
 jobs:
-    build:
-        docker:
-            - image: cimg/base:stable
-        steps:
-            - checkout
-            - setup_remote_docker
-            - run: 
-                command: docker-compose build picopt-build-builder
-                name: Install Build Dependancies
-            - run: 
-                command: docker-compose up picopt-lint
-                name: Lint
-            - run:
-                command: ci/create-output-dirs.sh
-                name: Create Output Dirs
-            - run: 
-                command: docker-compose up picopt-test
-                name: Test
-            - store_test_results:
-                path: test-results
-            - store_artifacts:
-                path: test-results/coverage
-            - run:
-                command: docker-compose up picopt-build
-                name: Build
-            - persist_to_workspace:
-                paths:
-                    - ./README.md
-                    - ./ci
-                    - ./dist
-                    - ./pyproject.toml
-                root: .
-    deploy:
-        docker:
-            - image: cimg/python:3.9
-        steps:
-            - attach_workspace:
-                at: .
-            - run:
-                command: pip install poetry
-                name: Install poetry
-            - run:
-                command: ci/publish-pypi.sh
-                name: Publish Package to PyPi
+  build:
+    machine: true
+    steps:
+      - checkout
+      - run:
+          command: docker-compose build picopt-build-builder
+          name: Install Build Dependancies
+      - run:
+          command: docker-compose up picopt-lint
+          name: Lint
+      - run:
+          command: ci/create-output-dirs.sh
+          name: Create Output Dirs
+      - run:
+          command: docker-compose up picopt-test
+          name: Test
+      - store_test_results:
+          path: test-results
+      - store_artifacts:
+          path: test-results/coverage
+      - run:
+          command: docker-compose up picopt-build
+          name: Build
+      - persist_to_workspace:
+          paths:
+            - ./README.md
+            - ./ci
+            - ./dist
+            - ./pyproject.toml
+          root: .
+  deploy:
+    docker:
+      - image: cimg/python:3.9
+    steps:
+      - attach_workspace:
+          at: .
+      - run:
+          command: pip install poetry
+          name: Install poetry
+      - run:
+          command: ci/publish-pypi.sh
+          name: Publish Package to PyPi
 version: 2.1
 workflows:
-    main:
-        jobs:
-            - build:
-                filters:
-                    branches:
-                        only:
-                            - dev
-                            - develop
-                            - circleci
-                            - release
-                            - master
-                            - /.*-ci/
-            - deploy:
-                filters:
-                    branches:
-                        only:
-                            - circleci
-                            - release
-                            - master
-                requires:
-                    - build
-    version: 2.1
-
+  main:
+    jobs:
+      - build:
+          filters:
+            branches:
+              only:
+                - dev
+                - develop
+                - circleci
+                - release
+                - master
+                - /.*-ci/
+      - deploy:
+          filters:
+            branches:
+              only:
+                - circleci
+                - release
+                - master
+          requires:
+            - build
+  version: 2.1
