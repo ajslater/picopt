@@ -52,7 +52,7 @@ pytest-monkeytype = "^1.0"
 pytest-mypy = "^0.7.0"
 radon = "^4.1"
 vulture = "^2.1"
-# aj's vim environment 
+# aj's vim environment
 neovim = "^0.3.1"
 jedi = "^0.17.1"
 
