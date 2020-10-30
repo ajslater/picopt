@@ -5,23 +5,23 @@ jobs:
     steps:
       - checkout
       - run:
-          command: docker-compose build picopt-build-builder
+          command: docker-compose build picopt-build-builder --exit-code-from  picopt-build-builder
           name: Install Build Dependancies
       - run:
-          command: docker-compose up picopt-lint
+          command: docker-compose up picopt-lint --exit-code-from picopt-lint
           name: Lint
       - run:
           command: ci/create-output-dirs.sh
           name: Create Output Dirs
       - run:
-          command: docker-compose up picopt-test
+          command: docker-compose up picopt-test --exit-code-from picopt-test
           name: Test
       - store_test_results:
-          path: test-results
+          path: test-results/pytest/results.xml
       - store_artifacts:
           path: test-results/coverage
       - run:
-          command: docker-compose up picopt-build
+          command: docker-compose up picopt-build --exit-code-from picopt-build
           name: Build
       - persist_to_workspace:
           paths:

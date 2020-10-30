@@ -11,4 +11,5 @@ __pycache__
 build
 dist
 monkeytype.sqlite3
+node_modules
 test-results

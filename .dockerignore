@@ -5,8 +5,8 @@
 **/.picopt_timestamp
 **/.ropeproject
 *.egg-info
-.git*
 *Dockerfile
+.git*
 LICENSE
 MANIFEST
 MANIFEST*
@@ -15,5 +15,6 @@ TODO
 build
 dist
 docker-compose.yaml
+node_modules
 run.py
 test-results
