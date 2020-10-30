@@ -1,7 +1,9 @@
-FROM ubuntu:19.10
+FROM cimg/python:3.9-node
+#FROM ajslater/picopt-builder:latest
 
 ENV DEBIAN_FRONTEND noninteractive
 
+USER root
 # hadolint ignore=DL3008
 RUN apt-get update \
     && apt-get dist-upgrade -y \
@@ -11,20 +13,25 @@ RUN apt-get update \
         git \
         libjpeg-progs \
         optipng \
-        python3-setuptools \
-        python3-venv \
+        shellcheck \
+#        python3-setuptools \
+#        python3-venv \
         unrar \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
-RUN python3 /usr/lib/python3/dist-packages/easy_install.py pip
-# hadolint ignore=DL3013
-RUN pip3 install poetry
-WORKDIR /opt/picopt/
-COPY ci ci
+COPY --chown=circleci:circleci ci ci
 RUN ci/mozjpeg.sh
 RUN ci/pngout.sh
-COPY . .
+
+USER circleci
+# hadolint ignore=DL3013
+RUN pip3 install poetry
+# hadolint ignore=DL3016
+RUN npm install
+
+COPY --chown=circleci:circleci . .
+RUN mkdir -p test-results dist
 
 # Install
 RUN poetry install

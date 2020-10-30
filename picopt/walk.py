@@ -47,7 +47,7 @@ class Walk(object):
         and on waiting for the contents subprocesses to compress.
         """
         # uncompress archive
-        tmp_dir, report_stats = Comic.comic_archive_uncompress(
+        tmp_dir, report_stats, comment = Comic.comic_archive_uncompress(
             self._settings, path, image_format
         )
         if tmp_dir is None:
@@ -67,7 +67,7 @@ class Walk(object):
             nag_about_gifs = nag_about_gifs or res.nag_about_gifs
 
         # recompress archive
-        args = (path, image_format, self._settings, nag_about_gifs)
+        args = (path, image_format, self._settings, nag_about_gifs, comment)
         return set([self._pool.apply_async(Comic.comic_archive_compress, args=(args,))])
 
     def _is_skippable(self, path: Path) -> bool:

@@ -8,7 +8,6 @@ from typing import Callable
 from typing import Optional
 from typing import Set
 from typing import Tuple
-from typing import Union
 
 import rarfile
 
@@ -70,9 +69,16 @@ class Comic(Format):
         return path.parent / filename
 
     @staticmethod
+    def _get_archive(path, image_format):
+        if image_format == _CBZ_FORMAT:  # and zipfile.is_zipfile(path):
+            return zipfile.ZipFile(path, "r")
+        elif image_format == _CBR_FORMAT:  # and rarfile.is_rarfile(path):
+            return rarfile.RarFile(path, "r")
+
+    @staticmethod
     def comic_archive_uncompress(
         settings: Settings, path: Path, image_format: str
-    ) -> Tuple[Optional[Path], Optional[ReportStats]]:
+    ) -> Tuple[Optional[Path], Optional[ReportStats], Optional[bytes]]:
         """
         Uncompress comic archives.
 
@@ -80,7 +86,7 @@ class Comic(Format):
         """
         if not settings.comics:
             report = f"Skipping archive file: {path}"
-            return None, ReportStats(path, report=report)
+            return None, ReportStats(path, report=report), None
 
         if settings.verbose:
             print(f"Extracting {path}...", end="")
@@ -92,42 +98,48 @@ class Comic(Format):
         tmp_dir.mkdir()
 
         # extract archvie into the tmpdir
-        if image_format == _CBZ_FORMAT:
-            with zipfile.ZipFile(path, "r") as zfile:
-                zfile.extractall(tmp_dir)
-        elif image_format == _CBR_FORMAT:
-            with rarfile.RarFile(path, "r") as rfile:
-                rfile.extractall(tmp_dir)
-        else:
+        try:
+            with Comic._get_archive(path, image_format) as archive:
+                archive.extractall(tmp_dir)
+                comment = archive.comment
+                if isinstance(comment, str):
+                    # rarfile exports unicode comments, zipfile bytes :/
+                    # zipfile expects bytes for assignment later.
+                    comment = comment.encode()
+        except Exception:
             report = f"{path} {image_format} is not a good format"
-            return None, ReportStats(path, report=report)
+            return None, ReportStats(path, report=report), None
 
         if settings.verbose:
             print("done")
 
-        return tmp_dir, None
+        return tmp_dir, None, comment
 
     @staticmethod
     def _comic_archive_write_zipfile(
-        settings: Settings, new_path: Path, tmp_path: Path
+        settings: Settings, new_path: Path, tmp_path: Path, comment: bytes
     ) -> None:
         """Zip up the files in the tempdir into the new filename."""
         if settings.verbose:
             print("Rezipping archive", end="")
-        with zipfile.ZipFile(new_path, "w", compression=zipfile.ZIP_DEFLATED) as new_zf:
+        with zipfile.ZipFile(
+            new_path, "w", compression=zipfile.ZIP_DEFLATED, compresslevel=9
+        ) as new_zf:
             for root, _, filenames in os.walk(tmp_path):
                 root_path = Path(root)
                 filenames.sort()
-                for fname in filenames:
+                for fname in sorted(filenames):
                     if settings.verbose:
                         print(".", end="")
                     full_path = root_path / fname
                     archive_path = full_path.relative_to(tmp_path)
                     new_zf.write(full_path, archive_path, zipfile.ZIP_DEFLATED)
+            if comment:
+                new_zf.comment = comment
 
     @staticmethod
     def comic_archive_compress(
-        args: Union[Tuple[Path, str, Settings, bool], Tuple[Path, str, Settings, bool]]
+        args: Tuple[Path, str, Settings, bool, bytes]
     ) -> ReportStats:
         """
         Call back by every optimization inside a comic archive.
@@ -135,12 +147,12 @@ class Comic(Format):
         When they're all done it creates the new archive and cleans up.
         """
         try:
-            old_path, old_format, settings, nag_about_gifs = args
+            old_path, old_format, settings, nag_about_gifs, comment = args
             tmp_path = Comic._get_archive_tmp_dir(old_path)
 
             # archive into new filename
             new_path = old_path.with_suffix(_NEW_ARCHIVE_SUFFIX)
-            Comic._comic_archive_write_zipfile(settings, new_path, tmp_path)
+            Comic._comic_archive_write_zipfile(settings, new_path, tmp_path, comment)
 
             # Cleanup tmpdir
             if settings.verbose:

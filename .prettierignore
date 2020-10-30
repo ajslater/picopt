@@ -1,0 +1,5 @@
+.circleci
+.mypy_cache
+.pytest_cache
+/test-results
+__pycache__

@@ -3,29 +3,33 @@
 ## Bugs:
 
 ## Tests:
-- Unit Tests
-- Functional Tests for each option
 - Test recursive opt timestamps
+- Functional Tests for each option
+- Unit Tests
 
 ## Architecture:
-- Change main process into an event loop so comics don't block as much
+- Change main process into event loop so comics don't block as much
 - Dynamically link in libraries instead of using command line procs
 - - Doesn't work for closed source like pngout
-- Rewrite in rust with clibs dynamically linked.
+- Dynamically link clibs.
 
 ## Packaging:
 - Include libraries and python for best optimizers
 
 ## Formats:
-- SVG - svgo
-- PDF would be cool, but difficult due to non-standard image formats and lack of easy PDF exploders/bundlers.
-- EPUB?
+- EPUB - easy.
+- I want to do PDF, but its has non-standard image formats and i haven't seen any easy PDF exploders/bundlers.
+- SVG - svgo is a node tool.
+
+## Compressors
+- Reexamine png compression options again
 
 ## Features:
 - Ignore path flag
 
 ## Future:
 - When Apple fully supports WebP or AVIF, offer that for everything and prefer it to png.
+-- https://developer.apple.com/documentation/safari-release-notes/safari-14-beta-release-notes
 -- And maybe jpg?
 -- https://caniuse.com/#feat=webp
 -- https://caniuse.com/#feat=av1

@@ -1,8 +1,27 @@
-version: '2'
+version: "3.8"
 services:
-    picopt:
-        build: .
-        image: picopt
-        container_name: picopt
-        command:
-            - ./test.sh
+  picopt-build-builder:
+    build:
+      context: .
+      dockerfile: build.Dockerfile
+    image: ajslater/picopt-builder
+    container_name: picopt-build-builder
+  picopt-lint:
+    image: ajslater/picopt-builder
+    container_name: picopt-lint
+    command:
+      - ./lint.sh
+  picopt-test:
+    image: ajslater/picopt-builder
+    container_name: picopt-test
+    volumes:
+      - ./test-results:/home/circleci/project/test-results
+    command:
+      - ./test.sh
+  picopt-build:
+    image: ajslater/picopt-builder
+    container_name: picopt-build
+    volumes:
+      - ./dist:/home/circleci/project/dist
+    command:
+      - ./build.sh
