@@ -17,7 +17,7 @@ jobs:
           command: docker-compose up --exit-code-from picopt-test picopt-test
           name: Test
       - store_test_results:
-          path: test-results/pytest/results.xml
+          path: test-results/pytest
       - store_artifacts:
           path: test-results/coverage
       - run:
@@ -53,7 +53,7 @@ workflows:
                 - dev
                 - develop
                 - circleci
-                - release
+                - main
                 - master
                 - /.*-ci/
       - deploy:
@@ -61,7 +61,7 @@ workflows:
             branches:
               only:
                 - circleci
-                - release
+                - main
                 - master
           requires:
             - build
