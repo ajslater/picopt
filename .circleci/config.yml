@@ -50,11 +50,9 @@ workflows:
           filters:
             branches:
               only:
-                - dev
-                - develop
                 - circleci
+                - develop
                 - main
-                - master
                 - /.*-ci/
       - deploy:
           filters:
@@ -62,7 +60,6 @@ workflows:
               only:
                 - circleci
                 - main
-                - master
           requires:
             - build
   version: 2.1
