@@ -5,8 +5,10 @@ v3.0.0-rc0
 - Timestamps are now kept in centralized .picopt_timestamps.yaml files.
 - Picopt will covert and clean up old style timestamps.
 - Timestamps are now recorded after optimizing every image, preserving progress.
-- Preserves comments when optimizing comic archives
+
+v2.2.1
 - Support python v3.9 & Pillow v8
+- Preserve comments when optimizing comic archives
 
 v2.2.0
 

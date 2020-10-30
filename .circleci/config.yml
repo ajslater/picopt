@@ -1,12 +1,68 @@
-version: 2.1
 jobs:
   build:
-    machine: true
+    machine:
+      image: ubuntu-2004:202010-01
     steps:
       - checkout
-      - run: ci/build.sh
-      - run: ci/test.sh
+      - run:
+          command: docker-compose build picopt-build-builder
+          name: Install Build Dependancies
+      - run:
+          command: docker-compose up --exit-code-from picopt-lint picopt-lint
+          name: Lint
+      - run:
+          command: ci/create-output-dirs.sh
+          name: Create Output Dirs
+      - run:
+          command: docker-compose up --exit-code-from picopt-test picopt-test
+          name: Test
       - store_test_results:
-            path: test-results
+          path: test-results/pytest
       - store_artifacts:
-            path: test-results/coverage
+          path: test-results/coverage
+      - run:
+          command: docker-compose up --exit-code-from picopt-build picopt-build
+          name: Build
+      - persist_to_workspace:
+          paths:
+            - ./README.md
+            - ./ci
+            - ./dist
+            - ./pyproject.toml
+          root: .
+  deploy:
+    docker:
+      - image: cimg/python:3.9
+    steps:
+      - attach_workspace:
+          at: .
+      - run:
+          command: pip install poetry
+          name: Install poetry
+      - run:
+          command: ci/publish-pypi.sh
+          name: Publish Package to PyPi
+version: 2.1
+workflows:
+  main:
+    jobs:
+      - build:
+          filters:
+            branches:
+              only:
+                - dev
+                - develop
+                - circleci
+                - main
+                - master
+                - /.*-ci/
+      - deploy:
+          filters:
+            branches:
+              only:
+                - circleci
+                - main
+                - master
+          requires:
+            - build
+  version: 2.1
