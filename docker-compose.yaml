@@ -25,3 +25,9 @@ services:
       - ./dist:/home/circleci/project/dist
     command:
       - ./build.sh
+  picopt:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: ajslater/picopt
+    container_name: picopt

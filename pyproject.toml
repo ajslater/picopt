@@ -50,6 +50,9 @@ pytest-isort = "^1.1.0"
 pytest-monkeytype = "^1.0"
 pytest-mypy = "^0.7.0"
 vulture = "^2.1"
+# aj's vim environment
+neovim = "^0.3.1"
+jedi = "^0.17.1"
 
 [tool.poetry.scripts]
 picopt = "picopt.cli:main"
