@@ -28,7 +28,7 @@ USER circleci
 # hadolint ignore=DL3013
 RUN pip3 install poetry
 # hadolint ignore=DL3016
-RUN npm install prettier
+RUN npm install
 
 COPY --chown=circleci:circleci . .
 RUN mkdir -p test-results dist
