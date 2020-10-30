@@ -30,7 +30,7 @@ RUN pip3 install poetry
 # hadolint ignore=DL3016
 RUN npm install prettier
 
-COPY --chown=circleci:circlceci . .
+COPY --chown=circleci:circleci . .
 RUN mkdir -p test-results dist
 
 # Install
