@@ -4,7 +4,6 @@ from typing import Callable
 from typing import Optional
 from typing import Set
 from typing import Tuple
-from unittest import TestCase
 
 from picopt import detect_format
 from picopt.extern import ExtArgs
@@ -18,7 +17,7 @@ from tests import INVALID_DIR
 __all__ = ()  # hides module from pydocstring
 
 
-class TestIsProgramSelected(TestCase):
+class TestIsProgramSelected:
     @staticmethod
     def pngout(settings: Settings, args: ExtArgs) -> str:
         return ""
@@ -30,20 +29,23 @@ class TestIsProgramSelected(TestCase):
     programs_true = (pngout, comics)
     programs_false = (comics,)
 
+    def setup_method(self):
+        self.settings = Settings()
+
     def test_comics(self) -> None:
-        res = detect_format._is_program_selected(Settings(), self.programs_false)
-        self.assertFalse(res)
+        res = detect_format._is_program_selected(self.settings, self.programs_false)
+        assert not res
 
     def test_pngout(self) -> None:
-        res = detect_format._is_program_selected(Settings(), self.programs_true)
-        self.assertTrue(res)
+        res = detect_format._is_program_selected(self.settings, self.programs_true)
+        assert res
 
     def test_empty(self) -> None:
-        res = detect_format._is_program_selected(Settings(), tuple())
-        self.assertFalse(res)
+        res = detect_format._is_program_selected(self.settings, tuple())
+        assert not res
 
 
-class TestIsFormatSelected(TestCase):
+class TestIsFormatSelected:
     @staticmethod
     def pngout(settings: Settings, args: ExtArgs) -> str:
         return ""
@@ -56,30 +58,33 @@ class TestIsFormatSelected(TestCase):
 
     programs: Tuple[Callable[[Settings, ExtArgs], str], ...] = (pngout, comics)
 
+    def setup_method(self):
+        self.settings = Settings()
+
     def test_gif(self) -> None:
         res = detect_format.is_format_selected(
-            Settings(), "GIF", self.formats, self.programs
+            self.settings, "GIF", self.formats, self.programs
         )
-        self.assertTrue(res)
+        assert res
 
     def test_cbz_in_settings(self) -> None:
         res = detect_format.is_format_selected(
-            Settings(), "CBZ", self.formats, self.programs
+            self.settings, "CBZ", self.formats, self.programs
         )
-        self.assertFalse(res)
+        assert not res
 
     def test_cbz_not_in_settings(self) -> None:
         res = detect_format.is_format_selected(
-            Settings(), "CBZ", set(["CBR"]), self.programs
+            self.settings, "CBZ", set(["CBR"]), self.programs
         )
-        self.assertFalse(res)
+        assert not res
 
 
-class TestGetImageFormat(TestCase):
+class TestGetImageFormat:
     def _test_type(self, root: Path, filename: str, image_type: Optional[str]) -> None:
         path = root / filename
         res = detect_format.get_image_format(path)
-        self.assertEqual(res, image_type)
+        assert res == image_type
 
     def test_get_image_format_jpg(self) -> None:
         self._test_type(IMAGES_DIR, "test_jpg.jpg", "JPEG")
@@ -109,43 +114,40 @@ class TestGetImageFormat(TestCase):
         self._test_type(INVALID_DIR, "test_mpeg.mpeg", "MPEG")
 
 
-class TestDetectFile(TestCase):
-    def _test_type(
-        self, settings: Settings, root: Path, filename: str, image_type: Optional[str]
-    ) -> None:
+class TestDetectFile:
+    def setup_method(self):
+        self.settings = Settings()
+
+    def _test_type(self, root: Path, filename: str, image_type: Optional[str]) -> None:
         path = root / filename
-        res = detect_format.detect_file(settings, path)
+        res = detect_format.detect_file(self.settings, path)
         print(res)
-        self.assertEqual(res, image_type)
+        assert res == image_type
 
     def test_detect_file_jpg(self) -> None:
-        self._test_type(Settings(), IMAGES_DIR, "test_jpg.jpg", "JPEG")
+        self._test_type(IMAGES_DIR, "test_jpg.jpg", "JPEG")
 
     def test_detect_file_png(self) -> None:
-        self._test_type(Settings(), IMAGES_DIR, "test_png.png", "PNG")
+        self._test_type(IMAGES_DIR, "test_png.png", "PNG")
 
     def test_detect_file_gif(self) -> None:
-        self._test_type(Settings(), IMAGES_DIR, "test_gif.gif", "GIF")
+        self._test_type(IMAGES_DIR, "test_gif.gif", "GIF")
 
     def test_detect_file_txt(self) -> None:
-        settings = Settings(namespace=Settings())
-        settings.verbose = 2
-        self._test_type(settings, IMAGES_DIR, "test_txt.txt", None)
+        self.settings.verbose = 2
+        self._test_type(IMAGES_DIR, "test_txt.txt", None)
 
     def test_detect_file_txt_quiet(self) -> None:
-        settings = Settings(namespace=Settings())
-        settings.verbose = 0
-        self._test_type(settings, IMAGES_DIR, "test_txt.txt", None)
+        self.settings.verbose = 0
+        self._test_type(IMAGES_DIR, "test_txt.txt", None)
 
     def test_detect_file_invalid(self) -> None:
-        self._test_type(Settings(), INVALID_DIR, "test_gif.gif", None)
+        self._test_type(INVALID_DIR, "test_gif.gif", None)
 
     def test_detect_file_cbr(self) -> None:
-        settings = Settings(namespace=Settings())
-        settings.formats |= Comic.FORMATS
-        self._test_type(settings, COMIC_DIR, "test_cbr.cbr", "CBR")
+        self.settings.formats |= Comic.FORMATS
+        self._test_type(COMIC_DIR, "test_cbr.cbr", "CBR")
 
     def test_detect_file_cbz(self) -> None:
-        settings = Settings(namespace=Settings())
-        settings.formats |= Comic.FORMATS
-        self._test_type(settings, COMIC_DIR, "test_cbz.cbz", "CBZ")
+        self.settings.formats |= Comic.FORMATS
+        self._test_type(COMIC_DIR, "test_cbz.cbz", "CBZ")

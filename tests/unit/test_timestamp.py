@@ -6,9 +6,9 @@ from datetime import datetime
 
 from ruamel.yaml import YAML
 
-from picopt.settings import TIMESTAMPS_FN
 from picopt.settings import Settings
 from picopt.timestamp import OLD_TIMESTAMP_FN
+from picopt.timestamp import TIMESTAMPS_FN
 from picopt.timestamp import Timestamp
 from tests import get_test_dir
 
@@ -18,7 +18,7 @@ TMP_ROOT = get_test_dir()
 TIMESTAMP_PATH = TMP_ROOT / TIMESTAMPS_FN
 MTIME = datetime.now().timestamp()
 TIMESTAMPS = {str(TMP_ROOT): MTIME}
-SETTINGS = Settings(namespace=Namespace(timestamps_path=TIMESTAMP_PATH))
+SETTINGS = Settings(arg_namespace=Namespace(timestamps_path=TIMESTAMP_PATH))
 
 
 class TestTimestamp:
@@ -31,7 +31,7 @@ class TestTimestamp:
     def setup_method(self) -> None:
         self.deep.mkdir(parents=True)
         self.yaml.dump(TIMESTAMPS, TIMESTAMP_PATH)
-        self.tso = Timestamp(SETTINGS)
+        self.tso = Timestamp(SETTINGS, TMP_ROOT)
 
     def teardown_method(self) -> None:
         shutil.rmtree(self.path)
@@ -68,7 +68,7 @@ class TestTimestamp:
     def test_upgrade_old_parent_timestamps(self) -> None:
         self._setup_old_timestamp()
         assert self.old_timestamp_path.exists()
-        mtime = self.tso._upgrade_old_parent_timestamps(self.deep)
+        mtime = self.tso.upgrade_old_parent_timestamps(self.deep)
         res = self.tso._get_timestamp(self.deep)
         assert res == mtime
         assert not self.old_timestamp_path.exists()
@@ -84,7 +84,7 @@ class TestTimestamp:
         mtime = self.tso.record_timestamp(bar_path)
         file_mtime = self.tso.record_timestamp(file_path)
         self.tso.compact_timestamps(self.deep)
-        timestamps = self.tso._load_timestamps()
+        timestamps = self.tso._load_timestamps(TMP_ROOT)
         compare_dict = {self.path: MTIME, self.deep: mtime, file_path: file_mtime}
         assert timestamps == compare_dict
 

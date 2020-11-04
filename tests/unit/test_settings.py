@@ -16,9 +16,9 @@ from tests import get_test_dir
 __all__ = ()
 FORMATS = set(["ANIMATED_GIF", "PNG", "PNM", "BMP", "PPM", "JPEG", "GIF"])
 TEST_PROGS = set(Png.PROGRAMS + Gif.PROGRAMS)
-RC_PATH = get_test_dir() / RC_FN
-RC_SETTINGS = {"jpegtran": False}
 TMP_ROOT = get_test_dir()
+RC_PATH = TMP_ROOT / RC_FN
+RC_SETTINGS = {"jpegtran": False}
 
 
 class TestSettings:
@@ -94,13 +94,13 @@ class TestSettings:
         assert not hasattr(self.settings, "_fake")
 
     def test_set_program_defaults(self) -> None:
-        self.settings._set_program_defaults(TEST_PROGS)
+        self.settings._set_program_defaults()
         for program in TEST_PROGS:
             name = program.__func__.__name__  # type: ignore
             assert getattr(self.settings, name)
 
     def test_config_program_reqs(self) -> None:
-        self.settings._config_program_reqs(TEST_PROGS)
+        self.settings._config_program_reqs()
         assert self.settings.can_do
 
 
@@ -112,15 +112,15 @@ class TestRCSettings:
         self.teardown_method()
         TMP_ROOT.mkdir(parents=True)
         self.yaml.dump(RC_SETTINGS, RC_PATH)
-        self.settings = Settings(namespace=Namespace(rc_path=TMP_ROOT))
+        self.settings = Settings(rc_path=TMP_ROOT)
 
     def teardown_method(self):
         if TMP_ROOT.is_dir():
             shutil.rmtree(TMP_ROOT)
 
-    def test_load_rc(self) -> None:
+    def test_load_rc(self):
         rc_settings = self.settings.load_rc(RC_PATH)
-        assert rc_settings == RC_SETTINGS
+        assert rc_settings == Namespace(**RC_SETTINGS)
 
-    def test_load_rc_apply(self) -> None:
+    def test_load_rc_apply(self):
         assert not self.settings.jpegtran

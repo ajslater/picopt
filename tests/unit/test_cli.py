@@ -13,59 +13,54 @@ TMP_ROOT = get_test_dir()
 JPEG_SRC = IMAGES_DIR / "test_jpg.jpg"
 
 
-def test_csv_set() -> None:
-    res = cli.csv_set("a,b,c,d")
-    assert res == set(("A", "B", "C", "D"))
+class TestCLI:
+    OLD_PATH = TMP_ROOT / "old.jpg"
 
+    def setup_method(self) -> None:
+        TMP_ROOT.mkdir(exist_ok=True)
 
-def test_get_arguments() -> None:
-    args = ("picopt", "-rvQcOPEZTGYSbINlM", str(TMP_ROOT))
-    arguments = cli.get_arguments(args)
-    assert arguments.recurse
-    assert arguments.verbose == -1
-    # assert arguments.advpng
-    assert arguments.comics
-    assert arguments.formats == set()
-    assert not arguments.optipng
-    assert not arguments.pngout
-    #    assert not arguments.jpegrescan
-    assert not arguments.mozjpeg
-    assert not arguments.jpegtran
-    assert not arguments.gifsicle
-    assert arguments.to_png_formats == set(["PNG"])
-    assert not arguments.follow_symlinks
-    assert arguments.bigger
-    assert not arguments.record_timestamp
-    assert arguments.test
-    assert arguments.list_only
-    assert arguments.destroy_metadata
-    assert arguments.paths[0] == str(TMP_ROOT)
+    def teardown_method(self) -> None:
+        if TMP_ROOT.exists():
+            shutil.rmtree(TMP_ROOT)
 
+    def test_csv_set(self) -> None:
+        res = cli.csv_set("a,b,c,d")
+        assert res == set(("A", "B", "C", "D"))
 
-def _setup() -> None:
-    TMP_ROOT.mkdir(exist_ok=True)
+    def test_get_arguments(self) -> None:
+        args = ("picopt", "-rvQcOPEZTGYSbINlM", str(TMP_ROOT))
+        arguments = cli.get_arguments(args)
+        assert arguments.recurse
+        assert arguments.verbose == -1
+        # assert arguments.advpng
+        assert arguments.comics
+        assert arguments.formats == set()
+        assert not arguments.optipng
+        assert not arguments.pngout
+        #    assert not arguments.jpegrescan
+        assert not arguments.mozjpeg
+        assert not arguments.jpegtran
+        assert not arguments.gifsicle
+        assert arguments.to_png_formats == set(["PNG"])
+        assert not arguments.follow_symlinks
+        assert arguments.bigger
+        assert not arguments.record_timestamp
+        assert arguments.test
+        assert arguments.list_only
+        assert arguments.destroy_metadata
+        assert arguments.paths[0] == str(TMP_ROOT)
 
-
-def _teardown() -> None:
-    if TMP_ROOT.exists():
-        shutil.rmtree(TMP_ROOT)
-
-
-def test_main() -> None:
-    _setup()
-    old_path = TMP_ROOT / "old.jpg"
-    shutil.copy(JPEG_SRC, old_path)
-    old_size = old_path.stat().st_size
-    sys.argv = ["picopt", str(old_path)]
-    cli.main()
-    assert old_path.is_file()
-    assert old_path.stat().st_size < old_size
-    _teardown()
-
-
-def test_main_err() -> None:
-    sys.argv = ["picopt", "-OPZTG", "XXX"]
-    try:
+    def test_main(self) -> None:
+        shutil.copy(JPEG_SRC, self.OLD_PATH)
+        old_size = self.OLD_PATH.stat().st_size
+        sys.argv = ["picopt", str(self.OLD_PATH)]
         cli.main()
-    except SystemExit as exc:
-        assert exc.code == 1
+        assert self.OLD_PATH.is_file()
+        assert self.OLD_PATH.stat().st_size < old_size
+
+    def test_main_err(self) -> None:
+        sys.argv = ["picopt", "-OPZTG", "XXX"]
+        try:
+            cli.main()
+        except SystemExit as exc:
+            assert exc.code == 1

@@ -3,30 +3,24 @@
 import argparse
 
 from argparse import Namespace
-from typing import Callable
+from pathlib import Path
+from typing import Optional
 from typing import Set
 from typing import Tuple
 
 import pkg_resources
 
+from picopt.formats.all_formats import ALL_FORMATS
+from picopt.formats.png import Png
+from picopt.formats.programs import PROGRAMS
+
 from . import PROGRAM_NAME
 from . import walk
-from .extern import ExtArgs
-from .formats.comic import Comic
-from .formats.gif import Gif
-from .formats.jpeg import Jpeg
-from .formats.png import Png
 from .settings import Settings
 
 
 FORMAT_DELIMETER = ","
 DISTRIBUTION = pkg_resources.get_distribution(PROGRAM_NAME)
-PROGRAMS: Set[Callable[[Settings, ExtArgs], str]] = set(
-    Png.PROGRAMS + Gif.PROGRAMS + Jpeg.PROGRAMS
-)
-
-ALL_DEFAULT_FORMATS: Set[str] = Jpeg.FORMATS | Gif.FORMATS | Png.CONVERTABLE_FORMATS
-ALL_FORMATS: Set[str] = ALL_DEFAULT_FORMATS | Comic.FORMATS
 
 
 def csv_set(csv_str: str) -> Set[str]:
@@ -251,7 +245,7 @@ def get_arguments(args: Tuple[str, ...]) -> Namespace:
         type=str,
         action="store",
         default=None,
-        help=f"Path to the config directory. Defaults to {Settings.rc_path}",
+        help="Path to a config file",
     )
 
     return parser.parse_args(args[1:])
@@ -260,9 +254,13 @@ def get_arguments(args: Tuple[str, ...]) -> Namespace:
 def run(args: Tuple[str, ...]) -> bool:
     """Process command line arguments and walk inputs."""
     arguments = get_arguments(args)
-    settings = Settings(PROGRAMS, arguments)
-    wob = walk.Walk(settings)
-    return wob.run()
+    if arguments.config is not None:
+        rc_path: Optional[Path] = Path(arguments.config)
+    else:
+        rc_path = None
+    settings = Settings(arguments, rc_path, check_programs=True)
+    wob = walk.Walk()
+    return wob.run(settings)
 
 
 def main() -> None:

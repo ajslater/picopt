@@ -7,6 +7,7 @@ v3.0.0-rc0
 - Timestamps are now recorded after optimizing every image, preserving progress.
 
 v2.2.1
+
 - Support python v3.9 & Pillow v8
 - Preserve comments when optimizing comic archives
 

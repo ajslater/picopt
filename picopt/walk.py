@@ -7,36 +7,41 @@ from multiprocessing.pool import AsyncResult
 from multiprocessing.pool import Pool
 from pathlib import Path
 from typing import Any
+from typing import Dict
 from typing import List
 from typing import Optional
 from typing import Set
 from typing import Tuple
 
-from . import detect_format
-from . import optimize
-from . import stats
-from . import timestamp
-from .formats.comic import Comic
-from .settings import Settings
-from .stats import ReportStats
-from .timestamp import Timestamp
+from picopt import detect_format
+from picopt import optimize
+from picopt import stats
+from picopt import timestamp
+from picopt.formats.comic import Comic
+from picopt.settings import Settings
+from picopt.stats import ReportStats
+from picopt.timestamp import TIMESTAMPS_FN
+from picopt.timestamp import Timestamp
 
 
 class Walk(object):
     """Walk object for storing state of a walk run."""
 
-    def __init__(self, settings: Settings) -> None:
-        """Set the settings and initialize the threadpool & Timstamp."""
-        self._settings = settings
-        self._pool = Pool(self._settings.jobs)
-        self._tso = Timestamp(self._settings)
+    def __init__(self):
+        """Initialize."""
+        self._pool = Pool()
+        self._timestamps: Dict[Path, Timestamp] = {}
 
     @staticmethod
     def _comic_archive_skip(args: Tuple[ReportStats]) -> ReportStats:
         return args[0]
 
     def walk_comic_archive(
-        self, path: Path, image_format: str, optimize_after: Optional[float]
+        self,
+        path: Path,
+        image_format: str,
+        optimize_after: Optional[float],
+        settings: Settings,
     ) -> Set[AsyncResult]:
         """
         Optimize a comic archive.
@@ -48,17 +53,21 @@ class Walk(object):
         """
         # uncompress archive
         tmp_dir, report_stats, comment = Comic.comic_archive_uncompress(
-            self._settings, path, image_format
+            settings, path, image_format
         )
         if tmp_dir is None:
-            skip_args = tuple([report_stats])
+            skip_args = (report_stats,)
             return set(
                 [self._pool.apply_async(self._comic_archive_skip, args=(skip_args,))]
             )
 
         # optimize contents of archive
         archive_mtime = path.stat().st_mtime
-        result_set = self.walk_dir(tmp_dir, optimize_after, True, archive_mtime)
+        # Use a None top_path to not report archive internal timestamps back up
+        #   to the timestamp file.
+        result_set = self.walk_dir(
+            tmp_dir, optimize_after, settings, None, archive_mtime
+        )
 
         # wait for archive contents to optimize before recompressing
         nag_about_gifs = False
@@ -67,21 +76,28 @@ class Walk(object):
             nag_about_gifs = nag_about_gifs or res.nag_about_gifs
 
         # recompress archive
-        args = (path, image_format, self._settings, nag_about_gifs, comment)
+        args = (path, image_format, settings, nag_about_gifs, comment)
         return set([self._pool.apply_async(Comic.comic_archive_compress, args=(args,))])
 
-    def _is_skippable(self, path: Path) -> bool:
+    def _is_skippable(
+        self, path: Path, settings: Settings, top_path: Optional[Path]
+    ) -> bool:
         """Handle things that are not optimizable files."""
         # File types
-        if not self._settings.follow_symlinks and path.is_symlink():
-            if self._settings.verbose > 1:
+        if not settings.follow_symlinks and path.is_symlink():
+            if settings.verbose > 1:
                 print(path, "is a symlink, skipping.")
             return True
         if path.name == timestamp.OLD_TIMESTAMP_FN:
-            self._tso.upgrade_old_timestamp(path)
+            if top_path is not None:
+                self._timestamps[top_path].upgrade_old_timestamp(path)
+            return True
+        if path.name == TIMESTAMPS_FN and path.parent != top_path:
+            if top_path is not None:
+                self._timestamps[top_path].consume_child_timestamps(path)
             return True
         if not path.exists():
-            if self._settings.verbose:
+            if settings.verbose:
                 print(path, "was not found.")
             return True
 
@@ -105,27 +121,29 @@ class Walk(object):
         self,
         filename: Path,
         walk_after: Optional[float],
-        recurse: Optional[int] = None,
+        settings: Settings,
+        top_path: Optional[Path],
         archive_mtime: Optional[float] = None,
     ) -> Set[AsyncResult]:
         """Optimize an individual file."""
         path = Path(filename)
         result_set: Set[AsyncResult] = set()
-        if self._is_skippable(path):
+        if self._is_skippable(path, settings, top_path):
             return result_set
 
-        walk_after = self._tso.get_walk_after(path, walk_after)
+        if top_path is not None:
+            walk_after = self._timestamps[top_path].get_walk_after(path, walk_after)
 
         # File is a directory
         if path.is_dir():
-            return self.walk_dir(path, walk_after, recurse, archive_mtime)
+            return self.walk_dir(path, walk_after, settings, top_path, archive_mtime)
 
         if self._is_older_than_timestamp(path, walk_after, archive_mtime):
             return result_set
 
         # Check image format
         #    try:
-        image_format = detect_format.detect_file(self._settings, path)
+        image_format = detect_format.detect_file(settings, path)
         #    except Exception:
         #        res = settings.pool.apply_async(
         #            stats.ReportStats, (path,), {"error": "Detect Format"}
@@ -136,19 +154,21 @@ class Walk(object):
         if not image_format:
             return result_set
 
-        if self._settings.list_only:
+        if settings.list_only:
             # list only
             print(f"{path}: {image_format}")
             return result_set
 
         if detect_format.is_format_selected(
-            self._settings, image_format, Comic.FORMATS, Comic.PROGRAMS
+            settings, image_format, Comic.FORMATS, Comic.PROGRAMS
         ):
             # comic archive
-            result_set |= self.walk_comic_archive(path, image_format, walk_after)
+            result_set |= self.walk_comic_archive(
+                path, image_format, walk_after, settings
+            )
         else:
             # regular image
-            args = [path, image_format, self._settings]
+            args = (path, image_format, settings)
             result_set.add(
                 self._pool.apply_async(optimize.optimize_image, args=(args,))
             )
@@ -158,16 +178,17 @@ class Walk(object):
         self,
         dir_path: Path,
         walk_after: Optional[float],
-        recurse: Optional[int] = None,
+        settings: Settings,
+        top_path: Optional[Path],
         archive_mtime: Optional[float] = None,
     ) -> Set[multiprocessing.pool.AsyncResult]:
         """Recursively optimize a directory."""
-        if recurse is None:
-            recurse = self._settings.recurse
-
         result_set: Set[AsyncResult] = set()
-        if not recurse:
+        if not settings.recurse:
             return result_set
+
+        # NEW DIR, NEW SETTINGS
+        settings = settings.clone(dir_path)
 
         for root, _, filenames in os.walk(dir_path):
             root_path = Path(root)
@@ -176,7 +197,7 @@ class Walk(object):
                 full_path = root_path / filename
                 try:
                     results = self.walk_file(
-                        full_path, walk_after, recurse, archive_mtime
+                        full_path, walk_after, settings, top_path, archive_mtime
                     )
                     result_set = result_set.union(results)
                 except Exception:
@@ -185,7 +206,9 @@ class Walk(object):
 
         return result_set
 
-    def _walk_all_files(self) -> Tuple[Set[Path], int, int, bool, List[Any]]:
+    def _walk_all_files(
+        self, settings: Settings, top_paths: Set[Path]
+    ) -> Tuple[int, int, bool, List[Any]]:
         """
         Optimize the files from the arugments list in two batches.
 
@@ -193,72 +216,83 @@ class Walk(object):
         working directory tree and one for relative files.
         """
         # Init records
-        record_dirs: Set[Path] = set()
-        result_set: Set[AsyncResult] = set()
+        result_sets: Dict[Path, Set[AsyncResult]] = {}
 
-        for filename in self._settings.paths:
-            path = Path(filename)
+        for top_path in sorted(top_paths):
             # Record dirs to put timestamps in later
-            if self._settings.recurse and path.is_dir():
-                record_dirs.add(path)
-                self._tso._upgrade_old_parent_timestamps(path)  # XXX Private
-
-        self._tso._dump_timestamps()  # XXX PRIVATE
-
-        for filename in self._settings.paths:
-            path = Path(filename)
-            walk_after = self._tso.get_walk_after(path)
-            # TODO is passing this recurse argument neccissary?
-            results = self.walk_file(path, walk_after, self._settings.recurse)
-            result_set = result_set.union(results)
+            if top_path.is_file():
+                top_path_settings = settings.clone(top_path)
+            else:
+                # dir handler does the clone later
+                top_path_settings = settings
+            timestamps = Timestamp(settings, top_path)
+            # TODO should walk_after still work like this?
+            self._timestamps[top_path] = timestamps
+            # XXX This should probably be moved to ts init.
+            timestamps.upgrade_old_parent_timestamps(top_path)
+            timestamps.dump_timestamps()
+            walk_after = timestamps.get_walk_after(top_path)
+            result_set = self.walk_file(
+                top_path, walk_after, top_path_settings, top_path
+            )
+            result_sets[top_path] = result_set
 
         bytes_in = 0
         bytes_out = 0
         nag_about_gifs = False
         errors: List[Tuple[Path, str]] = []
-        for result in result_set:
-            res = result.get()
-            if res.error:
-                errors += [(res.final_path, res.error)]
-                continue
-            # APPEND EVERY FILE'S TIMESTAMP
-            self._tso.record_timestamp(res.final_path)
-            bytes_in += res.bytes_in
-            bytes_out += res.bytes_out
-            nag_about_gifs = nag_about_gifs or res.nag_about_gifs
+        for top_path, result_set in result_sets.items():
+            for result in result_set:
+                res = result.get()
+                if res.error:
+                    errors += [(res.final_path, res.error)]
+                    continue
+                # APPEND EVERY FILE'S TIMESTAMP after its done.
+                self._timestamps[top_path].record_timestamp(res.final_path)
+                bytes_in += res.bytes_in
+                bytes_out += res.bytes_out
+                nag_about_gifs = nag_about_gifs or res.nag_about_gifs
 
-        return record_dirs, bytes_in, bytes_out, nag_about_gifs, errors
+            timestamps = self._timestamps[top_path]
+            timestamps.record_timestamp(top_path)
+            timestamps.compact_timestamps(top_path)
 
-    def run(self) -> bool:
+        return bytes_in, bytes_out, nag_about_gifs, errors
+
+    def run(self, settings: Settings) -> bool:
         """Use preconfigured settings to optimize files."""
-        if not self._settings.can_do:
-            print("All optimizers are not available or disabled.")
+        if not settings.can_do:
+            print("No optimizers are available or all optimizers are disabled.")
             return False
 
-        if self._settings.optimize_after is not None and self._settings.verbose:
-            print("Optimizing after", time.ctime(self._settings.optimize_after))
+        top_paths = set()
+        for top_path_fn in settings.paths:
+            top_path = Path(top_path_fn)
+            if not top_path.exists():
+                print(f"Path does not exist: {top_path_fn}")
+                return False
+            top_paths.add(top_path)
+
+        if settings.optimize_after is not None and settings.verbose:
+            print("Optimizing after", time.ctime(settings.optimize_after))
 
         # Setup Multiprocessing
+        if settings.jobs != multiprocessing.cpu_count():
+            # unusual situation, people usually don't specify jobs
+            self._pool = Pool(settings.jobs)
+
         # Optimize Files
         (
-            record_dirs,
             bytes_in,
             bytes_out,
             nag_about_gifs,
             errors,
-        ) = self._walk_all_files()
+        ) = self._walk_all_files(settings, top_paths)
 
         # Shut down multiprocessing
         self._pool.close()
         self._pool.join()
 
-        # Write timestamps
-        for dirname in sorted(record_dirs):
-            self._tso.record_timestamp(dirname)
-            self._tso.compact_timestamps(dirname)
-
-        self._tso._dump_timestamps()  # XXX PRIVATE
-
         # Finish by reporting totals
-        stats.report_totals(self._settings, bytes_in, bytes_out, nag_about_gifs, errors)
+        stats.report_totals(settings, bytes_in, bytes_out, nag_about_gifs, errors)
         return True
