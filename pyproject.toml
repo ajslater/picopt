@@ -70,3 +70,6 @@ directory = "test-results/coverage"
 [tool.pytest.ini_options]
 junit_family = "xunit2"
 addopts = "--junitxml=test-results/pytest/junit.xml -ra --strict --black --cov --cov-append --cov-report=html --cov-report=term --flake8 --isort --mypy"
+
+[tool.vulture]
+sort_by_size = true
