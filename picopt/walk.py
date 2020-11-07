@@ -14,9 +14,10 @@ from typing import Set
 from typing import Tuple
 
 from picopt import detect_format
-from picopt import optimize
 from picopt import stats
 from picopt.formats.comic import Comic
+from picopt.optimize import TMP_SUFFIX
+from picopt.optimize import optimize_image
 from picopt.settings import Settings
 from picopt.stats import ReportStats
 from picopt.timestamp import OLD_TIMESTAMP_FN
@@ -96,6 +97,9 @@ class Walk(object):
             if top_path is not None:
                 self._timestamps[top_path].consume_child_timestamps(path)
             return True
+        if path.name.endswith(TMP_SUFFIX):
+            path.unlink()
+            return True
         if not path.exists():
             if settings.verbose:
                 print(path, "was not found.")
@@ -171,9 +175,7 @@ class Walk(object):
         else:
             # regular image
             args = (path, image_format, settings)
-            result_set.add(
-                self._pool.apply_async(optimize.optimize_image, args=(args,))
-            )
+            result_set.add(self._pool.apply_async(optimize_image, args=(args,)))
         return result_set
 
     def walk_dir(
