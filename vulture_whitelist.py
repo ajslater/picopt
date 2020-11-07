@@ -1,3 +1,4 @@
+# flake8: noqa
 _.setup_method  # unused method (tests/integration/test_images_dir.py:16)
 _.setup_method  # unused method (tests/unit/test_cli.py:19)
 _.setup_method  # unused method (tests/unit/test_detect_format.py:32)
