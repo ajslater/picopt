@@ -16,10 +16,10 @@ from typing import Tuple
 from picopt import detect_format
 from picopt import optimize
 from picopt import stats
-from picopt import timestamp
 from picopt.formats.comic import Comic
 from picopt.settings import Settings
 from picopt.stats import ReportStats
+from picopt.timestamp import OLD_TIMESTAMP_FN
 from picopt.timestamp import TIMESTAMPS_FN
 from picopt.timestamp import Timestamp
 
@@ -88,7 +88,7 @@ class Walk(object):
             if settings.verbose > 1:
                 print(path, "is a symlink, skipping.")
             return True
-        if path.name == timestamp.OLD_TIMESTAMP_FN:
+        if path.name == OLD_TIMESTAMP_FN:
             if top_path is not None:
                 self._timestamps[top_path].upgrade_old_timestamp(path)
             return True
@@ -129,6 +129,8 @@ class Walk(object):
         path = Path(filename)
         result_set: Set[AsyncResult] = set()
         if self._is_skippable(path, settings, top_path):
+            if settings.verbose > 1:
+                print(f"skip {path}")
             return result_set
 
         if top_path is not None:
@@ -219,12 +221,9 @@ class Walk(object):
         result_sets: Dict[Path, Set[AsyncResult]] = {}
 
         for top_path in sorted(top_paths):
-            # Record dirs to put timestamps in later
-            if top_path.is_file():
-                top_path_settings = settings.clone(top_path)
-            else:
-                # dir handler does the clone later
-                top_path_settings = settings
+            top_path_settings = settings.clone(top_path)
+            # dir handler will reclone the settings for the top path
+            #   a bit wasteful, but fine.
             timestamps = Timestamp(settings, top_path)
             # TODO should walk_after still work like this?
             self._timestamps[top_path] = timestamps

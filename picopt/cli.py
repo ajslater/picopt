@@ -30,7 +30,7 @@ def csv_set(csv_str: str) -> Set[str]:
 
 def get_arguments(args: Tuple[str, ...]) -> Namespace:
     """Parse the command line."""
-    usage = "%(prog)s [arguments] [image files]"
+    usage = "%(prog)s [arguments] [paths]"
     programs_str = ", ".join(
         (prog.__func__.__name__ for prog in PROGRAMS)  # type: ignore
     )
@@ -43,16 +43,15 @@ def get_arguments(args: Tuple[str, ...]) -> Namespace:
         "--recurse",
         action="store_true",
         dest="recurse",
-        default=0,
-        help="Recurse down through directories ignoring the"
-        "image file arguments on the command line",
+        default=None,
+        help="Recurse down through command line paths.",
     )
     parser.add_argument(
         "-v",
         "--verbose",
         action="count",
         dest="verbose",
-        default=0,
+        default=None,
         help="Display more output. -v (default) and -vv " "(noisy)",
     )
     parser.add_argument(
@@ -61,6 +60,7 @@ def get_arguments(args: Tuple[str, ...]) -> Namespace:
         action="store_const",
         dest="verbose",
         const=-1,
+        default=None,
         help="Display little to no output",
     )
     #    parser.add_argument(
@@ -76,7 +76,7 @@ def get_arguments(args: Tuple[str, ...]) -> Namespace:
         "--comics",
         action="store_true",
         dest="comics",
-        default=0,
+        default=None,
         help="Also optimize comic book archives (cbz & cbr)",
     )
     parser.add_argument(
@@ -85,7 +85,7 @@ def get_arguments(args: Tuple[str, ...]) -> Namespace:
         type=csv_set,
         action="store",
         dest="formats",
-        default=set(),
+        default=None,
         help="Only optimize images of the specifed"
         f"'{FORMAT_DELIMETER}' delimited formats from:"
         f" {all_formats}",
@@ -95,7 +95,7 @@ def get_arguments(args: Tuple[str, ...]) -> Namespace:
         "--disable_optipng",
         action="store_false",
         dest="optipng",
-        default=1,
+        default=None,
         help="Do not optimize with optipng",
     )
     parser.add_argument(
@@ -103,7 +103,7 @@ def get_arguments(args: Tuple[str, ...]) -> Namespace:
         "--disable_pngout",
         action="store_false",
         dest="pngout",
-        default=1,
+        default=None,
         help="Do not optimize with pngout",
     )
     #    parser.add_argument(
@@ -119,7 +119,7 @@ def get_arguments(args: Tuple[str, ...]) -> Namespace:
         "--disable_progressive",
         action="store_false",
         dest="jpegtran_prog",
-        default=1,
+        default=None,
         help="Don't try to reduce size by making " "progressive JPEGs with jpegtran",
     )
     parser.add_argument(
@@ -127,7 +127,7 @@ def get_arguments(args: Tuple[str, ...]) -> Namespace:
         "--disable_mozjpeg",
         action="store_false",
         dest="mozjpeg",
-        default=1,
+        default=None,
         help="Do not optimize with mozjpeg",
     )
     parser.add_argument(
@@ -135,7 +135,7 @@ def get_arguments(args: Tuple[str, ...]) -> Namespace:
         "--disable_jpegtran",
         action="store_false",
         dest="jpegtran",
-        default=1,
+        default=None,
         help="Do not optimize with jpegtran",
     )
     parser.add_argument(
@@ -143,7 +143,7 @@ def get_arguments(args: Tuple[str, ...]) -> Namespace:
         "--disable_gifsicle",
         action="store_false",
         dest="gifsicle",
-        default=1,
+        default=None,
         help="disable optimizing animated GIFs",
     )
     parser.add_argument(
@@ -152,7 +152,7 @@ def get_arguments(args: Tuple[str, ...]) -> Namespace:
         action="store_const",
         dest="to_png_formats",
         const=Png.FORMATS,
-        default=Png.CONVERTABLE_FORMATS,
+        default=None,
         help="Do not convert other lossless formats"
         f"like {lossless_formats} to PNG when "
         f"optimizing. By default, {PROGRAM_NAME}"
@@ -163,7 +163,7 @@ def get_arguments(args: Tuple[str, ...]) -> Namespace:
         "--disable_follow_symlinks",
         action="store_false",
         dest="follow_symlinks",
-        default=1,
+        default=None,
         help="disable following symlinks for files and " "directories",
     )
     parser.add_argument(
@@ -171,7 +171,7 @@ def get_arguments(args: Tuple[str, ...]) -> Namespace:
         "--bigger",
         action="store_true",
         dest="bigger",
-        default=0,
+        default=None,
         help="Save optimized files that are larger than " "the originals",
     )
     parser.add_argument(
@@ -179,7 +179,7 @@ def get_arguments(args: Tuple[str, ...]) -> Namespace:
         "--no_timestamp",
         action="store_false",
         dest="record_timestamp",
-        default=True,
+        default=None,
         help="Do not record the optimization time in a timestamp file.",
     )
     parser.add_argument(
@@ -187,8 +187,8 @@ def get_arguments(args: Tuple[str, ...]) -> Namespace:
         "--optimize_after",
         action="store",
         dest="optimize_after",
-        type=Settings.parse_date_string,
         default=None,
+        type=Settings.parse_date_string,
         help="only optimize files after the specified "
         "timestamp. Supercedes .picopt_timestamp file.",
     )
@@ -197,7 +197,7 @@ def get_arguments(args: Tuple[str, ...]) -> Namespace:
         "--noop",
         action="store_true",
         dest="test",
-        default=0,
+        default=None,
         help="Do not replace files with optimized versions",
     )
     parser.add_argument(
@@ -205,7 +205,7 @@ def get_arguments(args: Tuple[str, ...]) -> Namespace:
         "--list",
         action="store_true",
         dest="list_only",
-        default=0,
+        default=None,
         help="Only list files that would be optimized",
     )
     parser.add_argument(
@@ -220,7 +220,7 @@ def get_arguments(args: Tuple[str, ...]) -> Namespace:
         "--destroy_metadata",
         action="store_true",
         dest="destroy_metadata",
-        default=0,
+        default=None,
         help="*Destroy* metadata like EXIF and JFIF",
     )
     parser.add_argument(
@@ -228,6 +228,7 @@ def get_arguments(args: Tuple[str, ...]) -> Namespace:
         metavar="path",
         type=str,
         nargs="+",
+        default=None,
         help="File or directory paths to optimize",
     )
     parser.add_argument(
@@ -236,7 +237,7 @@ def get_arguments(args: Tuple[str, ...]) -> Namespace:
         type=int,
         action="store",
         dest="jobs",
-        default=0,
+        default=None,
         help="Number of parallel jobs to run simultaneously.",
     )
     parser.add_argument(
@@ -254,11 +255,16 @@ def get_arguments(args: Tuple[str, ...]) -> Namespace:
 def run(args: Tuple[str, ...]) -> bool:
     """Process command line arguments and walk inputs."""
     arguments = get_arguments(args)
+    arguments_dict = {}
+    for key, val in vars(arguments).items():
+        if val is not None:
+            arguments_dict[key] = val
     if arguments.config is not None:
         rc_path: Optional[Path] = Path(arguments.config)
     else:
         rc_path = None
-    settings = Settings(arguments, rc_path, check_programs=True)
+    arg_namespace = Namespace(**arguments_dict)
+    settings = Settings(arg_namespace, rc_path, check_programs=True)
     wob = walk.Walk()
     return wob.run(settings)
 

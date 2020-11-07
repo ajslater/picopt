@@ -34,7 +34,7 @@ class TestCLI:
         assert arguments.verbose == -1
         # assert arguments.advpng
         assert arguments.comics
-        assert arguments.formats == set()
+        assert arguments.formats is None
         assert not arguments.optipng
         assert not arguments.pngout
         #    assert not arguments.jpegrescan

@@ -39,6 +39,7 @@ class TestTimestamp:
     def _setup_old_timestamp(self) -> None:
         self.old_timestamp_path.touch()
         self.old_mtime = self.old_timestamp_path.stat().st_mtime
+        assert self.old_timestamp_path.exists()
 
     def test_get_timestamp_invalid(self) -> None:
         path = TMP_ROOT / "BLARGH"
@@ -47,8 +48,7 @@ class TestTimestamp:
 
     def test_get_old_timestamp(self) -> None:
         self._setup_old_timestamp()
-        assert self.old_timestamp_path.exists()
-        res = self.tso.upgrade_old_timestamp(TMP_ROOT)
+        res = self.tso.upgrade_old_timestamp(self.old_timestamp_path)
 
         assert res == self.old_mtime
         assert not self.old_timestamp_path.exists()
@@ -59,8 +59,7 @@ class TestTimestamp:
 
     def test_upgrade_old_timestamp(self) -> None:
         self._setup_old_timestamp()
-        assert self.old_timestamp_path.exists()
-        self.tso.upgrade_old_timestamp(TMP_ROOT)
+        self.tso.upgrade_old_timestamp(self.old_timestamp_path)
         res = self.tso._get_timestamp(TMP_ROOT)
         assert res == self.old_mtime
         assert not self.old_timestamp_path.exists()

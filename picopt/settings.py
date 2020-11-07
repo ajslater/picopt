@@ -72,9 +72,9 @@ class Settings(Namespace):
             self._update(rc_namespace)
         # passed in args overwrite rc
         self._update(self.arg_namespace)
-
-        self.verbose += 1
         self._update_formats()
+        if self.verbose > 1:
+            print(path, "formats:", *sorted(self.formats))
         self.jobs = max(self.jobs, 1)
         # self._set_jpegrescan_threading()
 
@@ -124,8 +124,6 @@ class Settings(Namespace):
             self.formats = self.to_png_formats | Jpeg.FORMATS | Gif.FORMATS
         if self.comics:
             self.formats |= Comic.FORMATS
-
-        print("Optimizing formats:", *sorted(self.formats))
 
     #    def _set_jpegrescan_threading(self) -> None:
     #        """

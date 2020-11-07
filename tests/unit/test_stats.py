@@ -70,7 +70,7 @@ class TestStatsReport:
         rep = stats.ReportStats(PATH, bytes_count=(2028, 1024), report=report)
         self.settings.test = True
         res = stats._report_saved(self.settings, rep)
-        assert res == f"{PATH}: 49.51% (1004.0 bytes) could be saved.\n\t{report}"
+        assert res == f"{PATH}: 49.51% (1004.0 bytes) could be saved."
 
     def test_report_saved_verbose(self) -> None:
         rep = stats.ReportStats(PATH, bytes_count=(2028, 1024), report="a")

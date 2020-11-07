@@ -138,7 +138,8 @@ class Timestamp(object):
     def _serialize_timestamps(self):
         dumpable_timestamps = {}
         for path, timestamp in self._timestamps.items():
-            dumpable_timestamps[str(path)] = timestamp
+            if timestamp is not None:
+                dumpable_timestamps[str(path)] = timestamp
         return dumpable_timestamps
 
     def dump_timestamps(self):
@@ -172,9 +173,8 @@ class Timestamp(object):
         after = self._max_timestamps(path, optimize_after)
         return after
 
-    def upgrade_old_timestamp(self, path: Path) -> Optional[float]:
+    def upgrade_old_timestamp(self, old_timestamp_path: Path) -> Optional[float]:
         """Get the timestamp from a old style timestamp file."""
-        old_timestamp_path = path / OLD_TIMESTAMP_FN
         if self._settings.verbose > 2:
             print("looking for", old_timestamp_path)
         if not old_timestamp_path.exists():
@@ -182,6 +182,7 @@ class Timestamp(object):
 
         mtime = old_timestamp_path.stat().st_mtime
         mtime_str = datetime.fromtimestamp(mtime)
+        path = old_timestamp_path.parent
         print(f"Found old style timestamp {path}:{mtime_str}")
         self.record_timestamp(path, mtime)
         try:
@@ -192,10 +193,8 @@ class Timestamp(object):
 
     def upgrade_old_parent_timestamps(self, path: Path) -> Optional[float]:
         """Walk up to the root eating old style timestamps."""
-        if path.is_file():
-            path = path.parent
-
-        path_mtime = self.upgrade_old_timestamp(path)
+        old_timestamp_path = path / OLD_TIMESTAMP_FN
+        path_mtime = self.upgrade_old_timestamp(old_timestamp_path)
         if path.parent != path:
             parent_mtime = self.upgrade_old_parent_timestamps(path.parent)
             path_mtime = self.max_none((parent_mtime, path_mtime))

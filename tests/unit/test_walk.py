@@ -218,7 +218,7 @@ class TestWalk:
     def test_walk_all_files_one(self) -> None:
         path = TMP_ROOT / "test.jpg"
         shutil.copy(TEST_JPG_SRC, path)
-        self.settings.recurse = True
+        self.settings.arg_namespace = Namespace(**{"recurse": True})
         bytes_in, bytes_out, nag, errors = self.wob._walk_all_files(
             self.settings, set([TMP_ROOT])
         )
@@ -233,10 +233,10 @@ class TestWalk:
         path1 = root1 / "test.jpg"
         shutil.copy(TEST_JPG_SRC, path1)
         root2 = TMP_ROOT / "dir2"
-        root2.mkdir()
+        root2.mkdir(parents=True)
         path2 = root2 / "test.jpg"
         shutil.copy(TEST_JPG_SRC, path2)
-        self.settings.recurse = True
+        self.settings.arg_namespace = Namespace(**{"recurse": True})
         bytes_in, bytes_out, nag, errors = self.wob._walk_all_files(
             self.settings, set([root1, root2])
         )
