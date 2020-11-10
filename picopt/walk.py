@@ -3,6 +3,7 @@ import multiprocessing
 import os
 import time
 
+from copy import deepcopy
 from multiprocessing.pool import AsyncResult
 from multiprocessing.pool import Pool
 from pathlib import Path
@@ -52,6 +53,11 @@ class Walk(object):
         module or format processor. It does mean that we block on uncompress
         and on waiting for the contents subprocesses to compress.
         """
+        # Force settings true for going inside comics
+
+        settings = deepcopy(settings)
+        settings.recurse = True
+
         # uncompress archive
         tmp_dir, report_stats, comment = Comic.comic_archive_uncompress(
             settings, path, image_format
@@ -72,6 +78,7 @@ class Walk(object):
 
         # wait for archive contents to optimize before recompressing
         nag_about_gifs = False
+        print(f"{result_set=}")
         for result in result_set:
             res = result.get()
             nag_about_gifs = nag_about_gifs or res.nag_about_gifs
@@ -94,6 +101,7 @@ class Walk(object):
                 self._timestamps[top_path].upgrade_old_timestamp(path)
             return True
         if path.name == TIMESTAMPS_FN and path.parent != top_path:
+            print(f"{top_path}")
             if top_path is not None:
                 self._timestamps[top_path].consume_child_timestamps(path)
             return True
@@ -208,6 +216,7 @@ class Walk(object):
                     print(f"Error with file: {full_path}")
                     raise
 
+        print(f"walk_dir: {result_set=}")
         return result_set
 
     def _walk_all_files(
