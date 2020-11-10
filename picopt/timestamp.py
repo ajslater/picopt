@@ -47,7 +47,7 @@ class Timestamp(object):
         tstamp = self._get_timestamp(path)
         return self.max_none((tstamp, compare_tstamp))
 
-    def _get_parent_timestamp(
+    def _get_timestamp_recursive_up(
         self, path: Path, mtime: Optional[float]
     ) -> Optional[float]:
         """
@@ -60,7 +60,7 @@ class Timestamp(object):
 
         if path != path.parent:
             # recurse up if we're not at the root
-            mtime = self._get_parent_timestamp(path.parent, mtime)
+            mtime = self._get_timestamp_recursive_up(path.parent, mtime)
 
         return mtime
 
@@ -98,16 +98,14 @@ class Timestamp(object):
             return None
 
         timestamps: Dict = {}
-        try:
-            yaml_timestamps: Optional[Dict] = self.yaml.load(timestamps_path)
-            if yaml_timestamps:
-                for path_str, timestamp in yaml_timestamps.items():
-                    try:
-                        timestamps[Path(path_str)] = float(timestamp)
-                    except Exception:
-                        print(f"Invalid timestamp for {path_str}: {timestamp}")
-        except OSError:
-            pass
+        yaml_timestamps: Optional[Dict] = self.yaml.load(timestamps_path)
+        if not yaml_timestamps:
+            return timestamps
+        for path_str, timestamp in yaml_timestamps.items():
+            try:
+                timestamps[Path(path_str)] = float(timestamp)
+            except Exception:
+                print(f"Invalid timestamp for {path_str}: {timestamp}")
         return timestamps
 
     def _load_timestamps(self, timestamps_path: Path):
@@ -165,11 +163,7 @@ class Timestamp(object):
         if self._settings.optimize_after is not None:
             return self._settings.optimize_after
 
-        if path.is_file():
-            path = path.parent
-
-        if optimize_after is None:
-            optimize_after = self._get_parent_timestamp(path, None)
+        optimize_after = self._get_timestamp_recursive_up(path, None)
         after = self._max_timestamps(path, optimize_after)
         return after
 
@@ -214,14 +208,21 @@ class Timestamp(object):
         self._timestamps[root_path] = max_timestamp
         self.dump_timestamps()
 
-    def consume_child_timestamps(self, path: Path) -> None:
+    def consume_child_timestamps(self, timestamps_path: Path) -> None:
         """Consume a child timestamp and add its values to our root."""
-        timestamps = self._load_one_timestamps_file(path)
-        for path, timestamp in timestamps:
+        timestamps = self._load_one_timestamps_file(timestamps_path)
+        # If the timestamp in the new batch is a child of an existing
+        #   timestamp and is earlier ignore it. Otherwise add it.
+        for path, timestamp in timestamps.items():
+            # TODO: could probably simplify this logic
+            ignore = True
             for root_path in set(self._timestamps.keys()):
-                if root_path == path or path in root_path.parents:
+                if root_path == path or root_path in path.parents:
                     root_timestamp = self._timestamps[root_path]
                     if timestamp > root_timestamp:
-                        self._timestamps[path] = timestamp
+                        ignore = False
+                        break
+            if not ignore:
+                self._timestamps[path] = timestamp
         self.dump_timestamps()  # TODO could interfere with appending
-        path.unlink()
+        timestamps_path.unlink()
