@@ -58,12 +58,25 @@ class TestStatsReport:
     def setup_method(self):
         self.settings = Settings()
 
+    def test_report_saved_quiet(self) -> None:
+        report = "a"
+        rep = stats.ReportStats(PATH, bytes_count=(2028, 1024), report=report)
+        self.settings.verbose = 0
+        stats.report_saved(self.settings, rep)
+
     def test__report_saved_verbose(self) -> None:
         report = "a"
         rep = stats.ReportStats(PATH, bytes_count=(2028, 1024), report=report)
         self.settings.verbose = 2
         res = stats._report_saved(self.settings, rep)
         assert res == f"{PATH}: 49.51% (1004.0 bytes)\n\t{report}"
+
+    def test__report_saved_verbose_no_tools(self) -> None:
+        report = ""
+        rep = stats.ReportStats(PATH, bytes_count=(2028, 1024), report=report)
+        self.settings.verbose = 2
+        res = stats._report_saved(self.settings, rep)
+        assert res == f"{PATH}: 49.51% (1004.0 bytes)"
 
     def test__report_saved_test(self) -> None:
         report = "a"
