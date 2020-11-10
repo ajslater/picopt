@@ -17,8 +17,10 @@ __all__ = ()
 FORMATS = set(["ANIMATED_GIF", "PNG", "PNM", "BMP", "PPM", "JPEG", "GIF"])
 TEST_PROGS = set(Png.PROGRAMS + Gif.PROGRAMS)
 TMP_ROOT = get_test_dir()
+DEEP_PATH = TMP_ROOT / "deep"
 RC_PATH = TMP_ROOT / RC_FN
-RC_SETTINGS = {"jpegtran": False}
+RC_SETTINGS = {"jpegtran": False, "formats": FORMATS}
+RC_NAMESPACE = Namespace(**RC_SETTINGS)
 
 
 class TestSettings:
@@ -54,32 +56,6 @@ class TestSettings:
         self.settings.comics = True
         self.settings._update_formats()
         assert self.settings.formats == FORMATS | set(["CBZ", "CBR"])
-
-    # def test_set_jpegrescan_threading_one() -> None:
-    #    settings = Settings()
-    #    paths = set(["tests/test_files/images/test_png.png"])
-    #    settings.paths = paths
-    #    assert settings.jpegrescan_multithread
-
-    # def test_set_jpegrescan_threading_many() -> None:
-    #    settings = Settings()
-    #    paths = Path("tests/test_files/images").glob("*.png")
-    #    strs = [str(path) for path in paths]
-    #    settings.paths = set(strs)
-    #    settings._set_jpegrescan_threading()
-    #    assert settings.jpegrescan_multithread
-
-    # def test_set_jpegrescan_threading_files_dir() -> None:
-    #    settings = Settings()
-    #    settings.paths = set(["tests/test_files/images"])
-    #    settings._set_jpegrescan_threading()
-    #    assert not settings.jpegrescan_multithread
-
-    # def test_set_jpegrescan_threading_files_invalid() -> None:
-    #    settings = Settings()
-    #    settings.paths = set(["XXX"])
-    #    settings._set_jpegrescan_threading()
-    #    assert not settings.jpegrescan_multithread
 
     def test_update(self) -> None:
         args = Namespace(bigger=True)
@@ -119,8 +95,46 @@ class TestRCSettings:
             shutil.rmtree(TMP_ROOT)
 
     def test_load_rc(self):
+        with open(RC_PATH) as rc:
+            print(rc.read())
         rc_settings = self.settings.load_rc(RC_PATH)
-        assert rc_settings == Namespace(**RC_SETTINGS)
+        assert rc_settings == RC_NAMESPACE
 
     def test_load_rc_apply(self):
         assert not self.settings.jpegtran
+
+    def test_load_settings_set_verbose(self):
+        self.settings.verbose = 2
+        self.settings.load_settings(TMP_ROOT)
+        assert self.settings.formats == FORMATS
+
+    def test_load_rc_deep(self):
+        rc_settings = self.settings.load_rc(DEEP_PATH)
+        assert rc_settings == Namespace(**RC_SETTINGS)
+
+
+class TestNoRC:
+    def setup_method(self):
+        TMP_ROOT.mkdir(parents=True)
+        self.settings = Settings(rc_path=TMP_ROOT)
+
+    def teardown_method(self):
+        if TMP_ROOT.is_dir():
+            shutil.rmtree(TMP_ROOT)
+
+    def test_load_rc_deep(self):
+        rc_settings = self.settings.load_rc(DEEP_PATH)
+        assert rc_settings == Namespace()
+
+    def test_clone(self):
+        yaml = YAML()
+        yaml.dump(RC_SETTINGS, RC_PATH)
+        clone = self.settings.clone(RC_PATH)
+        assert self.settings.jpegtran
+        assert not clone.jpegtran
+
+
+class TestSettingsCheck:
+    def test_settings_init_check(self):
+        settings = Settings(check_programs=True)
+        assert settings.can_do

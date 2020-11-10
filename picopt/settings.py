@@ -88,10 +88,9 @@ class Settings(Namespace):
         try:
             rc_settings = _YAML.load(rc_path)
             for attr in self._SET_ATTRS:
-                attr_list = getattr(rc_settings, attr, None)
+                attr_list = rc_settings.get(attr)
                 if attr_list is not None:
-                    attr_set = set(attr_list)
-                    setattr(rc_settings, attr, attr_set)
+                    rc_settings[attr] = set(attr_list)
             return Namespace(**rc_settings)
         except Exception as exc:
             print(f"Error parsing {rc_path}")
