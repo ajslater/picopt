@@ -123,6 +123,7 @@ class TestNoRC:
             shutil.rmtree(TMP_ROOT)
 
     def test_load_rc_deep(self):
+        DEEP_PATH.mkdir(parents=True)
         rc_settings = self.settings.load_rc(DEEP_PATH)
         assert rc_settings == Namespace()
 
