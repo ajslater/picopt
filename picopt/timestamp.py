@@ -93,7 +93,7 @@ class Timestamp(object):
         self._dump_append(full_path, mtime)
         return mtime
 
-    def _load_one_timestamps_file(self, timestamps_path: Path):
+    def _load_one_timestamps_file(self, timestamps_path: Path) -> Optional[Dict]:
         if not timestamps_path.is_file():
             return None
 
@@ -129,7 +129,7 @@ class Timestamp(object):
 
         return timestamps
 
-    def _dump_append(self, path, mtime):
+    def _dump_append(self, path: Path, mtime: float) -> None:
         with open(self._dump_path, "a") as tsf:
             tsf.write(f"{path}: {mtime}\n")
 
@@ -140,7 +140,7 @@ class Timestamp(object):
                 dumpable_timestamps[str(path)] = timestamp
         return dumpable_timestamps
 
-    def dump_timestamps(self):
+    def dump_timestamps(self) -> None:
         """Serialize timestamps and dump to file."""
         # Could do with unsafe YAML, but this seems better
         dumpable_timestamps = self._serialize_timestamps()
@@ -213,16 +213,17 @@ class Timestamp(object):
         timestamps = self._load_one_timestamps_file(timestamps_path)
         # If the timestamp in the new batch is a child of an existing
         #   timestamp and is earlier ignore it. Otherwise add it.
-        for path, timestamp in timestamps.items():
-            # TODO: could probably simplify this logic
-            ignore = True
-            for root_path in set(self._timestamps.keys()):
-                if root_path == path or root_path in path.parents:
-                    root_timestamp = self._timestamps[root_path]
-                    if timestamp > root_timestamp:
-                        ignore = False
-                        break
-            if not ignore:
-                self._timestamps[path] = timestamp
+        if timestamps is not None:
+            for path, timestamp in timestamps.items():
+                # TODO: could probably simplify this logic
+                ignore = True
+                for root_path in set(self._timestamps.keys()):
+                    if root_path == path or root_path in path.parents:
+                        root_timestamp = self._timestamps[root_path]
+                        if timestamp > root_timestamp:
+                            ignore = False
+                            break
+                if not ignore:
+                    self._timestamps[path] = timestamp
         self.dump_timestamps()  # TODO could interfere with appending
         timestamps_path.unlink()

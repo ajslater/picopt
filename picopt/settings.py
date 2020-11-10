@@ -51,7 +51,7 @@ class Settings(Namespace):
         self,
         arg_namespace: Optional[Namespace] = None,
         rc_path: Optional[Path] = None,
-        check_programs=False,
+        check_programs: bool = False,
     ) -> None:
         """Initialize settings object with arguments namespace."""
         self.arg_namespace = arg_namespace

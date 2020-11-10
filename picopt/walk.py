@@ -29,7 +29,7 @@ from picopt.timestamp import Timestamp
 class Walk(object):
     """Walk object for storing state of a walk run."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize."""
         self._pool = Pool()
         self._timestamps: Dict[Path, Timestamp] = {}
