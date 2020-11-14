@@ -4,10 +4,10 @@ from typing import Callable
 from typing import Optional
 from typing import Tuple
 
-from .. import extern
-from ..settings import Settings
-from .format import Format
-from .png_bit_depth import png_bit_depth
+from picopt import extern
+from picopt.formats.format import Format
+from picopt.formats.png_bit_depth import png_bit_depth
+from picopt.settings import Settings
 
 
 _PNG_FORMAT = "PNG"

@@ -7,10 +7,10 @@ from typing import Tuple
 
 from PIL import Image
 
-from .extern import ExtArgs
-from .formats.comic import Comic
-from .formats.format import ANIMATED_FORMAT_PREFIX
-from .settings import Settings
+from picopt.extern import ExtArgs
+from picopt.formats.comic import Comic
+from picopt.formats.format import ANIMATED_FORMAT_PREFIX
+from picopt.settings import Settings
 
 
 def _is_program_selected(

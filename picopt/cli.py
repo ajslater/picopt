@@ -10,13 +10,12 @@ from typing import Tuple
 
 import pkg_resources
 
+from picopt import PROGRAM_NAME
+from picopt import walk
 from picopt.formats.all_formats import ALL_FORMATS
 from picopt.formats.png import Png
 from picopt.formats.programs import PROGRAMS
-
-from . import PROGRAM_NAME
-from . import walk
-from .settings import Settings
+from picopt.settings import Settings
 
 
 FORMAT_DELIMETER = ","

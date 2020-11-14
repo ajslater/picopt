@@ -2,11 +2,11 @@
 from typing import Callable
 from typing import Tuple
 
-from .. import extern
-from ..extern import ExtArgs
-from ..settings import Settings
-from .format import ANIMATED_FORMAT_PREFIX
-from .format import Format
+from picopt import extern
+from picopt.extern import ExtArgs
+from picopt.formats.format import ANIMATED_FORMAT_PREFIX
+from picopt.formats.format import Format
+from picopt.settings import Settings
 
 
 _GIF_FORMAT = "GIF"

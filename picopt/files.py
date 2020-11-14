@@ -2,9 +2,9 @@
 from pathlib import Path
 from typing import Tuple
 
-from . import stats
-from .settings import Settings
-from .stats import ReportStats
+from picopt import stats
+from picopt.settings import Settings
+from picopt.stats import ReportStats
 
 
 def _cleanup_after_optimize_aux(

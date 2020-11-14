@@ -3,8 +3,8 @@ from typing import Callable
 from typing import Set
 from typing import Tuple
 
-from ..extern import ExtArgs
-from ..settings import Settings
+from picopt.extern import ExtArgs
+from picopt.settings import Settings
 
 
 ANIMATED_FORMAT_PREFIX = "ANIMATED_"

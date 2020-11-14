@@ -4,9 +4,9 @@ import copy
 from typing import Callable
 from typing import Tuple
 
-from .. import extern
-from ..settings import Settings
-from .format import Format
+from picopt import extern
+from picopt.formats.format import Format
+from picopt.settings import Settings
 
 
 _JPEG_FORMAT = "JPEG"

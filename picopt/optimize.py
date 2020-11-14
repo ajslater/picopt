@@ -8,17 +8,17 @@ from typing import Optional
 from typing import Tuple
 from typing import Type
 
-from . import PROGRAM_NAME
-from . import detect_format
-from . import files
-from . import stats
-from .extern import ExtArgs
-from .formats.format import Format
-from .formats.gif import Gif
-from .formats.jpeg import Jpeg
-from .formats.png import Png
-from .settings import Settings
-from .stats import ReportStats
+from picopt import PROGRAM_NAME
+from picopt import detect_format
+from picopt import files
+from picopt import stats
+from picopt.extern import ExtArgs
+from picopt.formats.format import Format
+from picopt.formats.gif import Gif
+from picopt.formats.jpeg import Jpeg
+from picopt.formats.png import Png
+from picopt.settings import Settings
+from picopt.stats import ReportStats
 
 
 TMP_SUFFIX = f".{PROGRAM_NAME}-optimized"

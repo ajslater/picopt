@@ -4,7 +4,7 @@ from typing import List
 from typing import Optional
 from typing import Tuple
 
-from .settings import Settings
+from picopt.settings import Settings
 
 
 ABBREVS = (

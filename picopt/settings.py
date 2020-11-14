@@ -11,8 +11,8 @@ import dateutil.parser
 
 from ruamel.yaml import YAML
 
-from . import PROGRAM_NAME
-from . import extern
+from picopt import PROGRAM_NAME
+from picopt import extern
 
 
 RC_FN = f".{PROGRAM_NAME}rc.yaml"

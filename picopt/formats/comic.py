@@ -11,13 +11,13 @@ from typing import Tuple
 
 import rarfile
 
-from .. import PROGRAM_NAME
-from .. import files
-from .. import stats
-from ..extern import ExtArgs
-from ..settings import Settings
-from ..stats import ReportStats
-from .format import Format
+from picopt import PROGRAM_NAME
+from picopt import files
+from picopt import stats
+from picopt.extern import ExtArgs
+from picopt.formats.format import Format
+from picopt.settings import Settings
+from picopt.stats import ReportStats
 
 
 _CBZ_FORMAT: str = "CBZ"
