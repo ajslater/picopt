@@ -98,14 +98,18 @@ class Timestamp(object):
             return None
 
         timestamps: Dict = {}
-        yaml_timestamps: Optional[Dict] = self.yaml.load(timestamps_path)
-        if not yaml_timestamps:
-            return timestamps
-        for path_str, timestamp in yaml_timestamps.items():
-            try:
-                timestamps[Path(path_str)] = float(timestamp)
-            except Exception:
-                print(f"Invalid timestamp for {path_str}: {timestamp}")
+        try:
+            yaml_timestamps: Optional[Dict] = self.yaml.load(timestamps_path)
+            if not yaml_timestamps:
+                return timestamps
+            for path_str, timestamp in yaml_timestamps.items():
+                try:
+                    timestamps[Path(path_str)] = float(timestamp)
+                except Exception:
+                    print(f"Invalid timestamp for {path_str}: {timestamp}")
+        except Exception as exc:
+            print(f"Error parsing timestamp file: {timestamps_path}")
+            print(exc)
         return timestamps
 
     def _load_timestamps(self, timestamps_path: Path):
@@ -169,20 +173,20 @@ class Timestamp(object):
 
     def upgrade_old_timestamp(self, old_timestamp_path: Path) -> Optional[float]:
         """Get the timestamp from a old style timestamp file."""
-        if self._settings.verbose > 2:
-            print("looking for", old_timestamp_path)
         if not old_timestamp_path.exists():
             return None
 
         mtime = old_timestamp_path.stat().st_mtime
         mtime_str = datetime.fromtimestamp(mtime)
         path = old_timestamp_path.parent
-        print(f"Found old style timestamp {path}:{mtime_str}")
         self.record_timestamp(path, mtime)
         try:
             old_timestamp_path.unlink()
+            if self._settings.verbose:
+                print(f"Upgraded old style timestamp {path}:{mtime_str}")
         except OSError:
             print(f"Could not remove old timestamp: {old_timestamp_path}")
+
         return mtime
 
     def upgrade_old_parent_timestamps(self, path: Path) -> Optional[float]:
@@ -196,7 +200,7 @@ class Timestamp(object):
 
     def compact_timestamps(self, root_path: Path) -> None:
         """Compact the timestamp cache and dump it."""
-        max_timestamp = None
+        max_timestamp = self._timestamps.get(root_path)
         delete_keys = set()
         for path in self._timestamps.keys():
             if root_path in path.parents:
@@ -207,6 +211,8 @@ class Timestamp(object):
             del self._timestamps[path]
         self._timestamps[root_path] = max_timestamp
         self.dump_timestamps()
+        if self._settings.verbose > 1:
+            print(f"Compacted timestamps: {root_path}: {max_timestamp}")
 
     def consume_child_timestamps(self, timestamps_path: Path) -> None:
         """Consume a child timestamp and add its values to our root."""
@@ -227,3 +233,5 @@ class Timestamp(object):
                     self._timestamps[path] = timestamp
         self.dump_timestamps()  # TODO could interfere with appending
         timestamps_path.unlink()
+        if self._settings.verbose:
+            print(f"Consumed child timestamp: {timestamps_path}")
