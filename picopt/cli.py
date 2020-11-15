@@ -38,12 +38,12 @@ def get_arguments(args: Tuple[str, ...]) -> Namespace:
     all_formats = ", ".join(sorted(ALL_FORMATS))
     lossless_formats = ", ".join(Png.LOSSLESS_FORMATS)
     parser.add_argument(
-        "-r",
-        "--recurse",
-        action="store_true",
+        "-R",
+        "--no_recurse",
+        action="store_false",
         dest="recurse",
         default=None,
-        help="Recurse down through command line paths.",
+        help="Do not recurse down through command line paths.",
     )
     parser.add_argument(
         "-v",
