@@ -6,6 +6,8 @@ v3.0.0-rc0
 - Picopt will covert and clean up old style timestamps.
 - Timestamps are now recorded after optimizing every image for each image individually instead of just directories, preserving progress.
 - Clean up old temporary files from aborted picopt runs.
+- Setting timestamps is now the default behavior
+- Recursion is now the default behavior
 
 v2.2.1
 
