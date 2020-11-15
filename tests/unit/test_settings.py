@@ -2,7 +2,6 @@
 import shutil
 
 from argparse import Namespace
-from sys import platform
 
 from ruamel.yaml import YAML
 
@@ -29,13 +28,6 @@ class TestSettings:
 
     def teardown_method(self):
         pass
-
-    def test_parse_date_string(self) -> None:
-        res = Settings.parse_date_string("2020-Jan-10 10:25:03pm")
-        if platform == "darwin":
-            assert res == 1578723903.0
-        elif platform == "linux":
-            assert res == 1578695103.0
 
     def test_update_formats(self) -> None:
         self.settings._update_formats()

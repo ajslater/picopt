@@ -1,9 +1,13 @@
 """Timestamp writer for keeping track of bulk optimizations."""
+import time
+
 from datetime import datetime
 from pathlib import Path
 from typing import Dict
 from typing import Optional
 from typing import Tuple
+
+import dateutil.parser
 
 from ruamel.yaml import YAML
 
@@ -28,6 +32,12 @@ class Timestamp(object):
             dump_path = dump_path.parent
         self._dump_path = dump_path / TIMESTAMPS_FN
         self._timestamps = self._load_timestamps(dump_path)
+
+    @staticmethod
+    def parse_date_string(date_str: str) -> float:
+        """Turn a datetime string into an epoch float."""
+        after_dt = dateutil.parser.parse(date_str)
+        return time.mktime(after_dt.timetuple())
 
     def _get_timestamp(self, path: Path) -> Optional[float]:
         """Get the timestamp from the cache."""

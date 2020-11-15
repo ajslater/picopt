@@ -1,13 +1,10 @@
 """Settings class for picopt."""
 import multiprocessing
-import time
 
 from argparse import Namespace
 from pathlib import Path
 from typing import Optional
 from typing import Set
-
-import dateutil.parser
 
 from ruamel.yaml import YAML
 
@@ -104,12 +101,6 @@ class Settings(Namespace):
             res = self.load_rc(path.parent)
 
         return res
-
-    @staticmethod
-    def parse_date_string(date_str: str) -> float:
-        """Turn a datetime string into an epoch float."""
-        after_dt = dateutil.parser.parse(date_str)
-        return time.mktime(after_dt.timetuple())
 
     def _update_formats(self) -> None:
         """Update the format list from to_png_formats & comics flag."""

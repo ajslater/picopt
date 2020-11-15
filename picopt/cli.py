@@ -16,6 +16,7 @@ from picopt.formats.all_formats import ALL_FORMATS
 from picopt.formats.png import Png
 from picopt.formats.programs import PROGRAMS
 from picopt.settings import Settings
+from picopt.timestamp import Timestamp
 
 
 FORMAT_DELIMETER = ","
@@ -187,7 +188,7 @@ def get_arguments(args: Tuple[str, ...]) -> Namespace:
         action="store",
         dest="optimize_after",
         default=None,
-        type=Settings.parse_date_string,
+        type=Timestamp.parse_date_string,
         help="only optimize files after the specified "
         "timestamp. Supercedes .picopt_timestamp file.",
     )

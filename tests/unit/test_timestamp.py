@@ -4,6 +4,7 @@ import shutil
 from argparse import Namespace
 from datetime import datetime
 from pathlib import Path
+from sys import platform
 
 from ruamel.yaml import YAML
 
@@ -25,6 +26,15 @@ PATH_TIMESTAMPS = {TMP_ROOT: MTIME}
 DEEP_MTIME = datetime.now().timestamp()
 DEEP_TIMESTAMPS = {str(DEEP_PATH): DEEP_MTIME}
 SETTINGS = Settings(arg_namespace=Namespace(timestamps_path=TIMESTAMP_PATH))
+
+
+class TestTimestampStatic:
+    def test_parse_date_string(self) -> None:
+        res = Timestamp.parse_date_string("2020-Jan-10 10:25:03pm")
+        if platform == "darwin":
+            assert res == 1578723903.0
+        elif platform == "linux":
+            assert res == 1578695103.0
 
 
 class TestTimestamp:
