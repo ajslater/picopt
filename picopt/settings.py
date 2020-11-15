@@ -69,6 +69,8 @@ class Settings(Namespace):
             self._update(rc_namespace)
         # passed in args overwrite rc
         self._update(self.arg_namespace)
+
+        # picopt specific
         self._update_formats()
         if self.verbose > 2:
             print(path, "formats:", *sorted(self.formats))
