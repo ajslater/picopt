@@ -218,6 +218,15 @@ class Walk(object):
 
         return result_set
 
+    @staticmethod
+    def _should_record_timestamp(settings: Settings, path: Path) -> bool:
+        """Determine if we should we record a timestamp at all."""
+        return (
+            (not settings.test and not settings.list_only and settings.record_timestamp)
+            and (settings.follow_symlinks or not path.is_symlink())
+            and path.exists()
+        )
+
     def _walk_all_files(
         self, settings: Settings, top_paths: Set[Path]
     ) -> Tuple[int, int, bool, List[Any]]:
@@ -237,7 +246,9 @@ class Walk(object):
             # XXX This should probably be moved to ts init.
             timestamps.upgrade_old_parent_timestamps(top_path)
             timestamps.dump_timestamps()
-            walk_after = timestamps.get_walk_after(top_path)
+            # TODO is this a dupe as it gets done in walk_file fast too
+            # walk_after = timestamps.get_walk_after(top_path)
+            walk_after = None
             result_set = self.walk_file(top_path, walk_after, settings, top_path)
             result_sets[top_path] = result_set
 
@@ -252,14 +263,18 @@ class Walk(object):
                     errors += [(res.final_path, res.error)]
                     continue
                 # APPEND EVERY FILE'S TIMESTAMP after its done.
-                self._timestamps[top_path].record_timestamp(res.final_path)
+                timestamps = self._timestamps[top_path]
+                if self._should_record_timestamp(settings, res.final_path):
+                    timestamps.record_timestamp(res.final_path)
                 bytes_in += res.bytes_in
                 bytes_out += res.bytes_out
                 nag_about_gifs = nag_about_gifs or res.nag_about_gifs
 
             timestamps = self._timestamps[top_path]
-            timestamps.record_timestamp(top_path)
-            timestamps.compact_timestamps(top_path)
+
+            if self._should_record_timestamp(settings, top_path):
+                timestamps.record_timestamp(top_path)
+                timestamps.compact_timestamps(top_path)
 
         return bytes_in, bytes_out, nag_about_gifs, errors
 

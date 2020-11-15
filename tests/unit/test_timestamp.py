@@ -159,32 +159,6 @@ class TestTimestamp:
         res = self.tso.get_walk_after(path, tstamp)
         assert res == tstamp
 
-    def test_should_record_timestamp(self) -> None:
-        res = self.tso._should_record_timestamp(TMP_ROOT)
-        assert res
-
-    def test_should_record_timestamp_symlink(self) -> None:
-        self.tso._settings.follow_symlinks = False
-        sym_path = self.path / "sym"
-        sym_path.symlink_to(self.deep)
-        res = self.tso._should_record_timestamp(sym_path)
-        assert not res
-
-    def test_should_record_timestamp_dne(self) -> None:
-        self.tso._settings.follow_symlinks = False
-        bad_path = self.path / "BLARGS"
-        res = self.tso._should_record_timestamp(bad_path)
-        assert not res
-
-    def test_should_record_timestamp_test(self) -> None:
-        self.tso._settings.test = True
-        res = self.tso._should_record_timestamp(TMP_ROOT)
-        assert not res
-
-    def test_record_timestamp(self) -> None:
-        res = self.tso.record_timestamp(TMP_ROOT / "blarg")
-        assert res is None
-
     def test__load_one_timestamp_file(self) -> None:
         timestamps = self.tso._load_one_timestamps_file(TIMESTAMP_PATH)
         assert timestamps == PATH_TIMESTAMPS
@@ -253,3 +227,8 @@ class TestTimestamp:
         assert self.tso._timestamps[TMP_ROOT] == MTIME
         assert self.tso._timestamps.get(DEEP_PATH) is None
         assert not DEEP_TIMESTAMP_PATH.exists()
+
+    def test_record_timestamp(self) -> None:
+        then = datetime.now().timestamp()
+        res = self.tso.record_timestamp(TMP_ROOT / "blarg")
+        assert res is not None and res > then and res < datetime.now().timestamp()

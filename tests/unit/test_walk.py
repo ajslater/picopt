@@ -356,3 +356,25 @@ class TestWalk:
         self.settings.jobs = 99
         res = self.wob.run(self.settings)
         assert res
+
+    def test_should_record_timestamp(self) -> None:
+        res = self.wob._should_record_timestamp(self.settings, TMP_ROOT)
+        assert res
+
+    def test_should_record_timestamp_symlink(self) -> None:
+        self.settings.follow_symlinks = False
+        sym_path = TMP_ROOT / "sym"
+        sym_path.symlink_to(DEEP_PATH)
+        res = self.wob._should_record_timestamp(self.settings, sym_path)
+        assert not res
+
+    def test_should_record_timestamp_dne(self) -> None:
+        self.settings.follow_symlinks = False
+        bad_path = TMP_ROOT / "BLARGS"
+        res = self.wob._should_record_timestamp(self.settings, bad_path)
+        assert not res
+
+    def test_should_record_timestamp_test(self) -> None:
+        self.settings.test = True
+        res = self.wob._should_record_timestamp(self.settings, TMP_ROOT)
+        assert not res

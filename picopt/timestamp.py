@@ -74,29 +74,10 @@ class Timestamp(object):
 
         return mtime
 
-    def _should_record_timestamp(self, path: Path) -> bool:
-        """Determine if we should we record a timestamp at all."""
-        # TODO simplify
-        record = True
-        if (
-            self._settings.test
-            or self._settings.list_only
-            or not self._settings.record_timestamp
-        ):
-            record = False
-        elif not self._settings.follow_symlinks and path.is_symlink():
-            record = False
-        elif not path.exists():
-            record = False
-
-        return record
-
     def record_timestamp(
         self, full_path: Path, mtime: Optional[float] = None
     ) -> Optional[float]:
         """Record the timestamp."""
-        if not self._should_record_timestamp(full_path):
-            return None
         if mtime is None:
             mtime = datetime.now().timestamp()
         self._timestamps[full_path] = mtime
