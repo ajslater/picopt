@@ -78,7 +78,6 @@ class Walk(object):
 
         # wait for archive contents to optimize before recompressing
         nag_about_gifs = False
-        print(f"{result_set=}")
         for result in result_set:
             res = result.get()
             nag_about_gifs = nag_about_gifs or res.nag_about_gifs
@@ -216,7 +215,6 @@ class Walk(object):
                     print(f"Error with file: {full_path}")
                     raise
 
-        print(f"walk_dir: {result_set=}")
         return result_set
 
     def _walk_all_files(
