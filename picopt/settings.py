@@ -41,7 +41,7 @@ class Settings(Namespace):
     paths: Set[str] = set()
     pngout: bool = True
     record_timestamp: bool = True
-    recurse: bool = False
+    recurse: bool = True
     test: bool = False
     to_png_formats: Set[str] = set()
     verbose: int = 1
@@ -73,7 +73,7 @@ class Settings(Namespace):
         # passed in args overwrite rc
         self._update(self.arg_namespace)
         self._update_formats()
-        if self.verbose > 1:
+        if self.verbose > 2:
             print(path, "formats:", *sorted(self.formats))
         self.jobs = max(self.jobs, 1)
         # self._set_jpegrescan_threading()
@@ -85,16 +85,17 @@ class Settings(Namespace):
 
         rc_path = path / RC_FN
 
-        try:
-            rc_settings = _YAML.load(rc_path)
-            for attr in self._SET_ATTRS:
-                attr_list = rc_settings.get(attr)
-                if attr_list is not None:
-                    rc_settings[attr] = set(attr_list)
-            return Namespace(**rc_settings)
-        except Exception as exc:
-            print(f"Error parsing {rc_path}")
-            print(exc)
+        if rc_path.is_file():
+            try:
+                rc_settings = _YAML.load(rc_path)
+                for attr in self._SET_ATTRS:
+                    attr_list = rc_settings.get(attr)
+                    if attr_list is not None:
+                        rc_settings[attr] = set(attr_list)
+                return Namespace(**rc_settings)
+            except Exception as exc:
+                print(f"Error parsing {rc_path}")
+                print(exc)
 
         if path == path.parent:
             # at root /, no rc found.
