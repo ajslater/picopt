@@ -91,28 +91,31 @@ class Walk(object):
     ) -> bool:
         """Handle things that are not optimizable files."""
         # File types
+        skip = False
         if not settings.follow_symlinks and path.is_symlink():
             if settings.verbose > 1:
                 print(path, "is a symlink, skipping.")
-            return True
-        if path.name == OLD_TIMESTAMP_FN:
+            skip = True
+        elif path.name == OLD_TIMESTAMP_FN:
             if top_path is not None:
                 self._timestamps[top_path].upgrade_old_timestamp(path)
-            return True
-        if path.name == TIMESTAMPS_FN and path.parent != top_path:
-            print(f"{top_path}")
-            if top_path is not None:
+            skip = True
+        elif path.name == TIMESTAMPS_FN:
+            if top_path is not None and path.parent != top_path:
                 self._timestamps[top_path].consume_child_timestamps(path)
-            return True
-        if path.name.endswith(TMP_SUFFIX):
+            skip = True
+        elif path.name.endswith(TMP_SUFFIX):
             path.unlink()
-            return True
-        if not path.exists():
+            skip = True
+        elif not path.exists():
             if settings.verbose:
                 print(path, "was not found.")
-            return True
+            skip = True
 
-        return False
+        if skip and settings.verbose > 1:
+            print(f"skip {path}")
+
+        return skip
 
     @staticmethod
     def _is_older_than_timestamp(
@@ -140,8 +143,6 @@ class Walk(object):
         path = Path(filename)
         result_set: Set[AsyncResult] = set()
         if self._is_skippable(path, settings, top_path):
-            if settings.verbose > 1:
-                print(f"skip {path}")
             return result_set
 
         if top_path is not None:
@@ -230,9 +231,6 @@ class Walk(object):
         result_sets: Dict[Path, Set[AsyncResult]] = {}
 
         for top_path in sorted(top_paths):
-            top_path_settings = settings.clone(top_path)
-            # dir handler will reclone the settings for the top path
-            #   a bit wasteful, but fine.
             timestamps = Timestamp(settings, top_path)
             # TODO should walk_after still work like this?
             self._timestamps[top_path] = timestamps
@@ -240,9 +238,7 @@ class Walk(object):
             timestamps.upgrade_old_parent_timestamps(top_path)
             timestamps.dump_timestamps()
             walk_after = timestamps.get_walk_after(top_path)
-            result_set = self.walk_file(
-                top_path, walk_after, top_path_settings, top_path
-            )
+            result_set = self.walk_file(top_path, walk_after, settings, top_path)
             result_sets[top_path] = result_set
 
         bytes_in = 0

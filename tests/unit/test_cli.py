@@ -28,9 +28,8 @@ class TestCLI:
         assert res == set(("A", "B", "C", "D"))
 
     def test_get_arguments(self) -> None:
-        args = ("picopt", "-rvQcOPEZTGYSbINlM", str(TMP_ROOT))
+        args = ("picopt", "-vQcOPEZTGYSbINlM", str(TMP_ROOT))
         arguments = cli.get_arguments(args)
-        assert arguments.recurse
         assert arguments.verbose == -1
         # assert arguments.advpng
         assert arguments.comics
