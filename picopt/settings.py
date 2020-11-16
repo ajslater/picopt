@@ -1,23 +1,19 @@
 """Settings class for picopt."""
 import multiprocessing
 
-from argparse import Namespace
 from pathlib import Path
 from typing import Optional
 from typing import Set
 
-from ruamel.yaml import YAML
-
 from picopt import PROGRAM_NAME
 from picopt import extern
+from picopt.settings_base import SettingsBase
 
 
-RC_FN = f".{PROGRAM_NAME}rc.yaml"
-_YAML = YAML()
+class Settings(SettingsBase):
+    """Picopt settings."""
 
-
-class Settings(Namespace):
-    """Global settings class."""
+    _RC_FN = f".{PROGRAM_NAME}rc.yaml"
 
     # advpng: bool = False
     bigger: bool = False
@@ -44,65 +40,15 @@ class Settings(Namespace):
     verbose: int = 1
     _SET_ATTRS = set(("formats", "paths", "to_png_formats"))
 
-    def __init__(
-        self,
-        arg_namespace: Optional[Namespace] = None,
-        rc_path: Optional[Path] = None,
-        check_programs: bool = False,
-    ) -> None:
-        """Initialize settings object with arguments namespace."""
-        self.arg_namespace = arg_namespace
-        if check_programs:
-            # only do this once for the whole system
-            self._config_program_reqs()
-        self.load_settings(rc_path)
-
-    def clone(self, path: Path):
-        """Clone this settings for a new path."""
-        return Settings(self.arg_namespace, path)
-
     def load_settings(self, path: Optional[Path]) -> None:
-        """Load settings for a path."""
-        if path is not None:
-            rc_namespace = self.load_rc(path)
-            # rc settings write over defaulst
-            self._update(rc_namespace)
-        # passed in args overwrite rc
-        self._update(self.arg_namespace)
-
+        """Load picopt specific settings as well as the base ones."""
+        super().load_settings(path)
         # picopt specific
         self._update_formats()
         if self.verbose > 2:
             print(path, "formats:", *sorted(self.formats))
         self.jobs = max(self.jobs, 1)
         # self._set_jpegrescan_threading()
-
-    def load_rc(self, path: Path) -> Namespace:
-        """Load an rc file, searching recursively upwards."""
-        if path.is_file():
-            path = path.parent
-
-        rc_path = path / RC_FN
-
-        if rc_path.is_file():
-            try:
-                rc_settings = _YAML.load(rc_path)
-                for attr in self._SET_ATTRS:
-                    attr_list = rc_settings.get(attr)
-                    if attr_list is not None:
-                        rc_settings[attr] = set(attr_list)
-                return Namespace(**rc_settings)
-            except Exception as exc:
-                print(f"Error parsing {rc_path}")
-                print(exc)
-
-        if path == path.parent:
-            # at root /, no rc found.
-            res = Namespace()
-        else:
-            res = self.load_rc(path.parent)
-
-        return res
 
     def _update_formats(self) -> None:
         """Update the format list from to_png_formats & comics flag."""
@@ -136,15 +82,6 @@ class Settings(Namespace):
     #        self.jpegrescan_multithread = (
     #            not non_file_in_paths and self.jobs - (files_in_paths * 3) > -1
     #        )
-
-    def _update(self, namespace: Optional[Namespace]) -> None:
-        """Update settings with a dict."""
-        if not namespace:
-            return
-        for key, val in namespace.__dict__.items():
-            if key.startswith("_"):
-                continue
-            setattr(self, key, val)
 
     def _set_program_defaults(self) -> None:
         """Run the external program tester on the required binaries."""
