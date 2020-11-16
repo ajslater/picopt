@@ -16,7 +16,7 @@ FORMATS = set(["ANIMATED_GIF", "PNG", "PNM", "BMP", "PPM", "JPEG", "GIF"])
 TEST_PROGS = set(Png.PROGRAMS + Gif.PROGRAMS)
 TMP_ROOT = get_test_dir()
 DEEP_PATH = TMP_ROOT / "deep"
-RC_PATH = TMP_ROOT / Settings._RC_FN
+RC_PATH = TMP_ROOT / Settings._RC_NAME
 RC_SETTINGS = {"jpegtran": False, "formats": FORMATS}
 RC_NAMESPACE = Namespace(**RC_SETTINGS)
 
@@ -106,6 +106,7 @@ class TestRCSettings:
 
 class TestNoRC:
     def setup_method(self):
+        self.teardown_method()
         TMP_ROOT.mkdir(parents=True)
         self.settings = Settings(rc_path=TMP_ROOT)
 

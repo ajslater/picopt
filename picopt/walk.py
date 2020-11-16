@@ -21,8 +21,6 @@ from picopt.optimize import TMP_SUFFIX
 from picopt.optimize import optimize_image
 from picopt.settings import Settings
 from picopt.stats import ReportStats
-from picopt.timestamp import OLD_TIMESTAMP_FN
-from picopt.timestamp import TIMESTAMPS_FN
 from picopt.timestamp import Timestamp
 
 
@@ -96,11 +94,11 @@ class Walk(object):
             if settings.verbose > 1:
                 print(path, "is a symlink, skipping.")
             skip = True
-        elif path.name == OLD_TIMESTAMP_FN:
+        elif path.name == Timestamp.OLD_TIMESTAMP_NAME:
             if top_path is not None:
                 self._timestamps[top_path].upgrade_old_timestamp(path)
             skip = True
-        elif path.name == TIMESTAMPS_FN:
+        elif path.name == Timestamp.TIMESTAMPS_NAME:
             if top_path is not None and path.parent != top_path:
                 self._timestamps[top_path].consume_child_timestamps(path)
             skip = True
@@ -146,7 +144,11 @@ class Walk(object):
             return result_set
 
         if top_path is not None:
-            walk_after = self._timestamps[top_path].get_walk_after(path, walk_after)
+            timestamps = self._timestamps[top_path]
+            if settings.optimize_after is not None:
+                walk_after = settings.optimize_after
+            else:
+                walk_after = timestamps.get_timestamp_recursive_up(path)
 
         # File is a directory
         if path.is_dir():
@@ -240,7 +242,7 @@ class Walk(object):
         result_sets: Dict[Path, Set[AsyncResult]] = {}
 
         for top_path in sorted(top_paths):
-            timestamps = Timestamp(settings, top_path)
+            timestamps = Timestamp(top_path, settings.verbose)
             # TODO should walk_after still work like this?
             self._timestamps[top_path] = timestamps
             # XXX This should probably be moved to ts init.

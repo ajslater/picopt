@@ -11,7 +11,12 @@ class SettingsBase(Namespace, ABC):
     """Global settings base class."""
 
     _YAML = YAML()
-    # _RC_NAME child classes must implement
+
+    @property
+    @classmethod
+    def _RC_NAME(cls):  # noqa: N802
+        """Children must implement the _RC_NAME."""
+        raise NotImplementedError()
 
     def __init__(
         self,
@@ -53,7 +58,7 @@ class SettingsBase(Namespace, ABC):
         if path.is_file():
             path = path.parent
 
-        rc_path = path / self._RC_FN
+        rc_path = path / self._RC_NAME
 
         if rc_path.is_file():
             try:

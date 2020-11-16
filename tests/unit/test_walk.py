@@ -7,8 +7,6 @@ from datetime import datetime
 from picopt.optimize import TMP_SUFFIX
 from picopt.settings import Settings
 from picopt.stats import ReportStats
-from picopt.timestamp import OLD_TIMESTAMP_FN
-from picopt.timestamp import TIMESTAMPS_FN
 from picopt.timestamp import Timestamp
 from picopt.walk import Walk
 from tests import COMIC_DIR
@@ -33,7 +31,7 @@ class TestWalk:
         TMP_ROOT.mkdir()
         self.settings = Settings(check_programs=True)
         self.wob = Walk()
-        self.wob._timestamps[TMP_ROOT] = Timestamp(self.settings, TMP_ROOT)
+        self.wob._timestamps[TMP_ROOT] = Timestamp(TMP_ROOT)
 
     def teardown_method(self):
         self.wob._pool.close()
@@ -106,27 +104,27 @@ class TestWalk:
         path.symlink_to(TMP_ROOT)
         self.settings.follow_symlinks = False
         self.settings.verbose = 2
-        self.wob._timestamps[TMP_ROOT] = Timestamp(self.settings, TMP_ROOT)
+        self.wob._timestamps[TMP_ROOT] = Timestamp(TMP_ROOT)
         res = self.wob._is_skippable(path, self.settings, TMP_ROOT)
         assert res
 
     def test_is_skippable_old_timestamp(self) -> None:
         DEEP_PATH.mkdir(parents=True)
-        path = DEEP_PATH / OLD_TIMESTAMP_FN
+        path = DEEP_PATH / Timestamp.OLD_TIMESTAMP_NAME
         path.touch()
         res = self.wob._is_skippable(path, self.settings, TMP_ROOT)
         assert res
 
     def test_is_skippable_old_timestamp_no_top_path(self) -> None:
         DEEP_PATH.mkdir(parents=True)
-        path = DEEP_PATH / OLD_TIMESTAMP_FN
+        path = DEEP_PATH / Timestamp.OLD_TIMESTAMP_NAME
         path.touch()
         res = self.wob._is_skippable(path, self.settings, None)
         assert res
 
     def test_is_skippable_timestamp(self) -> None:
         DEEP_PATH.mkdir(parents=True)
-        path = DEEP_PATH / TIMESTAMPS_FN
+        path = DEEP_PATH / Timestamp.TIMESTAMPS_NAME
         path.touch()
         print(f"test_is_skippable_timestamp {path=}, {TMP_ROOT=}")
         res = self.wob._is_skippable(path, self.settings, TMP_ROOT)
@@ -135,7 +133,7 @@ class TestWalk:
 
     def test_is_skippable_timestamp_none_top_path(self) -> None:
         DEEP_PATH.mkdir(parents=True)
-        path = DEEP_PATH / TIMESTAMPS_FN
+        path = DEEP_PATH / Timestamp.TIMESTAMPS_NAME
         path.touch()
         res = self.wob._is_skippable(path, self.settings, None)
         assert path.exists()
@@ -227,21 +225,21 @@ class TestWalk:
 
     def test_walk_file_dir(self) -> None:
         DEEP_PATH.mkdir(parents=True)
-        path = DEEP_PATH / OLD_TIMESTAMP_FN
+        path = DEEP_PATH / Timestamp.OLD_TIMESTAMP_NAME
         path.touch()
         res = self.wob.walk_file(DEEP_PATH, None, self.settings, TMP_ROOT)
         assert len(res) == 0
 
     def test_walk_file_skippable(self) -> None:
         DEEP_PATH.mkdir(parents=True)
-        path = DEEP_PATH / OLD_TIMESTAMP_FN
+        path = DEEP_PATH / Timestamp.OLD_TIMESTAMP_NAME
         path.touch()
         res = self.wob.walk_file(path, None, self.settings, TMP_ROOT)
         assert len(res) == 0
 
     def test_walk_file_skippable_verbose(self) -> None:
         DEEP_PATH.mkdir(parents=True)
-        path = DEEP_PATH / OLD_TIMESTAMP_FN
+        path = DEEP_PATH / Timestamp.OLD_TIMESTAMP_NAME
         path.touch()
         self.settings.verbose = 2
         res = self.wob.walk_file(path, None, self.settings, TMP_ROOT)

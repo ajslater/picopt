@@ -1,16 +1,12 @@
 """Test timestamp module."""
 import shutil
 
-from argparse import Namespace
 from datetime import datetime
 from pathlib import Path
 from sys import platform
 
 from ruamel.yaml import YAML
 
-from picopt.settings import Settings
-from picopt.timestamp import OLD_TIMESTAMP_FN
-from picopt.timestamp import TIMESTAMPS_FN
 from picopt.timestamp import Timestamp
 from tests import get_test_dir
 
@@ -18,14 +14,13 @@ from tests import get_test_dir
 __all__ = ()
 TMP_ROOT = get_test_dir()
 DEEP_PATH = TMP_ROOT / "deep"
-TIMESTAMP_PATH = TMP_ROOT / TIMESTAMPS_FN
-DEEP_TIMESTAMP_PATH = DEEP_PATH / TIMESTAMPS_FN
+TIMESTAMP_PATH = TMP_ROOT / Timestamp.TIMESTAMPS_NAME
+DEEP_TIMESTAMP_PATH = DEEP_PATH / Timestamp.TIMESTAMPS_NAME
 MTIME = datetime.now().timestamp()
 TIMESTAMPS = {str(TMP_ROOT): MTIME}
 PATH_TIMESTAMPS = {TMP_ROOT: MTIME}
 DEEP_MTIME = datetime.now().timestamp()
 DEEP_TIMESTAMPS = {str(DEEP_PATH): DEEP_MTIME}
-SETTINGS = Settings(arg_namespace=Namespace(timestamps_path=TIMESTAMP_PATH))
 
 
 class TestTimestampStatic:
@@ -41,13 +36,13 @@ class TestTimestamp:
 
     path = TMP_ROOT
     deep = DEEP_PATH
-    old_timestamp_path = path / OLD_TIMESTAMP_FN
+    old_timestamp_path = path / Timestamp.OLD_TIMESTAMP_NAME
     yaml = YAML()
 
     def setup_method(self) -> None:
         self.deep.mkdir(parents=True)
         self.yaml.dump(TIMESTAMPS, TIMESTAMP_PATH)
-        self.tso = Timestamp(SETTINGS, TMP_ROOT)
+        self.tso = Timestamp(TMP_ROOT)
 
     def teardown_method(self) -> None:
         shutil.rmtree(self.path)
@@ -58,7 +53,7 @@ class TestTimestamp:
         assert self.old_timestamp_path.exists()
 
     def test_init_dump_file(self) -> None:
-        self.tso = Timestamp(SETTINGS, TIMESTAMP_PATH)
+        self.tso = Timestamp(TIMESTAMP_PATH)
         assert self.tso._dump_path == TIMESTAMP_PATH
 
     def test_get_timestamp_invalid(self) -> None:
@@ -129,34 +124,12 @@ class TestTimestamp:
         assert res == tstamp
 
     def test_get_timestamp_recursive_up_none(self) -> None:
-        res = self.tso._get_timestamp_recursive_up(self.deep, None)
+        res = self.tso.get_timestamp_recursive_up(self.deep, None)
         assert res == MTIME
 
     def test_get_timestamp_recursive_up_tstamp(self) -> None:
         tstamp = MTIME + 100
-        res = self.tso._get_timestamp_recursive_up(self.deep, tstamp)
-        assert res == tstamp
-
-    def test_get_walk_after_none(self) -> None:
-        res = self.tso.get_walk_after(TMP_ROOT, None)
-        assert res == MTIME
-
-    def test_get_walk_after_settings(self) -> None:
-        oatime = MTIME + 100
-        self.tso._settings.optimize_after = oatime
-        res = self.tso.get_walk_after(TMP_ROOT, None)
-        assert res == oatime
-
-    def test_get_walk_after_settings_tstamp(self) -> None:
-        tstamp = MTIME + 100
-        res = self.tso.get_walk_after(TMP_ROOT, tstamp)
-        assert res == tstamp
-
-    def test_get_walk_after_file(self) -> None:
-        tstamp = MTIME + 100
-        path = self.path / "text.txt"
-        path.touch()
-        res = self.tso.get_walk_after(path, tstamp)
+        res = self.tso.get_timestamp_recursive_up(self.deep, tstamp)
         assert res == tstamp
 
     def test__load_one_timestamp_file(self) -> None:
@@ -194,7 +167,7 @@ class TestTimestamp:
 
     def test__load_timestamps_none_quiet(self) -> None:
         TIMESTAMP_PATH.unlink()
-        self.tso._settings.verbose = 0
+        self.tso._verbose = 0
         timestamps = self.tso._load_timestamps(DEEP_TIMESTAMP_PATH)
         assert timestamps == {}
 

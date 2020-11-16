@@ -13,7 +13,8 @@ from picopt.settings_base import SettingsBase
 class Settings(SettingsBase):
     """Picopt settings."""
 
-    _RC_FN = f".{PROGRAM_NAME}rc.yaml"
+    _RC_NAME = f".{PROGRAM_NAME}rc.yaml"
+    _SET_ATTRS = set(("formats", "paths", "to_png_formats"))
 
     # advpng: bool = False
     bigger: bool = False
@@ -38,7 +39,6 @@ class Settings(SettingsBase):
     test: bool = False
     to_png_formats: Set[str] = set()
     verbose: int = 1
-    _SET_ATTRS = set(("formats", "paths", "to_png_formats"))
 
     def load_settings(self, path: Optional[Path]) -> None:
         """Load picopt specific settings as well as the base ones."""
