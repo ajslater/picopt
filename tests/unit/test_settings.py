@@ -7,7 +7,6 @@ from ruamel.yaml import YAML
 
 from picopt.formats.gif import Gif
 from picopt.formats.png import Png
-from picopt.settings import RC_FN
 from picopt.settings import Settings
 from tests import get_test_dir
 
@@ -17,7 +16,7 @@ FORMATS = set(["ANIMATED_GIF", "PNG", "PNM", "BMP", "PPM", "JPEG", "GIF"])
 TEST_PROGS = set(Png.PROGRAMS + Gif.PROGRAMS)
 TMP_ROOT = get_test_dir()
 DEEP_PATH = TMP_ROOT / "deep"
-RC_PATH = TMP_ROOT / RC_FN
+RC_PATH = TMP_ROOT / Settings._RC_FN
 RC_SETTINGS = {"jpegtran": False, "formats": FORMATS}
 RC_NAMESPACE = Namespace(**RC_SETTINGS)
 
