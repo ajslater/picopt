@@ -7,7 +7,7 @@ from typing import Set
 
 from picopt import PROGRAM_NAME
 from picopt import extern
-from picopt.settings_base import SettingsBase
+from picopt.rc.settings_base import SettingsBase
 
 
 class Settings(SettingsBase):

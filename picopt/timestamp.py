@@ -1,6 +1,6 @@
 """Timestamp writer for keeping track of bulk optimizations."""
 from picopt import PROGRAM_NAME
-from picopt.timestamp_base import TimestampBase
+from picopt.rc.timestamp_base import TimestampBase
 
 
 class Timestamp(TimestampBase):
