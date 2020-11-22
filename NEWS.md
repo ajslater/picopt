@@ -8,6 +8,8 @@ v3.0.0-rc0
 - Clean up old temporary files from aborted picopt runs.
 - Setting timestamps is now the default behavior
 - Recursion is now the default behavior
+- Remove cli args for manually disabling programs
+- Change long name of 'disable_*' cli args to 'no_*'
 - Fix condition where new files in an old archive might not be processed.
 
 v2.2.1

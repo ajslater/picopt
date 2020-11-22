@@ -63,14 +63,6 @@ def get_arguments(args: Tuple[str, ...]) -> Namespace:
         default=None,
         help="Display little to no output",
     )
-    #    parser.add_argument(
-    #        "-a",
-    #        "--enable_advpng",
-    #        action="store_true",
-    #        dest="advpng",
-    #        default=0,
-    #        help="Optimize with advpng (disabled by default)",
-    #    )
     parser.add_argument(
         "-c",
         "--comics",
@@ -91,64 +83,8 @@ def get_arguments(args: Tuple[str, ...]) -> Namespace:
         f" {all_formats}",
     )
     parser.add_argument(
-        "-O",
-        "--disable_optipng",
-        action="store_false",
-        dest="optipng",
-        default=None,
-        help="Do not optimize with optipng",
-    )
-    parser.add_argument(
-        "-P",
-        "--disable_pngout",
-        action="store_false",
-        dest="pngout",
-        default=None,
-        help="Do not optimize with pngout",
-    )
-    #    parser.add_argument(
-    #        "-J",
-    #        "--disable_jpegrescan",
-    #        action="store_false",
-    #        dest="jpegrescan",
-    #        default=1,
-    #        help="Do not optimize with jpegrescan",
-    #    )
-    parser.add_argument(
-        "-E",
-        "--disable_progressive",
-        action="store_false",
-        dest="jpegtran_prog",
-        default=None,
-        help="Don't try to reduce size by making " "progressive JPEGs with jpegtran",
-    )
-    parser.add_argument(
-        "-Z",
-        "--disable_mozjpeg",
-        action="store_false",
-        dest="mozjpeg",
-        default=None,
-        help="Do not optimize with mozjpeg",
-    )
-    parser.add_argument(
-        "-T",
-        "--disable_jpegtran",
-        action="store_false",
-        dest="jpegtran",
-        default=None,
-        help="Do not optimize with jpegtran",
-    )
-    parser.add_argument(
-        "-G",
-        "--disable_gifsicle",
-        action="store_false",
-        dest="gifsicle",
-        default=None,
-        help="disable optimizing animated GIFs",
-    )
-    parser.add_argument(
         "-Y",
-        "--disable_convert_type",
+        "--no_convert_type",
         action="store_const",
         dest="to_png_formats",
         const=Png.FORMATS,
@@ -160,11 +96,11 @@ def get_arguments(args: Tuple[str, ...]) -> Namespace:
     )
     parser.add_argument(
         "-S",
-        "--disable_follow_symlinks",
+        "--no-follow-symlinks",
         action="store_false",
         dest="follow_symlinks",
         default=None,
-        help="disable following symlinks for files and " "directories",
+        help="do not follow symlinks for files and directories",
     )
     parser.add_argument(
         "-b",

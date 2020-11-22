@@ -28,18 +28,13 @@ class TestCLI:
         assert res == set(("A", "B", "C", "D"))
 
     def test_get_arguments(self) -> None:
-        args = ("picopt", "-vQcOPEZTGYSbINlM", str(TMP_ROOT))
+        args = ("picopt", "-vQcYSbINlM", str(TMP_ROOT))
         arguments = cli.get_arguments(args)
         assert arguments.verbose == -1
         # assert arguments.advpng
         assert arguments.comics
         assert arguments.formats is None
-        assert not arguments.optipng
-        assert not arguments.pngout
         #    assert not arguments.jpegrescan
-        assert not arguments.mozjpeg
-        assert not arguments.jpegtran
-        assert not arguments.gifsicle
         assert arguments.to_png_formats == set(["PNG"])
         assert not arguments.follow_symlinks
         assert arguments.bigger
@@ -58,7 +53,7 @@ class TestCLI:
         assert self.OLD_PATH.stat().st_size < old_size
 
     def test_main_err(self) -> None:
-        sys.argv = ["picopt", "-OPZTG", "XXX"]
+        sys.argv = ["picopt", "XXX"]
         try:
             cli.main()
         except SystemExit as exc:
