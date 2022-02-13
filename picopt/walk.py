@@ -4,27 +4,20 @@ import os
 import time
 
 from copy import deepcopy
-from multiprocessing.pool import AsyncResult
-from multiprocessing.pool import Pool
+from multiprocessing.pool import AsyncResult, Pool
 from pathlib import Path
-from typing import Any
-from typing import Dict
-from typing import List
-from typing import Optional
-from typing import Set
-from typing import Tuple
+from typing import Any, Dict, List, Optional, Set, Tuple
 
-from picopt import detect_format
-from picopt import stats
+from picopt import detect_format, stats
 from picopt.formats.comic import Comic
-from picopt.optimize import TMP_SUFFIX
-from picopt.optimize import optimize_image
+from picopt.formats.comic_formats import COMIC_FORMATS
+from picopt.optimize import TMP_SUFFIX, optimize_image
 from picopt.settings import Settings
 from picopt.stats import ReportStats
 from picopt.timestamp import Timestamp
 
 
-class Walk(object):
+class Walk:
     """Walk object for storing state of a walk run."""
 
     def __init__(self) -> None:
@@ -75,13 +68,11 @@ class Walk(object):
         )
 
         # wait for archive contents to optimize before recompressing
-        nag_about_gifs = False
         for result in result_set:
-            res = result.get()
-            nag_about_gifs = nag_about_gifs or res.nag_about_gifs
+            result.get()
 
         # recompress archive
-        args = (path, image_format, settings, nag_about_gifs, comment)
+        args = (path, image_format, settings, comment)
         return set([self._pool.apply_async(Comic.comic_archive_compress, args=(args,))])
 
     def _is_skippable(
@@ -176,7 +167,7 @@ class Walk(object):
             return result_set
 
         if detect_format.is_format_selected(
-            settings, image_format, Comic.FORMATS, Comic.PROGRAMS
+            settings, image_format, COMIC_FORMATS, Comic.PROGRAMS
         ):
             # comic archive
             result_set |= self.walk_comic_archive(
@@ -195,7 +186,7 @@ class Walk(object):
         settings: Settings,
         top_path: Optional[Path],
         archive_mtime: Optional[float] = None,
-    ) -> Set[multiprocessing.pool.AsyncResult]:
+    ) -> Set[AsyncResult]:
         """Recursively optimize a directory."""
         result_set: Set[AsyncResult] = set()
         if not settings.recurse:
@@ -231,9 +222,9 @@ class Walk(object):
 
     def _walk_all_files(
         self, settings: Settings, top_paths: Set[Path]
-    ) -> Tuple[int, int, bool, List[Any]]:
+    ) -> Tuple[int, int, List[Any]]:
         """
-        Optimize the files from the arugments list in two batches.
+        Optimize the files from the arguments list in two batches.
 
         One for absolute paths which are probably outside the current
         working directory tree and one for relative files.
@@ -256,7 +247,6 @@ class Walk(object):
 
         bytes_in = 0
         bytes_out = 0
-        nag_about_gifs = False
         errors: List[Tuple[Path, str]] = []
         for top_path, result_set in result_sets.items():
             for result in result_set:
@@ -270,7 +260,6 @@ class Walk(object):
                     timestamps.record_timestamp(res.final_path)
                 bytes_in += res.bytes_in
                 bytes_out += res.bytes_out
-                nag_about_gifs = nag_about_gifs or res.nag_about_gifs
 
             timestamps = self._timestamps[top_path]
 
@@ -278,7 +267,7 @@ class Walk(object):
                 timestamps.record_timestamp(top_path)
                 timestamps.compact_timestamps(top_path)
 
-        return bytes_in, bytes_out, nag_about_gifs, errors
+        return bytes_in, bytes_out, errors
 
     def run(self, settings: Settings) -> bool:
         """Use preconfigured settings to optimize files."""
@@ -306,7 +295,6 @@ class Walk(object):
         (
             bytes_in,
             bytes_out,
-            nag_about_gifs,
             errors,
         ) = self._walk_all_files(settings, top_paths)
 
@@ -315,5 +303,5 @@ class Walk(object):
         self._pool.join()
 
         # Finish by reporting totals
-        stats.report_totals(settings, bytes_in, bytes_out, nag_about_gifs, errors)
+        stats.report_totals(settings, bytes_in, bytes_out, errors)
         return True

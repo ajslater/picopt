@@ -4,12 +4,9 @@ import time
 from abc import ABC
 from datetime import datetime
 from pathlib import Path
-from typing import Dict
-from typing import Optional
-from typing import Tuple
+from typing import Dict, Optional, Tuple
 
-import dateutil.parser
-
+from dateutil.parser import parse
 from ruamel.yaml import YAML
 
 
@@ -18,17 +15,8 @@ class TimestampBase(ABC):
 
     _YAML = YAML()
 
-    @property
-    @classmethod
-    def OLD_TIMESTAMP_NAME(cls):  # noqa: N802
-        """Childen can implement this but its not neccissary."""
-        return None
-
-    @property
-    @classmethod
-    def TIMESTAMPS_NAME(cls):  # noqa: N802
-        """Children must implement TIMESTAMPS_NAME."""
-        raise NotImplementedError()
+    OLD_TIMESTAMP_NAME = "Unimplemented"
+    TIMESTAMPS_NAME = "Unimplemented"
 
     def __init__(self, dump_path: Path, verbose: int = 0) -> None:
         """Initialize instance variables."""
@@ -42,7 +30,7 @@ class TimestampBase(ABC):
     @staticmethod
     def parse_date_string(date_str: str) -> float:
         """Turn a datetime string into an epoch float."""
-        after_dt = dateutil.parser.parse(date_str)
+        after_dt = parse(date_str)
         return time.mktime(after_dt.timetuple())
 
     def _get_timestamp(self, path: Path) -> Optional[float]:
@@ -172,8 +160,6 @@ class TimestampBase(ABC):
 
     def upgrade_old_parent_timestamps(self, path: Path) -> Optional[float]:
         """Walk up to the root eating old style timestamps."""
-        if self.OLD_TIMESTAMP_NAME is None:
-            return None
         old_timestamp_path = path / self.OLD_TIMESTAMP_NAME
         path_mtime = self.upgrade_old_timestamp(old_timestamp_path)
         if path.parent != path:

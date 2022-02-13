@@ -1,10 +1,8 @@
 """Test comic format."""
 import shutil
 
-from picopt import PROGRAM_NAME
-from picopt import cli
-from tests import IMAGES_DIR
-from tests import get_test_dir
+from picopt import PROGRAM_NAME, cli
+from tests import IMAGES_DIR, get_test_dir
 
 
 __all__ = ()

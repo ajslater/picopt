@@ -3,18 +3,19 @@ v3.0.0-rc0
 - .picoptrc.yaml files can configure options
 - Recording timestamps is now the default behavior
 - Timestamps are now kept in .picopt_timestamps.yaml files.
-- Picopt will covert and clean up old style timestamps.
-- Timestamps are now recorded after optimizing every image for each image individually instead of just directories, preserving progress.
+- Picopt will convert and clean up old style timestamps.
+- Timestamps are now recorded after optimizing every image for
+  each image individually instead of directories, preserving progress.
 - Clean up old temporary files from aborted picopt runs.
 - Setting timestamps is now the default behavior
-- Recursion is now the default behavior
 - Remove cli args for manually disabling programs
-- Change long name of 'disable_*' cli args to 'no_*'
-- Fix condition where new files in an old archive might not be processed.
+- Change long name of 'disable*\*' cli args to 'no*\*'
+- Fix condition where new files in an old archive were not processed.
+- WebP lossy & lossless support. No support yet for Animated WebP.
 
 v2.2.1
 
-- Support python v3.9 & Pillow v8
+- Support python v3.9
 - Preserve comments when optimizing comic archives
 
 v2.2.0
@@ -24,11 +25,11 @@ v2.2.0
 
 v2.1.0
 
-- Remove adv support. It was inferior to other methods anyway.
+- Remove adv support.
 - Remove jpegrescan support. Inferior to mozjpeg
 - Don't preserve ctime/mtime when making new pngs
 - Use pytest instead of nosetest
-- Require formating with black & isort
+- Require formatting with black & isort
 
 v2.0.1
 
@@ -56,21 +57,21 @@ v1.6.1
 v1.6.0
 
 - Report on all errors at the end
-- Remove PIL support. Pillow only now.
+- Remove PIL support in favor of Pillow.
 - Python3 proof
 
 v1.5.3
 
-- Fix hang on external program error. Especially likley with 16 bit PNGs and pngout.
+- Fix hang on external program error. Likley with 16 bit PNGs and pngout.
 
 v1.5.2
 
-- Additional compatibility with Python 3
+- More compatibility with Python 3
 - Fix formats as a list when it should be a set issue
 
 v1.5.1
 
-- Drop TIFF support. It was never a good idea, tiff is usually a metadata store. And behaves poorly with older optipng.
+- Drop TIFF support.
 - Fix space savings reporting bug where savings always equaled zero
 
 v1.4.5
@@ -79,11 +80,11 @@ v1.4.5
 
 v1.4.4
 
-- Use timestamp cacheing more often
+- Use timestamp caching more often
 
 v1.4.3
 
-- Fix bug where files would sometimes not be detected
+- Fix bug where files were not detected
 - Fix broken timestamp processing.
 
 v1.4.1
@@ -93,7 +94,7 @@ v1.4.1
 v1.4.0
 
 - let the archive date override the newness of its contained files.
-- let the cli be run programatically with passed in args
+- let the cli run programmatically with passed in args
 - code no longer relies on cwd for finding its way
 - -d --directory argument goes away
 - nosetests now run the old inadequate cli tests
@@ -113,7 +114,7 @@ v1.3.2
 
 v1.3.1
 
-- Remove dev dependancies from installed requirements.
+- Remove dev dependencies from installed requirements.
 
 v1.3
 
@@ -141,11 +142,11 @@ v1.1.0
 
 v1.0.6
 
-- Fix comic archive switch which was disabled somehow
+- Fix disabled comic archive switch.
 
 v1.0.5
 
-- Fix timestamp writing to really happen once workers have finished
+- Fix timestamp writing to happen once workers have finished
 - Fix size saved if size in is zero
 
 v1.0.3
@@ -165,7 +166,7 @@ v1.0.0
 
 - Packaging for PyPI
 - Internal changes to make picopt more modular and library friendly
-- CHANGED COMMAND LINE ARGUMENT LETTERS! WATCH OUT!
+- CHANGED COMMAND LINE ARGUMENT LETTERS.
 - Added verbosity setting
 - Truncated relative and in-archive path names for readibiliy
 - Nag about animated gifs less
@@ -177,7 +178,7 @@ v0.12.0.1
 v0.12.0
 
 - Added multithreaded jpegrescan operation when picopt isn't using up all the cores at the suggestion of Alex Roe.
-- Added destroy metatdata option at the suggestion of Alex Roe.
+- Added destroy metadata option at the suggestion of Alex Roe.
 
 v0.11.4
 

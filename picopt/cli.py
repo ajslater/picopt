@@ -3,24 +3,38 @@
 import argparse
 
 from argparse import Namespace
+from importlib.metadata import PackageNotFoundError, version
 from pathlib import Path
-from typing import Optional
-from typing import Set
-from typing import Tuple
+from typing import Optional, Set, Tuple
 
-import pkg_resources
-
-from picopt import PROGRAM_NAME
-from picopt import walk
-from picopt.formats.all_formats import ALL_FORMATS
-from picopt.formats.png import Png
-from picopt.formats.programs import PROGRAMS
+from picopt import PROGRAM_NAME, walk
+from picopt.formats.comic_formats import COMIC_FORMATS
+from picopt.formats.format import CONVERTABLE_LOSSLESS_FORMATS
+from picopt.formats.gif import GIF_FORMATS
+from picopt.formats.jpeg import JPEG_FORMATS
+from picopt.formats.png import PNG_CONVERTABLE_FORMATS, PNG_FORMATS
+from picopt.formats.webp import (
+    WEBP_ANIMATED_CONVERTABLE_FORMATS,
+    WEBP_CONVERTABLE_FORMATS,
+    WEBP_FORMATS,
+)
 from picopt.settings import Settings
 from picopt.timestamp import Timestamp
 
 
 FORMAT_DELIMETER = ","
-DISTRIBUTION = pkg_resources.get_distribution(PROGRAM_NAME)
+try:
+    VERSION = version(PROGRAM_NAME)
+except PackageNotFoundError:
+    VERSION = "test"
+ALL_FORMATS: Set[str] = (
+    JPEG_FORMATS
+    | GIF_FORMATS
+    | CONVERTABLE_LOSSLESS_FORMATS
+    | PNG_FORMATS
+    | WEBP_FORMATS
+    | COMIC_FORMATS
+)
 
 
 def csv_set(csv_str: str) -> Set[str]:
@@ -31,20 +45,18 @@ def csv_set(csv_str: str) -> Set[str]:
 def get_arguments(args: Tuple[str, ...]) -> Namespace:
     """Parse the command line."""
     usage = "%(prog)s [arguments] [paths]"
-    programs_str = ", ".join(
-        (prog.__func__.__name__ for prog in PROGRAMS)  # type: ignore
-    )
-    description = f"Uses {programs_str} if they are on the path."
+    description = "Losslessly optimizes and optionally converts images."
     parser = argparse.ArgumentParser(usage=usage, description=description)
     all_formats = ", ".join(sorted(ALL_FORMATS))
-    lossless_formats = ", ".join(Png.LOSSLESS_FORMATS)
+    png_lossless_formats = ", ".join(sorted(PNG_CONVERTABLE_FORMATS))
+    webp_lossless_formats = ", ".join(sorted(WEBP_CONVERTABLE_FORMATS))
     parser.add_argument(
-        "-R",
-        "--no_recurse",
-        action="store_false",
+        "-r",
+        "--recurse",
+        action="store_true",
         dest="recurse",
         default=None,
-        help="Do not recurse down through command line paths.",
+        help="Recurse down through directories on the command line.",
     )
     parser.add_argument(
         "-v",
@@ -55,7 +67,7 @@ def get_arguments(args: Tuple[str, ...]) -> Namespace:
         help="Display more output. -v (default) and -vv " "(noisy)",
     )
     parser.add_argument(
-        "-Q",
+        "-q",
         "--quiet",
         action="store_const",
         dest="verbose",
@@ -78,21 +90,36 @@ def get_arguments(args: Tuple[str, ...]) -> Namespace:
         action="store",
         dest="formats",
         default=None,
-        help="Only optimize images of the specifed"
+        help="Only optimize images of the specified "
         f"'{FORMAT_DELIMETER}' delimited formats from:"
         f" {all_formats}",
     )
     parser.add_argument(
-        "-Y",
-        "--no_convert_type",
+        "-p",
+        "--convert_to_png",
         action="store_const",
         dest="to_png_formats",
-        const=Png.FORMATS,
+        const=PNG_CONVERTABLE_FORMATS,
+        default=PNG_FORMATS,
+        help=f"Convert {png_lossless_formats} formats to PNG when optimizing.",
+    )
+    parser.add_argument(
+        "-w",
+        "--convert_to_webp",
+        action="store_const",
+        dest="to_webp_formats",
+        const=WEBP_CONVERTABLE_FORMATS,
+        default=WEBP_FORMATS,
+        help=f"Convert {webp_lossless_formats} to Lossless WebP when optimizing.",
+    )
+    parser.add_argument(
+        "-g",
+        "--convert_animated_formats",
+        action="store_const",
+        dest="to_animated_webp_formats",
+        const=WEBP_ANIMATED_CONVERTABLE_FORMATS,
         default=None,
-        help="Do not convert other lossless formats"
-        f"like {lossless_formats} to PNG when "
-        f"optimizing. By default, {PROGRAM_NAME}"
-        " does convert these formats to PNG",
+        help="Convert animated gifs to animated WebP.",
     )
     parser.add_argument(
         "-S",
@@ -126,7 +153,7 @@ def get_arguments(args: Tuple[str, ...]) -> Namespace:
         default=None,
         type=Timestamp.parse_date_string,
         help="only optimize files after the specified "
-        "timestamp. Supercedes .picopt_timestamp file.",
+        "timestamp. Supersedes .picopt_timestamp file.",
     )
     parser.add_argument(
         "-N",
@@ -148,7 +175,7 @@ def get_arguments(args: Tuple[str, ...]) -> Namespace:
         "-V",
         "--version",
         action="version",
-        version=DISTRIBUTION.version,
+        version=VERSION,
         help="Display the version number",
     )
     parser.add_argument(
@@ -167,7 +194,7 @@ def get_arguments(args: Tuple[str, ...]) -> Namespace:
         default=None,
         help="File or directory paths to optimize",
     )
-    parser.add_argument(
+    parser.add_argument(  # TODO remove and use os.cpu
         "-j",
         "--jobs",
         type=int,

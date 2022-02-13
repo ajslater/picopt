@@ -2,8 +2,7 @@
 import shutil
 
 from picopt import cli
-from tests import COMIC_DIR
-from tests import get_test_dir
+from tests import COMIC_DIR, get_test_dir
 
 
 __all__ = ()

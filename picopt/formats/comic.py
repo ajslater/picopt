@@ -4,28 +4,20 @@ import shutil
 import zipfile
 
 from pathlib import Path
-from typing import Callable
-from typing import Optional
-from typing import Set
-from typing import Tuple
+from typing import Callable, Optional, Tuple
 
 import rarfile
 
-from picopt import PROGRAM_NAME
-from picopt import files
-from picopt import stats
+from picopt import PROGRAM_NAME, files, stats
 from picopt.extern import ExtArgs
+from picopt.formats.comic_formats import CBR_FORMAT, CBZ_FORMAT
 from picopt.formats.format import Format
 from picopt.settings import Settings
 from picopt.stats import ReportStats
 
 
-_CBZ_FORMAT: str = "CBZ"
-_CBR_FORMAT: str = "CBR"
-
 _CBR_EXT: str = ".cbr"
 _CBZ_EXT: str = ".cbz"
-_COMIC_EXTS: Set[str] = set((_CBR_EXT, _CBZ_EXT))
 
 _ARCHIVE_TMP_DIR_PREFIX: str = PROGRAM_NAME + "_tmp_"
 _NEW_ARCHIVE_SUFFIX: str = f".{PROGRAM_NAME}-optimized-cbz"
@@ -36,10 +28,9 @@ class Comic(Format):
 
     BEST_ONLY: bool = False
     OUT_EXT: str = _CBZ_EXT
-    FORMATS: Set[str] = set((_CBZ_FORMAT, _CBR_FORMAT))
 
     @staticmethod
-    def comics(_: Settings, __: ExtArgs) -> str:
+    def comics(_: ExtArgs) -> str:
         """
         Do nothing comic optimizer.
 
@@ -47,9 +38,9 @@ class Comic(Format):
         But currently neccissary to keep detect_format._is_program_selected()
         working
         """
-        return _CBZ_FORMAT
+        return CBZ_FORMAT
 
-    PROGRAMS: Tuple[Callable[[Settings, ExtArgs], str], ...] = (comics,)
+    PROGRAMS: Tuple[Callable[[ExtArgs], str], ...] = (comics,)
 
     @staticmethod
     def get_comic_format(path: Path) -> Optional[str]:
@@ -57,9 +48,9 @@ class Comic(Format):
         image_format = None
         filename_ext = path.suffix.lower()
         if filename_ext == _CBZ_EXT and zipfile.is_zipfile(path):
-            image_format = _CBZ_FORMAT
+            image_format = CBZ_FORMAT
         if filename_ext == _CBR_EXT and rarfile.is_rarfile(path):
-            image_format = _CBR_FORMAT
+            image_format = CBR_FORMAT
         return image_format
 
     @staticmethod
@@ -70,10 +61,11 @@ class Comic(Format):
 
     @staticmethod
     def _get_archive(path, image_format):
-        if image_format == _CBZ_FORMAT:  # and zipfile.is_zipfile(path):
+        if image_format == CBZ_FORMAT:  # and zipfile.is_zipfile(path):
             return zipfile.ZipFile(path, "r")
-        elif image_format == _CBR_FORMAT:  # and rarfile.is_rarfile(path):
+        elif image_format == CBR_FORMAT:  # and rarfile.is_rarfile(path):
             return rarfile.RarFile(path, "r")
+        raise ValueError(f"Archive format {image_format} not supported")
 
     @staticmethod
     def comic_archive_uncompress(
@@ -97,7 +89,7 @@ class Comic(Format):
             shutil.rmtree(tmp_dir)
         tmp_dir.mkdir()
 
-        # extract archvie into the tmpdir
+        # extract archive into the tmpdir
         try:
             with Comic._get_archive(path, image_format) as archive:
                 archive.extractall(tmp_dir)
@@ -138,16 +130,14 @@ class Comic(Format):
                 new_zf.comment = comment
 
     @staticmethod
-    def comic_archive_compress(
-        args: Tuple[Path, str, Settings, bool, bytes]
-    ) -> ReportStats:
+    def comic_archive_compress(args: Tuple[Path, str, Settings, bytes]) -> ReportStats:
         """
         Call back by every optimization inside a comic archive.
 
         When they're all done it creates the new archive and cleans up.
         """
         try:
-            old_path, old_format, settings, nag_about_gifs, comment = args
+            old_path, old_format, settings, comment = args
             tmp_path = Comic._get_archive_tmp_dir(old_path)
 
             # archive into new filename
@@ -162,9 +152,8 @@ class Comic(Format):
                 print("done.")
 
             report_stats = files.cleanup_after_optimize(
-                settings, old_path, new_path, old_format, _CBZ_FORMAT
+                settings, old_path, new_path, old_format, CBZ_FORMAT
             )
-            report_stats.nag_about_gifs = nag_about_gifs
             stats.report_saved(settings, report_stats)
             return report_stats
         except Exception as exc:

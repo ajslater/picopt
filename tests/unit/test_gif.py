@@ -3,9 +3,8 @@ import shutil
 
 from picopt.extern import ExtArgs
 from picopt.formats import gif
-from picopt.settings import Settings
-from tests import IMAGES_DIR
-from tests import get_test_dir
+from picopt.formats.gif import ANIMATED_GIF_FORMAT, GIF_FORMAT
+from tests import IMAGES_DIR, get_test_dir
 
 
 __all__ = ()  # hides module from pydocstring
@@ -27,7 +26,9 @@ def _teardown() -> None:
 def test_gifiscle() -> None:
     _setup()
     shutil.copy(TEST_GIF_SRC, OLD_PATH)
-    args = ExtArgs("", str(OLD_PATH))
-    res = gif.Gif.gifsicle(Settings(), args)
-    assert res == "GIF"
+    args = ExtArgs("", str(OLD_PATH), ANIMATED_GIF_FORMAT, False)
+    res = gif.Gif.gifsicle(
+        args,
+    )
+    assert res == GIF_FORMAT
     _teardown()

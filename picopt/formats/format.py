@@ -1,19 +1,17 @@
 """Format Superclass."""
-from typing import Callable
-from typing import Set
-from typing import Tuple
+from typing import Callable, Tuple
 
 from picopt.extern import ExtArgs
-from picopt.settings import Settings
 
 
-ANIMATED_FORMAT_PREFIX = "ANIMATED_"
+ANIMATED_FORMAT_PREFIX: str = "ANIMATED_"
+LOSSLESS_FORMAT_PREFIX: str = "LOSSLESS_"
+CONVERTABLE_LOSSLESS_FORMATS = set(("PNM", "PPM", "BMP"))
 
 
-class Format(object):
+class Format:
     """Format superclass."""
 
-    PROGRAMS: Tuple[Callable[[Settings, ExtArgs], str], ...] = tuple()
+    PROGRAMS: Tuple[Callable[[ExtArgs], str], ...] = tuple()
     BEST_ONLY: bool = True
-    FORMATS: Set[str] = set()
-    OUT_EXT: str = "xxx"
+    OUT_EXT: str = "undefined"

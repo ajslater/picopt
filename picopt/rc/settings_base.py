@@ -48,7 +48,7 @@ class SettingsBase(Namespace, ABC):
         """Load settings for a path."""
         if path is not None:
             rc_namespace = self.load_rc(path)
-            # rc settings write over defaulst
+            # rc settings write over default
             self._update(rc_namespace)
         # passed in args overwrite rc
         self._update(self.arg_namespace)

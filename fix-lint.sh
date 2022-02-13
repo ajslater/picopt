@@ -1,5 +1,7 @@
 #!/bin/bash
-set -euo pipefail
+set -euxo pipefail
 poetry run isort --color .
 poetry run black .
-prettier --write .
+npm run fix
+npx prettier --write --parser ini setup.cfg
+shfmt -s -w -i 4 ./*.sh ./**/*.sh

@@ -3,8 +3,12 @@ import shutil
 import sys
 
 from picopt import cli
-from tests import IMAGES_DIR
-from tests import get_test_dir
+from picopt.formats.png import PNG_CONVERTABLE_FORMATS
+from picopt.formats.webp import (
+    WEBP_ANIMATED_CONVERTABLE_FORMATS,
+    WEBP_CONVERTABLE_FORMATS,
+)
+from tests import IMAGES_DIR, get_test_dir
 
 
 __all__ = ()  # hides module from pydocstring
@@ -28,14 +32,16 @@ class TestCLI:
         assert res == set(("A", "B", "C", "D"))
 
     def test_get_arguments(self) -> None:
-        args = ("picopt", "-vQcYSbINlM", str(TMP_ROOT))
+        args = ("picopt", "-vrqcgwpSbINlM", str(TMP_ROOT))
         arguments = cli.get_arguments(args)
         assert arguments.verbose == -1
         # assert arguments.advpng
         assert arguments.comics
         assert arguments.formats is None
         #    assert not arguments.jpegrescan
-        assert arguments.to_png_formats == set(["PNG"])
+        assert arguments.to_png_formats == PNG_CONVERTABLE_FORMATS
+        assert arguments.to_webp_formats == WEBP_CONVERTABLE_FORMATS
+        assert arguments.to_animated_webp_formats == WEBP_ANIMATED_CONVERTABLE_FORMATS
         assert not arguments.follow_symlinks
         assert arguments.bigger
         assert not arguments.record_timestamp

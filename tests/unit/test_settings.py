@@ -5,14 +5,23 @@ from argparse import Namespace
 
 from ruamel.yaml import YAML
 
+from picopt.formats.comic_formats import COMIC_FORMATS
 from picopt.formats.gif import Gif
-from picopt.formats.png import Png
+from picopt.formats.png import PNG_FORMATS, Png
 from picopt.settings import Settings
 from tests import get_test_dir
 
 
 __all__ = ()
-FORMATS = set(["ANIMATED_GIF", "PNG", "PNM", "BMP", "PPM", "JPEG", "GIF"])
+FORMATS = set(
+    [
+        "ANIMATED_GIF",
+        "PNG",
+        "JPEG",
+        "GIF",
+        "WEBP",
+    ]
+)
 TEST_PROGS = set(Png.PROGRAMS + Gif.PROGRAMS)
 TMP_ROOT = get_test_dir()
 DEEP_PATH = TMP_ROOT / "deep"
@@ -33,7 +42,7 @@ class TestSettings:
         assert self.settings.formats == FORMATS
 
     def test_update_formats_to_png(self) -> None:
-        self.settings.to_png_formats = set(["PNG"])
+        self.settings.to_png_formats = PNG_FORMATS
         self.settings._update_formats()
         assert self.settings.formats == FORMATS
 
@@ -46,7 +55,7 @@ class TestSettings:
     def test_update_formats_comics(self) -> None:
         self.settings.comics = True
         self.settings._update_formats()
-        assert self.settings.formats == FORMATS | set(["CBZ", "CBR"])
+        assert self.settings.formats == FORMATS | COMIC_FORMATS
 
     def test_update(self) -> None:
         args = Namespace(bigger=True)

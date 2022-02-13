@@ -1,8 +1,6 @@
 """Statistics for the optimization operations."""
 from pathlib import Path
-from typing import List
-from typing import Optional
-from typing import Tuple
+from typing import List, Optional, Tuple
 
 from picopt.settings import Settings
 
@@ -17,7 +15,7 @@ ABBREVS = (
 )
 
 
-class ReportStats(object):
+class ReportStats:
     """Container for reported stats from optimization operations."""
 
     def __init__(
@@ -25,7 +23,6 @@ class ReportStats(object):
         final_path: Path,
         report: Optional[str] = None,
         bytes_count: Optional[Tuple[int, int]] = None,
-        nag_about_gifs: bool = False,
         error: Optional[str] = None,
     ) -> None:
         """Initialize required instance variables."""
@@ -40,8 +37,6 @@ class ReportStats(object):
         else:
             self.bytes_in = 0
             self.bytes_out = 0
-
-        self.nag_about_gifs = nag_about_gifs
 
 
 def _humanize_bytes(num_bytes: int, precision: int = 1) -> str:
@@ -141,7 +136,6 @@ def report_totals(
     settings: Settings,
     bytes_in: int,
     bytes_out: int,
-    nag_about_gifs: bool,
     errors: List[Tuple[Path, str]],
 ) -> None:
     """Report the total number and percent of bytes saved."""
@@ -174,9 +168,6 @@ def report_totals(
     else:
         if settings.verbose:
             print("Didn't optimize any files.")
-
-    if nag_about_gifs and settings.verbose:
-        print("Most animated GIFS would be better off converted to" " HTML5 video")
 
     if not errors:
         return

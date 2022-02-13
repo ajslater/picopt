@@ -8,7 +8,7 @@ __all__ = ()  # hides module from pydocstring
 
 
 def test_extargs_class() -> None:
-    eac = extern.ExtArgs("a", "b")
+    eac = extern.ExtArgs("a", "b", "PNG", False)
     assert type(eac) == extern.ExtArgs
 
 

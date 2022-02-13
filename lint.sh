@@ -1,8 +1,22 @@
 #!/bin/bash
 # Lint checks
-set -eux
-poetry run isort --check-only --color .
-poetry run black --check .
-npx prettier --check .
-# hadolint Dockerfile*
-shellcheck -x ./*.sh
+set -euxo pipefail
+#poetry run isort --check-only --color .
+#poetry run black --check .
+poetry run pyright
+poetry run vulture .
+if [ "$(uname)" = "Darwin" ]; then
+    # Radon is only of interest to development
+    poetry run radon mi --min B .
+fi
+npm run lint
+npx prettier --check --parser ini setup.cfg
+npm run check
+if [ "$(uname)" = "Darwin" ]; then
+    # shellcheck disable=2035
+    hadolint *Dockerfile
+    shfmt -d -i 4 ./*.sh ./**/*.sh
+    circleci config check .circleci/config.yml
+fi
+shellcheck --external-sources ./*.sh
+poetry run codespell .

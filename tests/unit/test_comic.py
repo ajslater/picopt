@@ -3,14 +3,12 @@ import shutil
 import zipfile
 
 from pathlib import Path
-from typing import Optional
-from typing import Tuple
+from typing import Optional, Tuple
 
 from picopt.extern import ExtArgs
 from picopt.formats.comic import Comic
 from picopt.settings import Settings
-from tests import COMIC_DIR
-from tests import get_test_dir
+from tests import COMIC_DIR, get_test_dir
 
 
 __all__ = ()  # hides module from pydocstring
@@ -34,7 +32,7 @@ def _teardown() -> None:
 
 
 def test_comic_method() -> None:
-    res = Comic.comics(Settings(), ExtArgs("a", "b"))
+    res = Comic.comics(ExtArgs("a", "b", "CBZ", False))
     assert res == "CBZ"
 
 
@@ -69,10 +67,12 @@ def test_get_archive_tmp_dir() -> None:
 
 def _setup_uncompress(fmt: str) -> Tuple[Path, str, Path, Settings]:
     _setup()
+    src = Path("/tmp/bad")
     if fmt == "CBR":
         src = TEST_CBR_SRC
     elif fmt == "CBZ":
         src = TEST_CBZ_SRC
+    assert src != Path("/tmp/bad")
     comic_fn = "test" + src.suffix
     comic_path = TMP_ROOT / comic_fn
     shutil.copy(src, comic_path)
@@ -81,7 +81,7 @@ def _setup_uncompress(fmt: str) -> Tuple[Path, str, Path, Settings]:
 
 
 def test_comic_archive_uncompress_unset() -> None:
-    comic_path, fmt, uncomp_dir, settings = _setup_uncompress("CBZ")
+    comic_path, fmt, _, settings = _setup_uncompress("CBZ")
 
     tmp_dir, stats, comment = Comic.comic_archive_uncompress(settings, comic_path, fmt)
     assert tmp_dir is None
@@ -126,7 +126,7 @@ def test_comic_archive_uncompress_cbr() -> None:
 
 
 def test_comic_archive_uncompress_invalid() -> None:
-    comic_path, fmt, uncomp_dir, settings = _setup_uncompress("CBR")
+    comic_path, _, _, settings = _setup_uncompress("CBR")
     settings.comics = True
     tmp_dir, stats, comment = Comic.comic_archive_uncompress(
         settings, comic_path, "XXX"
@@ -166,9 +166,9 @@ def test_comic_archive_write_zipfile_quiet() -> None:
 
 
 def _setup_compress(fmt: str) -> Tuple[Path, int, Path, Settings]:
-    old_path, fmt, uncomp_dir, settings = _setup_uncompress(fmt)
+    old_path, fmt, _, settings = _setup_uncompress(fmt)
     old_size = old_path.stat().st_size
-    tmp_dir, settings = _setup_write_zipfile(old_path)
+    _, settings = _setup_write_zipfile(old_path)
     optimized_archive = old_path.with_suffix(".cbz")
     return old_path, old_size, optimized_archive, settings
 
@@ -176,8 +176,7 @@ def _setup_compress(fmt: str) -> Tuple[Path, int, Path, Settings]:
 def test_comic_archive_compress() -> None:
     old_format = "CBR"
     old_path, old_size, optimized_archive, settings = _setup_compress(old_format)
-    nag_about_gifs = False
-    args = (old_path, old_format, settings, nag_about_gifs, TEST_COMMENT)
+    args = (old_path, old_format, settings, TEST_COMMENT)
     assert not optimized_archive.is_file()
     res = Comic.comic_archive_compress(args)
     assert optimized_archive.is_file()
@@ -192,8 +191,7 @@ def test_comic_archive_compress() -> None:
 def test_comic_archive_compress_tmp_path() -> None:
     old_format = "CBZ"
     old_path, old_size, optimized_archive, settings = _setup_compress(old_format)
-    nag_about_gifs = False
-    args = (old_path, old_format, settings, nag_about_gifs, EMPTY_STR)
+    args = (old_path, old_format, settings, EMPTY_STR)
     assert optimized_archive.is_file()
     res = Comic.comic_archive_compress(args)
     assert optimized_archive.is_file()
@@ -207,8 +205,7 @@ def test_comic_archive_compress_quiet_tmp_path() -> None:
     old_format = "CBR"
     old_path, old_size, optimized_archive, settings = _setup_compress(old_format)
     settings.verbose = 0
-    nag_about_gifs = False
-    args = (old_path, old_format, settings, nag_about_gifs, EMPTY_STR)
+    args = (old_path, old_format, settings, EMPTY_STR)
     assert not optimized_archive.is_file()
     res = Comic.comic_archive_compress(args)
     assert optimized_archive.is_file()
@@ -221,10 +218,9 @@ def test_comic_archive_compress_quiet_tmp_path() -> None:
 def test_comic_archive_compress_exception() -> None:
     old_format = "CBR"
     _, _, _, settings = _setup_compress(old_format)
-    nag_about_gifs = False
     TMP_ROOT.mkdir(exist_ok=True)
     path = TMP_ROOT / "XXXXX"
-    args = (path, old_format, settings, nag_about_gifs, EMPTY_STR)
+    args = (path, old_format, settings, EMPTY_STR)
     excepted = False
     try:
         Comic.comic_archive_compress(args)

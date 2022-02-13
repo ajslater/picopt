@@ -3,20 +3,15 @@ import shutil
 import traceback
 
 from pathlib import Path
-from typing import Callable
-from typing import Optional
-from typing import Tuple
-from typing import Type
+from typing import Callable, Optional, Tuple, Type
 
-from picopt import PROGRAM_NAME
-from picopt import detect_format
-from picopt import files
-from picopt import stats
+from picopt import PROGRAM_NAME, detect_format, files, stats
 from picopt.extern import ExtArgs
 from picopt.formats.format import Format
-from picopt.formats.gif import Gif
-from picopt.formats.jpeg import Jpeg
+from picopt.formats.gif import GIF_FORMATS, Gif
+from picopt.formats.jpeg import JPEG_FORMATS, Jpeg
 from picopt.formats.png import Png
+from picopt.formats.webp import ANIMATED_WEBP_FORMAT, WEBP_FORMAT, AnimatedWebP, WebP
 from picopt.settings import Settings
 from picopt.stats import ReportStats
 
@@ -27,7 +22,7 @@ TMP_SUFFIX = f".{PROGRAM_NAME}-optimized"
 def _optimize_image_external(
     settings: Settings,
     path: Path,
-    func: Callable[[Settings, ExtArgs], str],
+    func: Callable[[ExtArgs], str],
     image_format: str,
     new_ext: str,
 ) -> ReportStats:
@@ -36,8 +31,13 @@ def _optimize_image_external(
     new_path = Path(new_filename).resolve()
     shutil.copy2(path, new_path)
 
-    ext_args = ExtArgs(str(path), str(new_path))
-    new_image_format = func.__func__(settings, ext_args)  # type: ignore
+    ext_args = ExtArgs(
+        str(path), str(new_path), image_format, settings.destroy_metadata
+    )
+    new_image_format = func.__func__(ext_args)  # type: ignore
+
+    if new_image_format == ANIMATED_WEBP_FORMAT:
+        new_image_format = WEBP_FORMAT
 
     report_stats = files.cleanup_after_optimize(
         settings, path, new_path, image_format, new_image_format
@@ -78,37 +78,44 @@ def _optimize_with_progs(
     return report_stats
 
 
-def _get_format_module(
-    settings: Settings, image_format: str
-) -> Tuple[Optional[Type[Format]], bool]:
+def _get_format_module(settings: Settings, image_format: str) -> Optional[Type[Format]]:
     """Get the format module to use for optimizing the image."""
     format_cls: Optional[Type[Format]] = None
-    nag_about_gifs: bool = False
+    # TODO should detect_format return the Format module?
+    # TODO make sure this doesn't change formats by default
 
     if detect_format.is_format_selected(
+        settings, image_format, settings.to_webp_formats, WebP.PROGRAMS
+    ):
+        format_cls = WebP
+    elif detect_format.is_format_selected(
         settings, image_format, settings.to_png_formats, Png.PROGRAMS
     ):
         format_cls = Png
     elif detect_format.is_format_selected(
-        settings, image_format, Jpeg.FORMATS, Jpeg.PROGRAMS
+        settings, image_format, JPEG_FORMATS, Jpeg.PROGRAMS
     ):
         format_cls = Jpeg
     elif detect_format.is_format_selected(
-        settings, image_format, Gif.FORMATS, Gif.PROGRAMS
+        settings, image_format, settings.to_animated_webp_formats, AnimatedWebP.PROGRAMS
+    ):
+        format_cls = AnimatedWebP
+    elif detect_format.is_format_selected(
+        settings, image_format, GIF_FORMATS, Gif.PROGRAMS
     ):
         # this captures still GIFs too if not caught above
         format_cls = Gif
-        nag_about_gifs = True
 
-    return format_cls, nag_about_gifs
+    return format_cls
 
 
 def optimize_image(arg: Tuple[Path, str, Settings]) -> ReportStats:
     """Optimize a given image from a filename."""
+    path = Path()
     try:
         path, image_format, settings = arg
 
-        format_cls, nag_about_gifs = _get_format_module(settings, image_format)
+        format_cls = _get_format_module(settings, image_format)
 
         if format_cls is None:
             if settings.verbose > 1:
@@ -117,7 +124,6 @@ def optimize_image(arg: Tuple[Path, str, Settings]) -> ReportStats:
             return stats.ReportStats(path, error="File format not selected.")
 
         report_stats = _optimize_with_progs(settings, format_cls, path, image_format)
-        report_stats.nag_about_gifs = nag_about_gifs
         stats.report_saved(settings, report_stats)
         return report_stats
     except Exception as exc:

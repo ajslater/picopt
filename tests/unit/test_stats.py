@@ -17,7 +17,6 @@ class TestStats:
         assert res.final_path == PATH
         assert res.report_list == [f"Skipping {TYPE_NAME} file: {PATH}"]
         assert res.error is None
-        assert not res.nag_about_gifs
 
     def test_humanize_bytes_none(self) -> None:
         hum = stats._humanize_bytes(0)
@@ -97,39 +96,39 @@ class TestStatsReport:
 
     def test_report_totals_verbose(self) -> None:
         self.settings.verbose = 2
-        stats.report_totals(self.settings, 2048, 1024, True, [])
+        stats.report_totals(self.settings, 2048, 1024, [])
 
     def test_report_totals_test(self) -> None:
         self.settings.test = True
-        stats.report_totals(self.settings, 2048, 1024, True, [])
+        stats.report_totals(self.settings, 2048, 1024, [])
 
     def test_report_totals_test_zero(self) -> None:
         self.settings.test = True
-        stats.report_totals(self.settings, 2048, 2048, True, [])
+        stats.report_totals(self.settings, 2048, 2048, [])
 
     def test_report_totals_test_neg(self) -> None:
         self.settings.test = True
-        stats.report_totals(self.settings, 1024, 2048, True, [])
+        stats.report_totals(self.settings, 1024, 2048, [])
 
     def test_report_totals_zero(self) -> None:
-        stats.report_totals(self.settings, 2048, 2048, True, [])
+        stats.report_totals(self.settings, 2048, 2048, [])
 
     def test_report_totals_bytes_in_zero(self) -> None:
-        stats.report_totals(self.settings, 0, 2048, True, [])
+        stats.report_totals(self.settings, 0, 2048, [])
 
     def test_report_totals_neg(self) -> None:
-        stats.report_totals(self.settings, 1024, 2048, True, [])
+        stats.report_totals(self.settings, 1024, 2048, [])
 
     def test_report_totals_zero_quiet(self) -> None:
         self.settings.verbose = 0
         self.settings.test = True
-        stats.report_totals(self.settings, 2048, 2028, True, [])
+        stats.report_totals(self.settings, 2048, 2028, [])
 
     def test_report_totals_errors(self) -> None:
         errors = [(PATH, "dummyError")]
-        stats.report_totals(self.settings, 0, 2048, True, errors)
+        stats.report_totals(self.settings, 0, 2048, errors)
 
     def test_report_noop_quiet(self) -> None:
         self.settings.verbose = 0
         self.settings.test = True
-        stats.report_totals(self.settings, 0, 0, True, [])
+        stats.report_totals(self.settings, 0, 0, [])

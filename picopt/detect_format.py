@@ -1,9 +1,6 @@
 """Detect file formats."""
 from pathlib import Path
-from typing import Callable
-from typing import Optional
-from typing import Set
-from typing import Tuple
+from typing import Callable, Optional, Set, Tuple
 
 from PIL import Image
 
@@ -14,7 +11,7 @@ from picopt.settings import Settings
 
 
 def _is_program_selected(
-    settings: Settings, progs: Tuple[Callable[[Settings, ExtArgs], str], ...]
+    settings: Settings, progs: Tuple[Callable[[ExtArgs], str], ...]
 ) -> bool:
     """Determine if any of the program is enabled in the settings."""
     mode = False
@@ -29,7 +26,7 @@ def is_format_selected(
     settings: Settings,
     image_format: str,
     formats: Set[str],
-    progs: Tuple[Callable[[Settings, ExtArgs], str], ...],
+    progs: Tuple[Callable[[ExtArgs], str], ...],
 ) -> bool:
     """Determine if the image format is selected by command line arguments."""
     intersection = formats & settings.formats
@@ -38,15 +35,15 @@ def is_format_selected(
     return result
 
 
-def get_image_format(path: Path) -> Optional[str]:
+def _get_image_format(path: Path) -> Optional[str]:
     """Get the image format."""
     image_format: Optional[str] = None
     try:
         with Image.open(path) as image:
             image_format = image.format
             try:
-                if image.is_animated:
-                    image_format = f"{ANIMATED_FORMAT_PREFIX}{image_format}"
+                if image_format and image.is_animated:
+                    image_format = ANIMATED_FORMAT_PREFIX + image_format
             except AttributeError:
                 pass
             image.verify()  # need to reopen after verify() so its last
@@ -57,7 +54,7 @@ def get_image_format(path: Path) -> Optional[str]:
 
 def detect_file(settings: Settings, path: Path) -> Optional[str]:
     """Decide what to do with the file."""
-    image_format = get_image_format(path)
+    image_format = _get_image_format(path)
     if image_format not in settings.formats:
         image_format = None
         if settings.verbose > 2 and not settings.list_only:

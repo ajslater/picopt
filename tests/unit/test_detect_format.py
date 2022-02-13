@@ -1,17 +1,12 @@
 """Test detect file format module."""
 from pathlib import Path
-from typing import Callable
-from typing import Optional
-from typing import Set
-from typing import Tuple
+from typing import Callable, Optional, Set, Tuple
 
 from picopt import detect_format
 from picopt.extern import ExtArgs
-from picopt.formats.comic import Comic
+from picopt.formats.comic_formats import COMIC_FORMATS
 from picopt.settings import Settings
-from tests import COMIC_DIR
-from tests import IMAGES_DIR
-from tests import INVALID_DIR
+from tests import COMIC_DIR, IMAGES_DIR, INVALID_DIR
 
 
 __all__ = ()  # hides module from pydocstring
@@ -19,11 +14,11 @@ __all__ = ()  # hides module from pydocstring
 
 class TestIsProgramSelected:
     @staticmethod
-    def pngout(settings: Settings, args: ExtArgs) -> str:
+    def pngout(_: ExtArgs) -> str:
         return ""
 
     @staticmethod
-    def comics(settings: Settings, args: ExtArgs) -> str:
+    def comics(_: ExtArgs) -> str:
         return ""
 
     programs_true = (pngout, comics)
@@ -47,16 +42,16 @@ class TestIsProgramSelected:
 
 class TestIsFormatSelected:
     @staticmethod
-    def pngout(settings: Settings, args: ExtArgs) -> str:
+    def pngout(_: ExtArgs) -> str:
         return ""
 
     @staticmethod
-    def comics(settings: Settings, args: ExtArgs) -> str:
+    def comics(_: ExtArgs) -> str:
         return ""
 
     formats: Set[str] = set(["GIF"])
 
-    programs: Tuple[Callable[[Settings, ExtArgs], str], ...] = (pngout, comics)
+    programs: Tuple[Callable[[ExtArgs], str], ...] = (pngout, comics)
 
     def setup_method(self):
         self.settings = Settings()
@@ -83,7 +78,7 @@ class TestIsFormatSelected:
 class TestGetImageFormat:
     def _test_type(self, root: Path, filename: str, image_type: Optional[str]) -> None:
         path = root / filename
-        res = detect_format.get_image_format(path)
+        res = detect_format._get_image_format(path)
         assert res == image_type
 
     def test_get_image_format_jpg(self) -> None:
@@ -145,9 +140,9 @@ class TestDetectFile:
         self._test_type(INVALID_DIR, "test_gif.gif", None)
 
     def test_detect_file_cbr(self) -> None:
-        self.settings.formats |= Comic.FORMATS
+        self.settings.formats |= COMIC_FORMATS
         self._test_type(COMIC_DIR, "test_cbr.cbr", "CBR")
 
     def test_detect_file_cbz(self) -> None:
-        self.settings.formats |= Comic.FORMATS
+        self.settings.formats |= COMIC_FORMATS
         self._test_type(COMIC_DIR, "test_cbz.cbz", "CBZ")

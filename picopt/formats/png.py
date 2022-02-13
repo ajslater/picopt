@@ -1,58 +1,47 @@
 """PNG format."""
-from pathlib import Path
-from typing import Callable
-from typing import Optional
-from typing import Tuple
+from typing import Callable, Tuple
 
 from picopt import extern
-from picopt.formats.format import Format
-from picopt.formats.png_bit_depth import png_bit_depth
-from picopt.settings import Settings
+from picopt.formats.format import CONVERTABLE_LOSSLESS_FORMATS, Format
+from picopt.formats.gif import GIF_FORMAT
+from picopt.pillow.png_bit_depth import png_bit_depth
 
 
-_PNG_FORMAT = "PNG"
+PNG_FORMAT = "PNG"
+PNG_FORMATS = set((PNG_FORMAT,))
+PNG_CONVERTABLE_FORMATS = (
+    CONVERTABLE_LOSSLESS_FORMATS | set((GIF_FORMAT,)) | PNG_FORMATS
+)
 _OPTIPNG_ARGS = ["optipng", "-o6", "-fix", "-force", "-quiet"]
-# _ADVPNG_ARGS = ["advpng", "-z", "-4", "-f"]
 _PNGOUT_ARGS = ["pngout", "-q", "-force", "-y"]
 
 
 class Png(Format):
     """PNG format class."""
 
-    FORMATS = set([_PNG_FORMAT])
-    LOSSLESS_FORMATS = set(("PNM", "PPM", "BMP", "GIF"))
-    CONVERTABLE_FORMATS = LOSSLESS_FORMATS | FORMATS
-    OUT_EXT = "." + _PNG_FORMAT.lower()
+    OUT_EXT = "." + PNG_FORMAT.lower()
     BEST_ONLY = False
 
     @staticmethod
-    def optipng(_: Optional[Settings], ext_args: extern.ExtArgs) -> str:
+    def optipng(ext_args: extern.ExtArgs) -> str:
         """Run the external program optipng on the file."""
         args = tuple(_OPTIPNG_ARGS + [ext_args.new_fn])
         extern.run_ext(args)
-        return _PNG_FORMAT
-
-    #    @staticmethod
-    #    def advpng(_, ext_args: extern.ExtArgs) -> str:
-    #        """Run the external program advpng on the file."""
-    #        args = tuple(_ADVPNG_ARGS + [ext_args.new_fn])
-    #        extern.run_ext(args)
-    #        return _PNG_FORMAT
+        return PNG_FORMAT
 
     @staticmethod
-    def pngout(_: Optional[Settings], ext_args: extern.ExtArgs) -> str:
+    def pngout(ext_args: extern.ExtArgs) -> str:
         """Run the external program pngout on the file."""
         # if png_bit_depth(ext_args.old_fn) == 16:
-        depth = png_bit_depth(Path(ext_args.old_fn))
+        depth = png_bit_depth(ext_args.old_fn)
         if depth in (16, None):
             print(f"Skipped pngout for {depth} bit PNG:")
         else:
             args = tuple(_PNGOUT_ARGS + [ext_args.old_fn, ext_args.new_fn])
             extern.run_ext(args)
-        return _PNG_FORMAT
+        return PNG_FORMAT
 
-    PROGRAMS: Tuple[Callable[[Settings, extern.ExtArgs], str], ...] = (
+    PROGRAMS: Tuple[Callable[[extern.ExtArgs], str], ...] = (
         optipng,
-        # advpng,
         pngout,
     )

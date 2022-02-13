@@ -4,12 +4,11 @@ import shutil
 from pathlib import Path
 
 from picopt import optimize
-from picopt.formats.gif import Gif
 from picopt.formats.jpeg import Jpeg
 from picopt.formats.png import Png
+from picopt.formats.webp import AnimatedWebP
 from picopt.settings import Settings
-from tests import IMAGES_DIR
-from tests import get_test_dir
+from tests import IMAGES_DIR, get_test_dir
 
 
 __all__ = ()  # Hides module from docstring linting
@@ -18,7 +17,7 @@ PNG_SRC = IMAGES_DIR / "test_png.png"
 TMP_ROOT = get_test_dir()
 OLD_PATH_JPEG = TMP_ROOT / "old.jpeg"
 OLD_PATH_PNG = TMP_ROOT / "old.png"
-NEW_SIZE = 87922
+NEW_SIZE = 87913
 
 
 class TestOptimize:
@@ -131,21 +130,17 @@ class TestOptimizeGetFormat:
         self.settings = Settings()
 
     def test_get_format_module_png(self) -> None:
-        cls, nag = optimize._get_format_module(self.settings, "PNG")
+        cls = optimize._get_format_module(self.settings, "PNG")
         assert cls == Png
-        assert not nag
 
     def test_get_format_module_jpeg(self) -> None:
-        cls, nag = optimize._get_format_module(self.settings, "JPEG")
+        cls = optimize._get_format_module(self.settings, "JPEG")
         assert cls == Jpeg
-        assert not nag
 
     def test_get_format_module_gif(self) -> None:
-        cls, nag = optimize._get_format_module(self.settings, "ANIMATED_GIF")
-        assert cls == Gif
-        assert nag
+        cls = optimize._get_format_module(self.settings, "ANIMATED_GIF")
+        assert cls == AnimatedWebP
 
     def test_get_format_module_invalid(self) -> None:
-        cls, nag = optimize._get_format_module(self.settings, "")
+        cls = optimize._get_format_module(self.settings, "")
         assert cls is None
-        assert not nag

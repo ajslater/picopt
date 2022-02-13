@@ -4,33 +4,64 @@ A multi-format, recursive, multiprocessor aware, command line lossless image opt
 
 Picopt depends on Python [PIL](http://www.pythonware.com/products/pil/) to identify files and Python [rarfile](https://pypi.python.org/pypi/rarfile) to open CBRs.
 
+Picopt drops hidden timestamps at the root of your image directories to avoid reoptimizing images picopt has already optimized.
+
 The actual image optimization is accomplished by external programs.
+
+## <a name="philosophy">Conversion Philosophy</a>
+
+### Lossy Images
+
+JPEG & WebP images are likely the best and most practical lossy image formats. Converting lossy images rarely makes sense and so picopt optimizes them in their current format.
+
+### Lossless Images
+
+Lossless WebP images are smaller than PNG, much smaller than GIF and, of course, a great deal smaller thein uncompressed bitmaps like BMP. As such the best practice is probably to convert all lossless images to WebP Lossless as now all major browsers support it. The only downside is that decoding WebP Lossless takes on average 50% more CPU than PNG.
+
+### Sequenced Images
+
+Sequenced Images, like animated GIFs and WebP, most of the time, should be converted to a compressed video format like HEVC or VP9. There are several situations where this is impractical and so Animated WebP is now a good substitute.
+
+## <a name="programs">External Programs</a>
+
+### JPEG
 
 To optimize JPEG images. Picopt needs one of [mozjpeg](https://github.com/mozilla/mozjpeg) or [jpegtran](http://jpegclub.org/jpegtran/) on the path. in order of preference.
 
-To optimize lossless images like PNG, PNM, GIF, and BMP, picopt requires either [optipng](http://optipng.sourceforge.net/) or [pngout](http://advsys.net/ken/utils.htm) be on the path. Optipng provides the most advantage, but best results are acheived by using pngout as well.
+### PNG, PNM, GIF, BMP
+
+To optimize lossless images like PNG, PNM, GIF, and BMP, picopt requires either [optipng](http://optipng.sourceforge.net/) or [pngout](http://advsys.net/ken/utils.htm) be on the path. Optipng provides the most advantage, but best results will be had by using pngout as well.
+
+### Animated GIF
 
 Animated GIFs are optimized with [gifsicle](http://www.lcdf.org/gifsicle/) if it is available. Picopt nag you to convert your file to [HTML5 video](http://gfycat.com/about), but does not provide this service itself.
 
-Picopt uncompresses, optimizes and rezips [comic book archive files](https://en.wikipedia.org/wiki/Comic_book_archive). Be aware that CBR rar archives will be rezipped into CBZs instead of CBR. Comic book archive optimization is not turned on by default to prevent surprises.
+### WebP
 
-Picopt allows you to drop picopt timestamps at the root of your recursive optimization trees so you don't have to remember which files to optimize or when you last optimized them.
+WebP lossless & lossy formats are optimized with [cwebp](https://developers.google.com/speed/webp/docs/cwebp).
+
+### CBZ & CBR
+
+Picopt uncompresses, optimizes and rezips [comic book archive files](https://en.wikipedia.org/wiki/Comic_book_archive). Be aware that CBR rar archives will be rezipped into CBZs instead of CBR. Comic book archive optimization is not turned on by default to prevent surprises.
 
 ## <a name="install">Install</a>
 
-### System Dependancies
+### System Dependencies
 
-picopt requires several external system dependancies to run. We must install these first
+picopt requires several external system dependencies to run. We must install these first
 
 #### macOS
 
-    brew install optipng mozjpeg gifsicle
-    ln -s /usr/local/Cellar/mozjpeg/4.0.0/bin/jpegtran /usr/local/bin/mozjpeg
-    brew install jonof/kenutils/pngout
+    brew install webp mozjpeg optipng jonof/kenutils/pngout gifsicle
+
+ln -s $(brew --prefix)/opt/mozjpeg/bin/jpegtran /usr/local/bin/mozjpeg
+
+Unfortunately hombrew's `webp` formula does not yet install the gif2webp tool that picopt uses for converting animated gifs to animated webps.
+You may manually download it and put it in your path at [Google's WebP developer website](https://developers.google.com/speed/webp/download)
 
 #### Debian / Ubuntu
 
-    apt-get install optipng gifsicle python-imaging
+    apt-get install optipng gifsicle python-imaging webp
 
 if you don't want to install mozjpeg using the instructions below then use jpegtran:
 
@@ -38,7 +69,7 @@ if you don't want to install mozjpeg using the instructions below then use jpegt
 
 #### Redhat / Fedora
 
-    yum install optipng gifsicle python-imaging
+    yum install optipng gifsicle python-imaging libwebp-tools
 
 if you don't want to install mozjpeg using the instructions below then use jpegtran:
 
@@ -59,9 +90,9 @@ pngout is a useful compression to use after optipng. It is not packaged for linu
 
     pip install picopt
 
-## <a name="usage">Usage<a/>
+## <a name="usage">Usage</a>
 
-Optimize all JPEG files in a dirctory:
+Optimize all JPEG files in a directory:
 
     picopt *.jpg
 
@@ -100,15 +131,5 @@ Optimize everything in my iPhoto library, but only after the last time i did thi
 
 ## <a name="alternatives">Alternatives</a>
 
-[imagemin](https://github.com/imagemin/imagemin-cli) looks to be an all in one cli and gui solution with bundled libraries, so no awkward dependancies.
+[imagemin](https://github.com/imagemin/imagemin-cli) looks to be an all in one cli and gui solution with bundled libraries, so no awkward dependencies.
 [Imageoptim](http://imageoptim.com/) is an all-in-one OS X GUI image optimizer. Imageoptim command line usage is possible with [an external program](https://code.google.com/p/imageoptim/issues/detail?can=2&start=0&num=100&q=&colspec=ID%20Type%20Status%20Priority%20Milestone%20Owner%20Summary%20Stars&groupby=&sort=&id=39).
-
-## <a name="future">Future</a>
-
-### Lossless
-
-Now that [Apple supports WebP](https://caniuse.com/?search=webp), it seems converting most lossless images (gif, png, tiff) to WebP Lossless might be the right strategy.
-
-### Lossy
-
-WebP Lossy vs JPEG is still a judgement call. HEIC remains Apple only.

@@ -2,9 +2,8 @@
 import shutil
 
 from picopt.extern import ExtArgs
-from picopt.formats.png import Png
-from tests import IMAGES_DIR
-from tests import get_test_dir
+from picopt.formats.png import PNG_FORMAT, Png
+from tests import IMAGES_DIR, get_test_dir
 
 
 __all__ = ()  # hides module from pydocstring
@@ -21,38 +20,31 @@ def _setup(use_16: bool = False) -> ExtArgs:
         src_path = TEST_SRC_PATH
     TMP_DIR.mkdir(exist_ok=True)
     shutil.copy(src_path, TMP_OLD_PATH)
-    args = ExtArgs(str(TMP_OLD_PATH), str(TMP_OLD_PATH))
+    args = ExtArgs(str(TMP_OLD_PATH), str(TMP_OLD_PATH), PNG_FORMAT, False)
     return args
 
 
-def _teardown(args: ExtArgs) -> None:
+def _teardown(_: ExtArgs) -> None:
     if TMP_DIR.exists():
         shutil.rmtree(TMP_DIR)
 
 
 def test_optipng() -> None:
     args = _setup()
-    res = Png.optipng(None, args)
+    res = Png.optipng(args)
     assert res == "PNG"
     _teardown(args)
 
 
-# def test_advpng():
-#    args = _setup()
-#    res = Png.advpng(None, args)
-#    assert res == "PNG"
-#    _teardown(args)
-
-
 def test_pngout() -> None:
     args = _setup()
-    res = Png.pngout(None, args)
+    res = Png.pngout(args)
     assert res == "PNG"
     _teardown(args)
 
 
 def test_pngout_16() -> None:
     args = _setup(True)
-    res = Png.pngout(None, args)
+    res = Png.pngout(args)
     assert res == "PNG"
     _teardown(args)
