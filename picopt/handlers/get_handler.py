@@ -17,6 +17,17 @@ _ALWAYS_LOSSLESS_FORMAT_STRS = WEBP_CONVERTABLE_FORMAT_STRS
 _CONTAINER_HANDLERS: Tuple[Type[ContainerHandler], ...] = (CBZ, Zip)
 
 
+def _is_lossless(image_format: str, path: Path) -> bool:
+    """Determine if image format is lossless."""
+    if image_format in _ALWAYS_LOSSLESS_FORMAT_STRS:
+        lossless = True
+    elif image_format == WebPLossless.FORMAT_STR:
+        lossless = is_lossless(str(path))
+    else:
+        lossless = False
+    return lossless
+
+
 def get_image_format(path) -> Optional[Format]:
     """Construct the image format with PIL."""
     format = None
@@ -27,12 +38,7 @@ def get_image_format(path) -> Optional[Format]:
                 raise ValueError("No image format")
             animated = getattr(image, "is_animated", False)
             image.verify()  # seeks to end of image. must be last.
-        if image_format in _ALWAYS_LOSSLESS_FORMAT_STRS:
-            lossless = True
-        elif image_format == WebPLossless.FORMAT_STR:
-            lossless = is_lossless(str(path))
-        else:
-            lossless = False
+        lossless = _is_lossless(image_format, path)
         format = Format(image_format, lossless, animated)
     except UnidentifiedImageError:
         pass
