@@ -7,7 +7,7 @@ from pathlib import Path
 TEST_FILES_DIR = Path("tests/test_files")
 IMAGES_DIR = TEST_FILES_DIR / "images"
 INVALID_DIR = TEST_FILES_DIR / "invalid"
-COMIC_DIR = TEST_FILES_DIR / "comic_archives"
+CONTAINER_DIR = TEST_FILES_DIR / "containers"
 TMP_ROOT = "/tmp"
 
 

@@ -12,6 +12,8 @@ v3.0.0-rc0
 - Change long name of 'disable*\*' cli args to 'no*\*'
 - Fix condition where new files in an old archive were not processed.
 - WebP lossy & lossless support. No support yet for Animated WebP.
+- Gain support for .zip archives
+- Drop support for rarfiles.
 
 v2.2.1
 

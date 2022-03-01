@@ -7,6 +7,7 @@ from sys import platform
 
 from ruamel.yaml import YAML
 
+from picopt import PROGRAM_NAME
 from picopt.timestamp import Timestamp
 from tests import get_test_dir
 
@@ -14,8 +15,8 @@ from tests import get_test_dir
 __all__ = ()
 TMP_ROOT = get_test_dir()
 DEEP_PATH = TMP_ROOT / "deep"
-TIMESTAMP_PATH = TMP_ROOT / Timestamp.TIMESTAMPS_NAME
-DEEP_TIMESTAMP_PATH = DEEP_PATH / Timestamp.TIMESTAMPS_NAME
+TIMESTAMP_PATH = TMP_ROOT / f".{PROGRAM_NAME}_timestamp.yaml"
+DEEP_TIMESTAMP_PATH = DEEP_PATH / f".{PROGRAM_NAME}_timestamp.yaml"
 MTIME = datetime.now().timestamp()
 TIMESTAMPS = {str(TMP_ROOT): MTIME}
 PATH_TIMESTAMPS = {TMP_ROOT: MTIME}
@@ -36,13 +37,13 @@ class TestTimestamp:
 
     path = TMP_ROOT
     deep = DEEP_PATH
-    old_timestamp_path = path / Timestamp.OLD_TIMESTAMP_NAME
+    old_timestamp_path = path / f".{PROGRAM_NAME}_timestamp"
     yaml = YAML()
 
     def setup_method(self) -> None:
         self.deep.mkdir(parents=True)
         self.yaml.dump(TIMESTAMPS, TIMESTAMP_PATH)
-        self.tso = Timestamp(TMP_ROOT)
+        self.tso = Timestamp(PROGRAM_NAME, TMP_ROOT)
 
     def teardown_method(self) -> None:
         shutil.rmtree(self.path)
@@ -53,7 +54,7 @@ class TestTimestamp:
         assert self.old_timestamp_path.exists()
 
     def test_init_dump_file(self) -> None:
-        self.tso = Timestamp(TIMESTAMP_PATH)
+        self.tso = Timestamp(PROGRAM_NAME, TIMESTAMP_PATH)
         assert self.tso._dump_path == TIMESTAMP_PATH
 
     def test_get_timestamp_invalid(self) -> None:

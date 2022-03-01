@@ -1,0 +1,17 @@
+after: null
+bigger: False
+convert_to:
+  PNG: False
+  WEBP: False
+  ZIP: False
+  CBZ: False
+destroy_metadata: False
+follow_symlinks: True
+formats: !!set { "GIF", "JPEG", "PNG", "WEBP" }
+jobs: 0
+list_only: False
+paths: []
+record_timestamp: True
+recurse: False
+test: False
+verbose: 1

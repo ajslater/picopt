@@ -2,39 +2,32 @@
 """
 Determine if a webp is lossless.
 
-This should really be a part of Pillow
+This should be a part of Pillow
 https://developers.google.com/speed/webp/docs/webp_lossless_bitstream_specification
 """
 from pathlib import Path
+from typing import Tuple
 
-from picopt.pillow.unpack import unpack
+from picopt.pillow.unpack import compare_header
 
 
-RIFF_HEADER = (b"R", b"I", b"F", b"F")
-WEBP_HEADER = (b"W", b"E", b"B", b"P")
-VP8L_HEADER = (b"V", b"P", b"8", b"L")
+RIFF_HEADER: Tuple[bytes, ...] = (b"R", b"I", b"F", b"F")
+WEBP_HEADER: Tuple[bytes, ...] = (b"W", b"E", b"B", b"P")
+VP8L_HEADER: Tuple[bytes, ...] = (b"V", b"P", b"8", b"L")
+
+COMPARATORS = ((0, RIFF_HEADER), (8, WEBP_HEADER), (12, VP8L_HEADER))
 
 
 def is_lossless(filename: str) -> bool:
     """If a file is a png, get the bit depth from the standard position."""
     path = Path(filename)
-    with path.open("rb") as img:
-        img.seek(0)
-        header = unpack("c", 4, img)
-        if header != RIFF_HEADER:
-            print(path, "is not a webp!")
-            return False
-
-        # skip past the block length header
-        img.seek(8)
-
-        webp = unpack("c", 4, img)
-        if webp != WEBP_HEADER:
-            print(path, "is not a webp!")
-            return False
-
-        vp8l = unpack("c", 4, img)
-        return bool(vp8l == VP8L_HEADER)
+    try:
+        with path.open("rb") as img:
+            for seek, byte_array in COMPARATORS:
+                compare_header(img, seek, byte_array)
+        return True
+    except ValueError:
+        return False
 
 
 def main() -> None:

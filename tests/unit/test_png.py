@@ -2,7 +2,7 @@
 import shutil
 
 from picopt.extern import ExtArgs
-from picopt.formats.png import PNG_FORMAT, Png
+from picopt.handlers.png import Png
 from tests import IMAGES_DIR, get_test_dir
 
 
@@ -20,7 +20,7 @@ def _setup(use_16: bool = False) -> ExtArgs:
         src_path = TEST_SRC_PATH
     TMP_DIR.mkdir(exist_ok=True)
     shutil.copy(src_path, TMP_OLD_PATH)
-    args = ExtArgs(str(TMP_OLD_PATH), str(TMP_OLD_PATH), PNG_FORMAT, False)
+    args = ExtArgs(str(TMP_OLD_PATH), str(TMP_OLD_PATH), False)
     return args
 
 
@@ -32,19 +32,19 @@ def _teardown(_: ExtArgs) -> None:
 def test_optipng() -> None:
     args = _setup()
     res = Png.optipng(args)
-    assert res == "PNG"
+    assert res == Png.SUFFIX
     _teardown(args)
 
 
 def test_pngout() -> None:
     args = _setup()
     res = Png.pngout(args)
-    assert res == "PNG"
+    assert res == Png.SUFFIX
     _teardown(args)
 
 
 def test_pngout_16() -> None:
     args = _setup(True)
     res = Png.pngout(args)
-    assert res == "PNG"
+    assert res == Png.SUFFIX
     _teardown(args)

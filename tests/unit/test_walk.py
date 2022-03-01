@@ -4,22 +4,28 @@ import shutil
 from argparse import Namespace
 from datetime import datetime
 
-from picopt.optimize import TMP_SUFFIX
-from picopt.settings import Settings
+from confuse.templates import AttrDict
+
+from picopt import PROGRAM_NAME
+from picopt.config import get_config
+from picopt.handlers.zip import CBZ, Zip
 from picopt.stats import ReportStats
 from picopt.timestamp import Timestamp
 from picopt.walk import Walk
-from tests import COMIC_DIR, IMAGES_DIR, get_test_dir
+from tests import CONTAINER_DIR, IMAGES_DIR, get_test_dir
 
 
 __all__ = ()  # hides module from pydocstring
-TEST_CBR_SRC = COMIC_DIR / "test_cbr.cbr"
-TEST_CBZ_SRC = COMIC_DIR / "test_cbz.cbz"
+TEST_CBZ_SRC = CONTAINER_DIR / "test_cbz.cbz"
 TEST_GIF_SRC = IMAGES_DIR / "test_gif.gif"
 TEST_JPG_SRC = IMAGES_DIR / "test_jpg.jpg"
+TEST_ZIP_SRC = IMAGES_DIR / "test_zip.zip"
 TMP_ROOT = get_test_dir()
 DEEP_PATH = TMP_ROOT / "deep"
 OLD_PATH = TMP_ROOT / "old.gif"
+OLD_TIMESTAMP_NAME = Timestamp(PROGRAM_NAME, TMP_ROOT).old_timestamp_name
+TIMESTAMPS_NAME = Timestamp(PROGRAM_NAME, DEEP_PATH).timestamps_name
+TMP_SUFFIX = ".tmp"
 
 
 class TestWalk:
@@ -27,9 +33,9 @@ class TestWalk:
         if TMP_ROOT.exists():
             shutil.rmtree(TMP_ROOT)
         TMP_ROOT.mkdir()
-        self.settings = Settings(check_programs=True)
-        self.wob = Walk()
-        self.wob._timestamps[TMP_ROOT] = Timestamp(TMP_ROOT)
+        self.config = get_config()
+        self.wob = Walk(self.config)
+        self.wob._timestamps[TMP_ROOT] = Timestamp(PROGRAM_NAME, TMP_ROOT)
 
     def teardown_method(self):
         self.wob._pool.close()
@@ -40,17 +46,17 @@ class TestWalk:
     def test_comic_archive_skip(self) -> None:
         path = TMP_ROOT / "xxx"
         rep = ReportStats(path)
-        res = Walk._comic_archive_skip((rep,))
+        res = Walk._container_skip((rep,))
         assert res.final_path == path
 
-    def test_walk_comic_archive_skip(self) -> None:
-        cbr = TMP_ROOT / "test.cbr"
-        shutil.copy(TEST_CBR_SRC, cbr)
-        result_set = self.wob.walk_comic_archive(cbr, "CBR", None, self.settings)
+    def test_walk_containar_zip_skip(self) -> None:
+        zip = TMP_ROOT / "test.zip"
+        shutil.copy(TEST_ZIP_SRC, zip)
+        result_set = self.wob.walk_container(zip, Zip, None)
         res = result_set.pop()
         rep = res.get()
         assert not rep.error
-        assert rep.final_path == cbr
+        assert rep.final_path == zip
         assert rep.bytes_in == 0
         assert rep.bytes_out == 0
 
@@ -58,8 +64,8 @@ class TestWalk:
         cbz = TMP_ROOT / "test.cbz"
         shutil.copy(TEST_CBZ_SRC, cbz)
         old_size = cbz.stat().st_size
-        self.settings.comics = True
-        result_set = self.wob.walk_comic_archive(cbz, "CBZ", None, self.settings)
+        self.config.comics = True
+        result_set = self.wob.walk_container(cbz, CBZ, None)
         res = result_set.pop()
         rep = res.get()
         assert not rep.error
@@ -68,13 +74,13 @@ class TestWalk:
         assert rep.bytes_out > 0
 
     def test_walk_comic_archive_bigger(self) -> None:
-        cbr = TMP_ROOT / "test.cbr"
+        zip = TMP_ROOT / "test.cbr"
         cbz = TMP_ROOT / "test.cbz"
-        shutil.copy(TEST_CBR_SRC, cbr)
-        old_size = cbr.stat().st_size
-        self.settings.comics = True
-        self.settings.bigger = True
-        result_set = self.wob.walk_comic_archive(cbr, "CBR", None, self.settings)
+        shutil.copy(TEST_ZIP_SRC, zip)
+        old_size = zip.stat().st_size
+        self.config.comics = True
+        self.config.bigger = True
+        result_set = self.wob.walk_container(zip, Zip, None)
         res = result_set.pop()
         rep = res.get()
         assert not rep.error
@@ -85,80 +91,78 @@ class TestWalk:
     def test_is_skippable_unset(self) -> None:
         path = TMP_ROOT / "test.txt"
         path.touch()
-        res = self.wob._is_skippable(path, self.settings, TMP_ROOT)
+        res = self.wob._is_skippable(path, TMP_ROOT)
         assert not res
 
     def test_is_skippable_symlink(self) -> None:
         path = TMP_ROOT / "test.txt"
         path.symlink_to(TMP_ROOT)
-        self.settings.follow_symlinks = False
-        res = self.wob._is_skippable(path, self.settings, TMP_ROOT)
+        self.config.follow_symlinks = False
+        res = self.wob._is_skippable(path, TMP_ROOT)
         assert res
 
     def test_is_skippable_symlink_verbose(self) -> None:
         path = TMP_ROOT / "test.txt"
         path.symlink_to(TMP_ROOT)
-        self.settings.follow_symlinks = False
-        self.settings.verbose = 2
-        self.wob._timestamps[TMP_ROOT] = Timestamp(TMP_ROOT)
-        res = self.wob._is_skippable(path, self.settings, TMP_ROOT)
+        self.config.follow_symlinks = False
+        self.config.verbose = 2
+        self.wob._timestamps[TMP_ROOT] = Timestamp(PROGRAM_NAME, TMP_ROOT)
+        res = self.wob._is_skippable(path, TMP_ROOT)
         assert res
 
     def test_is_skippable_old_timestamp(self) -> None:
         DEEP_PATH.mkdir(parents=True)
-        assert Timestamp.OLD_TIMESTAMP_NAME
-        path = DEEP_PATH / Timestamp.OLD_TIMESTAMP_NAME
+        path = DEEP_PATH / OLD_TIMESTAMP_NAME
         path.touch()
-        res = self.wob._is_skippable(path, self.settings, TMP_ROOT)
+        res = self.wob._is_skippable(path, TMP_ROOT)
         assert res
 
     def test_is_skippable_old_timestamp_no_top_path(self) -> None:
         DEEP_PATH.mkdir(parents=True)
-        assert Timestamp.OLD_TIMESTAMP_NAME
-        path = DEEP_PATH / Timestamp.OLD_TIMESTAMP_NAME
+        path = DEEP_PATH / OLD_TIMESTAMP_NAME
         path.touch()
-        res = self.wob._is_skippable(path, self.settings, None)
+        res = self.wob._is_skippable(path, None)
         assert res
 
     def test_is_skippable_timestamp(self) -> None:
         DEEP_PATH.mkdir(parents=True)
-        path = DEEP_PATH / Timestamp.TIMESTAMPS_NAME
+        path = DEEP_PATH / TIMESTAMPS_NAME
         path.touch()
         print(f"test_is_skippable_timestamp {path=}, {TMP_ROOT=}")
-        res = self.wob._is_skippable(path, self.settings, TMP_ROOT)
+        res = self.wob._is_skippable(path, TMP_ROOT)
         assert res
         assert not path.exists()
 
     def test_is_skippable_timestamp_none_top_path(self) -> None:
         DEEP_PATH.mkdir(parents=True)
-        path = DEEP_PATH / Timestamp.TIMESTAMPS_NAME
+        path = DEEP_PATH / TIMESTAMPS_NAME
         path.touch()
-        res = self.wob._is_skippable(path, self.settings, None)
+        res = self.wob._is_skippable(path, None)
         assert path.exists()
         assert res
 
     def test_is_skippable_tmp_file(self) -> None:
         path = TMP_ROOT / f"foo.{TMP_SUFFIX}"
         path.touch()
-        res = self.wob._is_skippable(path, self.settings, None)
+        res = self.wob._is_skippable(path, None)
         assert res
         assert not path.exists()
 
     def test_is_skippable_dne(self) -> None:
         path = TMP_ROOT / "test.txt"
-        res = self.wob._is_skippable(path, self.settings, TMP_ROOT)
+        res = self.wob._is_skippable(path, TMP_ROOT)
         assert res
 
     def test_is_skippable_dne_quiet(self) -> None:
         path = TMP_ROOT / "test.txt"
-        self.settings.verbose = 0
-        res = self.wob._is_skippable(path, self.settings, TMP_ROOT)
+        self.config.verbose = 0
+        res = self.wob._is_skippable(path, TMP_ROOT)
         assert res
 
     def test_is_skippable_not(self) -> None:
         path = TMP_ROOT / "test.png"
         path.touch()
-        res = self.wob._is_skippable(path, self.settings, TMP_ROOT)
+        res = self.wob._is_skippable(path, TMP_ROOT)
         assert not res
 
     def test_is_older_than_timestamp_none(self) -> None:
@@ -199,63 +203,60 @@ class TestWalk:
         path.touch()
         # walk_after = path.stat().st_mtime
         walk_after = datetime.now().timestamp()
-        res = self.wob.walk_file(path, walk_after, self.settings, None)
+        res = self.wob.walk_file(path, walk_after, None)
         assert len(res) == 0
 
     def test_walk_file_list_only(self) -> None:
         path = TMP_ROOT / "test.jpg"
         shutil.copy(TEST_JPG_SRC, path)
         path.touch()
-        self.settings.list_only = True
-        res = self.wob.walk_file(path, None, self.settings, TMP_ROOT)
+        self.config.list_only = True
+        res = self.wob.walk_file(path, None, TMP_ROOT)
         assert len(res) == 0
 
-    def test_walk_file_comic(self) -> None:
-        path = TMP_ROOT / "test.cbr"
-        shutil.copy(TEST_CBR_SRC, path)
-        self.settings.comics = True
-        self.settings.bigger = True
-        self.settings._update_formats()
-        res = self.wob.walk_file(path, None, self.settings, TMP_ROOT)
+    def test_walk_file_zip(self) -> None:
+        path = TMP_ROOT / "test.zip"
+        shutil.copy(TEST_ZIP_SRC, path)
+        self.config.comics = True
+        self.config.bigger = True
+        self.config._update_formats()
+        res = self.wob.walk_file(path, None, TMP_ROOT)
         assert len(res) == 1
         rep = res.pop().get()
-        assert rep.final_path == path.with_suffix(".cbz")
+        assert rep.final_path == path.with_suffix(".zip")
 
     def test_walk_file_dir(self) -> None:
         DEEP_PATH.mkdir(parents=True)
-        assert Timestamp.OLD_TIMESTAMP_NAME
-        path = DEEP_PATH / Timestamp.OLD_TIMESTAMP_NAME
+        path = DEEP_PATH / OLD_TIMESTAMP_NAME
         path.touch()
-        res = self.wob.walk_file(DEEP_PATH, None, self.settings, TMP_ROOT)
+        res = self.wob.walk_file(DEEP_PATH, None, TMP_ROOT)
         assert len(res) == 0
 
     def test_walk_file_skippable(self) -> None:
         DEEP_PATH.mkdir(parents=True)
-        assert Timestamp.OLD_TIMESTAMP_NAME
-        path = DEEP_PATH / Timestamp.OLD_TIMESTAMP_NAME
+        path = DEEP_PATH / OLD_TIMESTAMP_NAME
         path.touch()
-        res = self.wob.walk_file(path, None, self.settings, TMP_ROOT)
+        res = self.wob.walk_file(path, None, TMP_ROOT)
         assert len(res) == 0
 
     def test_walk_file_skippable_verbose(self) -> None:
         DEEP_PATH.mkdir(parents=True)
-        assert Timestamp.OLD_TIMESTAMP_NAME
-        path = DEEP_PATH / Timestamp.OLD_TIMESTAMP_NAME
+        path = DEEP_PATH / OLD_TIMESTAMP_NAME
         path.touch()
-        self.settings.verbose = 2
-        res = self.wob.walk_file(path, None, self.settings, TMP_ROOT)
+        self.config.verbose = 2
+        res = self.wob.walk_file(path, None, TMP_ROOT)
         assert len(res) == 0
 
     def test_walk_dir_unset(self) -> None:
         dir_path = TMP_ROOT / "deep"
         dir_path.mkdir(parents=True)
-        res = self.wob.walk_dir(dir_path, None, self.settings, TMP_ROOT)
+        res = self.wob.walk_dir(dir_path, None, TMP_ROOT)
         assert len(res) == 0
 
     def test_walk_dir_recurse(self) -> None:
         dir_path = TMP_ROOT / "deep"
         dir_path.mkdir(parents=True)
-        res = self.wob.walk_dir(dir_path, None, self.settings, TMP_ROOT, None)
+        res = self.wob.walk_dir(dir_path, None, TMP_ROOT, None)
         assert len(res) == 0
 
     # def test_walk_dir_error():
@@ -274,9 +275,7 @@ class TestWalk:
     #    _teardown()
 
     def test_walk_all_files_empty(self) -> None:
-        bytes_in, bytes_out, errors = self.wob._walk_all_files(
-            self.settings, set([TMP_ROOT])
-        )
+        bytes_in, bytes_out, errors = self.wob._walk_all_files(set([TMP_ROOT]))
         assert bytes_in == 0
         assert bytes_out == 0
         assert len(errors) == 0
@@ -284,10 +283,8 @@ class TestWalk:
     def test_walk_all_files_one(self) -> None:
         path = TMP_ROOT / "test.jpg"
         shutil.copy(TEST_JPG_SRC, path)
-        self.settings.recurse = True
-        bytes_in, bytes_out, errors = self.wob._walk_all_files(
-            self.settings, set([TMP_ROOT])
-        )
+        self.config.recurse = True
+        bytes_in, bytes_out, errors = self.wob._walk_all_files(set([TMP_ROOT]))
         assert bytes_in == 97373
         assert bytes_out == 87913
         assert len(errors) == 0
@@ -301,10 +298,8 @@ class TestWalk:
         root2.mkdir(parents=True)
         path2 = root2 / "test.jpg"
         shutil.copy(TEST_JPG_SRC, path2)
-        self.settings.recurse = True
-        bytes_in, bytes_out, errors = self.wob._walk_all_files(
-            self.settings, set([root1, root2])
-        )
+        self.config.recurse = True
+        bytes_in, bytes_out, errors = self.wob._walk_all_files(set([root1, root2]))
         assert bytes_in == 194746
         assert bytes_out == 175826
         assert len(errors) == 0
@@ -313,63 +308,61 @@ class TestWalk:
         path = TMP_ROOT / "test.gif"
         shutil.copy(TEST_GIF_SRC, path)
 
-        self.settings = Settings(
+        self.config = AttrDict(
             arg_namespace=Namespace(
                 gifsicle=False, optipng=False, pngout=False, recurse=True
             )
         )
-        print(f"{self.settings.formats=}")
-        bytes_in, bytes_out, errors = self.wob._walk_all_files(
-            self.settings, set([TMP_ROOT])
-        )
+        print(f"{self.config.formats=}")
+        bytes_in, bytes_out, errors = self.wob._walk_all_files(set([TMP_ROOT]))
         assert bytes_in == 0
         assert bytes_out == 0
         assert len(errors) == 1
 
     def test_run(self) -> None:
-        self.settings.can_do = False
-        res = self.wob.run(self.settings)
+        self.config.formats = set()
+        res = self.wob.run()
         assert not res
 
     def test_run_optimize_after(self) -> None:
-        self.settings.optimize_after = 3000
-        res = self.wob.run(self.settings)
+        self.config.optimize_after = 3000
+        res = self.wob.run()
         assert res
 
     def test_run_record_timestamp(self) -> None:
-        self.settings.record_timestamps = True
-        self.settings.paths = set([str(TMP_ROOT)])
-        res = self.wob.run(self.settings)
+        self.config.record_timestamps = True
+        self.config.paths = set([str(TMP_ROOT)])
+        res = self.wob.run()
         assert res
 
     def test_run_dne(self) -> None:
-        self.settings.paths = set(["blargh"])
-        res = self.wob.run(self.settings)
+        self.config.paths = set(["blargh"])
+        res = self.wob.run()
         assert not res
 
     def test_run_jobs(self) -> None:
-        self.settings.jobs = 99
-        res = self.wob.run(self.settings)
+        self.config.jobs = 99
+        res = self.wob.run()
         assert res
 
     def test_should_record_timestamp(self) -> None:
-        res = self.wob._should_record_timestamp(self.settings, TMP_ROOT)
+        res = self.wob._should_record_timestamp(TMP_ROOT)
         assert res
 
     def test_should_record_timestamp_symlink(self) -> None:
-        self.settings.follow_symlinks = False
+        self.config.follow_symlinks = False
         sym_path = TMP_ROOT / "sym"
         sym_path.symlink_to(DEEP_PATH)
-        res = self.wob._should_record_timestamp(self.settings, sym_path)
+        res = self.wob._should_record_timestamp(sym_path)
         assert not res
 
     def test_should_record_timestamp_dne(self) -> None:
-        self.settings.follow_symlinks = False
+        self.config.follow_symlinks = False
         bad_path = TMP_ROOT / "BLARGS"
-        res = self.wob._should_record_timestamp(self.settings, bad_path)
+        res = self.wob._should_record_timestamp(bad_path)
         assert not res
 
     def test_should_record_timestamp_test(self) -> None:
-        self.settings.test = True
-        res = self.wob._should_record_timestamp(self.settings, TMP_ROOT)
+        self.config.test = True
+        res = self.wob._should_record_timestamp(TMP_ROOT)
         assert not res

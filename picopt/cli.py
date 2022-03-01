@@ -2,24 +2,19 @@
 """Run pictures through image specific external optimizers."""
 import argparse
 
-from argparse import Namespace
+from argparse import Action, Namespace
 from importlib.metadata import PackageNotFoundError, version
-from pathlib import Path
-from typing import Optional, Set, Tuple
+from typing import Tuple
 
 from picopt import PROGRAM_NAME, walk
-from picopt.formats.comic_formats import COMIC_FORMATS
-from picopt.formats.format import CONVERTABLE_LOSSLESS_FORMATS
-from picopt.formats.gif import GIF_FORMATS
-from picopt.formats.jpeg import JPEG_FORMATS
-from picopt.formats.png import PNG_CONVERTABLE_FORMATS, PNG_FORMATS
-from picopt.formats.webp import (
-    WEBP_ANIMATED_CONVERTABLE_FORMATS,
-    WEBP_CONVERTABLE_FORMATS,
-    WEBP_FORMATS,
+from picopt.config import (
+    ALL_FORMAT_STRS,
+    DEFAULT_FORMAT_STRS,
+    PNG_CONVERTABLE_FORMAT_STRS,
+    WEBP_CONVERTABLE_FORMAT_STRS,
+    get_config,
 )
-from picopt.settings import Settings
-from picopt.timestamp import Timestamp
+from picopt.handlers.zip import CBZ, Zip
 
 
 FORMAT_DELIMETER = ","
@@ -27,19 +22,48 @@ try:
     VERSION = version(PROGRAM_NAME)
 except PackageNotFoundError:
     VERSION = "test"
-ALL_FORMATS: Set[str] = (
-    JPEG_FORMATS
-    | GIF_FORMATS
-    | CONVERTABLE_LOSSLESS_FORMATS
-    | PNG_FORMATS
-    | WEBP_FORMATS
-    | COMIC_FORMATS
-)
 
 
-def csv_set(csv_str: str) -> Set[str]:
+class SplitArgsAction(Action):
     """Convert csv string from argparse to a list."""
-    return set(csv_str.upper().split(FORMAT_DELIMETER))
+
+    def __call__(self, parser, namespace, values, option_string=None):
+        """Split values string into list."""
+        if isinstance(values, str):
+            values = tuple(sorted(values.split(FORMAT_DELIMETER)))
+        super().__call__(parser, namespace, values, option_string)
+
+
+class StoreConstSubKeyAction(Action):
+    """Store const in subkey."""
+
+    def __init__(
+        self,
+        option_strings,
+        dest,
+        const=None,
+        default=None,
+        required=False,
+        help=None,
+        _metavar=None,
+    ):
+        """Init."""
+        super().__init__(
+            option_strings=option_strings,
+            dest=dest,
+            nargs=0,
+            const=const,
+            default=default,
+            required=required,
+            help=help,
+        )
+
+    def __call__(self, _parser, namespace, _values, _option_string=None):
+        """Assign const to referenced subkey."""
+        key, sub_key = self.dest.split(".")
+        if key not in namespace:
+            namespace.__dict__[key] = {}
+        namespace.__dict__[key][sub_key] = self.const
 
 
 def get_arguments(args: Tuple[str, ...]) -> Namespace:
@@ -47,15 +71,15 @@ def get_arguments(args: Tuple[str, ...]) -> Namespace:
     usage = "%(prog)s [arguments] [paths]"
     description = "Losslessly optimizes and optionally converts images."
     parser = argparse.ArgumentParser(usage=usage, description=description)
-    all_formats = ", ".join(sorted(ALL_FORMATS))
-    png_lossless_formats = ", ".join(sorted(PNG_CONVERTABLE_FORMATS))
-    webp_lossless_formats = ", ".join(sorted(WEBP_CONVERTABLE_FORMATS))
+    all_formats = ", ".join(sorted(ALL_FORMAT_STRS))
+    png_convertable_formats = ", ".join(sorted(PNG_CONVERTABLE_FORMAT_STRS))
+    webp_convertable_formats = ", ".join(sorted(WEBP_CONVERTABLE_FORMAT_STRS))
+    default_formats = ", ".join(sorted(DEFAULT_FORMAT_STRS))
     parser.add_argument(
         "-r",
         "--recurse",
         action="store_true",
         dest="recurse",
-        default=None,
         help="Recurse down through directories on the command line.",
     )
     parser.add_argument(
@@ -63,7 +87,6 @@ def get_arguments(args: Tuple[str, ...]) -> Namespace:
         "--verbose",
         action="count",
         dest="verbose",
-        default=None,
         help="Display more output. -v (default) and -vv " "(noisy)",
     )
     parser.add_argument(
@@ -72,61 +95,70 @@ def get_arguments(args: Tuple[str, ...]) -> Namespace:
         action="store_const",
         dest="verbose",
         const=-1,
-        default=None,
         help="Display little to no output",
     )
     parser.add_argument(
         "-c",
-        "--comics",
-        action="store_true",
-        dest="comics",
-        default=None,
-        help="Also optimize comic book archives (cbz & cbr)",
+        "--cbz",
+        action="append_const",
+        dest="_extra_formats",
+        const=CBZ.FORMAT_STR,
+        help="Optimize comic book zip archives. Implies --recursive",
+    )
+    parser.add_argument(
+        "-z",
+        "--zipfiles",
+        action="append_const",
+        dest="_extra_formats",
+        const=Zip.FORMAT_STR,
+        help="Optimize images inside of zipfiles. Implies --recursive",
     )
     parser.add_argument(
         "-f",
         "--formats",
-        type=csv_set,
-        action="store",
+        action=SplitArgsAction,
         dest="formats",
-        default=None,
         help="Only optimize images of the specified "
-        f"'{FORMAT_DELIMETER}' delimited formats from:"
-        f" {all_formats}",
+        f"'{FORMAT_DELIMETER}' delimited formats from: {all_formats}. "
+        f"Defaults to {default_formats}",
     )
     parser.add_argument(
         "-p",
         "--convert_to_png",
-        action="store_const",
-        dest="to_png_formats",
-        const=PNG_CONVERTABLE_FORMATS,
-        default=PNG_FORMATS,
-        help=f"Convert {png_lossless_formats} formats to PNG when optimizing.",
+        action=StoreConstSubKeyAction,
+        dest="convert_to.PNG",
+        const=True,
+        help=f"Convert {png_convertable_formats} formats to PNG when optimizing.",
     )
     parser.add_argument(
         "-w",
         "--convert_to_webp",
-        action="store_const",
-        dest="to_webp_formats",
-        const=WEBP_CONVERTABLE_FORMATS,
-        default=WEBP_FORMATS,
-        help=f"Convert {webp_lossless_formats} to Lossless WebP when optimizing.",
+        action=StoreConstSubKeyAction,
+        dest="convert_to.WEBP",
+        const=True,
+        help=f"Convert {webp_convertable_formats} to Lossless WebP when optimizing.",
     )
     parser.add_argument(
-        "-g",
-        "--convert_animated_formats",
-        action="store_const",
-        dest="to_animated_webp_formats",
-        const=WEBP_ANIMATED_CONVERTABLE_FORMATS,
-        default=None,
-        help="Convert animated gifs to animated WebP.",
+        "-i",
+        "--convert_to_zip",
+        action=StoreConstSubKeyAction,
+        dest="convert_to.ZIP",
+        const=True,
+        help="Convert RAR to Zip when optimizing.",
+    )
+    parser.add_argument(
+        "-d",
+        "--convert_to_cbz",
+        action=StoreConstSubKeyAction,
+        dest="convert_to.CBZ",
+        const=True,
+        help="Convert CBR to CBZ when optimizing.",
     )
     parser.add_argument(
         "-S",
         "--no-follow-symlinks",
         action="store_false",
         dest="follow_symlinks",
-        default=None,
         help="do not follow symlinks for files and directories",
     )
     parser.add_argument(
@@ -134,7 +166,6 @@ def get_arguments(args: Tuple[str, ...]) -> Namespace:
         "--bigger",
         action="store_true",
         dest="bigger",
-        default=None,
         help="Save optimized files that are larger than " "the originals",
     )
     parser.add_argument(
@@ -142,33 +173,28 @@ def get_arguments(args: Tuple[str, ...]) -> Namespace:
         "--no_timestamp",
         action="store_false",
         dest="record_timestamp",
-        default=None,
         help="Do not record the optimization time in a timestamp file.",
     )
     parser.add_argument(
-        "-D",
-        "--optimize_after",
+        "-A",
+        "--after",
         action="store",
-        dest="optimize_after",
-        default=None,
-        type=Timestamp.parse_date_string,
-        help="only optimize files after the specified "
-        "timestamp. Supersedes .picopt_timestamp file.",
+        dest="after",
+        help="Only optimize files after the specified "
+        "timestamp. Supersedes recorded timestamp files.",
     )
     parser.add_argument(
-        "-N",
-        "--noop",
+        "-T",
+        "--test",
         action="store_true",
         dest="test",
-        default=None,
-        help="Do not replace files with optimized versions",
+        help="Report how much would be saved, but do not replace files.",
     )
     parser.add_argument(
         "-l",
         "--list",
         action="store_true",
         dest="list_only",
-        default=None,
         help="Only list files that would be optimized",
     )
     parser.add_argument(
@@ -183,7 +209,6 @@ def get_arguments(args: Tuple[str, ...]) -> Namespace:
         "--destroy_metadata",
         action="store_true",
         dest="destroy_metadata",
-        default=None,
         help="*Destroy* metadata like EXIF and JFIF",
     )
     parser.add_argument(
@@ -191,24 +216,21 @@ def get_arguments(args: Tuple[str, ...]) -> Namespace:
         metavar="path",
         type=str,
         nargs="+",
-        default=None,
         help="File or directory paths to optimize",
     )
-    parser.add_argument(  # TODO remove and use os.cpu
+    parser.add_argument(
         "-j",
         "--jobs",
         type=int,
         action="store",
         dest="jobs",
-        default=None,
-        help="Number of parallel jobs to run simultaneously.",
+        help="Number of parallel jobs to run simultaneously. Defaults to maximum.",
     )
     parser.add_argument(
         "-C",
         "--config",
         type=str,
         action="store",
-        default=None,
         help="Path to a config file",
     )
 
@@ -218,18 +240,10 @@ def get_arguments(args: Tuple[str, ...]) -> Namespace:
 def run(args: Tuple[str, ...]) -> bool:
     """Process command line arguments and walk inputs."""
     arguments = get_arguments(args)
-    arguments_dict = {}
-    for key, val in vars(arguments).items():
-        if val is not None:
-            arguments_dict[key] = val
-    if arguments.config is not None:
-        rc_path: Optional[Path] = Path(arguments.config)
-    else:
-        rc_path = None
-    arg_namespace = Namespace(**arguments_dict)
-    settings = Settings(arg_namespace, rc_path, check_programs=True)
-    wob = walk.Walk()
-    return wob.run(settings)
+    config = get_config(arguments)
+    print("Optimizing formats:", *sorted(config.formats))
+    wob = walk.Walk(config)
+    return wob.run()
 
 
 def main() -> None:

@@ -3,11 +3,7 @@ import shutil
 import sys
 
 from picopt import cli
-from picopt.formats.png import PNG_CONVERTABLE_FORMATS
-from picopt.formats.webp import (
-    WEBP_ANIMATED_CONVERTABLE_FORMATS,
-    WEBP_CONVERTABLE_FORMATS,
-)
+from picopt.handlers.zip import CBZ, Zip
 from tests import IMAGES_DIR, get_test_dir
 
 
@@ -27,21 +23,14 @@ class TestCLI:
         if TMP_ROOT.exists():
             shutil.rmtree(TMP_ROOT)
 
-    def test_csv_set(self) -> None:
-        res = cli.csv_set("a,b,c,d")
-        assert res == set(("A", "B", "C", "D"))
-
     def test_get_arguments(self) -> None:
-        args = ("picopt", "-vrqcgwpSbINlM", str(TMP_ROOT))
+        args = ("picopt", "-rqczpwSbINlM", str(TMP_ROOT))
         arguments = cli.get_arguments(args)
         assert arguments.verbose == -1
-        # assert arguments.advpng
-        assert arguments.comics
+        assert arguments.convert_to["PNG"]
+        assert arguments.convert_to["WEBP"]
         assert arguments.formats is None
-        #    assert not arguments.jpegrescan
-        assert arguments.to_png_formats == PNG_CONVERTABLE_FORMATS
-        assert arguments.to_webp_formats == WEBP_CONVERTABLE_FORMATS
-        assert arguments.to_animated_webp_formats == WEBP_ANIMATED_CONVERTABLE_FORMATS
+        assert arguments._extra_formats == [CBZ.FORMAT_STR, Zip.FORMAT_STR]
         assert not arguments.follow_symlinks
         assert arguments.bigger
         assert not arguments.record_timestamp
