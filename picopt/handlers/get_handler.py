@@ -28,7 +28,7 @@ def _is_lossless(image_format: str, path: Path) -> bool:
     return lossless
 
 
-def get_image_format(path) -> Optional[Format]:
+def _get_image_format(path) -> Optional[Format]:
     """Construct the image format with PIL."""
     format = None
     try:
@@ -60,7 +60,7 @@ def get_handler(config: AttrDict, path: Path) -> Optional[Handler]:
     format: Optional[Format] = None
     handler_cls: Optional[Type[Handler]] = None
     try:
-        format = get_image_format(path)
+        format = _get_image_format(path)
         if not format:
             format = _get_container_format(path)
         handler_cls = config._format_handlers.get(format)

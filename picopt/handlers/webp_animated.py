@@ -1,6 +1,6 @@
 """WebP Animated images are treated like containers."""
 from pathlib import Path
-from typing import List, Optional, Set
+from typing import Optional, Set
 
 from PIL import Image
 
@@ -26,9 +26,6 @@ class WebPAnimated(ContainerHandler):
     def can_handle(cls, _path: Path) -> Optional[Format]:
         """Can the handler handle this file type."""
         # XXX This never gets called because image format is called earlier
-        # format = cls.get_image_format(path)
-        # if format in (cls.LOSSLESS_FORMAT, cls.LOSSY_FORMAT):
-        #    return format
         return None
 
     def unpack_into(self) -> None:
