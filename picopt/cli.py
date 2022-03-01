@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Run pictures through image specific external optimizers."""
 import argparse
+import sys
 
 from argparse import Action, Namespace
 from importlib.metadata import PackageNotFoundError, version
@@ -248,8 +249,6 @@ def run(args: Tuple[str, ...]) -> bool:
 
 def main() -> None:
     """CLI entry point."""
-    import sys
-
     res = run(tuple(sys.argv))
     if not res:
         sys.exit(1)
