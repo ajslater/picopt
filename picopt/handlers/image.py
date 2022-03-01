@@ -1,7 +1,7 @@
 """Format Superclass."""
 import traceback
 
-from abc import ABC
+from abc import ABCMeta
 
 from PIL.BmpImagePlugin import BmpImageFile
 from PIL.PpmImagePlugin import PpmImageFile
@@ -17,7 +17,7 @@ CONVERTABLE_FORMATS = set((BPM_FORMAT, PPM_FORMAT))
 CONVERTABLE_FORMAT_STRS = set([format.format for format in CONVERTABLE_FORMATS])
 
 
-class ImageHandler(Handler, ABC):
+class ImageHandler(Handler, metaclass=ABCMeta):
     """Format superclass."""
 
     def _optimize_with_progs(self) -> ReportStats:

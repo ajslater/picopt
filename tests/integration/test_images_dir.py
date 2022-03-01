@@ -11,7 +11,7 @@ TMP_ROOT = get_test_dir()
 FNS = {
     "07themecamplist.pdf": (93676, 93676, ("pdf", 93676), ("pdf", 93676)),
     "test_animated_gif.gif": (16383, 16358, ("gif", 16358), ("webp", 11846)),
-    "test_animated_webp.webp": (13610, 13610, ("webp", 13610), ("webp", 13610)),
+    "test_animated_webp.webp": (13610, 11854, ("webp", 11854), ("webp", 11854)),
     "test_bmp.bmp": (141430, 141430, ("png", 67215), ("webp", 47524)),
     "test_gif.gif": (138952, 138944, ("png", 112467), ("webp", 26504)),
     "test_jpg.jpg": (97373, 87913, ("jpg", 87913), ("jpg", 87913)),

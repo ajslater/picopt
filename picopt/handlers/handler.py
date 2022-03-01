@@ -29,7 +29,7 @@ class Handler(ABC):
     NATIVE_FORMATS: Set[Format] = set()
     IMPLIES_RECURSE: bool = False
     INTERNAL: bool = False
-    PROGRAMS: Tuple[str, ...] = tuple()
+    PROGRAMS: Tuple[str, ...] = tuple()  # XXX Image only?
     SUFFIX: str = "." + FORMAT_STR.lower()
     WORKING_SUFFIX: str = f"{PROGRAM_NAME}-tmp"
 
@@ -99,3 +99,21 @@ class Handler(ABC):
         And report results using the stats module.
         """
         return self._cleanup_after_optimize_aux(last_working_path)
+
+    @classmethod
+    def is_handler_available(
+        cls,
+        formats: Set[str],
+        convert_handlers: dict,
+        available_programs: set,
+        format: Format,
+    ):
+        """Can this handler run with available programs."""
+        if not (
+            (format in cls.NATIVE_FORMATS or format in convert_handlers.get(cls, set()))
+            and format.format in formats
+        ):
+            return False
+        if cls.INTERNAL:
+            return True
+        return bool(available_programs & set(cls.PROGRAMS))

@@ -26,10 +26,6 @@ class Walk:
         self._timestamps: Dict[Path, Timestamp] = {}
         self._config: AttrDict = config
 
-    @staticmethod
-    def _container_skip(args: Tuple[ReportStats]) -> ReportStats:
-        return args[0]
-
     def walk_container(
         self,
         path: Path,
@@ -60,14 +56,11 @@ class Walk:
                 result.get()
 
             # recompress archive
-            final_result_set = set([self._pool.apply_async(handler.repack)])
-        except Exception:
-            report = f"{path} is not a good container."
-            report_stats = ReportStats(self._config, path, report=report)
-            final_result_set = set(
-                [self._pool.apply_async(self._container_skip, args=(report_stats,))]
-            )
-        return final_result_set
+            final_result = self._pool.apply_async(handler.repack)
+        except Exception as exc:
+            args = tuple([exc])
+            final_result = self._pool.apply_async(handler.error, args=args)
+        return set([final_result])
 
     def _is_skippable(self, path: Path, top_path: Optional[Path]) -> bool:
         """Handle things that are not optimizable files."""
