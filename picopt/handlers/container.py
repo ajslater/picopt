@@ -84,10 +84,9 @@ class ContainerHandler(Handler, metaclass=ABCMeta):
             self.create_container(new_path)
 
             bytes_count = self.cleanup_after_optimize(new_path)
-            report_stats = ReportStats(
-                self.config, self.final_path, bytes_count=bytes_count
-            )
-            report_stats.report_saved()
+            report_stats = ReportStats(self.final_path, bytes_count=bytes_count)
+            if self.config.verbose:
+                report_stats.report(self.config.test)
             return report_stats
         except Exception as exc:
             print(exc)

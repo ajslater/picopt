@@ -4,9 +4,10 @@ import time
 
 from multiprocessing.pool import AsyncResult, Pool
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Set, Tuple
+from typing import Dict, List, Optional, Set
 
 from confuse.templates import AttrDict
+from humanize import naturalsize
 
 from picopt import PROGRAM_NAME
 from picopt.handlers.container import ContainerHandler
@@ -190,16 +191,54 @@ class Walk:
             and path.exists()
         )
 
-    def _walk_all_files(self, top_paths: Set[Path]) -> Tuple[int, int, List[Any]]:
+    def _report_totals(
+        self, bytes_in: int, bytes_out: int, errors: List[ReportStats]
+    ) -> None:
+        """Report the total number and percent of bytes saved."""
+        if bytes_in:
+            bytes_saved = bytes_in - bytes_out
+            percent_bytes_saved = bytes_saved / bytes_in * 100
+            msg = ""
+            if self._config.test:
+                if percent_bytes_saved > 0:
+                    msg += "Could save"
+                elif percent_bytes_saved == 0:
+                    msg += "Could even out for"
+                else:
+                    msg += "Could lose"
+            else:
+                if percent_bytes_saved > 0:
+                    msg += "Saved"
+                elif percent_bytes_saved == 0:
+                    msg += "Evened out"
+                else:
+                    msg = "Lost"
+            msg += " a total of {} or {:.{prec}f}%".format(
+                naturalsize(bytes_saved), percent_bytes_saved, prec=2
+            )
+            if self._config.verbose:
+                print(msg)
+                if self._config.test:
+                    print("Test run did not change any files.")
+
+        else:
+            if self._config.verbose:
+                print("Didn't optimize any files.")
+
+        if errors:
+            print("Errors with the following files:")
+            for rs in errors:
+                rs.report(self._config.test)
+
+    def _walk_all_files(self, top_paths: Set[Path]) -> None:
         """
         Optimize the files from the arguments list in two batches.
 
         One for absolute paths which are probably outside the current
         working directory tree and one for relative files.
         """
-        # Init records
+        # Fire off all async processes
         result_sets: Dict[Path, Set[AsyncResult]] = {}
-
         for top_path in sorted(top_paths):
             timestamps = Timestamp(PROGRAM_NAME, top_path, self._config.verbose)
             # TODO should walk_after still work like this?
@@ -213,19 +252,20 @@ class Walk:
             result_set = self.walk_file(top_path, walk_after, top_path)
             result_sets[top_path] = result_set
 
+        # Collect results, tally totals, record timestamps
         bytes_in = 0
         bytes_out = 0
-        errors: List[Tuple[Path, List[str]]] = []
+        errors: List[ReportStats] = []
         for top_path, result_set in result_sets.items():
             for result in result_set:
                 res = result.get()
-                if res.errors:
-                    errors += [(res.final_path, res.errors)]
+                if res.error:
+                    errors.append(res)
                     continue
                 # APPEND EVERY FILE'S TIMESTAMP after its done.
                 timestamps = self._timestamps[top_path]
-                if self._should_record_timestamp(res.final_path):
-                    timestamps.record_timestamp(res.final_path)
+                if self._should_record_timestamp(res.path):
+                    timestamps.record_timestamp(res.path)
                 bytes_in += res.bytes_in
                 bytes_out += res.bytes_out
 
@@ -235,18 +275,20 @@ class Walk:
                 timestamps.record_timestamp(top_path)
                 timestamps.compact_timestamps(top_path)
 
-        return bytes_in, bytes_out, errors
+        # Finish by reporting totals
+        self._report_totals(bytes_in, bytes_out, errors)
 
     def run(self) -> bool:
         """Optimize all configured files."""
+        # Validate paths
         top_paths = set()
-        for top_path_fn in self._config.paths:
-            top_path = Path(top_path_fn)
+        for top_path in self._config.paths:
             if not top_path.exists():
-                print(f"Path does not exist: {top_path_fn}")
+                print(f"Path does not exist: {top_path}")
                 return False
             top_paths.add(top_path)
 
+        print("Optimizing formats:", *sorted(self._config.formats))
         if self._config.after is not None and self._config.verbose:
             print("Optimizing after", time.ctime(self._config.after))
 
@@ -254,19 +296,10 @@ class Walk:
             self._pool = Pool(self._config.jobs)
 
         # Optimize Files
-        (
-            bytes_in,
-            bytes_out,
-            errors,
-        ) = self._walk_all_files(top_paths)
+        self._walk_all_files(top_paths)
 
         # Shut down multiprocessing
         self._pool.close()
         self._pool.join()
 
-        # Finish by reporting totals
-        report_stats = ReportStats(
-            self._config, Path(), bytes_count=(bytes_in, bytes_out), errors=errors
-        )
-        report_stats.report_totals()
         return True

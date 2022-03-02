@@ -5,6 +5,7 @@ import sys
 
 from argparse import Action, Namespace
 from importlib.metadata import PackageNotFoundError, version
+from pathlib import Path
 from typing import Tuple
 
 from picopt import PROGRAM_NAME, walk
@@ -242,7 +243,6 @@ def run(args: Tuple[str, ...]) -> bool:
     """Process command line arguments and walk inputs."""
     arguments = get_arguments(args)
     config = get_config(arguments)
-    print("Optimizing formats:", *sorted(config.formats))
     wob = walk.Walk(config)
     return wob.run()
 

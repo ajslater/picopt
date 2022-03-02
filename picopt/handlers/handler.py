@@ -121,7 +121,7 @@ class Handler(ABC):
 
     def error(self, exc: Exception) -> ReportStats:
         """Return an error result."""
-        report = f"{self.original_path} skipped: {exc}"
-        report_stats = ReportStats(self.config, self.original_path, report=report)
-        report_stats.report_saved()
+        report_stats = ReportStats(self.original_path, error=str(exc))
+        if self.config.verbose:
+            report_stats.report(self.config.test)
         return report_stats

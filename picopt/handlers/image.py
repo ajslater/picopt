@@ -34,9 +34,7 @@ class ImageHandler(Handler, metaclass=ABCMeta):
                 break
 
         bytes_count = self.cleanup_after_optimize(path)
-        report_stats = ReportStats(
-            self.config, self.final_path, bytes_count=bytes_count
-        )
+        report_stats = ReportStats(self.final_path, bytes_count=bytes_count)
 
         return report_stats
 
@@ -44,7 +42,8 @@ class ImageHandler(Handler, metaclass=ABCMeta):
         """Optimize a given image from a filename."""
         try:
             report_stats = self._optimize_with_progs()
-            report_stats.report_saved()
+            if self.config.verbose:
+                report_stats.report(self.config.test)
         except Exception as exc:
             report_stats = self.error(exc)
         return report_stats
