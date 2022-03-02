@@ -14,7 +14,7 @@ class Jpeg(ImageHandler):
     """JPEG format class."""
 
     FORMAT_STR = JpegImageFile.format
-    FORMAT = Format(JpegImageFile.format, False, False)
+    FORMAT = Format(FORMAT_STR, False, False)
     NATIVE_FORMATS = set((FORMAT,))
     SUFFIX = ".jpg"
     PROGRAMS: Tuple[str, ...] = ("mozjpeg", "jpegtran")
