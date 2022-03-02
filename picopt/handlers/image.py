@@ -1,12 +1,9 @@
 """Format Superclass."""
-import traceback
-
 from abc import ABCMeta
 
 from PIL.BmpImagePlugin import BmpImageFile
 from PIL.PpmImagePlugin import PpmImageFile
 
-from picopt import stats
 from picopt.handlers.handler import Format, Handler
 from picopt.stats import ReportStats
 
@@ -48,10 +45,6 @@ class ImageHandler(Handler, metaclass=ABCMeta):
         try:
             report_stats = self._optimize_with_progs()
             report_stats.report_saved()
-            return report_stats
         except Exception as exc:
-            print(exc)
-            traceback.print_exc()
-            return stats.ReportStats(
-                self.config, self.original_path, errors=["Optimizing image"]
-            )
+            report_stats = self.error(exc)
+        return report_stats

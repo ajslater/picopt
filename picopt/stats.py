@@ -31,7 +31,7 @@ class ReportStats:
             self.bytes_in = 0
             self.bytes_out = 0
 
-    def new_percent_saved(self) -> str:
+    def _new_percent_saved(self) -> str:
         """Spit out how much space the optimization saved."""
         size_in = self.bytes_in
         size_out = self.bytes_out
@@ -51,7 +51,7 @@ class ReportStats:
         path = self.final_path
 
         report += f"{path}: "
-        report += self.new_percent_saved()
+        report += self._new_percent_saved()
         if self.config.test:
             report += " could be saved."
         if self.config.verbose > 1:

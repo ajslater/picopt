@@ -31,7 +31,7 @@ class Walk:
         path: Path,
         handler: ContainerHandler,
         after: Optional[float],
-    ) -> Set[AsyncResult]:
+    ) -> AsyncResult:
         """
         Optimize a comic archive.
 
@@ -60,7 +60,7 @@ class Walk:
         except Exception as exc:
             args = tuple([exc])
             final_result = self._pool.apply_async(handler.error, args=args)
-        return set([final_result])
+        return final_result
 
     def _is_skippable(self, path: Path, top_path: Optional[Path]) -> bool:
         """Handle things that are not optimizable files."""
@@ -142,11 +142,12 @@ class Walk:
             return result_set
 
         if isinstance(handler, ContainerHandler):
-            result_set |= self.walk_container(path, handler, walk_after)
+            result = self.walk_container(path, handler, walk_after)
         elif isinstance(handler, ImageHandler):
-            result_set.add(self._pool.apply_async(handler.optimize_image))
+            result = self._pool.apply_async(handler.optimize_image)
         else:
             raise ValueError(f"bad handler {handler}")
+        result_set.add(result)
         return result_set
 
     def walk_dir(

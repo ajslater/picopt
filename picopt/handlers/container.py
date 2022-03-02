@@ -92,10 +92,3 @@ class ContainerHandler(Handler, metaclass=ABCMeta):
         except Exception as exc:
             print(exc)
             raise exc
-
-    def error(self, exc: Exception) -> ReportStats:
-        """Return an error result."""
-        import traceback
-        traceback.print_exc()
-        report = f"{self.original_path} skipped: {exc}"
-        return ReportStats(self.config, self.original_path, report=report)

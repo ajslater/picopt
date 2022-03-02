@@ -9,6 +9,7 @@ from typing import Set, Tuple
 from confuse.templates import AttrDict
 
 from picopt import PROGRAM_NAME
+from picopt.stats import ReportStats
 
 
 @dataclass(eq=True, frozen=True)
@@ -117,3 +118,10 @@ class Handler(ABC):
         if cls.INTERNAL:
             return True
         return bool(available_programs & set(cls.PROGRAMS))
+
+    def error(self, exc: Exception) -> ReportStats:
+        """Return an error result."""
+        report = f"{self.original_path} skipped: {exc}"
+        report_stats = ReportStats(self.config, self.original_path, report=report)
+        report_stats.report_saved()
+        return report_stats

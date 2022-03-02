@@ -1,4 +1,4 @@
-"""Detect file handlers."""
+"""Return a handler for a path."""
 from pathlib import Path
 from typing import Optional, Tuple, Type
 
