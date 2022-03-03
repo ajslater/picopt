@@ -15,7 +15,7 @@ v3.0.0-a0
 - Gain support for .zip archives
 - Drop support for rarfiles.
 - optiping optimization level changed to o5
-- Exif data preserved in all formats.
+- Metadata preserved in all formats much better by default.
 
 v2.2.1
 
