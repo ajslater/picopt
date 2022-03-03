@@ -77,7 +77,6 @@ class Handler(ABC):
         self.original_path: Path = original_path
         self.working_paths: Set[Path] = set()
         self.final_path: Path = self.original_path.with_suffix(self.output_suffix())
-        print(f"{self.final_path=}")
         self.input_format: Format = input_format
 
     def get_working_path(self, identifier: str = "") -> Path:
@@ -89,7 +88,6 @@ class Handler(ABC):
 
         suffix = ".".join(suffixes)
         wp = self.original_path.with_suffix(suffix)
-        print(f"{wp=}")
         return wp
 
     def _cleanup_after_optimize_aux(self, last_working_path: Path) -> Tuple[int, int]:
@@ -114,9 +112,6 @@ class Handler(ABC):
                 working_path.unlink(missing_ok=True)
         except OSError as exc:
             print(exc)
-            import traceback
-
-            traceback.print_exc()
 
         return (bytes_in, bytes_out)
 
