@@ -4,9 +4,10 @@ import subprocess
 from abc import ABC
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Set, Tuple
+from typing import Optional, Set, Tuple
 
 from confuse.templates import AttrDict
+from PIL.Image import Exif
 
 from picopt import PROGRAM_NAME
 from picopt.stats import ReportStats
@@ -71,13 +72,23 @@ class Handler(ABC):
             available_programs & set(cls.PROGRAMS)
         )
 
-    def __init__(self, config: AttrDict, original_path: Path, input_format: Format):
+    def __init__(
+        self,
+        config: AttrDict,
+        original_path: Path,
+        input_format: Format,
+        exif: Optional[Exif],
+    ):
         """Initialize handler."""
         self.config: AttrDict = config
         self.original_path: Path = original_path
         self.working_paths: Set[Path] = set()
         self.final_path: Path = self.original_path.with_suffix(self.output_suffix())
         self.input_format: Format = input_format
+        if self.config.destroy_metadata:
+            self.exif = None
+        else:
+            self.exif = exif
 
     def get_working_path(self, identifier: str = "") -> Path:
         """Return a working path with a custom suffix."""
