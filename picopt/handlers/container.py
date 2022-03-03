@@ -18,8 +18,8 @@ class ContainerHandler(Handler, metaclass=ABCMeta):
 
     @classmethod
     @abstractmethod
-    def can_handle(cls, path: Path) -> Optional[Format]:
-        """Can this handler handle this file type."""
+    def identify_format(cls, path: Path) -> Optional[Format]:
+        """Return the format if this handler can handle this path."""
         pass
 
     @abstractmethod

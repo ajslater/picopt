@@ -13,12 +13,15 @@ from picopt.handlers.image import ImageHandler
 class Jpeg(ImageHandler):
     """JPEG format class."""
 
-    FORMAT_STR = JpegImageFile.format
-    FORMAT = Format(FORMAT_STR, False, False)
-    NATIVE_FORMATS = set((FORMAT,))
-    SUFFIX = ".jpg"
+    OUTPUT_FORMAT = JpegImageFile.format
+    OUTPUT_FORMAT_OBJ = Format(OUTPUT_FORMAT, False, False)
     PROGRAMS: Tuple[str, ...] = ("mozjpeg", "jpegtran")
     _ARGS_PREFIX = ["-optimize", "-progressive"]
+
+    @classmethod
+    def _output_suffix(cls) -> str:
+        """JPEG suffix does not match format."""
+        return "jpg"
 
     def _jpegtran(self, exe: str, old_path: Path, new_path: Path) -> Path:
         """Run the jpegtran type program."""

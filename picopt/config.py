@@ -18,13 +18,14 @@ from confuse.templates import (
 )
 
 from picopt import PROGRAM_NAME
-from picopt.handlers.gif import Gif
+from picopt.handlers.container import ContainerHandler
+from picopt.handlers.gif import AnimatedGif, Gif
 from picopt.handlers.handler import Format, Handler
 from picopt.handlers.image import (
-    BPM_FORMAT,
-    CONVERTABLE_FORMAT_STRS,
+    BPM_FORMAT_OBJ,
+    CONVERTABLE_FORMAT_OBJS,
     CONVERTABLE_FORMATS,
-    PPM_FORMAT,
+    PPM_FORMAT_OBJ,
 )
 from picopt.handlers.jpeg import Jpeg
 from picopt.handlers.png import Png
@@ -34,20 +35,21 @@ from picopt.handlers.zip import CBZ, Zip
 from picopt.timestamp import Timestamp
 
 
-_PNG_CONVERTABLE_FORMATS = CONVERTABLE_FORMATS | set([Gif.FORMAT])
-_WEBP_CONVERTABLE_FORMATS = _PNG_CONVERTABLE_FORMATS | set([Png.FORMAT])
-PNG_CONVERTABLE_FORMAT_STRS = set(
-    [format.format for format in _PNG_CONVERTABLE_FORMATS]
+_PNG_CONVERTABLE_FORMAT_OBJS = CONVERTABLE_FORMAT_OBJS | set([Gif.OUTPUT_FORMAT_OBJ])
+_WEBP_CONVERTABLE_FORMAT_OBJS = _PNG_CONVERTABLE_FORMAT_OBJS | set(
+    [Png.OUTPUT_FORMAT_OBJ]
 )
-WEBP_CONVERTABLE_FORMAT_STRS = set(
-    [format.format for format in _WEBP_CONVERTABLE_FORMATS]
+PNG_CONVERTABLE_FORMATS = set(
+    [format.format for format in _PNG_CONVERTABLE_FORMAT_OBJS]
 )
-HANDLERS = set((WebPLossless, WebPLossy, Gif2WebP, Png, Jpeg, Gif, Zip, CBZ))
-ALL_FORMAT_STRS: typing.Set[str] = (
-    set([cls.FORMAT_STR for cls in HANDLERS]) | CONVERTABLE_FORMAT_STRS
+WEBP_CONVERTABLE_FORMATS = set(
+    [format.format for format in _WEBP_CONVERTABLE_FORMAT_OBJS]
 )
-
-
+DEFAULT_HANDLERS = (Gif, AnimatedGif, Jpeg, Png, WebPLossy, WebPLossless)
+HANDLERS = set([*DEFAULT_HANDLERS, Gif2WebP, WebPAnimated, Zip, CBZ])
+ALL_FORMATS: typing.Set[str] = (
+    set([cls.OUTPUT_FORMAT for cls in HANDLERS]) | CONVERTABLE_FORMATS
+)
 TEMPLATE = MappingTemplate(
     {
         "after": Optional(datetime),
@@ -64,32 +66,26 @@ TEMPLATE = MappingTemplate(
         "test": bool,
         "verbose": Integer(),
         "_available_programs": set,
-        "_extra_formats": Optional(Sequence(Choice(ALL_FORMAT_STRS))),
+        "_extra_formats": Optional(Sequence(Choice(ALL_FORMATS))),
         "_format_handlers": dict,
     }
 )
-HANDLERS = set(
-    [Gif, Jpeg, Png, WebPLossless, WebPLossy, Gif2WebP, WebPAnimated, Zip, CBZ]
-)
 # Handlers for formats are listed in priority order
 FORMAT_HANDLERS = {
-    PPM_FORMAT: (WebPLossless, Png),
-    BPM_FORMAT: (WebPLossless, Png),
-    Gif.FORMAT: (Gif2WebP, Png, Gif),
-    Gif.FORMAT_ANIMATED: (Gif2WebP, Gif),
-    Jpeg.FORMAT: (Jpeg,),
-    Png.FORMAT: (WebPLossless, Png),
-    WebPLossy.FORMAT: (WebPLossy,),
-    WebPLossless.FORMAT: (WebPLossless,),
-    WebPAnimated.FORMAT: (WebPAnimated,),
-    Zip.FORMAT: (Zip,),
-    CBZ.FORMAT: (CBZ,),
-    Zip.RAR_FORMAT: (Zip,),
-    CBZ.RAR_FORMAT: (CBZ,),
+    PPM_FORMAT_OBJ: (WebPLossless, Png),
+    BPM_FORMAT_OBJ: (WebPLossless, Png),
+    Gif.OUTPUT_FORMAT_OBJ: (Gif2WebP, Png, Gif),
+    AnimatedGif.OUTPUT_FORMAT_OBJ: (Gif2WebP, AnimatedGif),
+    Jpeg.OUTPUT_FORMAT_OBJ: (Jpeg,),
+    Png.OUTPUT_FORMAT_OBJ: (WebPLossless, Png),
+    WebPLossy.OUTPUT_FORMAT_OBJ: (WebPLossy,),
+    WebPLossless.OUTPUT_FORMAT_OBJ: (WebPLossless,),
+    WebPAnimated.OUTPUT_FORMAT_OBJ: (WebPAnimated,),
+    Zip.OUTPUT_FORMAT_OBJ: (Zip,),
+    CBZ.OUTPUT_FORMAT_OBJ: (CBZ,),
+    Zip.INPUT_FORMAT_OBJ_RAR: (Zip,),
+    CBZ.INPUT_FORMAT_OBJ_RAR: (CBZ,),
 }
-
-_DEFAULT_HANDLERS = (Gif, Jpeg, Png, WebPLossy, WebPLossless)
-DEFAULT_FORMAT_STRS = set([handler.FORMAT_STR for handler in _DEFAULT_HANDLERS])
 
 
 def _does_external_program_run(prog: str, verbose: int) -> bool:
@@ -111,8 +107,10 @@ def _get_available_programs(config) -> set:
     programs = set()
     for handler in HANDLERS:
         for program in handler.PROGRAMS:
-            if program.startswith("pil2") or _does_external_program_run(
-                program, config["verbose"].get(int)
+            if (
+                program == Handler.INTERNAL
+                or program.startswith("pil2")
+                or _does_external_program_run(program, config["verbose"].get(int))
             ):
                 programs.add(program)
     if not programs:
@@ -126,19 +124,21 @@ def _update_formats(config) -> dict:
     convert_handlers: typing.Dict[typing.Type[Handler], typing.Set[Format]] = {}
     if "_extra_formats" in config:
         formats |= set(config["_extra_formats"].get(list))
-    if convert_to.get(Png.FORMAT_STR):
-        formats |= PNG_CONVERTABLE_FORMAT_STRS
-        convert_handlers[Png] = _PNG_CONVERTABLE_FORMATS
-    if convert_to.get(WebPLossless.FORMAT_STR):
-        formats |= WEBP_CONVERTABLE_FORMAT_STRS
-        convert_handlers[WebPLossless] = _WEBP_CONVERTABLE_FORMATS
-        convert_handlers[Gif2WebP] = Gif.NATIVE_FORMATS
-    if convert_to.get(Zip.FORMAT_STR):
-        formats |= set([Zip.RAR_FORMAT_STR])
-        convert_handlers[Zip] = set([Zip.RAR_FORMAT])
-    if convert_to.get(CBZ.FORMAT_STR):
-        formats |= set([CBZ.RAR_FORMAT_STR])
-        convert_handlers[CBZ] = set([CBZ.RAR_FORMAT])
+    if convert_to.get(Png.OUTPUT_FORMAT):
+        formats |= PNG_CONVERTABLE_FORMATS
+        convert_handlers[Png] = _PNG_CONVERTABLE_FORMAT_OBJS
+    if convert_to.get(WebPLossless.OUTPUT_FORMAT):
+        formats |= WEBP_CONVERTABLE_FORMATS
+        convert_handlers[WebPLossless] = _WEBP_CONVERTABLE_FORMAT_OBJS
+        convert_handlers[Gif2WebP] = set(
+            [Gif.OUTPUT_FORMAT_OBJ, AnimatedGif.OUTPUT_FORMAT_OBJ]
+        )
+    if convert_to.get(Zip.OUTPUT_FORMAT):
+        formats |= set([Zip.INPUT_FORMAT_RAR])
+        convert_handlers[Zip] = set([Zip.INPUT_FORMAT_OBJ_RAR])
+    if convert_to.get(CBZ.OUTPUT_FORMAT):
+        formats |= set([CBZ.INPUT_FORMAT_RAR])
+        convert_handlers[CBZ] = set([CBZ.INPUT_FORMAT_OBJ_RAR])
 
     config["formats"].set(set(formats))
     return convert_handlers
@@ -151,15 +151,15 @@ def _create_format_handler_map(config: Configuration, convert_handlers: dict) ->
     formats = config["formats"].get(set)
     if not isinstance(formats, set):
         raise ValueError(f"wrong type for formats: {type(formats)}{formats}")
-    recurse = config["recurse"].get(bool)
+    recurse = bool(config["recurse"].get(bool))
 
     for format, possible_handler_classes in FORMAT_HANDLERS.items():
         for handler_class in possible_handler_classes:
-            if handler_class.is_handler_available(
-                formats, convert_handlers, available_programs, format
+            if format.format in formats and handler_class.is_handler_available(
+                convert_handlers, available_programs, format
             ):
                 format_handlers[format] = handler_class
-                recurse |= handler_class.IMPLIES_RECURSE
+                recurse |= issubclass(handler_class, ContainerHandler)
                 break
 
     config["recurse"].set(recurse)

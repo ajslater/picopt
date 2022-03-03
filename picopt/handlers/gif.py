@@ -12,13 +12,10 @@ from picopt.handlers.image import ImageHandler
 
 
 class Gif(ImageHandler):
-    """GIF format class."""
+    """GIF handler."""
 
-    FORMAT_STR = GifImageFile.format
-    FORMAT = Format(FORMAT_STR, True, False)
-    FORMAT_ANIMATED = Format(FORMAT_STR, True, True)
-    NATIVE_FORMATS = set((FORMAT, FORMAT_ANIMATED))
-    SUFFIX: str = "." + FORMAT_STR.lower()
+    OUTPUT_FORMAT = GifImageFile.format
+    OUTPUT_FORMAT_OBJ = Format(OUTPUT_FORMAT, True, False)
     PROGRAMS: Tuple[str, ...] = ("gifsicle", "pil2gif")
     _ARGS_PREFIX = ["gifsicle", "--optimize=3", "--batch"]
 
@@ -32,5 +29,11 @@ class Gif(ImageHandler):
     def pil2gif(self, old_path: Path, new_path: Path) -> Path:
         """Pillow gif optimization."""
         with Image.open(old_path) as image:
-            image.save(new_path, self.FORMAT_STR, optimize=True, save_all=True)
+            image.save(new_path, self.OUTPUT_FORMAT, optimize=True, save_all=True)
         return new_path
+
+
+class AnimatedGif(Gif):
+    """Animated GIF handler."""
+
+    OUTPUT_FORMAT_OBJ = Format(Gif.OUTPUT_FORMAT, True, True)

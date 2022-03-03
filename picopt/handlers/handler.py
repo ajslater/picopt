@@ -25,32 +25,11 @@ class Handler(ABC):
     """FileType superclass for image and container formats."""
 
     BEST_ONLY: bool = True
-    FORMAT_STR: str = "unimplemented"
-    FORMAT: Format = Format(FORMAT_STR, False, False)
-    NATIVE_FORMATS: Set[Format] = set()
-    IMPLIES_RECURSE: bool = False
-    INTERNAL: bool = False
-    PROGRAMS: Tuple[str, ...] = tuple()  # XXX Image only?
-    SUFFIX: str = "." + FORMAT_STR.lower()
+    OUTPUT_FORMAT: str = "unimplemented"
+    OUTPUT_FORMAT_OBJ: Format = Format(OUTPUT_FORMAT, False, False)
+    INTERNAL: str = "python_internal"
+    PROGRAMS: Tuple[str, ...] = tuple()
     WORKING_SUFFIX: str = f"{PROGRAM_NAME}-tmp"
-
-    def __init__(self, config: AttrDict, original_path: Path, format: Format):
-        """Initialize handler."""
-        self.config: AttrDict = config
-        self.original_path: Path = original_path
-        self.working_paths: Set[Path] = set()
-        self.final_path: Path = self.original_path.with_suffix(self.SUFFIX)
-        self.format: Format = format
-
-    def get_working_path(self, identifier: str = "") -> Path:
-        """Return a working path with a custom suffix."""
-        suffixes = [self.original_path.suffix, self.WORKING_SUFFIX]
-        if identifier:
-            suffixes += [identifier]
-        suffixes += [self.SUFFIX[1:]]
-
-        suffix = ".".join(suffixes)
-        return self.original_path.with_suffix(suffix)
 
     @staticmethod
     def run_ext(args: Tuple[str, ...]) -> None:
@@ -63,6 +42,55 @@ class Handler(ABC):
             print(exc.returncode)
             print(exc.output)
             raise
+
+    @classmethod
+    def native_input_formats(cls) -> Set[Format]:
+        """Return input formats handled without conversion."""
+        return set([cls.OUTPUT_FORMAT_OBJ])
+
+    @classmethod
+    def _output_suffix(cls) -> str:
+        """Return the suffix without a leading dot."""
+        return cls.OUTPUT_FORMAT.lower()
+
+    @classmethod
+    def output_suffix(cls) -> str:
+        """Generate the output suffix for the handler."""
+        return "." + cls._output_suffix()
+
+    @classmethod
+    def is_handler_available(
+        cls,
+        convert_handlers: dict,
+        available_programs: set,
+        format: Format,
+    ):
+        """Can this handler run with available programs."""
+        handled_formats = cls.native_input_formats() | convert_handlers.get(cls, set())
+        return format in handled_formats and bool(
+            available_programs & set(cls.PROGRAMS)
+        )
+
+    def __init__(self, config: AttrDict, original_path: Path, input_format: Format):
+        """Initialize handler."""
+        self.config: AttrDict = config
+        self.original_path: Path = original_path
+        self.working_paths: Set[Path] = set()
+        self.final_path: Path = self.original_path.with_suffix(self.output_suffix())
+        print(f"{self.final_path=}")
+        self.input_format: Format = input_format
+
+    def get_working_path(self, identifier: str = "") -> Path:
+        """Return a working path with a custom suffix."""
+        suffixes = [self.original_path.suffix, self.WORKING_SUFFIX]
+        if identifier:
+            suffixes += [identifier]
+        suffixes += [self._output_suffix()]
+
+        suffix = ".".join(suffixes)
+        wp = self.original_path.with_suffix(suffix)
+        print(f"{wp=}")
+        return wp
 
     def _cleanup_after_optimize_aux(self, last_working_path: Path) -> Tuple[int, int]:
         """Replace old file with better one or discard new wasteful file."""
@@ -77,7 +105,6 @@ class Handler(ABC):
                 last_working_path.replace(self.final_path)
                 if self.final_path != self.original_path:
                     self.working_paths.add(self.original_path)
-                self.format = self.FORMAT
             else:
                 self.working_paths.add(last_working_path)
                 bytes_out = bytes_in
@@ -100,24 +127,6 @@ class Handler(ABC):
         And report results using the stats module.
         """
         return self._cleanup_after_optimize_aux(last_working_path)
-
-    @classmethod
-    def is_handler_available(
-        cls,
-        formats: Set[str],
-        convert_handlers: dict,
-        available_programs: set,
-        format: Format,
-    ):
-        """Can this handler run with available programs."""
-        if not (
-            (format in cls.NATIVE_FORMATS or format in convert_handlers.get(cls, set()))
-            and format.format in formats
-        ):
-            return False
-        if cls.INTERNAL:
-            return True
-        return bool(available_programs & set(cls.PROGRAMS))
 
     def error(self, exc: Exception) -> ReportStats:
         """Return an error result."""

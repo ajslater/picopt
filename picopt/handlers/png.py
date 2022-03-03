@@ -16,10 +16,8 @@ class Png(ImageHandler):
     """PNG format class."""
 
     BEST_ONLY: bool = False
-    FORMAT_STR = PngImageFile.format
-    FORMAT = Format(FORMAT_STR, True, False)
-    NATIVE_FORMATS = set((FORMAT,))
-    SUFFIX: str = "." + FORMAT_STR.lower()
+    OUTPUT_FORMAT = PngImageFile.format
+    OUTPUT_FORMAT_OBJ = Format(OUTPUT_FORMAT, True, False)
     PROGRAMS: Tuple[str, ...] = ("optipng", "pil2png", "pngout")
     _OPTIPNG_ARGS = ["optipng", "-o6", "-fix", "-force", "-quiet"]
     _PNGOUT_ARGS = ["pngout", "-q", "-force", "-y"]
@@ -42,7 +40,7 @@ class Png(ImageHandler):
                     exif = None
                 else:
                     exif = image.info.get("exif")
-                image.save(new_path, self.FORMAT_STR, optimize=True, exif=exif)
+                image.save(new_path, self.OUTPUT_FORMAT, optimize=True, exif=exif)
         return new_path
 
     def pngout(self, old_path: Path, new_path: Path) -> Path:

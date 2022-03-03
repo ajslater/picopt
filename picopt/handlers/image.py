@@ -8,10 +8,10 @@ from picopt.handlers.handler import Format, Handler
 from picopt.stats import ReportStats
 
 
-PPM_FORMAT = Format(PpmImageFile.format, True, False)
-BPM_FORMAT = Format(BmpImageFile.format, True, False)
-CONVERTABLE_FORMATS = set((BPM_FORMAT, PPM_FORMAT))
-CONVERTABLE_FORMAT_STRS = set([format.format for format in CONVERTABLE_FORMATS])
+PPM_FORMAT_OBJ = Format(PpmImageFile.format, True, False)
+BPM_FORMAT_OBJ = Format(BmpImageFile.format, True, False)
+CONVERTABLE_FORMAT_OBJS = set((BPM_FORMAT_OBJ, PPM_FORMAT_OBJ))
+CONVERTABLE_FORMATS = set([format.format for format in CONVERTABLE_FORMAT_OBJS])
 
 
 class ImageHandler(Handler, metaclass=ABCMeta):

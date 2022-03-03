@@ -5,7 +5,7 @@ from typing import Optional, Tuple, Type
 from confuse.templates import AttrDict
 from PIL import Image, UnidentifiedImageError
 
-from picopt.config import WEBP_CONVERTABLE_FORMAT_STRS
+from picopt.config import WEBP_CONVERTABLE_FORMATS
 from picopt.handlers.container import ContainerHandler
 from picopt.handlers.handler import Format, Handler
 from picopt.handlers.webp import WebPLossless
@@ -13,15 +13,15 @@ from picopt.handlers.zip import CBZ, Zip
 from picopt.pillow.webp_lossless import is_lossless
 
 
-_ALWAYS_LOSSLESS_FORMAT_STRS = WEBP_CONVERTABLE_FORMAT_STRS
+_ALWAYS_LOSSLESS_FORMATS = WEBP_CONVERTABLE_FORMATS
 _CONTAINER_HANDLERS: Tuple[Type[ContainerHandler], ...] = (CBZ, Zip)
 
 
 def _is_lossless(image_format: str, path: Path) -> bool:
     """Determine if image format is lossless."""
-    if image_format in _ALWAYS_LOSSLESS_FORMAT_STRS:
+    if image_format in _ALWAYS_LOSSLESS_FORMATS:
         lossless = True
-    elif image_format == WebPLossless.FORMAT_STR:
+    elif image_format == WebPLossless.OUTPUT_FORMAT:
         lossless = is_lossless(str(path))
     else:
         lossless = False
@@ -49,7 +49,7 @@ def _get_container_format(path) -> Optional[Format]:
     """Get the container format by querying each handler."""
     format = None
     for container_handler in _CONTAINER_HANDLERS:
-        format = container_handler.can_handle(path)
+        format = container_handler.identify_format(path)
         if format is not None:
             break
     return format

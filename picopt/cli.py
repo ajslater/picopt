@@ -5,20 +5,20 @@ import sys
 
 from argparse import Action, Namespace
 from importlib.metadata import PackageNotFoundError, version
-from pathlib import Path
-from typing import Tuple
+from typing import Set, Tuple
 
 from picopt import PROGRAM_NAME, walk
 from picopt.config import (
-    ALL_FORMAT_STRS,
-    DEFAULT_FORMAT_STRS,
-    PNG_CONVERTABLE_FORMAT_STRS,
-    WEBP_CONVERTABLE_FORMAT_STRS,
+    ALL_FORMATS,
+    DEFAULT_HANDLERS,
+    PNG_CONVERTABLE_FORMATS,
+    WEBP_CONVERTABLE_FORMATS,
     get_config,
 )
 from picopt.handlers.zip import CBZ, Zip
 
 
+DEFAULT_FORMATS = set([handler_cls.OUTPUT_FORMAT for handler_cls in DEFAULT_HANDLERS])
 FORMAT_DELIMETER = ","
 try:
     VERSION = version(PROGRAM_NAME)
@@ -68,15 +68,16 @@ class StoreConstSubKeyAction(Action):
         namespace.__dict__[key][sub_key] = self.const
 
 
+def _comma_join(formats: Set[str]) -> str:
+    """Sort and join a sequence into a human readable string."""
+    return ", ".join(sorted(formats))
+
+
 def get_arguments(args: Tuple[str, ...]) -> Namespace:
     """Parse the command line."""
     usage = "%(prog)s [arguments] [paths]"
     description = "Losslessly optimizes and optionally converts images."
     parser = argparse.ArgumentParser(usage=usage, description=description)
-    all_formats = ", ".join(sorted(ALL_FORMAT_STRS))
-    png_convertable_formats = ", ".join(sorted(PNG_CONVERTABLE_FORMAT_STRS))
-    webp_convertable_formats = ", ".join(sorted(WEBP_CONVERTABLE_FORMAT_STRS))
-    default_formats = ", ".join(sorted(DEFAULT_FORMAT_STRS))
     parser.add_argument(
         "-r",
         "--recurse",
@@ -104,7 +105,7 @@ def get_arguments(args: Tuple[str, ...]) -> Namespace:
         "--cbz",
         action="append_const",
         dest="_extra_formats",
-        const=CBZ.FORMAT_STR,
+        const=CBZ.OUTPUT_FORMAT,
         help="Optimize comic book zip archives. Implies --recursive",
     )
     parser.add_argument(
@@ -112,7 +113,7 @@ def get_arguments(args: Tuple[str, ...]) -> Namespace:
         "--zipfiles",
         action="append_const",
         dest="_extra_formats",
-        const=Zip.FORMAT_STR,
+        const=Zip.OUTPUT_FORMAT,
         help="Optimize images inside of zipfiles. Implies --recursive",
     )
     parser.add_argument(
@@ -121,8 +122,8 @@ def get_arguments(args: Tuple[str, ...]) -> Namespace:
         action=SplitArgsAction,
         dest="formats",
         help="Only optimize images of the specified "
-        f"'{FORMAT_DELIMETER}' delimited formats from: {all_formats}. "
-        f"Defaults to {default_formats}",
+        f"'{FORMAT_DELIMETER}' delimited formats from: {_comma_join(ALL_FORMATS)}. "
+        f"Defaults to {_comma_join(DEFAULT_FORMATS)}",
     )
     parser.add_argument(
         "-p",
@@ -130,7 +131,8 @@ def get_arguments(args: Tuple[str, ...]) -> Namespace:
         action=StoreConstSubKeyAction,
         dest="convert_to.PNG",
         const=True,
-        help=f"Convert {png_convertable_formats} formats to PNG when optimizing.",
+        help=f"Convert {_comma_join(PNG_CONVERTABLE_FORMATS)} formats to "
+        "PNG when optimizing.",
     )
     parser.add_argument(
         "-w",
@@ -138,7 +140,8 @@ def get_arguments(args: Tuple[str, ...]) -> Namespace:
         action=StoreConstSubKeyAction,
         dest="convert_to.WEBP",
         const=True,
-        help=f"Convert {webp_convertable_formats} to Lossless WebP when optimizing.",
+        help=f"Convert {_comma_join(WEBP_CONVERTABLE_FORMATS)} to "
+        "Lossless WebP when optimizing.",
     )
     parser.add_argument(
         "-i",

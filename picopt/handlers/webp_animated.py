@@ -1,6 +1,6 @@
 """WebP Animated images are treated like containers."""
 from pathlib import Path
-from typing import Optional, Set
+from typing import Optional
 
 from PIL import Image
 
@@ -12,21 +12,17 @@ from picopt.handlers.webp import WebP
 class WebPAnimated(ContainerHandler):
     """Animated WebP container."""
 
-    FORMAT_STR: str = WebP.FORMAT_STR
-    FORMAT = Format(FORMAT_STR, False, True)
-    NATIVE_FORMATS: Set[Format] = set([FORMAT])
-    IMPLIES_RECURSE: bool = True
-    SUFFIX: str = "." + FORMAT_STR.lower()
+    OUTPUT_FORMAT: str = WebP.OUTPUT_FORMAT
+    OUTPUT_FORMAT_OBJ = Format(OUTPUT_FORMAT, False, True)
     PROGRAMS = ("webpmux", "img2webp")
 
     _WEBPMUX_ARGS_PREFIX = ("webpmux", "-get", "frame")
     _IMG2WEBP_ARGS_PREFIX = ("img2webp", "-min_size")
 
     @classmethod
-    def can_handle(cls, _path: Path) -> Optional[Format]:
-        """Can the handler handle this file type."""
-        # XXX This never gets called because image format is called earlier
-        return None
+    def identify_format(cls, _path: Path) -> Optional[Format]:
+        """Return the format if this handler can handle this path."""
+        raise NotImplementedError()
 
     def unpack_into(self) -> None:
         """Unpack webp into temp dir."""

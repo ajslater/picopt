@@ -14,28 +14,25 @@ from picopt.handlers.handler import Format
 class Zip(ContainerHandler):
     """Ziplike container."""
 
-    FORMAT_STR = "ZIP"
-    FORMAT = Format(FORMAT_STR)
-    NATIVE_FORMATS = set((FORMAT,))
-    IMPLIES_RECURSE = True
-    INTERNAL = True
-    SUFFIX = "." + FORMAT_STR.lower()
-    RAR_FORMAT_STR = "RAR"
-    RAR_SUFFIX = "." + RAR_FORMAT_STR.lower()
-    RAR_FORMAT = Format(RAR_FORMAT_STR)
+    OUTPUT_FORMAT = "ZIP"
+    OUTPUT_FORMAT_OBJ = Format(OUTPUT_FORMAT)
+    INPUT_FORMAT_RAR = "RAR"
+    INPUT_FORMAT_OBJ_RAR = Format(INPUT_FORMAT_RAR)
+    RAR_SUFFIX = "." + INPUT_FORMAT_RAR.lower()
+    PROGRAMS = (ContainerHandler.INTERNAL,)
 
     @classmethod
-    def can_handle(cls, path: Path) -> Optional[Format]:
-        """Is this a zipfile with a .zip extension."""
+    def identify_format(cls, path: Path) -> Optional[Format]:
+        """Return the format if this handler can handle this path."""
         format = None
         suffix = path.suffix.lower()
-        if is_zipfile(path) and suffix == cls.SUFFIX:
-            format = cls.FORMAT
+        if is_zipfile(path) and suffix == cls.output_suffix():
+            format = cls.OUTPUT_FORMAT_OBJ
         elif is_rarfile(path) and suffix == cls.RAR_SUFFIX:
-            format = cls.RAR_FORMAT
+            format = cls.INPUT_FORMAT_OBJ_RAR
         return format
 
-    def get_archive(self) -> Union[ZipFile, RarFile]:
+    def _get_archive(self) -> Union[ZipFile, RarFile]:
         """Use the zipfile builtin for this archive."""
         if is_zipfile(self.original_path):
             archive = ZipFile(self.original_path, "r")
@@ -45,7 +42,7 @@ class Zip(ContainerHandler):
             raise ValueError(f"Unknown archive type: {self.original_path}")
         return archive
 
-    def set_comment(self, comment: Union[str, bytes, None]) -> None:
+    def _set_comment(self, comment: Union[str, bytes, None]) -> None:
         """Set the comment from the archive."""
         if type(comment) is str:
             self.comment = comment.encode()
@@ -54,9 +51,9 @@ class Zip(ContainerHandler):
 
     def unpack_into(self) -> None:
         """Uncompress archive."""
-        with self.get_archive() as archive:
+        with self._get_archive() as archive:
             archive.extractall(self.tmp_container_dir)
-            self.set_comment(archive.comment)
+            self._set_comment(archive.comment)
 
     def create_container(self, working_path: Path) -> None:
         """Zip up the files in the tempdir into the new filename."""
@@ -81,10 +78,8 @@ class Zip(ContainerHandler):
 class CBZ(Zip):
     """CBZ Container."""
 
-    FORMAT_STR = "CBZ"
-    SUFFIX = "." + FORMAT_STR.lower()
-    FORMAT = Format(FORMAT_STR)
-    NATIVE_FORMATS = set((FORMAT,))
-    RAR_FORMAT_STR = "CBR"
-    RAR_SUFFIX = "." + RAR_FORMAT_STR.lower()
-    RAR_FORMAT = Format(RAR_FORMAT_STR)
+    OUTPUT_FORMAT = "CBZ"
+    OUTPUT_FORMAT_OBJ = Format(OUTPUT_FORMAT)
+    INPUT_FORMAT_RAR = "CBR"
+    INPUT_FORMAT_OBJ_RAR = Format(INPUT_FORMAT_RAR)
+    RAR_SUFFIX = "." + INPUT_FORMAT_RAR.lower()
