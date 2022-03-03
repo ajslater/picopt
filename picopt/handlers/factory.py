@@ -28,24 +28,30 @@ def _is_lossless(image_format: str, path: Path) -> bool:
     return lossless
 
 
-def _get_image_format(path) -> Optional[Format]:
+def _get_image_format(
+    path: Path, destroy_metadata: bool
+) -> Tuple[Optional[Format], Optional[Image.Exif]]:
     """Construct the image format with PIL."""
     format = None
+    exif = None
     try:
-        with Image.open(path) as image:
+        with Image.open(path, mode="r") as image:
+            image.verify()
+        with Image.open(path, mode="r") as image:
             image_format = image.format
             if image_format is None:
-                raise ValueError("No image format")
+                raise UnidentifiedImageError("No image format")
             animated = getattr(image, "is_animated", False)
-            image.verify()  # seeks to end of image. must be last.
+            if not destroy_metadata:
+                exif = image.getexif()
         lossless = _is_lossless(image_format, path)
         format = Format(image_format, lossless, animated)
     except UnidentifiedImageError:
         pass
-    return format
+    return format, exif
 
 
-def _get_container_format(path) -> Optional[Format]:
+def _get_container_format(path: Path) -> Optional[Format]:
     """Get the container format by querying each handler."""
     format = None
     for container_handler in _CONTAINER_HANDLERS:
@@ -58,9 +64,10 @@ def _get_container_format(path) -> Optional[Format]:
 def create_handler(config: AttrDict, path: Path) -> Optional[Handler]:
     """Get the image format."""
     format: Optional[Format] = None
+    exif: Optional[Image.Exif] = None
     handler_cls: Optional[Type[Handler]] = None
     try:
-        format = _get_image_format(path)
+        format, exif = _get_image_format(path, config.destroy_metadata)
         if not format:
             format = _get_container_format(path)
         handler_cls = config._format_handlers.get(format)
@@ -69,7 +76,7 @@ def create_handler(config: AttrDict, path: Path) -> Optional[Handler]:
         pass
 
     if handler_cls and format is not None:
-        handler = handler_cls(config, path, format)
+        handler = handler_cls(config, path, format, exif)
     else:
         if config.verbose > 2 and not config.list_only:
             print(
