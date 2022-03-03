@@ -55,7 +55,7 @@ def _get_container_format(path) -> Optional[Format]:
     return format
 
 
-def get_handler(config: AttrDict, path: Path) -> Optional[Handler]:
+def create_handler(config: AttrDict, path: Path) -> Optional[Handler]:
     """Get the image format."""
     format: Optional[Format] = None
     handler_cls: Optional[Type[Handler]] = None

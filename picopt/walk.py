@@ -11,7 +11,7 @@ from humanize import naturalsize
 
 from picopt import PROGRAM_NAME
 from picopt.handlers.container import ContainerHandler
-from picopt.handlers.get_handler import get_handler
+from picopt.handlers.factory import create_handler
 from picopt.handlers.handler import Handler
 from picopt.handlers.image import ImageHandler
 from picopt.stats import ReportStats
@@ -133,7 +133,7 @@ class Walk:
         if self._is_older_than_timestamp(path, walk_after, archive_mtime):
             return result_set
 
-        handler = get_handler(self._config, path)
+        handler = create_handler(self._config, path)
 
         if handler is None:
             return result_set
