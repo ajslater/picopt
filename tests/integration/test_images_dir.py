@@ -16,7 +16,7 @@ FNS = {
     "test_gif.gif": (138952, 138944, ("png", 112467), ("webp", 26504)),
     "test_jpg.jpg": (97373, 87913, ("jpg", 87913), ("jpg", 87913)),
     "test_png.png": (7967, 4379, ("png", 4379), ("webp", 3870)),
-    "test_png_16rgba.png": (3435, 2869, ("png", 2869), ("webp", 1142)),
+    "test_png_16rgba.png": (3435, 2870, ("png", 2870), ("webp", 1142)),
     "test_pnm.pnm": (27661, 27661, ("png", 15510), ("webp", 12808)),
     "test_pre-optimized_jpg.jpg": (22664, 22664, ("jpg", 22664), ("jpg", 22664)),
     "test_pre-optimized_png.png": (256572, 256572, ("png", 256572), ("webp", 197680)),

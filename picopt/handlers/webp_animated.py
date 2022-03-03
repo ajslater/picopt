@@ -18,6 +18,7 @@ class WebPAnimated(ContainerHandler):
 
     _WEBPMUX_ARGS_PREFIX = ("webpmux", "-get", "frame")
     _IMG2WEBP_ARGS_PREFIX = ("img2webp", "-min_size")
+    _WEBPMUX_EXIF_ARGS_PREFIX = ("webpmux", "-set", "exif")
 
     @classmethod
     def identify_format(cls, _path: Path) -> Optional[Format]:
@@ -38,7 +39,6 @@ class WebPAnimated(ContainerHandler):
                 str(frame_path),
             ]
             self.run_ext(tuple(args))
-        print(self.tmp_container_dir.iterdir())
 
     def create_container(self, working_path: Path) -> None:
         """Remux the optimized frames into an animated webp."""
@@ -49,5 +49,32 @@ class WebPAnimated(ContainerHandler):
             "-o",
             str(working_path),
         ]
-        print(args)
         self.run_ext(tuple(args))
+        if not self.config.destroy_metadata and self.exif:
+            self._set_exif(working_path)
+
+    def _set_exif(self, working_path):
+        """Set the exif data on the rebuilt image."""
+        if not self.exif:
+            return
+
+        # dump exif
+        exif_path = working_path.with_suffix(".exif")
+        with exif_path.open("wb") as exif:
+            exif.write(self.exif.tobytes())
+        self.working_paths.add(exif_path)
+
+        # move working file
+        container_exif_working_path = self.get_working_path("exif")
+        working_path.replace(container_exif_working_path)
+        self.working_paths.add(container_exif_working_path)
+
+        # run exif set
+        args = (
+            *self._WEBPMUX_EXIF_ARGS_PREFIX,
+            str(exif_path),
+            str(container_exif_working_path),
+            "-o",
+            str(working_path),
+        )
+        self.run_ext(args)

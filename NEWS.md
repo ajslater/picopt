@@ -14,6 +14,8 @@ v3.0.0-a0
 - WebP lossless, lossy and animated support.
 - Gain support for .zip archives
 - Drop support for rarfiles.
+- optiping optimization level changed to o5
+- Exif data preserved in all formats.
 
 v2.2.1
 

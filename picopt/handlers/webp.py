@@ -1,7 +1,7 @@
 """WebP format."""
 from abc import ABC
 from pathlib import Path
-from typing import Any, Dict, Tuple
+from typing import Any, Dict, List, Tuple
 
 from PIL import Image
 from PIL.WebPImagePlugin import WebPImageFile
@@ -11,7 +11,34 @@ from picopt.handlers.image import CONVERTABLE_FORMAT_OBJS, ImageHandler
 from picopt.handlers.png import Png
 
 
-class WebP(ImageHandler, ABC):
+class WebPBase(ImageHandler, ABC):
+    """Base for handlers that use WebP utility commands."""
+
+    PREFERRED_PROGRAM: str = ""
+    PIL2WEBP_KWARGS: Dict[str, Any] = {"lossless": True, "quality": 100, "method": 6}
+
+    def get_metadata_args(self) -> List[str]:
+        """Get webp utility metadata args."""
+        args = ["-metadata"]
+        if self.config.destroy_metadata:
+            args += ["none"]
+        else:
+            args += ["all"]
+        return args
+
+    def pil2webp(self, old_path: Path, new_path: Path) -> Path:
+        """Pillow webp optimization."""
+        if self.PREFERRED_PROGRAM in self.config._available_programs:
+            new_path = old_path
+        else:
+            with Image.open(old_path) as image:
+                image.save(
+                    new_path, self.OUTPUT_FORMAT, **self.PIL2WEBP_KWARGS, exif=self.exif
+                )
+        return new_path
+
+
+class WebP(WebPBase, ABC):
     """WebP format class."""
 
     OUTPUT_FORMAT = WebPImageFile.format
@@ -28,7 +55,11 @@ class WebP(ImageHandler, ABC):
 
     def cwebp(self, old_path: Path, new_path: Path) -> Path:
         """Optimize using cwebp."""
-        args = tuple(self.ARGS_PREFIX + [str(old_path), "-o", str(new_path)])
+        args = tuple(
+            self.ARGS_PREFIX
+            + self.get_metadata_args()
+            + [str(old_path), "-o", str(new_path)]
+        )
         self.run_ext(args)
         return new_path
 
@@ -43,8 +74,8 @@ class WebPLossless(WebP):
         "-z",
         "9",
     ]
-    PIL2WEBP_KWARGS: Dict[str, Any] = {"lossless": True, "quality": 100, "method": 6}
     BEST_ONLY = False
+    PREFERRED_PROGRAM = "cwebp"
 
     def pil2png(self, old_path: Path, new_path: Path) -> Path:
         """Internally convert uncompressed formats to uncompressed png."""
@@ -54,25 +85,10 @@ class WebPLossless(WebP):
         ):
             new_path = new_path.with_suffix(Png.output_suffix())
             with Image.open(old_path) as image:
-                image.save(new_path, "PNG", compress_level=0)
+                image.save(new_path, "PNG", compress_level=0, exif=self.exif)
             self.input_format = Png.OUTPUT_FORMAT_OBJ
         else:
             new_path = old_path
-        return new_path
-
-    def pil2webp(self, old_path: Path, new_path: Path) -> Path:
-        """Pillow webp optimization."""
-        if "cwebp" in self.config._available_programs:
-            new_path = old_path
-        else:
-            with Image.open(old_path) as image:
-                if self.config.destroy_metadata:
-                    exif = None
-                else:
-                    exif = image.info.get("exif")
-                image.save(
-                    new_path, self.OUTPUT_FORMAT, **self.PIL2WEBP_KWARGS, exif=exif
-                )
         return new_path
 
 
@@ -88,7 +104,7 @@ class WebPLossy(WebP):
     ]
 
 
-class Gif2WebP(ImageHandler):
+class Gif2WebP(WebPBase):
     """
     Animated WebP format class.
 
@@ -111,6 +127,7 @@ class Gif2WebP(ImageHandler):
         **WebPLossless.PIL2WEBP_KWARGS,
         "minimize_size": True,
     }
+    PREFERRED_PROGRAM = "gif2webp"
 
     @classmethod
     def native_input_formats(cls):
@@ -119,19 +136,10 @@ class Gif2WebP(ImageHandler):
 
     def gif2webp(self, old_path: Path, new_path: Path) -> Path:
         """Convert animated gif to animated webp."""
-        args = tuple(self._ARGS_PREFIX + [str(old_path), "-o", str(new_path)])
+        args = tuple(
+            self._ARGS_PREFIX
+            + self.get_metadata_args()
+            + [str(old_path), "-o", str(new_path)]
+        )
         self.run_ext(args)
-        return new_path
-
-    def pil2webp(self, old_path: Path, new_path: Path) -> Path:
-        """Pillow webp optimization."""
-        if "gif2webp" in self.config._available_programs:
-            new_path = old_path
-        else:
-            with Image.open(old_path) as image:
-                if self.config.destroy_metadata:
-                    exif = None
-                else:
-                    exif = image.info.get("exif")
-                image.save(new_path, "WEBP", **self.PIL2WEBP_KWARGS, exif=exif)
         return new_path
