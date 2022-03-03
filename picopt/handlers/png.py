@@ -1,6 +1,7 @@
 """PNG format."""
 import shutil
 
+from copy import copy
 from pathlib import Path
 from typing import Tuple
 
@@ -19,14 +20,17 @@ class Png(ImageHandler):
     OUTPUT_FORMAT = PngImageFile.format
     OUTPUT_FORMAT_OBJ = Format(OUTPUT_FORMAT, True, False)
     PROGRAMS: Tuple[str, ...] = ("optipng", "pil2png", "pngout")
-    _OPTIPNG_ARGS = ["optipng", "-o6", "-fix", "-force", "-quiet"]
+    _OPTIPNG_ARGS = ["optipng", "-o5", "-fix", "-force", "-quiet"]
     _PNGOUT_ARGS = ["pngout", "-q", "-force", "-y"]
 
     def optipng(self, old_path: Path, new_path: Path) -> Path:
         """Run the external program optipng on the file."""
         shutil.copy2(old_path, new_path)
-        args = tuple(self._OPTIPNG_ARGS + [str(new_path)])
-        self.run_ext(args)
+        args = copy(self._OPTIPNG_ARGS)
+        if self.config.destroy_metadata:
+            args += ["-strip", "all"]
+        args += [str(new_path)]
+        self.run_ext(tuple(args))
         return new_path
 
     def pil2png(self, old_path: Path, new_path: Path) -> Path:
@@ -36,11 +40,7 @@ class Png(ImageHandler):
             new_path = old_path
         else:
             with Image.open(old_path) as image:
-                if self.config.destroy_metadata:
-                    exif = None
-                else:
-                    exif = image.info.get("exif")
-                image.save(new_path, self.OUTPUT_FORMAT, optimize=True, exif=exif)
+                image.save(new_path, self.OUTPUT_FORMAT, optimize=True, exif=self.exif)
         return new_path
 
     def pngout(self, old_path: Path, new_path: Path) -> Path:
