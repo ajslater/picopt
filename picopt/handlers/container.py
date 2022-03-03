@@ -7,7 +7,6 @@ from typing import Optional, Tuple
 
 from confuse.templates import AttrDict
 
-from picopt import PROGRAM_NAME
 from picopt.handlers.handler import Format, Handler
 from picopt.stats import ReportStats
 
@@ -15,7 +14,7 @@ from picopt.stats import ReportStats
 class ContainerHandler(Handler, metaclass=ABCMeta):
     """Comic format class."""
 
-    CONTAINER_DIR_SUFFX = f".{PROGRAM_NAME}-container"
+    CONTAINER_DIR_SUFFIX = "dir"
 
     @classmethod
     @abstractmethod
@@ -38,7 +37,7 @@ class ContainerHandler(Handler, metaclass=ABCMeta):
         super().__init__(config, original_path, format)
         self.comment: Optional[bytes] = None
         self.tmp_container_dir: Path = Path(
-            str(self.original_path) + self.CONTAINER_DIR_SUFFX
+            str(self.get_working_path()) + self.CONTAINER_DIR_SUFFIX
         )
 
     def unpack(self):

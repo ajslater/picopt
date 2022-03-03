@@ -19,8 +19,8 @@ class Gif(ImageHandler):
     FORMAT_ANIMATED = Format(FORMAT_STR, True, True)
     NATIVE_FORMATS = set((FORMAT, FORMAT_ANIMATED))
     SUFFIX: str = "." + FORMAT_STR.lower()
-    _ARGS_PREFIX = ["gifsicle", "--optimize=3", "--batch"]
     PROGRAMS: Tuple[str, ...] = ("gifsicle", "pil2gif")
+    _ARGS_PREFIX = ["gifsicle", "--optimize=3", "--batch"]
 
     def gifsicle(self, old_path: Path, new_path: Path) -> Path:
         """Return gifsicle args."""
