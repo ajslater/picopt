@@ -9,7 +9,7 @@ from PIL import Image
 from PIL.PngImagePlugin import PngImageFile
 
 from picopt.handlers.handler import Format
-from picopt.handlers.image import ImageHandler
+from picopt.handlers.image import TIFF_FORMAT_OBJ, ImageHandler
 from picopt.pillow.png_bit_depth import png_bit_depth
 
 
@@ -19,7 +19,8 @@ class Png(ImageHandler):
     BEST_ONLY: bool = False
     OUTPUT_FORMAT = PngImageFile.format
     OUTPUT_FORMAT_OBJ = Format(OUTPUT_FORMAT, True, False)
-    PROGRAMS: Tuple[str, ...] = ("optipng", "pil2png", "pngout")
+    PROGRAMS: Tuple[str, ...] = ("pil2png", "optipng", "pngout")
+    PREFERRED_PROGRAM: str = "optipng"
     _OPTIPNG_ARGS = ["optipng", "-o5", "-fix", "-force", "-quiet"]
     _PNGOUT_ARGS = ["pngout", "-q", "-force", "-y"]
 
@@ -35,8 +36,11 @@ class Png(ImageHandler):
 
     def pil2png(self, old_path: Path, new_path: Path) -> Path:
         """Pillow png optimization."""
-        if "optipng" in self.config._available_programs:
-            # Optipng usually, but not always, does a better job than pillow
+        if (
+            self.input_format not in set([TIFF_FORMAT_OBJ])
+            or self.PREFERRED_PROGRAM not in self.config._available_programs
+        ):
+            # Optipng usually does a better job than Pillow
             new_path = old_path
         else:
             with Image.open(old_path) as image:
@@ -51,7 +55,6 @@ class Png(ImageHandler):
 
     def pngout(self, old_path: Path, new_path: Path) -> Path:
         """Run the external program pngout on the file."""
-        # if png_bit_depth(ext_args.old_fn) == 16:
         depth = png_bit_depth(old_path)
         if depth in (16, None):
             print(f"Skipped pngout for {depth} bit PNG:")

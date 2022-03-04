@@ -2,8 +2,11 @@
 from pathlib import Path
 from typing import Optional
 
+from PIL import Image, ImageSequence
+
 from picopt.handlers.container import ContainerHandler
 from picopt.handlers.handler import Format
+from picopt.handlers.image import TIFF_ANIMATED_FORMAT_OBJ
 from picopt.handlers.webp import WebP
 
 
@@ -13,6 +16,7 @@ class WebPAnimated(ContainerHandler):
     OUTPUT_FORMAT: str = WebP.OUTPUT_FORMAT
     OUTPUT_FORMAT_OBJ = Format(OUTPUT_FORMAT, False, True)
     PROGRAMS = ("webpmux", "img2webp")
+    OPEN_WITH_PIL_FORMATS = set([TIFF_ANIMATED_FORMAT_OBJ])
 
     _WEBPMUX_ARGS_PREFIX = ("webpmux", "-get", "frame")
     _IMG2WEBP_ARGS_PREFIX = ("img2webp", "-min_size")
@@ -22,18 +26,36 @@ class WebPAnimated(ContainerHandler):
         """Return the format if this handler can handle this path."""
         raise NotImplementedError()
 
+    def _get_frame_path(self, frame_index: int) -> Path:
+        """Return a frame path for an index."""
+        return self.tmp_container_dir / f"frame-{frame_index:08d}.webp"
+
     def unpack_into(self) -> None:
         """Unpack webp into temp dir."""
-        for frame_index in range(0, self.metadata.n_frames):
-            frame_path = self.tmp_container_dir / f"frame-{frame_index:08d}.webp"
-            args = [
-                *self._WEBPMUX_ARGS_PREFIX,
-                str(frame_index),
-                str(self.original_path),
-                "-o",
-                str(frame_path),
-            ]
-            self.run_ext(tuple(args))
+        if self.input_format in self.OPEN_WITH_PIL_FORMATS:
+            with Image.open(self.original_path) as image:
+                frame_index = 0
+                for frame in ImageSequence.Iterator(image):
+                    frame_path = self._get_frame_path(frame_index)
+                    frame.save(
+                        frame_path,
+                        self.OUTPUT_FORMAT,
+                        lossless=True,
+                        quality=100,
+                        method=0,
+                    )
+                    frame_index += 1
+        else:
+            for frame_index in range(0, self.metadata.n_frames):
+                frame_path = self._get_frame_path(frame_index)
+                args = [
+                    *self._WEBPMUX_ARGS_PREFIX,
+                    str(frame_index),
+                    str(self.original_path),
+                    "-o",
+                    str(frame_path),
+                ]
+                self.run_ext(tuple(args))
 
     def _prepare_metadata(self, data: Optional[bytes], working_path: Path, md_arg: str):
         """Prepare a metadata file and args for webpmux."""
@@ -53,9 +75,7 @@ class WebPAnimated(ContainerHandler):
         args = ["webpmux"]
         # dump exif
         if self.metadata.exif:
-            args += self._prepare_metadata(
-                self.metadata.exif.tobytes(), working_path, "exif"
-            )
+            args += self._prepare_metadata(self.metadata.exif, working_path, "exif")
 
         if self.metadata.icc_profile:
             args += self._prepare_metadata(

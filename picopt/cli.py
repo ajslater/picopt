@@ -15,6 +15,7 @@ from picopt.config import (
     WEBP_CONVERTABLE_FORMATS,
     get_config,
 )
+from picopt.handlers.image import TIFF_FORMAT
 from picopt.handlers.zip import CBZ, EPub, Zip
 
 
@@ -123,6 +124,14 @@ def get_arguments(args: Tuple[str, ...]) -> Namespace:
         dest="_extra_formats",
         const=EPub.OUTPUT_FORMAT,
         help="Optimize images inside of ePubs. Implies --recursive",
+    )
+    parser.add_argument(
+        "-t",
+        "--tiff",
+        action="append_const",
+        dest="_extra_formats",
+        const=TIFF_FORMAT,
+        help="Convert lossless TIFFs to PNG or WEBP. Requires -p or -w to activate.",
     )
     parser.add_argument(
         "-f",

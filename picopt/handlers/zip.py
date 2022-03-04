@@ -30,7 +30,6 @@ class Zip(ContainerHandler):
             format = cls.OUTPUT_FORMAT_OBJ
         elif is_rarfile(path) and suffix == cls.RAR_SUFFIX:
             format = cls.INPUT_FORMAT_OBJ_RAR
-        print(path, format, cls.output_suffix())
         return format
 
     def _get_archive(self) -> Union[ZipFile, RarFile]:

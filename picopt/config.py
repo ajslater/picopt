@@ -26,6 +26,9 @@ from picopt.handlers.image import (
     CONVERTABLE_FORMAT_OBJS,
     CONVERTABLE_FORMATS,
     PPM_FORMAT_OBJ,
+    TIFF_ANIMATED_FORMAT_OBJ,
+    TIFF_FORMAT,
+    TIFF_FORMAT_OBJ,
 )
 from picopt.handlers.jpeg import Jpeg
 from picopt.handlers.png import Png
@@ -35,7 +38,9 @@ from picopt.handlers.zip import CBZ, EPub, Zip
 from picopt.timestamp import Timestamp
 
 
-_PNG_CONVERTABLE_FORMAT_OBJS = CONVERTABLE_FORMAT_OBJS | set([Gif.OUTPUT_FORMAT_OBJ])
+_PNG_CONVERTABLE_FORMAT_OBJS = CONVERTABLE_FORMAT_OBJS | set(
+    [Gif.OUTPUT_FORMAT_OBJ, TIFF_FORMAT_OBJ]
+)
 _WEBP_CONVERTABLE_FORMAT_OBJS = _PNG_CONVERTABLE_FORMAT_OBJS | set(
     [Png.OUTPUT_FORMAT_OBJ]
 )
@@ -48,7 +53,9 @@ WEBP_CONVERTABLE_FORMATS = set(
 DEFAULT_HANDLERS = (Gif, AnimatedGif, Jpeg, Png, WebPLossy, WebPLossless)
 HANDLERS = set([*DEFAULT_HANDLERS, Gif2WebP, WebPAnimated, Zip, CBZ, EPub])
 ALL_FORMATS: typing.Set[str] = (
-    set([cls.OUTPUT_FORMAT for cls in HANDLERS]) | CONVERTABLE_FORMATS
+    set([cls.OUTPUT_FORMAT for cls in HANDLERS])
+    | CONVERTABLE_FORMATS
+    | set([TIFF_FORMAT])
 )
 TEMPLATE = MappingTemplate(
     {
@@ -86,6 +93,8 @@ FORMAT_HANDLERS = {
     Zip.INPUT_FORMAT_OBJ_RAR: (Zip,),
     CBZ.INPUT_FORMAT_OBJ_RAR: (CBZ,),
     EPub.OUTPUT_FORMAT_OBJ: (EPub,),
+    TIFF_FORMAT_OBJ: (WebPLossless, Png),
+    TIFF_ANIMATED_FORMAT_OBJ: (WebPAnimated,),
 }
 
 
@@ -128,12 +137,17 @@ def _update_formats(config) -> dict:
     if convert_to.get(Png.OUTPUT_FORMAT):
         formats |= PNG_CONVERTABLE_FORMATS
         convert_handlers[Png] = _PNG_CONVERTABLE_FORMAT_OBJS
+        if TIFF_FORMAT in formats:
+            convert_handlers[Png].add(TIFF_FORMAT_OBJ)
     if convert_to.get(WebPLossless.OUTPUT_FORMAT):
         formats |= WEBP_CONVERTABLE_FORMATS
         convert_handlers[WebPLossless] = _WEBP_CONVERTABLE_FORMAT_OBJS
         convert_handlers[Gif2WebP] = set(
             [Gif.OUTPUT_FORMAT_OBJ, AnimatedGif.OUTPUT_FORMAT_OBJ]
         )
+        if TIFF_FORMAT in formats:
+            convert_handlers[WebPLossless].add(TIFF_FORMAT_OBJ)
+            convert_handlers[WebPAnimated] = set([TIFF_ANIMATED_FORMAT_OBJ])
     if convert_to.get(Zip.OUTPUT_FORMAT):
         formats |= set([Zip.INPUT_FORMAT_RAR])
         convert_handlers[Zip] = set([Zip.INPUT_FORMAT_OBJ_RAR])

@@ -30,6 +30,8 @@ FNS = {
     ),
     "test_webp_lossy.webp": (2764, 1760, ("webp", 1760), ("webp", 1760)),
     "test_webp_lossy_pre-optimized.webp": (1514, 1514, ("webp", 1514), ("webp", 1514)),
+    "eight.tif": (59640, 59640, ("png", 30564), ("webp", 24982)),
+    "mri.tif": (230578, 230578, ("tif", 230578), ("webp", 128416)),
 }
 
 
@@ -54,7 +56,7 @@ class TestImagesDir:
             assert path.stat().st_size == sizes[1]
 
     def test_convert_to_png(self) -> None:
-        args = (PROGRAM_NAME, "-pr", str(TMP_ROOT))
+        args = (PROGRAM_NAME, "-prt", str(TMP_ROOT))
         res = cli.run(args)
         assert res
         for name, sizes in FNS.items():
@@ -62,7 +64,7 @@ class TestImagesDir:
             assert path.stat().st_size == sizes[2][1]
 
     def test_convert_to_webp(self) -> None:
-        args = (PROGRAM_NAME, "-wr", str(TMP_ROOT))
+        args = (PROGRAM_NAME, "-wrt", str(TMP_ROOT))
         res = cli.run(args)
         assert res
         for name, sizes in FNS.items():

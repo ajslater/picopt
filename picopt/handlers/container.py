@@ -14,7 +14,7 @@ from picopt.stats import ReportStats
 class ContainerHandler(Handler, metaclass=ABCMeta):
     """Comic format class."""
 
-    CONTAINER_DIR_SUFFIX = "dir"
+    CONTAINER_DIR_SUFFIX = ".dir"
 
     @classmethod
     @abstractmethod

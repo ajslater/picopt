@@ -7,7 +7,7 @@ from PIL import Image
 from PIL.WebPImagePlugin import WebPImageFile
 
 from picopt.handlers.handler import Format
-from picopt.handlers.image import CONVERTABLE_FORMAT_OBJS, ImageHandler
+from picopt.handlers.image import CONVERTABLE_FORMAT_OBJS, TIFF_FORMAT_OBJ, ImageHandler
 from picopt.handlers.png import Png
 
 
@@ -28,7 +28,10 @@ class WebPBase(ImageHandler, ABC):
 
     def pil2webp(self, old_path: Path, new_path: Path) -> Path:
         """Pillow webp optimization."""
-        if self.PREFERRED_PROGRAM in self.config._available_programs:
+        if (
+            self.PREFERRED_PROGRAM in self.config._available_programs
+            and self.input_format != TIFF_FORMAT_OBJ
+        ):
             new_path = old_path
         else:
             with Image.open(old_path) as image:
@@ -71,27 +74,27 @@ class WebP(WebPBase, ABC):
 class WebPLossless(WebP):
     """Handle lossless webp images and images that convert to lossless webp."""
 
+    BEST_ONLY: bool = False
     OUTPUT_FORMAT_OBJ = Format(WebP.OUTPUT_FORMAT, True, False)
+    PREFERRED_PROGRAM: str = "cwebp"
     PROGRAMS: Tuple[str, ...] = ("pil2png", *WebP.PROGRAMS, "pil2webp")
     ARGS_PREFIX = WebP.ARGS_PREFIX + [
         "-lossless",
         "-z",
         "9",
     ]
-    BEST_ONLY = False
-    PREFERRED_PROGRAM = "cwebp"
 
     def pil2png(self, old_path: Path, new_path: Path) -> Path:
         """Internally convert uncompressed formats to uncompressed png."""
         if (
-            self.input_format in CONVERTABLE_FORMAT_OBJS
-            and "cwebp" in self.config._available_programs
+            self.input_format in (CONVERTABLE_FORMAT_OBJS | set([TIFF_FORMAT_OBJ]))
+            and self.PREFERRED_PROGRAM in self.config._available_programs
         ):
             new_path = new_path.with_suffix(Png.output_suffix())
             with Image.open(old_path) as image:
                 image.save(
                     new_path,
-                    "PNG",
+                    Png.OUTPUT_FORMAT,
                     compress_level=0,
                     exif=self.metadata.exif,
                     icc_profile=self.metadata.icc_profile,
@@ -124,6 +127,11 @@ class Gif2WebP(WebPBase):
 
     OUTPUT_FORMAT = WebP.OUTPUT_FORMAT
     OUTPUT_FORMAT_OBJ = Format(WebP.OUTPUT_FORMAT, True, True)
+    PIL2WEBP_KWARGS: Dict[str, Any] = {
+        **WebPLossless.PIL2WEBP_KWARGS,
+        "minimize_size": True,
+    }
+    PREFERRED_PROGRAM = "gif2webp"
     PROGRAMS: Tuple[str, ...] = ("gif2webp", "pil2webp")
     _ARGS_PREFIX = [
         "gif2webp",
@@ -133,11 +141,6 @@ class Gif2WebP(WebPBase):
         "6",
         "-mt",
     ]
-    PIL2WEBP_KWARGS: Dict[str, Any] = {
-        **WebPLossless.PIL2WEBP_KWARGS,
-        "minimize_size": True,
-    }
-    PREFERRED_PROGRAM = "gif2webp"
 
     @classmethod
     def native_input_formats(cls):

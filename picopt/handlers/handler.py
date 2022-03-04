@@ -4,10 +4,9 @@ import subprocess
 from abc import ABC
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Optional, Set, Tuple
+from typing import Set, Tuple
 
 from confuse.templates import AttrDict
-from PIL.Image import Exif
 
 from picopt import PROGRAM_NAME
 from picopt.stats import ReportStats
@@ -26,7 +25,7 @@ class Format:
 class Metadata:
     """Image metadata class."""
 
-    exif: Optional[Exif] = None
+    exif: bytes = b""
     icc_profile: str = ""
     n_frames: int = 1
 
@@ -102,10 +101,9 @@ class Handler(ABC):
         if identifier:
             suffixes += [identifier]
         suffixes += [self._output_suffix()]
-
         suffix = ".".join(suffixes)
-        wp = self.original_path.with_suffix(suffix)
-        return wp
+
+        return self.original_path.with_suffix(suffix)
 
     def _cleanup_after_optimize_aux(self, last_working_path: Path) -> Tuple[int, int]:
         """Replace old file with better one or discard new wasteful file."""

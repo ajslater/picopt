@@ -3,6 +3,7 @@ from abc import ABCMeta
 
 from PIL.BmpImagePlugin import BmpImageFile
 from PIL.PpmImagePlugin import PpmImageFile
+from PIL.TiffImagePlugin import TiffImageFile
 
 from picopt.handlers.handler import Format, Handler
 from picopt.stats import ReportStats
@@ -12,6 +13,9 @@ PPM_FORMAT_OBJ = Format(PpmImageFile.format, True, False)
 BPM_FORMAT_OBJ = Format(BmpImageFile.format, True, False)
 CONVERTABLE_FORMAT_OBJS = set((BPM_FORMAT_OBJ, PPM_FORMAT_OBJ))
 CONVERTABLE_FORMATS = set([format.format for format in CONVERTABLE_FORMAT_OBJS])
+TIFF_FORMAT = TiffImageFile.format
+TIFF_FORMAT_OBJ = Format(TIFF_FORMAT, True, False)
+TIFF_ANIMATED_FORMAT_OBJ = Format(TIFF_FORMAT, True, True)
 
 
 class ImageHandler(Handler, metaclass=ABCMeta):
@@ -25,7 +29,6 @@ class ImageHandler(Handler, metaclass=ABCMeta):
         """
         path = self.original_path
         for func in self.PROGRAMS:
-            print(f"{func} {path}")
             if path != self.original_path:
                 self.working_paths.add(path)
             new_path = self.get_working_path(func)

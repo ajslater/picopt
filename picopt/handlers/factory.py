@@ -8,21 +8,24 @@ from PIL import Image, UnidentifiedImageError
 from picopt.config import WEBP_CONVERTABLE_FORMATS
 from picopt.handlers.container import ContainerHandler
 from picopt.handlers.handler import Format, Handler, Metadata
+from picopt.handlers.image import TIFF_FORMAT
 from picopt.handlers.webp import WebPLossless
-from picopt.handlers.zip import CBZ, Zip, EPub
+from picopt.handlers.zip import CBZ, EPub, Zip
 from picopt.pillow.webp_lossless import is_lossless
 
 
-_ALWAYS_LOSSLESS_FORMATS = WEBP_CONVERTABLE_FORMATS
+_ALWAYS_LOSSLESS_FORMATS = WEBP_CONVERTABLE_FORMATS - set([TIFF_FORMAT])
 _CONTAINER_HANDLERS: Tuple[Type[ContainerHandler], ...] = (CBZ, Zip, EPub)
 
 
-def _is_lossless(image_format: str, path: Path) -> bool:
+def _is_lossless(image_format: str, path: Path, info: dict) -> bool:
     """Determine if image format is lossless."""
     if image_format in _ALWAYS_LOSSLESS_FORMATS:
         lossless = True
     elif image_format == WebPLossless.OUTPUT_FORMAT:
         lossless = is_lossless(str(path))
+    elif image_format == TIFF_FORMAT:
+        lossless = info.get("compression") != "jpeg"
     else:
         lossless = False
     return lossless
@@ -34,6 +37,7 @@ def _get_image_format(
     """Construct the image format with PIL."""
     format = None
     metadata = Metadata()
+    n_frames = 1
     try:
         with Image.open(path, mode="r") as image:
             image.verify()
@@ -42,12 +46,14 @@ def _get_image_format(
             if image_format is None:
                 raise UnidentifiedImageError("No image format")
             animated = getattr(image, "is_animated", False)
-            if not destroy_metadata:
+            info = image.info
+            if not destroy_metadata and animated:
                 n_frames = getattr(image, "n_frames", 1)
-                metadata = Metadata(
-                    image.getexif(), image.info.get("icc_profile", ""), n_frames
-                )
-        lossless = _is_lossless(image_format, path)
+        if not destroy_metadata:
+            exif = info.get("exif", b"")
+            icc = info.get("icc_profile", "")
+            metadata = Metadata(exif, icc, n_frames)
+        lossless = _is_lossless(image_format, path, info)
         format = Format(image_format, lossless, animated)
     except UnidentifiedImageError:
         pass
