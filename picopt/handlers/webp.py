@@ -33,7 +33,11 @@ class WebPBase(ImageHandler, ABC):
         else:
             with Image.open(old_path) as image:
                 image.save(
-                    new_path, self.OUTPUT_FORMAT, **self.PIL2WEBP_KWARGS, exif=self.exif
+                    new_path,
+                    self.OUTPUT_FORMAT,
+                    **self.PIL2WEBP_KWARGS,
+                    exif=self.metadata.exif,
+                    icc_profile=self.metadata.icc_profile
                 )
         return new_path
 
@@ -85,7 +89,13 @@ class WebPLossless(WebP):
         ):
             new_path = new_path.with_suffix(Png.output_suffix())
             with Image.open(old_path) as image:
-                image.save(new_path, "PNG", compress_level=0, exif=self.exif)
+                image.save(
+                    new_path,
+                    "PNG",
+                    compress_level=0,
+                    exif=self.metadata.exif,
+                    icc_profile=self.metadata.icc_profile,
+                )
             self.input_format = Png.OUTPUT_FORMAT_OBJ
         else:
             new_path = old_path

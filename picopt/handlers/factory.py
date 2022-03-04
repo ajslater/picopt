@@ -7,7 +7,7 @@ from PIL import Image, UnidentifiedImageError
 
 from picopt.config import WEBP_CONVERTABLE_FORMATS
 from picopt.handlers.container import ContainerHandler
-from picopt.handlers.handler import Format, Handler
+from picopt.handlers.handler import Format, Handler, Metadata
 from picopt.handlers.webp import WebPLossless
 from picopt.handlers.zip import CBZ, Zip
 from picopt.pillow.webp_lossless import is_lossless
@@ -30,10 +30,10 @@ def _is_lossless(image_format: str, path: Path) -> bool:
 
 def _get_image_format(
     path: Path, destroy_metadata: bool
-) -> Tuple[Optional[Format], Optional[Image.Exif]]:
+) -> Tuple[Optional[Format], Metadata]:
     """Construct the image format with PIL."""
     format = None
-    exif = None
+    metadata = Metadata()
     try:
         with Image.open(path, mode="r") as image:
             image.verify()
@@ -43,12 +43,15 @@ def _get_image_format(
                 raise UnidentifiedImageError("No image format")
             animated = getattr(image, "is_animated", False)
             if not destroy_metadata:
-                exif = image.getexif()
+                n_frames = getattr(image, "n_frames", 1)
+                metadata = Metadata(
+                    image.getexif(), image.info.get("icc_profile", ""), n_frames
+                )
         lossless = _is_lossless(image_format, path)
         format = Format(image_format, lossless, animated)
     except UnidentifiedImageError:
         pass
-    return format, exif
+    return format, metadata
 
 
 def _get_container_format(path: Path) -> Optional[Format]:
@@ -64,19 +67,18 @@ def _get_container_format(path: Path) -> Optional[Format]:
 def create_handler(config: AttrDict, path: Path) -> Optional[Handler]:
     """Get the image format."""
     format: Optional[Format] = None
-    exif: Optional[Image.Exif] = None
+    metadata: Metadata = Metadata()
     handler_cls: Optional[Type[Handler]] = None
     try:
-        format, exif = _get_image_format(path, config.destroy_metadata)
+        format, metadata = _get_image_format(path, config.destroy_metadata)
         if not format:
             format = _get_container_format(path)
         handler_cls = config._format_handlers.get(format)
     except OSError as exc:
         print(exc)
-        pass
 
     if handler_cls and format is not None:
-        handler = handler_cls(config, path, format, exif)
+        handler = handler_cls(config, path, format, metadata)
     else:
         if config.verbose > 2 and not config.list_only:
             print(

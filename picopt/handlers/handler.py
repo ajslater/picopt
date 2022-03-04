@@ -22,6 +22,15 @@ class Format:
     animated: bool = False
 
 
+@dataclass(eq=True, frozen=True)
+class Metadata:
+    """Image metadata class."""
+
+    exif: Optional[Exif] = None
+    icc_profile: str = ""
+    n_frames: int = 1
+
+
 class Handler(ABC):
     """FileType superclass for image and container formats."""
 
@@ -77,7 +86,7 @@ class Handler(ABC):
         config: AttrDict,
         original_path: Path,
         input_format: Format,
-        exif: Optional[Exif],
+        metadata: Metadata,
     ):
         """Initialize handler."""
         self.config: AttrDict = config
@@ -85,10 +94,7 @@ class Handler(ABC):
         self.working_paths: Set[Path] = set()
         self.final_path: Path = self.original_path.with_suffix(self.output_suffix())
         self.input_format: Format = input_format
-        if self.config.destroy_metadata:
-            self.exif = None
-        else:
-            self.exif = exif
+        self.metadata = metadata
 
     def get_working_path(self, identifier: str = "") -> Path:
         """Return a working path with a custom suffix."""

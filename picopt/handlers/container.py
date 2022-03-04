@@ -6,9 +6,8 @@ from pathlib import Path
 from typing import Optional, Tuple
 
 from confuse.templates import AttrDict
-from PIL.Image import Exif
 
-from picopt.handlers.handler import Format, Handler
+from picopt.handlers.handler import Format, Handler, Metadata
 from picopt.stats import ReportStats
 
 
@@ -38,10 +37,10 @@ class ContainerHandler(Handler, metaclass=ABCMeta):
         config: AttrDict,
         original_path: Path,
         format: Format,
-        exif: Optional[Exif],
+        metadata: Metadata,
     ):
         """Unpack a container with a subclass's unpacker."""
-        super().__init__(config, original_path, format, exif)
+        super().__init__(config, original_path, format, metadata)
         self.comment: Optional[bytes] = None
         self.tmp_container_dir: Path = Path(
             str(self.get_working_path()) + self.CONTAINER_DIR_SUFFIX

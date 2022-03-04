@@ -40,7 +40,13 @@ class Png(ImageHandler):
             new_path = old_path
         else:
             with Image.open(old_path) as image:
-                image.save(new_path, self.OUTPUT_FORMAT, optimize=True, exif=self.exif)
+                image.save(
+                    new_path,
+                    self.OUTPUT_FORMAT,
+                    optimize=True,
+                    exif=self.metadata.exif,
+                    icc_profile=self.metadata.icc_profile,
+                )
         return new_path
 
     def pngout(self, old_path: Path, new_path: Path) -> Path:
