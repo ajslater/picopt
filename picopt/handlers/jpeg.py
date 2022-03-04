@@ -4,6 +4,7 @@ import copy
 from pathlib import Path
 from typing import Tuple
 
+from PIL import Image
 from PIL.JpegImagePlugin import JpegImageFile
 
 from picopt.handlers.handler import Format
@@ -15,7 +16,7 @@ class Jpeg(ImageHandler):
 
     OUTPUT_FORMAT = JpegImageFile.format
     OUTPUT_FORMAT_OBJ = Format(OUTPUT_FORMAT, False, False)
-    PROGRAMS: Tuple[str, ...] = ("mozjpeg", "jpegtran")
+    PROGRAMS: Tuple[str, ...] = ("mozjpeg", "jpegtran", "pil2jpeg")
     _ARGS_PREFIX = ["-optimize", "-progressive"]
 
     @classmethod
@@ -42,3 +43,18 @@ class Jpeg(ImageHandler):
     def jpegtran(self, old_path: Path, new_path: Path) -> Path:
         """Create argument list for jpegtran."""
         return self._jpegtran("jpegtran", old_path, new_path)
+
+    def pil2jpeg(self, old_path: Path, new_path: Path) -> Path:
+        """Use Pillow to optimize JPEG."""
+        with Image.open(old_path) as image:
+            image.save(
+                new_path,
+                self.OUTPUT_FORMAT,
+                optimize=True,
+                progressive=True,
+                exif=self.metadata.exif,
+                icc_profile=self.metadata.icc_profile,
+                quality=100,
+                subsampling="keep",
+            )
+        return new_path
