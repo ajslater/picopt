@@ -14,6 +14,7 @@ FNS = {
     "test_cbr.cbr": (93725, 93725, ("cbz", 84506)),
     "test_rar.rar": (93675, 93675, ("zip", 84493)),
     "test_zip.zip": (2974, 1917, ("zip", 2974)),
+    "igp-twss.epub": (181397, 175224, ("epub", 181397)),
 }
 
 
@@ -38,7 +39,7 @@ class TestContainersDir:
             assert path.stat().st_size == sizes[0]
 
     def test_containers_no_convert(self) -> None:
-        args = (PROGRAM_NAME, "-rcz", str(TMP_ROOT))
+        args = (PROGRAM_NAME, "-rcze", str(TMP_ROOT))
         res = cli.run(args)
         assert res
         for name, sizes in FNS.items():

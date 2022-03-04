@@ -31,7 +31,7 @@ from picopt.handlers.jpeg import Jpeg
 from picopt.handlers.png import Png
 from picopt.handlers.webp import Gif2WebP, WebPLossless, WebPLossy
 from picopt.handlers.webp_animated import WebPAnimated
-from picopt.handlers.zip import CBZ, Zip
+from picopt.handlers.zip import CBZ, EPub, Zip
 from picopt.timestamp import Timestamp
 
 
@@ -46,7 +46,7 @@ WEBP_CONVERTABLE_FORMATS = set(
     [format.format for format in _WEBP_CONVERTABLE_FORMAT_OBJS]
 )
 DEFAULT_HANDLERS = (Gif, AnimatedGif, Jpeg, Png, WebPLossy, WebPLossless)
-HANDLERS = set([*DEFAULT_HANDLERS, Gif2WebP, WebPAnimated, Zip, CBZ])
+HANDLERS = set([*DEFAULT_HANDLERS, Gif2WebP, WebPAnimated, Zip, CBZ, EPub])
 ALL_FORMATS: typing.Set[str] = (
     set([cls.OUTPUT_FORMAT for cls in HANDLERS]) | CONVERTABLE_FORMATS
 )
@@ -85,6 +85,7 @@ FORMAT_HANDLERS = {
     CBZ.OUTPUT_FORMAT_OBJ: (CBZ,),
     Zip.INPUT_FORMAT_OBJ_RAR: (Zip,),
     CBZ.INPUT_FORMAT_OBJ_RAR: (CBZ,),
+    EPub.OUTPUT_FORMAT_OBJ: (EPub,),
 }
 
 

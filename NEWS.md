@@ -17,6 +17,7 @@ v3.0.0-a0
 - optiping optimization level changed to o5
 - Exif & icc metadata preserved in all formats much better by default.
 - Fall back to Pillow optimization if no external programs.
+- EPub support
 
 v2.2.1
 

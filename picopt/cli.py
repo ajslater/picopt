@@ -15,7 +15,7 @@ from picopt.config import (
     WEBP_CONVERTABLE_FORMATS,
     get_config,
 )
-from picopt.handlers.zip import CBZ, Zip
+from picopt.handlers.zip import CBZ, EPub, Zip
 
 
 DEFAULT_FORMATS = set([handler_cls.OUTPUT_FORMAT for handler_cls in DEFAULT_HANDLERS])
@@ -115,6 +115,14 @@ def get_arguments(args: Tuple[str, ...]) -> Namespace:
         dest="_extra_formats",
         const=Zip.OUTPUT_FORMAT,
         help="Optimize images inside of zipfiles. Implies --recursive",
+    )
+    parser.add_argument(
+        "-e",
+        "--epub",
+        action="append_const",
+        dest="_extra_formats",
+        const=EPub.OUTPUT_FORMAT,
+        help="Optimize images inside of ePubs. Implies --recursive",
     )
     parser.add_argument(
         "-f",

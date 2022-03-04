@@ -30,6 +30,7 @@ class Zip(ContainerHandler):
             format = cls.OUTPUT_FORMAT_OBJ
         elif is_rarfile(path) and suffix == cls.RAR_SUFFIX:
             format = cls.INPUT_FORMAT_OBJ_RAR
+        print(path, format, cls.output_suffix())
         return format
 
     def _get_archive(self) -> Union[ZipFile, RarFile]:
@@ -83,3 +84,10 @@ class CBZ(Zip):
     INPUT_FORMAT_RAR = "CBR"
     INPUT_FORMAT_OBJ_RAR = Format(INPUT_FORMAT_RAR)
     RAR_SUFFIX = "." + INPUT_FORMAT_RAR.lower()
+
+
+class EPub(Zip):
+    """Epub Container."""
+
+    OUTPUT_FORMAT = "EPUB"
+    OUTPUT_FORMAT_OBJ = Format(OUTPUT_FORMAT)
