@@ -1,6 +1,9 @@
 """Format Superclass."""
 from abc import ABCMeta
+from pathlib import Path
+from typing import Dict
 
+from PIL import Image
 from PIL.BmpImagePlugin import BmpImageFile
 from PIL.PpmImagePlugin import PpmImageFile
 from PIL.TiffImagePlugin import TiffImageFile
@@ -20,6 +23,9 @@ TIFF_ANIMATED_FORMAT_OBJ = Format(TIFF_FORMAT, True, True)
 
 class ImageHandler(Handler, metaclass=ABCMeta):
     """Format superclass."""
+
+    PIL2_ARGS: Dict = {}
+    PREFERRED_PROGRAM: str = "unimplemented"
 
     def _optimize_with_progs(self) -> ReportStats:
         """
@@ -50,3 +56,21 @@ class ImageHandler(Handler, metaclass=ABCMeta):
         except Exception as exc:
             report_stats = self.error(exc)
         return report_stats
+
+    def pil2native(self, old_path: Path, new_path: Path) -> Path:
+        """Use PIL to save the image."""
+        if (
+            self.input_format == TIFF_FORMAT_OBJ
+            or self.PREFERRED_PROGRAM not in self.config._available_programs
+        ):
+            with Image.open(old_path) as image:
+                image.save(
+                    new_path,
+                    self.OUTPUT_FORMAT,
+                    exif=self.metadata.exif,
+                    icc_profile=self.metadata.icc_profile,
+                    **self.PIL2_ARGS,
+                )
+        else:
+            new_path = old_path
+        return new_path

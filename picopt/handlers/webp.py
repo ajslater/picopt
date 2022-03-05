@@ -14,8 +14,8 @@ from picopt.handlers.png import Png
 class WebPBase(ImageHandler, ABC):
     """Base for handlers that use WebP utility commands."""
 
-    PREFERRED_PROGRAM: str = ""
     PIL2WEBP_KWARGS: Dict[str, Any] = {"lossless": True, "quality": 100, "method": 6}
+    PIL2_ARGS: Dict[str, Any] = PIL2WEBP_KWARGS
 
     def get_metadata_args(self) -> List[str]:
         """Get webp utility metadata args."""
@@ -28,21 +28,7 @@ class WebPBase(ImageHandler, ABC):
 
     def pil2webp(self, old_path: Path, new_path: Path) -> Path:
         """Pillow webp optimization."""
-        if (
-            self.PREFERRED_PROGRAM in self.config._available_programs
-            and self.input_format != TIFF_FORMAT_OBJ
-        ):
-            new_path = old_path
-        else:
-            with Image.open(old_path) as image:
-                image.save(
-                    new_path,
-                    self.OUTPUT_FORMAT,
-                    **self.PIL2WEBP_KWARGS,
-                    exif=self.metadata.exif,
-                    icc_profile=self.metadata.icc_profile
-                )
-        return new_path
+        return self.pil2native(old_path, new_path)
 
 
 class WebP(WebPBase, ABC):
@@ -83,11 +69,12 @@ class WebPLossless(WebP):
         "-z",
         "9",
     ]
+    _PIL2PNG_FORMATS = CONVERTABLE_FORMAT_OBJS | set([TIFF_FORMAT_OBJ])
 
     def pil2png(self, old_path: Path, new_path: Path) -> Path:
         """Internally convert uncompressed formats to uncompressed png for cwebp."""
         if (
-            self.input_format in (CONVERTABLE_FORMAT_OBJS | set([TIFF_FORMAT_OBJ]))
+            self.input_format in self._PIL2PNG_FORMATS
             and self.PREFERRED_PROGRAM in self.config._available_programs
         ):
             new_path = new_path.with_suffix(Png.output_suffix())
