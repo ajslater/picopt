@@ -60,7 +60,7 @@ class ImageHandler(Handler, metaclass=ABCMeta):
     def pil2native(self, old_path: Path, new_path: Path) -> Path:
         """Use PIL to save the image."""
         if (
-            self.input_format == TIFF_FORMAT_OBJ
+            self.input_format_obj == TIFF_FORMAT_OBJ
             or self.PREFERRED_PROGRAM not in self.config._available_programs
         ):
             with Image.open(old_path) as image:

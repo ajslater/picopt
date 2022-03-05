@@ -74,7 +74,7 @@ class WebPLossless(WebP):
     def pil2png(self, old_path: Path, new_path: Path) -> Path:
         """Internally convert unhandled formats to uncompressed png for cwebp."""
         if (
-            self.input_format in self._PIL2PNG_FORMATS
+            self.input_format_obj in self._PIL2PNG_FORMATS
             and self.PREFERRED_PROGRAM in self.config._available_programs
         ):
             new_path = new_path.with_suffix(Png.output_suffix())
@@ -86,7 +86,7 @@ class WebPLossless(WebP):
                     exif=self.metadata.exif,
                     icc_profile=self.metadata.icc_profile,
                 )
-            self.input_format = Png.OUTPUT_FORMAT_OBJ
+            self.input_format_obj = Png.OUTPUT_FORMAT_OBJ
         else:
             new_path = old_path
         return new_path
@@ -130,7 +130,7 @@ class Gif2WebP(WebPBase):
     ]
 
     @classmethod
-    def native_input_formats(cls):
+    def native_input_format_objs(cls):
         """No native formats."""
         return set()
 

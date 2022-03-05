@@ -16,10 +16,9 @@ class WebPAnimated(ContainerHandler):
     OUTPUT_FORMAT: str = WebP.OUTPUT_FORMAT
     OUTPUT_FORMAT_OBJ = Format(OUTPUT_FORMAT, False, True)
     PROGRAMS = ("webpmux", "img2webp")
-    OPEN_WITH_PIL_FORMATS = set([TIFF_ANIMATED_FORMAT_OBJ])
-
-    _WEBPMUX_ARGS_PREFIX = ("webpmux", "-get", "frame")
+    _OPEN_WITH_PIL_FORMAT_OBJS = set([TIFF_ANIMATED_FORMAT_OBJ])
     _IMG2WEBP_ARGS_PREFIX = ("img2webp", "-min_size")
+    _WEBPMUX_ARGS_PREFIX = ("webpmux", "-get", "frame")
 
     @classmethod
     def identify_format(cls, _path: Path) -> Optional[Format]:
@@ -32,7 +31,7 @@ class WebPAnimated(ContainerHandler):
 
     def unpack_into(self) -> None:
         """Unpack webp into temp dir."""
-        if self.input_format in self.OPEN_WITH_PIL_FORMATS:
+        if self.input_format_obj in self._OPEN_WITH_PIL_FORMAT_OBJS:
             with Image.open(self.original_path) as image:
                 frame_index = 0
                 for frame in ImageSequence.Iterator(image):

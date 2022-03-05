@@ -53,7 +53,7 @@ class Handler(ABC):
             raise
 
     @classmethod
-    def native_input_formats(cls) -> Set[Format]:
+    def native_input_format_objs(cls) -> Set[Format]:
         """Return input formats handled without conversion."""
         return set([cls.OUTPUT_FORMAT_OBJ])
 
@@ -72,11 +72,13 @@ class Handler(ABC):
         cls,
         convert_handlers: dict,
         available_programs: set,
-        format: Format,
+        format_obj: Format,
     ):
         """Can this handler run with available programs."""
-        handled_formats = cls.native_input_formats() | convert_handlers.get(cls, set())
-        return format in handled_formats and bool(
+        handled_format_objs = cls.native_input_format_objs() | convert_handlers.get(
+            cls, set()
+        )
+        return format_obj in handled_format_objs and bool(
             available_programs & set(cls.PROGRAMS)
         )
 
@@ -84,7 +86,7 @@ class Handler(ABC):
         self,
         config: AttrDict,
         original_path: Path,
-        input_format: Format,
+        input_format_obj: Format,
         metadata: Metadata,
     ):
         """Initialize handler."""
@@ -92,7 +94,7 @@ class Handler(ABC):
         self.original_path: Path = original_path
         self.working_paths: Set[Path] = set()
         self.final_path: Path = self.original_path.with_suffix(self.output_suffix())
-        self.input_format: Format = input_format
+        self.input_format_obj: Format = input_format_obj
         self.metadata = metadata
 
     def get_working_path(self, identifier: str = "") -> Path:
