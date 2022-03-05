@@ -94,7 +94,7 @@ class WebPAnimated(ContainerHandler):
         ]
         self.run_ext(tuple(args))
 
-    def create_container(self, working_path: Path) -> None:
+    def pack_into(self, working_path: Path) -> None:
         """Remux the optimized frames into an animated webp."""
         frames = sorted([str(path) for path in self.tmp_container_dir.iterdir()])
         args = [

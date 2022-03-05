@@ -55,7 +55,7 @@ class Zip(ContainerHandler):
             archive.extractall(self.tmp_container_dir)
             self._set_comment(archive.comment)
 
-    def create_container(self, working_path: Path) -> None:
+    def pack_into(self, working_path: Path) -> None:
         """Zip up the files in the tempdir into the new filename."""
         if self.config.verbose:
             print("Rezipping archive", end="")

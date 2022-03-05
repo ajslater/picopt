@@ -28,7 +28,7 @@ class ContainerHandler(Handler, metaclass=ABCMeta):
         pass
 
     @abstractmethod
-    def create_container(self, working_path: Path) -> None:
+    def pack_into(self, working_path: Path) -> None:
         """Create a container from a tmp dir's contents."""
         pass
 
@@ -84,9 +84,8 @@ class ContainerHandler(Handler, metaclass=ABCMeta):
         """Create a new container and clean up the tmp dir."""
         try:
             # archive into new filename
-            # XXX should create_container specify the path?
             new_path = self.get_working_path()
-            self.create_container(new_path)
+            self.pack_into(new_path)
 
             bytes_count = self.cleanup_after_optimize(new_path)
             report_stats = ReportStats(self.final_path, bytes_count=bytes_count)
