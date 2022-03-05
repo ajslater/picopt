@@ -85,7 +85,7 @@ class WebPLossless(WebP):
     ]
 
     def pil2png(self, old_path: Path, new_path: Path) -> Path:
-        """Internally convert uncompressed formats to uncompressed png."""
+        """Internally convert uncompressed formats to uncompressed png for cwebp."""
         if (
             self.input_format in (CONVERTABLE_FORMAT_OBJS | set([TIFF_FORMAT_OBJ]))
             and self.PREFERRED_PROGRAM in self.config._available_programs
