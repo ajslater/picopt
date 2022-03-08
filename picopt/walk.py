@@ -14,8 +14,9 @@ from picopt.handlers.container import ContainerHandler
 from picopt.handlers.factory import create_handler
 from picopt.handlers.handler import Handler
 from picopt.handlers.image import ImageHandler
+from picopt.old_timestamps import migrate_timestamps
 from picopt.stats import ReportStats
-from picopt.timestamp import Timestamp
+from picopt.timestamps import Timestamps
 
 
 class Walk:
@@ -24,7 +25,7 @@ class Walk:
     def __init__(self, config: AttrDict) -> None:
         """Initialize."""
         self._pool = Pool()
-        self._timestamps: Dict[Path, Timestamp] = {}
+        self._timestamps: Dict[Path, Timestamps] = {}
         self._config: AttrDict = config
 
     def walk_container(
@@ -42,11 +43,11 @@ class Walk:
         try:
             # XXX blocks on unpack
             # optimize contents of archive
-            archive_mtime = path.stat().st_mtime
 
             handler.unpack()
             # Use a None top_path to not report archive internal timestamps back up
             #   to the timestamp file.
+            archive_mtime = path.stat().st_mtime
             result_set = self.walk_dir(
                 handler.tmp_container_dir, after, None, archive_mtime
             )
@@ -63,7 +64,7 @@ class Walk:
             final_result = self._pool.apply_async(handler.error, args=args)
         return final_result
 
-    def _is_skippable(self, path: Path, top_path: Optional[Path]) -> bool:
+    def _is_skippable(self, path: Path) -> bool:
         """Handle things that are not optimizable files."""
         # File types
         skip = False
@@ -71,13 +72,7 @@ class Walk:
             if self._config.verbose > 1:
                 print(path, "is a symlink, skipping.")
             skip = True
-        elif top_path and path.name == self._timestamps[top_path].old_timestamp_name:
-            if top_path is not None:
-                self._timestamps[top_path].upgrade_old_timestamp(path)
-            skip = True
-        elif top_path and path.name == self._timestamps[top_path].timestamps_name:
-            if top_path is not None and path.parent != top_path:
-                self._timestamps[top_path].consume_child_timestamps(path)
+        elif path.name == self.timestamps_filename:
             skip = True
         elif path.name.rfind(Handler.WORKING_SUFFIX) > -1:
             path.unlink()
@@ -103,7 +98,7 @@ class Walk:
         # is newer. This helps if you have a new archive that you
         # collected from someone who put really old files in it that
         # should still be optimised
-        mtime = Timestamp.max_none((path.stat().st_mtime, archive_mtime))
+        mtime = Timestamps.max_none(path.stat().st_mtime, archive_mtime)
         return mtime is not None and mtime <= walk_after
 
     def walk_file(
@@ -116,15 +111,14 @@ class Walk:
         """Optimize an individual file."""
         path = Path(filename)
         result_set: Set[AsyncResult] = set()
-        if self._is_skippable(path, top_path):
+        if self._is_skippable(path):
             return result_set
 
-        if top_path is not None:
+        if self._config.after is not None:
+            walk_after = self._config.after
+        elif top_path is not None:
             timestamps = self._timestamps[top_path]
-            if self._config.after is not None:
-                walk_after = self._config.after
-            else:
-                walk_after = timestamps.get_timestamp_recursive_up(path)
+            walk_after = timestamps.get(path)
 
         # File is a directory
         if path.is_dir():
@@ -240,16 +234,12 @@ class Walk:
         # Fire off all async processes
         result_sets: Dict[Path, Set[AsyncResult]] = {}
         for top_path in sorted(top_paths):
-            timestamps = Timestamp(PROGRAM_NAME, top_path, self._config.verbose)
-            # TODO should walk_after still work like this?
+            timestamps = Timestamps(PROGRAM_NAME, top_path, self._config.verbose)
+            migrate_timestamps(timestamps, top_path)
             self._timestamps[top_path] = timestamps
-            # XXX This should probably be moved to ts init.
-            timestamps.upgrade_old_parent_timestamps(top_path)
-            timestamps.dump_timestamps()
-            # TODO is this a dupe as it gets done in walk_file fast too
-            # walk_after = timestamps.get_walk_after(top_path)
-            walk_after = None
-            result_set = self.walk_file(top_path, walk_after, top_path)
+            self.timestamps_filename = timestamps.filename
+
+            result_set = self.walk_file(top_path, None, top_path)
             result_sets[top_path] = result_set
 
         # Collect results, tally totals, record timestamps
@@ -265,15 +255,15 @@ class Walk:
                 # APPEND EVERY FILE'S TIMESTAMP after its done.
                 timestamps = self._timestamps[top_path]
                 if self._should_record_timestamp(res.path):
-                    timestamps.record_timestamp(res.path)
+                    timestamps.set(res.path)
                 bytes_in += res.bytes_in
                 bytes_out += res.bytes_out
 
             timestamps = self._timestamps[top_path]
 
             if self._should_record_timestamp(top_path):
-                timestamps.record_timestamp(top_path)
-                timestamps.compact_timestamps(top_path)
+                timestamps.set(top_path, compact=True)
+                timestamps.dump_timestamps()
 
         # Finish by reporting totals
         self._report_totals(bytes_in, bytes_out, errors)

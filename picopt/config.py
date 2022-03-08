@@ -1,5 +1,6 @@
 """Confuse config for picopt."""
 import subprocess
+import time
 import typing
 
 from argparse import Namespace
@@ -16,6 +17,7 @@ from confuse.templates import (
     Path,
     Sequence,
 )
+from dateutil.parser import parse
 
 from picopt import PROGRAM_NAME
 from picopt.handlers.container import ContainerHandler
@@ -35,7 +37,6 @@ from picopt.handlers.png import Png
 from picopt.handlers.webp import Gif2WebP, WebPLossless, WebPLossy
 from picopt.handlers.webp_animated import WebPAnimated
 from picopt.handlers.zip import CBZ, EPub, Zip
-from picopt.timestamp import Timestamp
 
 
 _PNG_CONVERTABLE_FORMAT_OBJS = CONVERTABLE_FORMAT_OBJS | set(
@@ -188,7 +189,8 @@ def _set_after(config) -> None:
         return
 
     if isinstance(after, str):
-        timestamp = Timestamp.parse_date_string(after)
+        after_dt = parse(after)
+        timestamp = time.mktime(after_dt.timetuple())
     elif isinstance(after, int) or isinstance(after, float):
         timestamp = float(after)
     else:
