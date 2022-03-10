@@ -19,6 +19,7 @@ v3.0.0-a0
 - Fall back to Pillow optimization if no external programs.
 - EPub support
 - TIFF support
+- use multiprocessing for unpacking and repacking containers.
 
 v2.2.1
 
