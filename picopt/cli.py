@@ -229,9 +229,9 @@ def get_arguments(args: Tuple[str, ...]) -> Namespace:
     parser.add_argument(
         "-M",
         "--destroy_metadata",
-        action="store_true",
-        dest="destroy_metadata",
-        help="*Destroy* metadata like EXIF and JFIF",
+        action="store_false",
+        dest="keep_metadata",
+        help="Destroy metadata like EXIF and ICC Profiles",
     )
     parser.add_argument(
         "paths",

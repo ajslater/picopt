@@ -32,7 +32,7 @@ def _is_lossless(image_format: str, path: Path, info: dict) -> bool:
 
 
 def _get_image_format(
-    path: Path, destroy_metadata: bool
+    path: Path, keep_metadata: bool
 ) -> Tuple[Optional[Format], Metadata]:
     """Construct the image format with PIL."""
     format = None
@@ -47,9 +47,9 @@ def _get_image_format(
                 raise UnidentifiedImageError("No image format")
             animated = getattr(image, "is_animated", False)
             info = image.info
-            if not destroy_metadata and animated:
+            if keep_metadata and animated:
                 n_frames = getattr(image, "n_frames", 1)
-        if not destroy_metadata:
+        if keep_metadata:
             exif = info.get("exif", b"")
             icc = info.get("icc_profile", "")
             metadata = Metadata(exif, icc, n_frames)
@@ -76,7 +76,7 @@ def create_handler(config: AttrDict, path: Path) -> Optional[Handler]:
     metadata: Metadata = Metadata()
     handler_cls: Optional[Type[Handler]] = None
     try:
-        format, metadata = _get_image_format(path, config.destroy_metadata)
+        format, metadata = _get_image_format(path, config.keep_metadata)
         if not format:
             format = _get_container_format(path)
         handler_cls = config._format_handlers.get(format)

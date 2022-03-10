@@ -63,7 +63,7 @@ TEMPLATE = MappingTemplate(
         "after": Optional(datetime),
         "bigger": bool,
         "convert_to": MappingValues(bool),
-        "destroy_metadata": bool,
+        "keep_metadata": bool,
         "follow_symlinks": bool,
         "formats": set,
         "jobs": Integer(),

@@ -20,10 +20,10 @@ class WebPBase(ImageHandler, ABC):
     def get_metadata_args(self) -> List[str]:
         """Get webp utility metadata args."""
         args = ["-metadata"]
-        if self.config.destroy_metadata:
-            args += ["none"]
-        else:
+        if self.config.keep_metadata:
             args += ["all"]
+        else:
+            args += ["none"]
         return args
 
     def pil2webp(self, old_path: Path, new_path: Path) -> Path:

@@ -8,7 +8,7 @@ from typing import Any, Dict, Tuple
 from PIL.PngImagePlugin import PngImageFile
 
 from picopt.handlers.handler import Format
-from picopt.handlers.image import TIFF_FORMAT_OBJ, ImageHandler
+from picopt.handlers.image import ImageHandler
 from picopt.pillow.png_bit_depth import png_bit_depth
 
 
@@ -32,7 +32,7 @@ class Png(ImageHandler):
         """Run the external program optipng on the file."""
         shutil.copy2(old_path, new_path)
         args = copy(self._OPTIPNG_ARGS)
-        if self.config.destroy_metadata:
+        if not self.config.keep_metadata:
             args += ["-strip", "all"]
         args += [str(new_path)]
         self.run_ext(tuple(args))

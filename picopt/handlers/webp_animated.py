@@ -104,5 +104,5 @@ class WebPAnimated(ContainerHandler):
             str(working_path),
         ]
         self.run_ext(tuple(args))
-        if not self.config.destroy_metadata:
+        if self.config.keep_metadata:
             self._set_metadata(working_path)

@@ -5,7 +5,7 @@ convert_to:
   WEBP: False
   ZIP: False
   CBZ: False
-destroy_metadata: False
+keep_metadata: True
 follow_symlinks: True
 formats: !!set { "GIF", "JPEG", "PNG", "WEBP" }
 jobs: 0

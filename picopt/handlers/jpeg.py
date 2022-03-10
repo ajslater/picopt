@@ -26,10 +26,10 @@ class Jpeg(ImageHandler):
     def _jpegtran(self, exe: str, old_path: Path, new_path: Path) -> Path:
         """Run the jpegtran type program."""
         args = [exe] + copy.copy(self._ARGS_PREFIX)
-        if self.config.destroy_metadata:
-            args += ["-copy", "none"]
-        else:
+        if self.config.keep_metadata:
             args += ["-copy", "all"]
+        else:
+            args += ["-copy", "none"]
         args += ["-outfile", str(new_path), str(old_path)]
         args_t = tuple(args)
         self.run_ext(args_t)
