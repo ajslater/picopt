@@ -3,7 +3,7 @@ import shutil
 
 from abc import ABCMeta, abstractmethod
 from pathlib import Path
-from typing import Optional, Tuple
+from typing import Optional, Tuple, Union
 
 from confuse.templates import AttrDict
 
@@ -46,7 +46,7 @@ class ContainerHandler(Handler, metaclass=ABCMeta):
             str(self.get_working_path()) + self.CONTAINER_DIR_SUFFIX
         )
 
-    def unpack(self):
+    def unpack(self) -> Union[Handler, ReportStats]:
         """Create directory and unpack container."""
         try:
             if self.config.verbose:
@@ -62,9 +62,9 @@ class ContainerHandler(Handler, metaclass=ABCMeta):
 
             if self.config.verbose:
                 print("done")
+            return self
         except Exception as exc:
-            print(exc)
-            raise exc
+            return self.error(exc)
 
     def cleanup_after_optimize(self, working_path: Path) -> Tuple[int, int]:
         """Clean up the temp dir as well as thte old container."""

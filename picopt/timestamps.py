@@ -12,6 +12,10 @@ class Timestamps:
     """Timestamp object to hold settings and caches."""
 
     @staticmethod
+    def dirpath(path: Path):
+        return path if path.is_dir() else path.parent
+
+    @staticmethod
     def max_none(a: Optional[float], b: Optional[float]) -> Optional[float]:
         """Max function that works in python 3."""
         return max((x for x in (a, b) if x is not None), default=None)

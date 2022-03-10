@@ -2,9 +2,11 @@
 import os
 import time
 
+from dataclasses import dataclass, field
 from multiprocessing.pool import AsyncResult, Pool
 from pathlib import Path
-from typing import Dict, List, Optional, Set
+from queue import SimpleQueue
+from typing import Any, Dict, List, Optional, Sequence, Tuple, Union
 
 from confuse.templates import AttrDict
 from humanize import naturalsize
@@ -19,50 +21,54 @@ from picopt.stats import ReportStats
 from picopt.timestamps import Timestamps
 
 
+@dataclass
+class DirResult:
+    """Results from a directory."""
+
+    path: Path
+    results: List
+
+
+@dataclass
+class ContainerDirResult(DirResult):
+    """Results from a container."""
+
+    handler: ContainerHandler
+
+
+@dataclass
+class ContainerRepackResult:
+    """Task to fire off repack once all container optimizations are done."""
+
+    handler: ContainerHandler
+
+
+@dataclass
+class Totals:
+    """Totals for final report."""
+
+    bytes_in: int = 0
+    bytes_out: int = 0
+    errors: List[ReportStats] = field(default_factory=list)
+
+
 class Walk:
     """Walk object for storing state of a walk run."""
 
     def __init__(self, config: AttrDict) -> None:
         """Initialize."""
-        self._pool = Pool()
-        self._timestamps: Dict[Path, Timestamps] = {}
         self._config: AttrDict = config
+        config_paths: Sequence[Path] = self._config.paths
+        self._top_paths: Tuple[Path, ...] = tuple(sorted(set(config_paths)))
+        self._timestamps: Dict[Path, Timestamps] = {}
+        if self._config.jobs:
+            self._pool = Pool(self._config.jobs)
+        else:
+            self._pool = Pool()
 
-    def walk_container(
-        self,
-        path: Path,
-        handler: ContainerHandler,
-        after: Optional[float],
-    ) -> AsyncResult:
-        """
-        Optimize a comic archive.
-
-        Blocks on uncompress.
-        """
-        # uncompress archive
-        try:
-            # XXX blocks on unpack
-            # optimize contents of archive
-
-            handler.unpack()
-            # Use a None top_path to not report archive internal timestamps back up
-            #   to the timestamp file.
-            archive_mtime = path.stat().st_mtime
-            result_set = self.walk_dir(
-                handler.tmp_container_dir, after, None, archive_mtime
-            )
-
-            # wait for archive contents to optimize before recompressing
-            # XXX blocks on waiting for container to complete.
-            for result in result_set:
-                result.get()
-
-            # recompress archive
-            final_result = self._pool.apply_async(handler.repack)
-        except Exception as exc:
-            args = tuple([exc])
-            final_result = self._pool.apply_async(handler.error, args=args)
-        return final_result
+    def _get_timestamps(self, top_path: Path) -> Timestamps:
+        dirpath = Timestamps.dirpath(top_path)
+        return self._timestamps[dirpath]
 
     def _is_skippable(self, path: Path) -> bool:
         """Handle things that are not optimizable files."""
@@ -70,108 +76,125 @@ class Walk:
         skip = False
         if not self._config.follow_symlinks and path.is_symlink():
             if self._config.verbose > 1:
-                print(path, "is a symlink, skipping.")
+                print(f"Skip symlink {path}")
             skip = True
         elif path.name == self.timestamps_filename:
             skip = True
         elif path.name.rfind(Handler.WORKING_SUFFIX) > -1:
+            # auto-clean old working temp files if encountered.
             path.unlink()
+            if self._config.verbose > 1:
+                print(f"Deleted {path}")
             skip = True
         elif not path.exists():
-            if self._config.verbose:
-                print(path, "was not found.")
+            if self._config.verbose > 1:
+                print(f"{path} not found.")
             skip = True
-
-        if skip and self._config.verbose > 1:
-            print(f"skip {path}")
 
         return skip
 
-    @staticmethod
     def _is_older_than_timestamp(
-        path: Path, walk_after: Optional[float], archive_mtime: Optional[float]
+        self,
+        path: Path,
+        timestamps: Optional[Timestamps],
+        container_mtime: Optional[float],
     ) -> bool:
+        """Is the file older than the timestamp."""
+        # if the file is in an container, use the container time.
+        # This helps if you have a new container that you
+        # collected from someone who put really old files in it that
+        # should still be optimised
+        if container_mtime is not None:
+            mtime = container_mtime
+        else:
+            mtime = path.stat().st_mtime
+
+        # The timestamp or configured walk after time for comparison.
+        walk_after = None
+        if self._config.after is not None:
+            walk_after = self._config.after
+        elif container_mtime is None and timestamps:
+            walk_after = timestamps.get(path)
+
         if walk_after is None:
             return False
 
-        # if the file is in an archive, use the archive time if it
-        # is newer. This helps if you have a new archive that you
-        # collected from someone who put really old files in it that
-        # should still be optimised
-        mtime = Timestamps.max_none(path.stat().st_mtime, archive_mtime)
-        return mtime is not None and mtime <= walk_after
+        return bool(mtime <= walk_after)
 
     def walk_file(
         self,
-        filename: Path,
-        walk_after: Optional[float],
-        top_path: Optional[Path],
-        archive_mtime: Optional[float] = None,
-    ) -> Set[AsyncResult]:
+        path: Path,
+        timestamps: Optional[Timestamps],
+        container_mtime: Optional[float] = None,
+    ) -> Union[AsyncResult, DirResult, None]:
         """Optimize an individual file."""
-        path = Path(filename)
-        result_set: Set[AsyncResult] = set()
-        if self._is_skippable(path):
-            return result_set
+        result: Union[AsyncResult, DirResult, None] = None
+        try:
+            if self._is_skippable(path):
+                return result
 
-        if self._config.after is not None:
-            walk_after = self._config.after
-        elif top_path is not None:
-            timestamps = self._timestamps[top_path]
-            walk_after = timestamps.get(path)
+            if path.is_dir():
+                if self._config.recurse:
+                    result = self.walk_dir(path, timestamps, container_mtime)
+                return result
 
-        # File is a directory
-        if path.is_dir():
-            return self.walk_dir(path, walk_after, top_path, archive_mtime)
+            if self._is_older_than_timestamp(path, timestamps, container_mtime):
+                return result
 
-        if self._is_older_than_timestamp(path, walk_after, archive_mtime):
-            return result_set
+            handler = create_handler(self._config, path)
 
-        handler = create_handler(self._config, path)
+            if handler is None:
+                return result
 
-        if handler is None:
-            return result_set
+            if self._config.list_only:
+                print(f"{path}: {handler.__class__.__name__}")
+                return result
 
-        if self._config.list_only:
-            print(f"{path}: {handler.__class__.__name__}")
-            return result_set
-
-        if isinstance(handler, ContainerHandler):
-            result = self.walk_container(path, handler, walk_after)
-        elif isinstance(handler, ImageHandler):
-            result = self._pool.apply_async(handler.optimize_image)
-        else:
-            raise ValueError(f"bad handler {handler}")
-        result_set.add(result)
-        return result_set
+            if isinstance(handler, ContainerHandler):
+                result = self._pool.apply_async(handler.unpack)
+            elif isinstance(handler, ImageHandler):
+                result = self._pool.apply_async(handler.optimize_image)
+            else:
+                raise ValueError(f"bad handler {handler}")
+        except Exception as exc:
+            result = self._pool.apply_async(ReportStats, args=(path, None, exc))
+        return result
 
     def walk_dir(
         self,
         dir_path: Path,
-        walk_after: Optional[float],
-        top_path: Optional[Path],
-        archive_mtime: Optional[float] = None,
-    ) -> Set[AsyncResult]:
+        timestamps: Optional[Timestamps],
+        container_mtime: Optional[float] = None,
+    ) -> DirResult:
         """Recursively optimize a directory."""
-        result_set: Set[AsyncResult] = set()
-        if not self._config.recurse:
-            return result_set
-
+        dir_result = DirResult(dir_path, [])
         for root, _, filenames in os.walk(dir_path):
             root_path = Path(root)
-            filenames.sort()
-            for filename in filenames:
+            for filename in sorted(filenames):
                 full_path = root_path / filename
-                try:
-                    results = self.walk_file(
-                        full_path, walk_after, top_path, archive_mtime
-                    )
-                    result_set = result_set.union(results)
-                except Exception:
-                    print(f"Error with file: {full_path}")
-                    raise
+                result = self.walk_file(full_path, timestamps, container_mtime)
+                if result:
+                    dir_result.results.append(result)
 
-        return result_set
+        return dir_result
+
+    def _walk_container_dir(
+        self, handler: ContainerHandler
+    ) -> Union[ContainerDirResult, AsyncResult]:
+        """Optimize a container."""
+        result: Union[ContainerDirResult, AsyncResult]
+        try:
+            container_mtime = handler.original_path.stat().st_mtime
+            dir_result = self.walk_dir(
+                handler.tmp_container_dir,
+                None,
+                container_mtime,
+            )
+            result = ContainerDirResult(handler.final_path, dir_result.results, handler)
+        except Exception as exc:
+            args = tuple([exc])
+            result = self._pool.apply_async(handler.error, args=args)
+        return result
 
     def _should_record_timestamp(self, path: Path) -> bool:
         """Determine if we should we record a timestamp at all."""
@@ -185,13 +208,11 @@ class Walk:
             and path.exists()
         )
 
-    def _report_totals(
-        self, bytes_in: int, bytes_out: int, errors: List[ReportStats]
-    ) -> None:
+    def _report_totals(self, totals: Totals) -> None:
         """Report the total number and percent of bytes saved."""
-        if bytes_in:
-            bytes_saved = bytes_in - bytes_out
-            percent_bytes_saved = bytes_saved / bytes_in * 100
+        if totals.bytes_in:
+            bytes_saved = totals.bytes_in - totals.bytes_out
+            percent_bytes_saved = bytes_saved / totals.bytes_in * 100
             msg = ""
             if self._config.test:
                 if percent_bytes_saved > 0:
@@ -219,74 +240,95 @@ class Walk:
             if self._config.verbose:
                 print("Didn't optimize any files.")
 
-        if errors:
+        if totals.errors:
             print("Errors with the following files:")
-            for rs in errors:
+            for rs in totals.errors:
                 rs.report(self._config.test)
 
-    def _walk_all_files(self, top_paths: Set[Path]) -> None:
-        """
-        Optimize the files from the arguments list in two batches.
-
-        One for absolute paths which are probably outside the current
-        working directory tree and one for relative files.
-        """
-        # Fire off all async processes
-        result_sets: Dict[Path, Set[AsyncResult]] = {}
-        for top_path in sorted(top_paths):
-            timestamps = Timestamps(PROGRAM_NAME, top_path, self._config.verbose)
-            migrate_timestamps(timestamps, top_path)
-            self._timestamps[top_path] = timestamps
-            self.timestamps_filename = timestamps.filename
-
-            result_set = self.walk_file(top_path, None, top_path)
-            result_sets[top_path] = result_set
-
-        # Collect results, tally totals, record timestamps
-        bytes_in = 0
-        bytes_out = 0
-        errors: List[ReportStats] = []
-        for top_path, result_set in result_sets.items():
-            for result in result_set:
-                res = result.get()
-                if res.error:
-                    errors.append(res)
-                    continue
-                # APPEND EVERY FILE'S TIMESTAMP after its done.
-                timestamps = self._timestamps[top_path]
+    def _handle_queue_item(
+        self,
+        timestamps: Timestamps,
+        totals: Totals,
+    ):
+        queue: SimpleQueue = self.queues[timestamps]
+        item: Union[
+            ContainerHandler, DirResult, ContainerRepackResult, AsyncResult
+        ] = queue.get()
+        if isinstance(item, ContainerHandler):
+            container_res = self._walk_container_dir(item)
+            queue.put(container_res)
+        elif isinstance(item, DirResult):
+            for dir_member_result in item.results:
+                # Put all the directory results on the queue
+                queue.put(dir_member_result)
+            if isinstance(item, ContainerDirResult):
+                task = ContainerRepackResult(item.handler)
+                queue.put(task)
+            else:
+                # Dump timestamps after every directory completes
+                if self._should_record_timestamp(item.path):
+                    timestamps.set(item.path, compact=True)
+                    timestamps.dump_timestamps()
+        elif isinstance(item, ContainerRepackResult):
+            repack_result = self._pool.apply_async(item.handler.repack)
+            queue.put(repack_result)
+        elif isinstance(item, AsyncResult):
+            res = item.get()
+            if not isinstance(item, ReportStats):
+                queue.put(res)
+            elif res.error:
+                print(res.error)
+                totals.errors.append(res)
+            else:
                 if self._should_record_timestamp(res.path):
                     timestamps.set(res.path)
-                bytes_in += res.bytes_in
-                bytes_out += res.bytes_out
+                totals.bytes_in += res.bytes_in
+                totals.bytes_out += res.bytes_out
 
-            timestamps = self._timestamps[top_path]
-
-            if self._should_record_timestamp(top_path):
-                timestamps.set(top_path, compact=True)
-                timestamps.dump_timestamps()
-
-        # Finish by reporting totals
-        self._report_totals(bytes_in, bytes_out, errors)
+    def _set_timestamps(self, path: Path):
+        dirpath = Timestamps.dirpath(path)
+        if dirpath in self._timestamps:
+            return
+        timestamps = Timestamps(PROGRAM_NAME, dirpath, self._config.verbose)
+        migrate_timestamps(timestamps, dirpath)
+        self._timestamps[dirpath] = timestamps
 
     def run(self) -> bool:
         """Optimize all configured files."""
-        # Validate paths
-        top_paths = set()
-        for top_path in self._config.paths:
+        if not self._top_paths:
+            print("No paths to optimize.")
+            return False
+
+        # Init timestamps.
+        for top_path in self._top_paths:
             if not top_path.exists():
                 print(f"Path does not exist: {top_path}")
                 return False
-            top_paths.add(top_path)
+            self._set_timestamps(top_path)
+        self.timestamps_filename = next(iter(self._timestamps.values())).filename
 
         print("Optimizing formats:", *sorted(self._config.formats))
         if self._config.after is not None and self._config.verbose:
             print("Optimizing after", time.ctime(self._config.after))
 
-        if self._config.jobs:
-            self._pool = Pool(self._config.jobs)
+        # Fire off all async processes using a queue per timestamps file.
+        self.queues: Dict[Timestamps, SimpleQueue[Any]] = {}
+        totals = Totals()
+        for top_path in self._top_paths:
+            timestamps = self._get_timestamps(top_path)
+            if timestamps not in self.queues:
+                self.queues[timestamps] = SimpleQueue()
+            queue = self.queues[timestamps]
+            result = self.walk_file(top_path, timestamps)
+            queue.put(result)
 
-        # Optimize Files
-        self._walk_all_files(top_paths)
+        # Process each queue
+        for timestamps, queue in self.queues.items():
+            while not queue.empty():
+                self._handle_queue_item(timestamps, totals)
+
+        # Finish by reporting totals
+        self._report_totals(totals)
 
         # Shut down multiprocessing
         self._pool.close()
