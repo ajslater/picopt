@@ -1,13 +1,9 @@
 after: null
 bigger: False
-convert_to:
-  PNG: False
-  WEBP: False
-  ZIP: False
-  CBZ: False
+convert_to: []
 keep_metadata: True
 follow_symlinks: True
-formats: !!set { "GIF", "JPEG", "PNG", "WEBP" }
+formats: ["GIF", "JPEG", "PNG", "WEBP"]
 jobs: 0
 list_only: False
 paths: []

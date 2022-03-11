@@ -134,7 +134,7 @@ class Walk:
                 return result
 
             if path.is_dir():
-                if self._config.recurse:
+                if self._config.recurse or container_mtime is not None:
                     result = self.walk_dir(path, timestamps, container_mtime)
                 return result
 

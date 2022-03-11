@@ -8,18 +8,14 @@ from importlib.metadata import PackageNotFoundError, version
 from typing import Set, Tuple
 
 from picopt import PROGRAM_NAME, walk
-from picopt.config import (
-    ALL_FORMATS,
-    DEFAULT_HANDLERS,
-    PNG_CONVERTABLE_FORMATS,
-    WEBP_CONVERTABLE_FORMATS,
-    get_config,
-)
-from picopt.handlers.image import TIFF_FORMAT
-from picopt.handlers.zip import CBZ, EPub, Zip
+from picopt.config import ALL_FORMATS, DEFAULT_HANDLERS, get_config
+from picopt.handlers.png import Png
+from picopt.handlers.webp import WebP
+from picopt.handlers.zip import CBZ, Zip
 
 
 DEFAULT_FORMATS = set([handler_cls.OUTPUT_FORMAT for handler_cls in DEFAULT_HANDLERS])
+EXTRA_FORMATS = ALL_FORMATS - DEFAULT_FORMATS
 FORMAT_DELIMETER = ","
 try:
     VERSION = version(PROGRAM_NAME)
@@ -33,40 +29,8 @@ class SplitArgsAction(Action):
     def __call__(self, parser, namespace, values, option_string=None):
         """Split values string into list."""
         if isinstance(values, str):
-            values = tuple(sorted(values.split(FORMAT_DELIMETER)))
-        super().__call__(parser, namespace, values, option_string)
-
-
-class StoreConstSubKeyAction(Action):
-    """Store const in subkey."""
-
-    def __init__(
-        self,
-        option_strings,
-        dest,
-        const=None,
-        default=None,
-        required=False,
-        help=None,
-        _metavar=None,
-    ):
-        """Init."""
-        super().__init__(
-            option_strings=option_strings,
-            dest=dest,
-            nargs=0,
-            const=const,
-            default=default,
-            required=required,
-            help=help,
-        )
-
-    def __call__(self, _parser, namespace, _values, _option_string=None):
-        """Assign const to referenced subkey."""
-        key, sub_key = self.dest.split(".")
-        if key not in namespace:
-            namespace.__dict__[key] = {}
-        namespace.__dict__[key][sub_key] = self.const
+            values = tuple(sorted(values.strip().split(FORMAT_DELIMETER)))
+        setattr(namespace, self.dest, values)
 
 
 def _comma_join(formats: Set[str]) -> str:
@@ -91,7 +55,7 @@ def get_arguments(args: Tuple[str, ...]) -> Namespace:
         "--verbose",
         action="count",
         dest="verbose",
-        help="Display more output. -v (default) and -vv " "(noisy)",
+        help="Display more output. Can be used twice for noisy output.",
     )
     parser.add_argument(
         "-q",
@@ -100,38 +64,6 @@ def get_arguments(args: Tuple[str, ...]) -> Namespace:
         dest="verbose",
         const=-1,
         help="Display little to no output",
-    )
-    parser.add_argument(
-        "-c",
-        "--cbz",
-        action="append_const",
-        dest="_extra_formats",
-        const=CBZ.OUTPUT_FORMAT,
-        help="Optimize comic book zip archives. Implies --recursive",
-    )
-    parser.add_argument(
-        "-z",
-        "--zipfiles",
-        action="append_const",
-        dest="_extra_formats",
-        const=Zip.OUTPUT_FORMAT,
-        help="Optimize images inside of zipfiles. Implies --recursive",
-    )
-    parser.add_argument(
-        "-e",
-        "--epub",
-        action="append_const",
-        dest="_extra_formats",
-        const=EPub.OUTPUT_FORMAT,
-        help="Optimize images inside of ePubs. Implies --recursive",
-    )
-    parser.add_argument(
-        "-t",
-        "--tiff",
-        action="append_const",
-        dest="_extra_formats",
-        const=TIFF_FORMAT,
-        help="Convert lossless TIFFs to PNG or WEBP. Requires -p or -w to activate.",
     )
     parser.add_argument(
         "-f",
@@ -143,45 +75,28 @@ def get_arguments(args: Tuple[str, ...]) -> Namespace:
         f"Defaults to {_comma_join(DEFAULT_FORMATS)}",
     )
     parser.add_argument(
-        "-p",
-        "--convert_to_png",
-        action=StoreConstSubKeyAction,
-        dest="convert_to.PNG",
-        const=True,
-        help=f"Convert {_comma_join(PNG_CONVERTABLE_FORMATS)} formats to "
-        "PNG when optimizing.",
+        "-x",
+        "--extra-formats",
+        action=SplitArgsAction,
+        dest="_extra_formats",
+        help="Append additional formats to the default formats.",
     )
     parser.add_argument(
-        "-w",
-        "--convert_to_webp",
-        action=StoreConstSubKeyAction,
-        dest="convert_to.WEBP",
-        const=True,
-        help=f"Convert {_comma_join(WEBP_CONVERTABLE_FORMATS)} to "
-        "Lossless WebP when optimizing.",
-    )
-    parser.add_argument(
-        "-i",
-        "--convert_to_zip",
-        action=StoreConstSubKeyAction,
-        dest="convert_to.ZIP",
-        const=True,
-        help="Convert RAR to Zip when optimizing.",
-    )
-    parser.add_argument(
-        "-d",
-        "--convert_to_cbz",
-        action=StoreConstSubKeyAction,
-        dest="convert_to.CBZ",
-        const=True,
-        help="Convert CBR to CBZ when optimizing.",
+        "-c",
+        "--convert-to",
+        action=SplitArgsAction,
+        dest="convert_to",
+        help="A list of formats to convert to. Lossless images may convert to "
+        f"{Png.OUTPUT_FORMAT} or {WebP.OUTPUT_FORMAT}. {Zip.INPUT_FORMAT_RAR} archives "
+        f"may convert to {Zip.OUTPUT_FORMAT} or {CBZ.OUTPUT_FORMAT}. "
+        "By default formats are not converted to other formats.",
     )
     parser.add_argument(
         "-S",
         "--no-follow-symlinks",
         action="store_false",
         dest="follow_symlinks",
-        help="do not follow symlinks for files and directories",
+        help="Do not follow symlinks for files and directories",
     )
     parser.add_argument(
         "-b",
@@ -192,7 +107,7 @@ def get_arguments(args: Tuple[str, ...]) -> Namespace:
     )
     parser.add_argument(
         "-I",
-        "--no_timestamp",
+        "--no-timestamp",
         action="store_false",
         dest="record_timestamp",
         help="Do not record the optimization time in a timestamp file.",
@@ -228,7 +143,7 @@ def get_arguments(args: Tuple[str, ...]) -> Namespace:
     )
     parser.add_argument(
         "-M",
-        "--destroy_metadata",
+        "--destroy-metadata",
         action="store_false",
         dest="keep_metadata",
         help="Destroy metadata like EXIF and ICC Profiles",
@@ -246,7 +161,8 @@ def get_arguments(args: Tuple[str, ...]) -> Namespace:
         type=int,
         action="store",
         dest="jobs",
-        help="Number of parallel jobs to run simultaneously. Defaults to maximum.",
+        help="Number of parallel jobs to run simultaneously. Defaults "
+        "to maximum available.",
     )
     parser.add_argument(
         "-C",

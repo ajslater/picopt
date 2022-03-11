@@ -39,7 +39,7 @@ class TestContainersDir:
             assert path.stat().st_size == sizes[0]
 
     def test_containers_no_convert(self) -> None:
-        args = (PROGRAM_NAME, "-rcze", str(TMP_ROOT))
+        args = (PROGRAM_NAME, "-rx", "CBZ,ZIP,EPUB", str(TMP_ROOT))
         res = cli.run(args)
         assert res
         for name, sizes in FNS.items():
@@ -47,7 +47,7 @@ class TestContainersDir:
             assert path.stat().st_size == sizes[1]
 
     def test_containers_convert_to_zip(self) -> None:
-        args = (PROGRAM_NAME, "-rid", str(TMP_ROOT))
+        args = (PROGRAM_NAME, "-rc", "ZIP,CBZ", str(TMP_ROOT))
         res = cli.run(args)
         assert res
         for name, sizes in FNS.items():

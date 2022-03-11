@@ -56,7 +56,7 @@ class TestImagesDir:
             assert path.stat().st_size == sizes[1]
 
     def test_convert_to_png(self) -> None:
-        args = (PROGRAM_NAME, "-prt", str(TMP_ROOT))
+        args = (PROGRAM_NAME, "-rx", "TIFF", "-c", "PNG", str(TMP_ROOT))
         res = cli.run(args)
         assert res
         for name, sizes in FNS.items():
@@ -64,7 +64,7 @@ class TestImagesDir:
             assert path.stat().st_size == sizes[2][1]
 
     def test_convert_to_webp(self) -> None:
-        args = (PROGRAM_NAME, "-wrt", str(TMP_ROOT))
+        args = (PROGRAM_NAME, "-rx", "TIFF", "-c", "WEBP", str(TMP_ROOT))
         res = cli.run(args)
         assert res
         for name, sizes in FNS.items():

@@ -12,7 +12,6 @@ from confuse.templates import (
     Choice,
     Integer,
     MappingTemplate,
-    MappingValues,
     Optional,
     Path,
     Sequence,
@@ -20,7 +19,6 @@ from confuse.templates import (
 from dateutil.parser import parse
 
 from picopt import PROGRAM_NAME
-from picopt.handlers.container import ContainerHandler
 from picopt.handlers.gif import AnimatedGif, Gif
 from picopt.handlers.handler import Format, Handler
 from picopt.handlers.image import (
@@ -51,21 +49,31 @@ PNG_CONVERTABLE_FORMATS = set(
 WEBP_CONVERTABLE_FORMATS = set(
     [format.format for format in _WEBP_CONVERTABLE_FORMAT_OBJS]
 )
+CONVERT_TO_FORMATS = set(
+    (
+        Png.OUTPUT_FORMAT,
+        WebPLossless.OUTPUT_FORMAT,
+        Zip.OUTPUT_FORMAT,
+        CBZ.OUTPUT_FORMAT,
+    )
+)
+CONTAINER_CONVERTABLE_FORMATS = set((Zip.INPUT_FORMAT_RAR, CBZ.INPUT_FORMAT_RAR))
 DEFAULT_HANDLERS = (Gif, AnimatedGif, Jpeg, Png, WebPLossy, WebPLossless)
 HANDLERS = set([*DEFAULT_HANDLERS, Gif2WebP, WebPAnimated, Zip, CBZ, EPub])
 ALL_FORMATS: typing.Set[str] = (
     set([cls.OUTPUT_FORMAT for cls in HANDLERS])
     | CONVERTABLE_FORMATS
     | set([TIFF_FORMAT])
+    | CONTAINER_CONVERTABLE_FORMATS
 )
 TEMPLATE = MappingTemplate(
     {
         "after": Optional(datetime),
         "bigger": bool,
-        "convert_to": MappingValues(bool),
+        "convert_to": Optional(Sequence(Choice(CONVERT_TO_FORMATS))),
         "keep_metadata": bool,
         "follow_symlinks": bool,
-        "formats": set,
+        "formats": Sequence(Choice(ALL_FORMATS)),
         "jobs": Integer(),
         "list_only": bool,
         "paths": Sequence(Path()),
@@ -130,17 +138,18 @@ def _get_available_programs(config) -> set:
 
 
 def _update_formats(config) -> dict:
-    convert_to: typing.Dict[str, bool] = config["convert_to"].get(dict)
-    formats: typing.Set[str] = set(config["formats"].get(set))
+    convert_to: typing.Set[str] = set(config["convert_to"].get(list))
+    formats: typing.Set[str] = set(config["formats"].get(list))
     convert_handlers: typing.Dict[typing.Type[Handler], typing.Set[Format]] = {}
     if "_extra_formats" in config:
         formats |= set(config["_extra_formats"].get(list))
-    if convert_to.get(Png.OUTPUT_FORMAT):
+    print(f"{convert_to=}")
+    if Png.OUTPUT_FORMAT in convert_to:
         formats |= PNG_CONVERTABLE_FORMATS
         convert_handlers[Png] = _PNG_CONVERTABLE_FORMAT_OBJS
         if TIFF_FORMAT in formats:
             convert_handlers[Png].add(TIFF_FORMAT_OBJ)
-    if convert_to.get(WebPLossless.OUTPUT_FORMAT):
+    if WebPLossless.OUTPUT_FORMAT in convert_to:
         formats |= WEBP_CONVERTABLE_FORMATS
         convert_handlers[WebPLossless] = _WEBP_CONVERTABLE_FORMAT_OBJS
         convert_handlers[Gif2WebP] = set(
@@ -149,14 +158,14 @@ def _update_formats(config) -> dict:
         if TIFF_FORMAT in formats:
             convert_handlers[WebPLossless].add(TIFF_FORMAT_OBJ)
             convert_handlers[WebPAnimated] = set([TIFF_ANIMATED_FORMAT_OBJ])
-    if convert_to.get(Zip.OUTPUT_FORMAT):
+    if Zip.OUTPUT_FORMAT in convert_to:
         formats |= set([Zip.INPUT_FORMAT_RAR])
         convert_handlers[Zip] = set([Zip.INPUT_FORMAT_OBJ_RAR])
-    if convert_to.get(CBZ.OUTPUT_FORMAT):
+    if CBZ.OUTPUT_FORMAT in convert_to:
         formats |= set([CBZ.INPUT_FORMAT_RAR])
         convert_handlers[CBZ] = set([CBZ.INPUT_FORMAT_OBJ_RAR])
 
-    config["formats"].set(set(formats))
+    config["formats"].set(sorted(formats))
     return convert_handlers
 
 
@@ -164,10 +173,10 @@ def _create_format_handler_map(config: Configuration, convert_handlers: dict) ->
     """Create a format to handler map from config."""
     available_programs = _get_available_programs(config)
     format_handlers = {}
-    formats = config["formats"].get(set)
-    if not isinstance(formats, set):
+    formats = config["formats"].get(list)
+    if not isinstance(formats, list):
         raise ValueError(f"wrong type for formats: {type(formats)}{formats}")
-    recurse = bool(config["recurse"].get(bool))
+    formats = set(formats)
 
     for format, possible_handler_classes in FORMAT_HANDLERS.items():
         for handler_class in possible_handler_classes:
@@ -175,10 +184,8 @@ def _create_format_handler_map(config: Configuration, convert_handlers: dict) ->
                 convert_handlers, available_programs, format
             ):
                 format_handlers[format] = handler_class
-                recurse |= issubclass(handler_class, ContainerHandler)
                 break
 
-    config["recurse"].set(recurse)
     config["_format_handlers"].set(format_handlers)
     config["_available_programs"].set(available_programs)
 

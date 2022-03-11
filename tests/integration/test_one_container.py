@@ -29,7 +29,7 @@ class TestContainersDir:
             shutil.rmtree(TMP_ROOT)
 
     def test_containers_no_convert(self) -> None:
-        args = (PROGRAM_NAME, "-z", str(TMP_ROOT / FN))
+        args = (PROGRAM_NAME, "-x", "ZIP", str(TMP_ROOT / FN))
         res = cli.run(args)
         assert res
         for name, sizes in FNS.items():
