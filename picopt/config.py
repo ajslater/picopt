@@ -86,6 +86,14 @@ TEMPLATE = MappingTemplate(
         "_format_handlers": dict,
     }
 )
+TIMESTAMPS_CONFIG_KEYS = (
+    "bigger",
+    "convert_to",
+    "keep_metadata",
+    "follow_symlinks",
+    "formats",
+    "recurse",
+)
 # Handlers for formats are listed in priority order
 FORMAT_HANDLERS = {
     PPM_FORMAT_OBJ: (WebPLossless, Png),

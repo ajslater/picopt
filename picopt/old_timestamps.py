@@ -13,21 +13,22 @@ _OLD_TIMESTAMPS_NAME = f".{PROGRAM_NAME}_timestamp"
 
 
 def _upgrade_old_timestamp(
-    timestamps: Timestamps, old_timestamp_path: Path
+    timestamps: Timestamps, old_timestamp_path: Path, unlink: bool = False
 ) -> Optional[float]:
     """Get the timestamp from a old style timestamp file."""
     if not old_timestamp_path.exists():
         return None
 
     mtime = old_timestamp_path.stat().st_mtime
-    mtime_str = datetime.fromtimestamp(mtime)
     path = old_timestamp_path.parent
     timestamps.set(path, mtime)
-    try:
-        old_timestamp_path.unlink()
-        print(f"Upgraded old style timestamp {path}:{mtime_str}")
-    except OSError:
-        print(f"Could not remove old timestamp: {old_timestamp_path}")
+    if unlink:
+        try:
+            old_timestamp_path.unlink()
+            mtime_str = datetime.fromtimestamp(mtime)
+            print(f"Upgraded old style timestamp {old_timestamp_path}:{mtime_str}")
+        except OSError:
+            print(f"Could not remove old timestamp: {old_timestamp_path}")
 
     return mtime
 
@@ -48,7 +49,8 @@ def _upgrade_old_child_timestamps(timestamps: Timestamps, top_path: Path):
     for root, dirnames, filenames in os.walk(top_path):
         root_path = Path(root)
         if _OLD_TIMESTAMPS_NAME in filenames:
-            _upgrade_old_timestamp(timestamps, root_path / _OLD_TIMESTAMPS_NAME)
+            old_timestamp_path = root_path / _OLD_TIMESTAMPS_NAME
+            _upgrade_old_timestamp(timestamps, old_timestamp_path, True)
         for dirname in dirnames:
             _upgrade_old_child_timestamps(timestamps, root_path / dirname)
 

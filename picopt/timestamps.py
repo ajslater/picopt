@@ -3,7 +3,7 @@ import os
 
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, Optional
+from typing import Any, Dict, Optional
 
 from ruamel.yaml import YAML
 
@@ -11,8 +11,12 @@ from ruamel.yaml import YAML
 class Timestamps:
     """Timestamp object to hold settings and caches."""
 
+    _CONFIG_TAG = "config"
+    _LOCAL_PATH = Path(".")
+
     @staticmethod
     def dirpath(path: Path):
+        """Return a directory for a path."""
         return path if path.is_dir() else path.parent
 
     @staticmethod
@@ -20,34 +24,61 @@ class Timestamps:
         """Max function that works in python 3."""
         return max((x for x in (a, b) if x is not None), default=None)
 
-    def _load_one_timestamps_file(self, timestamps_path: Path) -> Optional[Dict]:
+    def _load_timestamp(
+        self, timestamps: Dict[Path, float], path_str: str, ts_str: str
+    ) -> None:
+        try:
+            path = Path(path_str)
+            relative_path = None
+            ts = None
+            if not path.is_absolute():
+                # Load relative path. Normal
+                relative_path = Path(path_str)
+                ts = float(ts_str)
+            elif path.is_relative_to(self._dump_path.parent):
+                # Convert absolute path to relative.
+                relative_path = path.relative_to(self._dump_path.parent)
+                ts = float(ts_str)
+            elif self._dump_path.is_relative_to(path):
+                # Convert parent path to local path.
+                ancestor_ts = float(ts_str)
+                local_ts = self._timestamps.get(self._LOCAL_PATH)
+                if local_ts is None or ancestor_ts > local_ts:
+                    relative_path = self._LOCAL_PATH
+                    ts = ancestor_ts
+
+            if (
+                relative_path is not None
+                and ts is not None
+                and (relative_path not in timestamps or ts > timestamps[relative_path])
+            ):
+                timestamps[relative_path] = ts
+            elif self._verbose > 2:
+                print(f"Irrelevant timestamp ignored: {path_str}: {ts_str}")
+        except Exception as exc:
+            print(f"Invalid timestamp for {path_str}: {ts_str} {exc}")
+
+    def _load_one_timestamps_file(
+        self, timestamps_path: Path
+    ) -> Optional[Dict[Path, float]]:
         """Load timestamps from a file."""
         if not timestamps_path.is_file():
             return None
 
-        timestamps: Dict = {}
+        timestamps: Dict[Path, float] = {}
         try:
-            yaml_timestamps: Optional[Dict] = self._YAML.load(timestamps_path)
-            if not yaml_timestamps:
+            yaml: Optional[Dict] = self._YAML.load(timestamps_path)
+            if not yaml:
                 return timestamps
-            for path_str, ts_str in yaml_timestamps.items():
-                try:
-                    path = Path(path_str)
-                    ts = float(ts_str)
-                    if not path.is_absolute():
-                        # Load relative path. Normal
-                        timestamps[path] = ts
-                    elif path.is_relative_to(self._dump_path):
-                        # Convert absolute path to relative.
-                        relative_path = path.relative_to(self._dump_path.parent)
-                        timestamps[relative_path] = ts
-                    elif self._dump_path.is_relative_to(path):
-                        # Convert parent path to local path.
-                        timestamps[self._dump_path.parent] = self.max_none(
-                            ts, self._timestamps.get(self._dump_path.parent)
-                        )
-                except Exception as exc:
-                    print(f"Invalid timestamp for {path_str}: {ts_str} {exc}")
+            try:
+                yaml_config = yaml.pop(self._CONFIG_TAG)
+            except KeyError:
+                yaml_config = None
+            if self._config != yaml_config:
+                # Only load timestamps for comparable configs
+                return timestamps
+            for path_str, ts_str in yaml.items():
+                self._load_timestamp(timestamps, path_str, ts_str)
         except Exception as exc:
             print(f"Error parsing timestamp file: {timestamps_path}")
             print(exc)
@@ -91,11 +122,10 @@ class Timestamps:
             for dirname in dirnames:
                 self._consume_all_child_timestamps(Path(dirname))
 
-    def _compact_timestamps_below(self, root_path: Path) -> None:
+    def _compact_timestamps_below(self, root_path: Path, root_timestamp: float) -> None:
         """Compact the timestamp cache below a particular path."""
         if not root_path.is_dir():
             return
-        root_timestamp = self._timestamps.get(root_path)
         delete_keys = set()
         for path, timestamp in self._timestamps.items():
             if (
@@ -114,7 +144,13 @@ class Timestamps:
             dumpable_timestamps[str(path)] = timestamp
         return dumpable_timestamps
 
-    def __init__(self, program_name: str, dump_path: Path, verbose: int = 0) -> None:
+    def __init__(
+        self,
+        program_name: str,
+        dump_path: Path,
+        verbose: int = 0,
+        config: Optional[Dict[str, Any]] = None,
+    ) -> None:
         """Initialize instance variables."""
         if not dump_path.is_dir():
             raise ValueError("dump_path must be a directory")
@@ -123,6 +159,7 @@ class Timestamps:
         self._YAML.allow_duplicate_keys = True
         self.filename = f".{program_name}_timestamps.yaml"
         self._dump_path = dump_path / self.filename
+        self._config = config
         self._timestamps = self._load_timestamps(dump_path)
         self._consume_all_child_timestamps(dump_path)
 
@@ -141,6 +178,11 @@ class Timestamps:
 
         return mtime
 
+    def _journal_timestamp(self, path, mtime):
+        """Append a timestamp journal to disk."""
+        with self._dump_path.open("a") as tsf:
+            tsf.write(f"{path}: {mtime}\n")
+
     def set(
         self, full_path: Path, mtime: Optional[float] = None, compact: bool = False
     ) -> Optional[float]:
@@ -150,12 +192,16 @@ class Timestamps:
         relative_path = full_path.relative_to(self._dump_path.parent)
         self._timestamps[relative_path] = mtime
         if compact:
-            self._compact_timestamps_below(relative_path)
-        with self._dump_path.open("a") as tsf:
-            tsf.write(f"{full_path}: {mtime}\n")
+            self._compact_timestamps_below(relative_path, mtime)
+        self._journal_timestamp(relative_path, mtime)
         return mtime
 
     def dump_timestamps(self) -> None:
         """Serialize timestamps and dump to file."""
+        yaml = {}
+        if self._config is not None:
+            yaml[self._CONFIG_TAG] = dict(sorted(self._config.items()))
         dumpable_timestamps = self._serialize_timestamps()
-        self._YAML.dump(dumpable_timestamps, self._dump_path)
+        yaml.update(dumpable_timestamps)
+
+        self._YAML.dump(yaml, self._dump_path)

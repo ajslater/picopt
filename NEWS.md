@@ -20,6 +20,7 @@ v3.0.0-a0
 - EPub support
 - TIFF support
 - use multiprocessing for unpacking and repacking containers.
+- Timestamps record configuration. Running with a new config invalidates non-matching timestamps.
 
 v2.2.1
 

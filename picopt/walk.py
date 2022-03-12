@@ -12,6 +12,7 @@ from confuse.templates import AttrDict
 from humanize import naturalsize
 
 from picopt import PROGRAM_NAME
+from picopt.config import TIMESTAMPS_CONFIG_KEYS
 from picopt.handlers.container import ContainerHandler
 from picopt.handlers.factory import create_handler
 from picopt.handlers.handler import Handler
@@ -285,11 +286,23 @@ class Walk:
                 totals.bytes_in += res.bytes_in
                 totals.bytes_out += res.bytes_out
 
-    def _set_timestamps(self, path: Path):
+    def _get_timestamps_config(self) -> Dict[str, Any]:
+        """Create a timestamps config dict."""
+        timestamps_config: Dict[str, Any] = {}
+        for key in TIMESTAMPS_CONFIG_KEYS:
+            timestamps_config[key] = self._config.get(key)
+        return timestamps_config
+
+    def _set_timestamps(self, path: Path, timestamps_config: Dict[str, Any]):
         dirpath = Timestamps.dirpath(path)
         if dirpath in self._timestamps:
             return
-        timestamps = Timestamps(PROGRAM_NAME, dirpath, self._config.verbose)
+        timestamps = Timestamps(
+            PROGRAM_NAME,
+            dirpath,
+            verbose=self._config.verbose,
+            config=timestamps_config,
+        )
         migrate_timestamps(timestamps, dirpath)
         self._timestamps[dirpath] = timestamps
 
@@ -300,11 +313,12 @@ class Walk:
             return False
 
         # Init timestamps.
+        timestamps_config = self._get_timestamps_config()
         for top_path in self._top_paths:
             if not top_path.exists():
                 print(f"Path does not exist: {top_path}")
                 return False
-            self._set_timestamps(top_path)
+            self._set_timestamps(top_path, timestamps_config)
         self.timestamps_filename = next(iter(self._timestamps.values())).filename
 
         print("Optimizing formats:", *sorted(self._config.formats))
