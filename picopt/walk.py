@@ -92,6 +92,11 @@ class Walk:
                 print(f"{path} not found.")
             skip = True
 
+        for ignore_glob in self._config.ignore:
+            if path.match(ignore_glob):
+                skip = True
+                break
+
         return skip
 
     def _is_older_than_timestamp(

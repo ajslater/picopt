@@ -4,6 +4,7 @@ convert_to: []
 keep_metadata: True
 follow_symlinks: True
 formats: ["GIF", "JPEG", "PNG", "WEBP"]
+ignore: []
 jobs: 0
 list_only: False
 paths: []

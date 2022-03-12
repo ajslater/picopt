@@ -74,6 +74,7 @@ TEMPLATE = MappingTemplate(
         "keep_metadata": bool,
         "follow_symlinks": bool,
         "formats": Sequence(Choice(ALL_FORMATS)),
+        "ignore": Sequence(str),
         "jobs": Integer(),
         "list_only": bool,
         "paths": Sequence(Path()),
@@ -92,6 +93,7 @@ TIMESTAMPS_CONFIG_KEYS = (
     "keep_metadata",
     "follow_symlinks",
     "formats",
+    "ignore",
     "recurse",
 )
 # Handlers for formats are listed in priority order
@@ -129,15 +131,18 @@ def _does_external_program_run(prog: str, verbose: int) -> bool:
     return result
 
 
-def _get_available_programs(config) -> set:
+def _get_available_programs(config: Configuration) -> set:
     """Run the external program tester on the required binaries."""
+    verbose = config["verbose"].get(int)
+    if not isinstance(verbose, int):
+        raise ValueError(f"wrong type for covnert_to: {type(verbose)} {verbose}")
     programs = set()
     for handler in HANDLERS:
         for program in handler.PROGRAMS:
             if (
                 program == Handler.INTERNAL
                 or program.startswith("pil2")
-                or _does_external_program_run(program, config["verbose"].get(int))
+                or _does_external_program_run(program, verbose)
             ):
                 programs.add(program)
     if not programs:
@@ -145,13 +150,20 @@ def _get_available_programs(config) -> set:
     return programs
 
 
-def _update_formats(config) -> dict:
-    convert_to: typing.Set[str] = set(config["convert_to"].get(list))
-    formats: typing.Set[str] = set(config["formats"].get(list))
-    convert_handlers: typing.Dict[typing.Type[Handler], typing.Set[Format]] = {}
+def _config_list_to_set(config, key) -> typing.Set[str]:
+    val_list = config[key].get(list)
+    if not isinstance(val_list, (tuple, list, set)):
+        raise ValueError(f"wrong type for convert_to: {type(val_list)} {val_list}")
+    return set(val_list)
+
+
+def _update_formats(config: Configuration) -> dict:
+    convert_to = _config_list_to_set(config, "convert_to")
+    formats = _config_list_to_set(config, "formats")
     if "_extra_formats" in config:
-        formats |= set(config["_extra_formats"].get(list))
-    print(f"{convert_to=}")
+        formats |= _config_list_to_set(config, "_extra_formats")
+
+    convert_handlers: typing.Dict[typing.Type[Handler], typing.Set[Format]] = {}
     if Png.OUTPUT_FORMAT in convert_to:
         formats |= PNG_CONVERTABLE_FORMATS
         convert_handlers[Png] = _PNG_CONVERTABLE_FORMAT_OBJS
@@ -213,6 +225,12 @@ def _set_after(config) -> None:
     config["after"].set(timestamp)
 
 
+def _set_ignore(config) -> None:
+    """Remove duplicates from the ignore list."""
+    ignore_list: typing.List[str] = config["ignore"].get(list)
+    config["ignore"].set(tuple(sorted(set(ignore_list))))
+
+
 def get_config(args: typing.Optional[Namespace] = None) -> AttrDict:
     """Get the config dict, layering env and args over defaults."""
     config = Configuration(PROGRAM_NAME, PROGRAM_NAME)
@@ -224,6 +242,7 @@ def get_config(args: typing.Optional[Namespace] = None) -> AttrDict:
     _set_after(config)
     convert_handlers = _update_formats(config)
     _create_format_handler_map(config, convert_handlers)
+    _set_ignore(config)
     ad = config.get(TEMPLATE)
     if not isinstance(ad, AttrDict):
         raise ValueError()

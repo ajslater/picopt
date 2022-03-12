@@ -99,11 +99,18 @@ def get_arguments(args: Tuple[str, ...]) -> Namespace:
         help="Do not follow symlinks for files and directories",
     )
     parser.add_argument(
+        "-i",
+        "--ignore",
+        action=SplitArgsAction,
+        dest="ignore",
+        help="List of globs to ignore.",
+    )
+    parser.add_argument(
         "-b",
         "--bigger",
         action="store_true",
         dest="bigger",
-        help="Save optimized files that are larger than " "the originals",
+        help="Save optimized files that are larger than the originals",
     )
     parser.add_argument(
         "-I",
