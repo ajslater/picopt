@@ -272,5 +272,8 @@ class Timestamps:
         self._close_wal()
         if self._consumed_paths:
             for path in self._consumed_paths:
-                path.unlink(missing_ok=True)
+                try:
+                    path.unlink(missing_ok=True)
+                except Exception as exc:
+                    print(exc)
             self._consumed_paths = set()
