@@ -139,7 +139,7 @@ def get_arguments(args: tuple[str, ...]) -> Namespace:
         help="Report how much would be saved, but do not replace files.",
     )
     parser.add_argument(
-        "-l",
+        "-L",
         "--list",
         action="store_true",
         dest="list_only",
