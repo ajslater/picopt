@@ -49,6 +49,7 @@ class Walk:
         timestamps_filename = Timestamps.get_timestamps_filename(PROGRAM_NAME)
         timestamps_wal_filename = Timestamps.get_wal_filename(PROGRAM_NAME)
         self._timestamps_filenames = set([timestamps_filename, timestamps_wal_filename])
+        self.queues: Dict[Path, SimpleQueue[Any]] = {}
 
     def _is_skippable(self, path: Path) -> bool:
         """Handle things that are not optimizable files."""
@@ -274,14 +275,8 @@ class Walk:
         else:
             print(f"Unhandled queue item {item}")
 
-    def _get_timestamps_config(self) -> Dict[str, Any]:
-        """Create a timestamps config dict."""
-        timestamps_config: Dict[str, Any] = {}
-        for key in TIMESTAMPS_CONFIG_KEYS:
-            timestamps_config[key] = self._config.get(key)
-        return timestamps_config
-
     def _set_timestamps(self, path: Path, timestamps_config: Dict[str, Any]):
+        """Read timestamps."""
         dirpath = self.dirpath(path)
         if dirpath in self._timestamps:
             return
@@ -294,51 +289,58 @@ class Walk:
         OldTimestamps(timestamps).import_old_timestamps()
         self._timestamps[dirpath] = timestamps
 
-    def run(self) -> bool:
-        """Optimize all configured files."""
+    def _init_run(self):
+        """Init Run."""
+        # Validate top_paths
         if not self._top_paths:
-            print("No paths to optimize.")
-            return False
+            raise ValueError("No paths to optimize.")
+        for path in self._top_paths:
+            if not path.exists():
+                raise ValueError(f"Path does not exist: {path}")
 
-        # Init timestamps.
-        if self._config.timestamps:
-            timestamps_config = self._get_timestamps_config()
-            for top_path in self._top_paths:
-                if not top_path.exists():
-                    print(f"Path does not exist: {top_path}")
-                    return False
-                self._set_timestamps(top_path, timestamps_config)
-
+        # Tell the user what we're doing
         if self._config.verbose:
             print("Optimizing formats:", *sorted(self._config.formats))
             if self._config.after is not None:
                 print("Optimizing after", time.ctime(self._config.after))
 
-        # Fire off all async processes using a queue per timestamps file.
-        self.queues: Dict[Path, SimpleQueue[Any]] = {}
+        # Init timestamps
+        if self._config.timestamps:
+            timestamps_config: Dict[str, Any] = {}
+            for key in TIMESTAMPS_CONFIG_KEYS:
+                timestamps_config[key] = self._config.get(key)
+            for top_path in self._top_paths:
+                self._set_timestamps(top_path, timestamps_config)
+
+    def run(self) -> bool:
+        """Optimize all configured files."""
+        try:
+            self._init_run()
+        except Exception as exc:
+            print(exc)
+            return False
+
+        # Start each queue
         totals = Totals()
         for top_path in self._top_paths:
             dirpath = self.dirpath(top_path)
+            result = self.walk_file(top_path, dirpath)
             if dirpath not in self.queues:
                 self.queues[dirpath] = SimpleQueue()
             queue = self.queues[dirpath]
-            result = self.walk_file(top_path, dirpath)
-            queue.put(result)
+            self.queues[dirpath].put(result)
 
         # Process each queue
         for top_path, queue in self.queues.items():
             while not queue.empty():
                 self._handle_queue_item(top_path, totals)
-            print(f"DEBUG: end of queue for {top_path}")
             if self._should_record_timestamp(top_path):
-                print(f"DEBUG: dump timestamps: {top_path}")
                 self._timestamps[top_path].dump_timestamps()
-
-        # Finish by reporting totals
-        self._report_totals(totals)
 
         # Shut down multiprocessing
         self._pool.close()
         self._pool.join()
 
+        # Finish by reporting totals
+        self._report_totals(totals)
         return True
