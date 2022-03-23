@@ -68,7 +68,7 @@ ALL_FORMATS: typing.Set[str] = (
 )
 TEMPLATE = MappingTemplate(
     {
-        "after": Optional(datetime),
+        "after": Optional(float),
         "bigger": bool,
         "convert_to": Optional(Sequence(Choice(CONVERT_TO_FORMATS))),
         "keep_metadata": bool,
@@ -216,8 +216,11 @@ def _set_after(config) -> None:
         return
 
     if isinstance(after, str):
-        after_dt = parse(after)
-        timestamp = time.mktime(after_dt.timetuple())
+        try:
+            timestamp = float(after)
+        except ValueError:
+            after_dt = parse(after)
+            timestamp = time.mktime(after_dt.timetuple())
     elif isinstance(after, int) or isinstance(after, float):
         timestamp = float(after)
     else:

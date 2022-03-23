@@ -139,10 +139,13 @@ class Timestamps:
         self._load_timestamps_file(parent / self.wal_filename)
         self._load_parent_timestamps(parent)
 
-    def _compact_timestamps_below(self, root_path: Path, root_timestamp: float) -> None:
+    def _compact_timestamps_below(self, root_path: Path) -> None:
         """Compact the timestamp cache below a particular path."""
         full_root_path = self.dir / root_path
         if not full_root_path.is_dir():
+            return
+        root_timestamp = self._timestamps.get(full_root_path)
+        if root_timestamp is None:
             return
         delete_keys = set()
         for path, timestamp in self._timestamps.items():
@@ -250,7 +253,7 @@ class Timestamps:
 
         self._timestamps[full_path] = mtime
         if compact and full_path.is_dir():
-            self._compact_timestamps_below(full_path, mtime)
+            self._compact_timestamps_below(full_path)
         if not self._wal:
             self._init_wal()
         if self._wal:
