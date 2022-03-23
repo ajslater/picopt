@@ -36,19 +36,19 @@ from picopt.handlers.webp_animated import WebPAnimated
 from picopt.handlers.zip import CBZ, EPub, Zip
 
 
-_PNG_CONVERTABLE_FORMAT_OBJS = CONVERTABLE_FORMAT_OBJS | set(
+_PNG_CONVERTABLE_FORMAT_OBJS = CONVERTABLE_FORMAT_OBJS | frozenset(
     [Gif.OUTPUT_FORMAT_OBJ, TIFF_FORMAT_OBJ]
 )
-_WEBP_CONVERTABLE_FORMAT_OBJS = _PNG_CONVERTABLE_FORMAT_OBJS | set(
+_WEBP_CONVERTABLE_FORMAT_OBJS = _PNG_CONVERTABLE_FORMAT_OBJS | frozenset(
     [Png.OUTPUT_FORMAT_OBJ]
 )
-PNG_CONVERTABLE_FORMATS = set(
+PNG_CONVERTABLE_FORMATS = frozenset(
     [format.format for format in _PNG_CONVERTABLE_FORMAT_OBJS]
 )
-WEBP_CONVERTABLE_FORMATS = set(
+WEBP_CONVERTABLE_FORMATS = frozenset(
     [format.format for format in _WEBP_CONVERTABLE_FORMAT_OBJS]
 )
-CONVERT_TO_FORMATS = set(
+CONVERT_TO_FORMATS = frozenset(
     (
         Png.OUTPUT_FORMAT,
         WebPLossless.OUTPUT_FORMAT,
@@ -56,13 +56,13 @@ CONVERT_TO_FORMATS = set(
         CBZ.OUTPUT_FORMAT,
     )
 )
-CONTAINER_CONVERTABLE_FORMATS = set((Zip.INPUT_FORMAT_RAR, CBZ.INPUT_FORMAT_RAR))
+CONTAINER_CONVERTABLE_FORMATS = frozenset((Zip.INPUT_FORMAT_RAR, CBZ.INPUT_FORMAT_RAR))
 DEFAULT_HANDLERS = (Gif, AnimatedGif, Jpeg, Png, WebPLossy, WebPLossless)
-HANDLERS = set([*DEFAULT_HANDLERS, Gif2WebP, WebPAnimated, Zip, CBZ, EPub])
-ALL_FORMATS: typing.Set[str] = (
-    set([cls.OUTPUT_FORMAT for cls in HANDLERS])
+HANDLERS = frozenset([*DEFAULT_HANDLERS, Gif2WebP, WebPAnimated, Zip, CBZ, EPub])
+ALL_FORMATS: frozenset[str] = (
+    frozenset([cls.OUTPUT_FORMAT for cls in HANDLERS])
     | CONVERTABLE_FORMATS
-    | set([TIFF_FORMAT])
+    | frozenset([TIFF_FORMAT])
     | CONTAINER_CONVERTABLE_FORMATS
 )
 TEMPLATE = MappingTemplate(

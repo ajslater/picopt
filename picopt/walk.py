@@ -5,17 +5,24 @@ import time
 from multiprocessing.pool import ApplyResult, Pool
 from pathlib import Path
 from queue import SimpleQueue
-from typing import Any, Dict, Optional, Sequence, Tuple, Union
+from typing import Any, Optional, Sequence, Type, Union
 
 from confuse.templates import AttrDict
 from humanize import naturalsize
 
 from picopt import PROGRAM_NAME
-from picopt.config import TIMESTAMPS_CONFIG_KEYS
+from picopt.config import (
+    PNG_CONVERTABLE_FORMATS,
+    TIMESTAMPS_CONFIG_KEYS,
+    WEBP_CONVERTABLE_FORMATS,
+)
 from picopt.handlers.container import ContainerHandler
 from picopt.handlers.factory import create_handler
 from picopt.handlers.handler import Handler
 from picopt.handlers.image import ImageHandler
+from picopt.handlers.png import Png
+from picopt.handlers.webp import WebP
+from picopt.handlers.zip import CBZ, Zip
 from picopt.old_timestamps import OldTimestamps
 from picopt.stats import ReportStats
 from picopt.tasks import (
@@ -40,8 +47,8 @@ class Walk:
         """Initialize."""
         self._config: AttrDict = config
         config_paths: Sequence[Path] = self._config.paths
-        self._top_paths: Tuple[Path, ...] = tuple(sorted(set(config_paths)))
-        self._timestamps: Dict[Path, Timestamps] = {}
+        self._top_paths: tuple[Path, ...] = tuple(sorted(set(config_paths)))
+        self._timestamps: dict[Path, Timestamps] = {}
         if self._config.jobs:
             self._pool = Pool(self._config.jobs)
         else:
@@ -49,7 +56,7 @@ class Walk:
         timestamps_filename = Timestamps.get_timestamps_filename(PROGRAM_NAME)
         timestamps_wal_filename = Timestamps.get_wal_filename(PROGRAM_NAME)
         self._timestamps_filenames = set([timestamps_filename, timestamps_wal_filename])
-        self.queues: Dict[Path, SimpleQueue[Any]] = {}
+        self.queues: dict[Path, SimpleQueue[Any]] = {}
 
     def _is_skippable(self, path: Path) -> bool:
         """Handle things that are not optimizable files."""
@@ -275,7 +282,7 @@ class Walk:
         else:
             print(f"Unhandled queue item {item}")
 
-    def _set_timestamps(self, path: Path, timestamps_config: Dict[str, Any]):
+    def _set_timestamps(self, path: Path, timestamps_config: dict[str, Any]):
         """Read timestamps."""
         dirpath = self.dirpath(path)
         if dirpath in self._timestamps:
@@ -289,6 +296,13 @@ class Walk:
         OldTimestamps(timestamps).import_old_timestamps()
         self._timestamps[dirpath] = timestamps
 
+    def _convert_message(
+        self, convert_from_formats: frozenset[str], convert_handler: Type[Handler]
+    ):
+        convert_from = ", ".join(sorted(convert_from_formats))
+        convert_to = convert_handler.OUTPUT_FORMAT
+        print(f"Converting {convert_from} to {convert_to}")
+
     def _init_run(self):
         """Init Run."""
         # Validate top_paths
@@ -301,12 +315,21 @@ class Walk:
         # Tell the user what we're doing
         if self._config.verbose:
             print("Optimizing formats:", *sorted(self._config.formats))
+            if self._config.convert_to:
+                if WebP.OUTPUT_FORMAT in self._config.convert_to:
+                    self._convert_message(WEBP_CONVERTABLE_FORMATS, WebP)
+                elif Png.OUTPUT_FORMAT in self._config.convert_to:
+                    self._convert_message(PNG_CONVERTABLE_FORMATS, Png)
+                if Zip.OUTPUT_FORMAT in self._config.convert_to:
+                    self._convert_message(frozenset([Zip.INPUT_FORMAT_RAR]), Zip)
+                if CBZ.OUTPUT_FORMAT in self._config.convert_to:
+                    self._convert_message(frozenset([CBZ.INPUT_FORMAT_RAR]), CBZ)
             if self._config.after is not None:
                 print("Optimizing after", time.ctime(self._config.after))
 
         # Init timestamps
         if self._config.timestamps:
-            timestamps_config: Dict[str, Any] = {}
+            timestamps_config: dict[str, Any] = {}
             for key in TIMESTAMPS_CONFIG_KEYS:
                 timestamps_config[key] = self._config.get(key)
             for top_path in self._top_paths:
