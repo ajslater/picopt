@@ -4,7 +4,6 @@ import time
 import typing
 
 from argparse import Namespace
-from datetime import datetime
 
 from confuse import Configuration
 from confuse.templates import (
