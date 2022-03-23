@@ -2,11 +2,10 @@
 import os
 import time
 
-from dataclasses import dataclass, field
 from multiprocessing.pool import ApplyResult, Pool
 from pathlib import Path
 from queue import SimpleQueue
-from typing import Any, Dict, List, Optional, Sequence, Tuple, Union
+from typing import Any, Dict, Optional, Sequence, Tuple, Union
 
 from confuse.templates import AttrDict
 from humanize import naturalsize
@@ -19,38 +18,14 @@ from picopt.handlers.handler import Handler
 from picopt.handlers.image import ImageHandler
 from picopt.old_timestamps import OldTimestamps
 from picopt.stats import ReportStats
+from picopt.tasks import (
+    ContainerDirResult,
+    ContainerRepackResult,
+    DirCompactTask,
+    DirResult,
+    Totals,
+)
 from picopt.timestamps import Timestamps
-
-
-@dataclass
-class DirResult:
-    """Results from a directory."""
-
-    path: Path
-    results: List
-
-
-@dataclass
-class ContainerDirResult(DirResult):
-    """Results from a container."""
-
-    handler: ContainerHandler
-
-
-@dataclass
-class ContainerRepackResult:
-    """Task to fire off repack once all container optimizations are done."""
-
-    handler: ContainerHandler
-
-
-@dataclass
-class Totals:
-    """Totals for final report."""
-
-    bytes_in: int = 0
-    bytes_out: int = 0
-    errors: List[ReportStats] = field(default_factory=list)
 
 
 class Walk:
@@ -261,8 +236,20 @@ class Walk:
         queue: SimpleQueue = self.queues[top_path]
         item = queue.get()
         if isinstance(item, ApplyResult):
-            res = item.get()
-            queue.put(res)
+            # unpack apply results inline to preserve directory order
+            item = item.get()
+
+        if item is None:
+            pass
+        elif isinstance(item, ReportStats):
+            if item.error:
+                print(item.error)
+                totals.errors.append(item)
+            else:
+                if self._should_record_timestamp(item.path):
+                    self._timestamps[top_path].set(item.path)
+                totals.bytes_in += item.bytes_in
+                totals.bytes_out += item.bytes_out
         elif isinstance(item, ContainerHandler):
             container_res = self._walk_container_dir(top_path, item)
             queue.put(container_res)
@@ -274,25 +261,16 @@ class Walk:
                 task = ContainerRepackResult(item.handler)
                 queue.put(task)
             else:
+                queue.put(DirCompactTask(item.path))
+        elif isinstance(item, DirCompactTask):
+            if self._should_record_timestamp(item.path):
                 # Dump timestamps after every directory completes
-                if self._should_record_timestamp(item.path):
-                    timestamps = self._timestamps[top_path]
-                    timestamps.set(item.path, compact=True)
-                    timestamps.dump_timestamps()
+                timestamps = self._timestamps[top_path]
+                timestamps.set(item.path, compact=True)
+                timestamps.dump_timestamps()
         elif isinstance(item, ContainerRepackResult):
             repack_result = self._pool.apply_async(item.handler.repack)
             queue.put(repack_result)
-        elif isinstance(item, ReportStats):
-            if item.error:
-                print(item.error)
-                totals.errors.append(item)
-            else:
-                if self._should_record_timestamp(item.path):
-                    self._timestamps[top_path].set(item.path)
-                totals.bytes_in += item.bytes_in
-                totals.bytes_out += item.bytes_out
-        elif item is None:
-            pass
         else:
             print(f"Unhandled queue item {item}")
 
@@ -351,7 +329,9 @@ class Walk:
         for top_path, queue in self.queues.items():
             while not queue.empty():
                 self._handle_queue_item(top_path, totals)
+            print(f"DEBUG: end of queue for {top_path}")
             if self._should_record_timestamp(top_path):
+                print(f"DEBUG: dump timestamps: {top_path}")
                 self._timestamps[top_path].dump_timestamps()
 
         # Finish by reporting totals
