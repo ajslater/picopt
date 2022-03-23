@@ -214,16 +214,12 @@ def _set_after(config) -> None:
     if after is None:
         return
 
-    if isinstance(after, str):
-        try:
-            timestamp = float(after)
-        except ValueError:
-            after_dt = parse(after)
-            timestamp = time.mktime(after_dt.timetuple())
-    elif isinstance(after, int) or isinstance(after, float):
+    try:
         timestamp = float(after)
-    else:
-        timestamp = None
+    except ValueError:
+        after_dt = parse(after)
+        timestamp = time.mktime(after_dt.timetuple())
+
     config["after"].set(timestamp)
 
 

@@ -127,8 +127,9 @@ def get_arguments(args: tuple[str, ...]) -> Namespace:
         "--after",
         action="store",
         dest="after",
-        help="Only optimize files after the specified "
-        "timestamp. Supersedes recorded timestamp files.",
+        help="Only optimize files after the specified timestamp. "
+        "Supersedes recorded timestamp files. Can be an epoch number or "
+        "datetime string",
     )
     parser.add_argument(
         "-T",
