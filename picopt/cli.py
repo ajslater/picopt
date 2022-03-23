@@ -56,14 +56,15 @@ def get_arguments(args: tuple[str, ...]) -> Namespace:
         "--verbose",
         action="count",
         dest="verbose",
-        help="Display more output. Can be used twice for noisy output.",
+        help="Display more output. Can be used multiple times for "
+        "increasingly noisy output.",
     )
     parser.add_argument(
         "-q",
         "--quiet",
         action="store_const",
         dest="verbose",
-        const=-1,
+        const=0,
         help="Display little to no output",
     )
     parser.add_argument(
