@@ -4,7 +4,6 @@ import subprocess
 from abc import ABC
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Set, Tuple
 
 from confuse.templates import AttrDict
 
@@ -37,11 +36,11 @@ class Handler(ABC):
     OUTPUT_FORMAT: str = "unimplemented"
     OUTPUT_FORMAT_OBJ: Format = Format(OUTPUT_FORMAT, False, False)
     INTERNAL: str = "python_internal"
-    PROGRAMS: Tuple[str, ...] = tuple()
+    PROGRAMS: tuple[str, ...] = tuple()
     WORKING_SUFFIX: str = f"{PROGRAM_NAME}-tmp"
 
     @staticmethod
-    def run_ext(args: Tuple[str, ...]) -> None:
+    def run_ext(args: tuple[str, ...]) -> None:
         """Run EXTERNAL program."""
         try:
             subprocess.check_call(args)
@@ -53,7 +52,7 @@ class Handler(ABC):
             raise
 
     @classmethod
-    def native_input_format_objs(cls) -> Set[Format]:
+    def native_input_format_objs(cls) -> set[Format]:
         """Return input formats handled without conversion."""
         return set([cls.OUTPUT_FORMAT_OBJ])
 
@@ -92,7 +91,7 @@ class Handler(ABC):
         """Initialize handler."""
         self.config: AttrDict = config
         self.original_path: Path = original_path
-        self.working_paths: Set[Path] = set()
+        self.working_paths: set[Path] = set()
         self.final_path: Path = self.original_path.with_suffix(self.output_suffix())
         self.input_format_obj: Format = input_format_obj
         self.metadata = metadata
@@ -107,7 +106,7 @@ class Handler(ABC):
 
         return self.original_path.with_suffix(suffix)
 
-    def _cleanup_after_optimize_aux(self, last_working_path: Path) -> Tuple[int, int]:
+    def _cleanup_after_optimize_aux(self, last_working_path: Path) -> tuple[int, int]:
         """Replace old file with better one or discard new wasteful file."""
         bytes_in = 0
         bytes_out = 0
@@ -132,7 +131,7 @@ class Handler(ABC):
 
         return (bytes_in, bytes_out)
 
-    def cleanup_after_optimize(self, last_working_path: Path) -> Tuple[int, int]:
+    def cleanup_after_optimize(self, last_working_path: Path) -> tuple[int, int]:
         """
         Replace old file with better one or discard new wasteful file.
 

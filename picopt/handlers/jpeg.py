@@ -2,7 +2,6 @@
 import copy
 
 from pathlib import Path
-from typing import Tuple
 
 from PIL.JpegImagePlugin import JpegImageFile
 
@@ -15,7 +14,7 @@ class Jpeg(ImageHandler):
 
     OUTPUT_FORMAT = JpegImageFile.format
     OUTPUT_FORMAT_OBJ = Format(OUTPUT_FORMAT, False, False)
-    PROGRAMS: Tuple[str, ...] = ("mozjpeg", "jpegtran")
+    PROGRAMS: tuple[str, ...] = ("mozjpeg", "jpegtran")
     _ARGS_PREFIX = ["-optimize", "-progressive"]
 
     @classmethod

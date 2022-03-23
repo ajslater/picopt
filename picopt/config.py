@@ -149,7 +149,7 @@ def _get_available_programs(config: Configuration) -> set:
     return programs
 
 
-def _config_list_to_set(config, key) -> typing.Set[str]:
+def _config_list_to_set(config, key) -> set[str]:
     val_list = config[key].get(list)
     if not isinstance(val_list, (tuple, list, set)):
         raise ValueError(f"wrong type for convert_to: {type(val_list)} {val_list}")
@@ -162,7 +162,7 @@ def _update_formats(config: Configuration) -> dict:
     if "_extra_formats" in config:
         formats |= _config_list_to_set(config, "_extra_formats")
 
-    convert_handlers: typing.Dict[typing.Type[Handler], typing.Set[Format]] = {}
+    convert_handlers: dict[typing.Type[Handler], set[Format]] = {}
     if Png.OUTPUT_FORMAT in convert_to:
         formats |= PNG_CONVERTABLE_FORMATS
         convert_handlers[Png] = _PNG_CONVERTABLE_FORMAT_OBJS
@@ -229,7 +229,7 @@ def _set_after(config) -> None:
 
 def _set_ignore(config) -> None:
     """Remove duplicates from the ignore list."""
-    ignore_list: typing.List[str] = config["ignore"].get(list)
+    ignore_list: list[str] = config["ignore"].get(list)
     config["ignore"].set(tuple(sorted(set(ignore_list))))
 
 

@@ -2,7 +2,6 @@
 import shutil
 
 from pathlib import Path
-from typing import Tuple
 
 from PIL import Image
 from PIL.GifImagePlugin import GifImageFile
@@ -16,7 +15,7 @@ class Gif(ImageHandler):
 
     OUTPUT_FORMAT = GifImageFile.format
     OUTPUT_FORMAT_OBJ = Format(OUTPUT_FORMAT, True, False)
-    PROGRAMS: Tuple[str, ...] = ("gifsicle", "pil2gif")
+    PROGRAMS: tuple[str, ...] = ("gifsicle", "pil2gif")
     _ARGS_PREFIX = ["gifsicle", "--optimize=3", "--batch"]
 
     def gifsicle(self, old_path: Path, new_path: Path) -> Path:

@@ -5,7 +5,6 @@ import sys
 
 from argparse import Action, Namespace
 from importlib.metadata import PackageNotFoundError, version
-from typing import Set, Tuple
 
 from picopt import PROGRAM_NAME, walk
 from picopt.config import ALL_FORMATS, DEFAULT_HANDLERS, get_config
@@ -14,7 +13,9 @@ from picopt.handlers.webp import WebP
 from picopt.handlers.zip import CBZ, Zip
 
 
-DEFAULT_FORMATS = set([handler_cls.OUTPUT_FORMAT for handler_cls in DEFAULT_HANDLERS])
+DEFAULT_FORMATS = frozenset(
+    [handler_cls.OUTPUT_FORMAT for handler_cls in DEFAULT_HANDLERS]
+)
 EXTRA_FORMATS = ALL_FORMATS - DEFAULT_FORMATS
 FORMAT_DELIMETER = ","
 try:
@@ -33,12 +34,12 @@ class SplitArgsAction(Action):
         setattr(namespace, self.dest, values)
 
 
-def _comma_join(formats: Set[str]) -> str:
+def _comma_join(formats: frozenset[str]) -> str:
     """Sort and join a sequence into a human readable string."""
     return ", ".join(sorted(formats))
 
 
-def get_arguments(args: Tuple[str, ...]) -> Namespace:
+def get_arguments(args: tuple[str, ...]) -> Namespace:
     """Parse the command line."""
     usage = "%(prog)s [arguments] [paths]"
     description = "Losslessly optimizes and optionally converts images."
@@ -183,7 +184,7 @@ def get_arguments(args: Tuple[str, ...]) -> Namespace:
     return parser.parse_args(args[1:])
 
 
-def run(args: Tuple[str, ...]) -> bool:
+def run(args: tuple[str, ...]) -> bool:
     """Process command line arguments and walk inputs."""
     arguments = get_arguments(args)
     config = get_config(arguments)

@@ -1,6 +1,6 @@
 """Statistics for the optimization operations."""
 from pathlib import Path
-from typing import Optional, Tuple
+from typing import Optional
 
 from humanize import naturalsize
 
@@ -11,7 +11,7 @@ class ReportStats:
     def __init__(
         self,
         path: Path,
-        bytes_count: Optional[Tuple[int, int]] = None,
+        bytes_count: Optional[tuple[int, int]] = None,
         error: Optional[str] = None,
     ) -> None:
         """Initialize required instance variables."""

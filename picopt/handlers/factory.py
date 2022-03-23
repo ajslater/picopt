@@ -1,6 +1,6 @@
 """Return a handler for a path."""
 from pathlib import Path
-from typing import Optional, Tuple, Type
+from typing import Optional, Type
 
 from confuse.templates import AttrDict
 from PIL import Image, UnidentifiedImageError
@@ -15,7 +15,7 @@ from picopt.pillow.webp_lossless import is_lossless
 
 
 _ALWAYS_LOSSLESS_FORMATS = WEBP_CONVERTABLE_FORMATS - set([TIFF_FORMAT])
-_CONTAINER_HANDLERS: Tuple[Type[ContainerHandler], ...] = (CBZ, Zip, EPub)
+_CONTAINER_HANDLERS: tuple[Type[ContainerHandler], ...] = (CBZ, Zip, EPub)
 
 
 def _is_lossless(image_format: str, path: Path, info: dict) -> bool:
@@ -33,7 +33,7 @@ def _is_lossless(image_format: str, path: Path, info: dict) -> bool:
 
 def _get_image_format(
     path: Path, keep_metadata: bool
-) -> Tuple[Optional[Format], Metadata]:
+) -> tuple[Optional[Format], Metadata]:
     """Construct the image format with PIL."""
     format = None
     metadata = Metadata()

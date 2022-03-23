@@ -1,7 +1,6 @@
 """Queue tasks."""
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import List
 
 from picopt.handlers.container import ContainerHandler
 from picopt.stats import ReportStats
@@ -12,7 +11,7 @@ class DirResult:
     """Results from a directory."""
 
     path: Path
-    results: List
+    results: list
 
 
 @dataclass
@@ -42,4 +41,4 @@ class Totals:
 
     bytes_in: int = 0
     bytes_out: int = 0
-    errors: List[ReportStats] = field(default_factory=list)
+    errors: list[ReportStats] = field(default_factory=list)

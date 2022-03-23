@@ -6,14 +6,13 @@ This should be a part of Pillow
 https://developers.google.com/speed/webp/docs/webp_lossless_bitstream_specification
 """
 from pathlib import Path
-from typing import Tuple
 
 from picopt.pillow.unpack import compare_header
 
 
-RIFF_HEADER: Tuple[bytes, ...] = (b"R", b"I", b"F", b"F")
-WEBP_HEADER: Tuple[bytes, ...] = (b"W", b"E", b"B", b"P")
-VP8L_HEADER: Tuple[bytes, ...] = (b"V", b"P", b"8", b"L")
+RIFF_HEADER: tuple[bytes, ...] = (b"R", b"I", b"F", b"F")
+WEBP_HEADER: tuple[bytes, ...] = (b"W", b"E", b"B", b"P")
+VP8L_HEADER: tuple[bytes, ...] = (b"V", b"P", b"8", b"L")
 
 COMPARATORS = ((0, RIFF_HEADER), (8, WEBP_HEADER), (12, VP8L_HEADER))
 

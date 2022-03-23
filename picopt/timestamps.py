@@ -1,7 +1,7 @@
 """Timestamp writer for keeping track of bulk optimizations."""
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, Optional, Set, TextIO
+from typing import Any, Optional, TextIO
 
 from ruamel.yaml import YAML
 
@@ -28,10 +28,10 @@ class Timestamps:
         return f".{program_name}_timestamps.wal.yaml"
 
     @classmethod
-    def _normalize_config(cls, config: Optional[Dict]) -> Optional[Dict]:
+    def _normalize_config(cls, config: Optional[dict]) -> Optional[dict]:
         if config is None:
             return None
-        new_config: Dict = {}
+        new_config: dict = {}
         for key, value in config.items():
             if isinstance(value, (list, tuple, set)):
                 original_type = type(value)
@@ -179,7 +179,7 @@ class Timestamps:
         program_name: str,
         dir: Path,
         verbose: int = 0,
-        config: Optional[Dict[str, Any]] = None,
+        config: Optional[dict[str, Any]] = None,
     ) -> None:
         """Initialize instance variables."""
         if not dir.is_dir():
@@ -193,9 +193,9 @@ class Timestamps:
         self._dump_path = self.dir / self.filename
         self._wal_path = self.dir / self.wal_filename
         self._wal: Optional[TextIO] = None
-        self._consumed_paths: Set[Path] = set()
-        self._config: Optional[Dict] = self._normalize_config(config)
-        self._timestamps: Dict[Path, float] = {}
+        self._consumed_paths: set[Path] = set()
+        self._config: Optional[dict] = self._normalize_config(config)
+        self._timestamps: dict[Path, float] = {}
         self._consume_all_child_timestamps(self.dir)
         self._load_parent_timestamps(self.dir)
 
@@ -226,7 +226,7 @@ class Timestamps:
         self._wal = None
 
     def _init_wal(self) -> None:
-        yaml: Dict = {}
+        yaml: dict = {}
         self._set_dumpable_config(yaml)
         self._close_wal()
         self._YAML.dump(yaml, self._wal_path)
@@ -263,7 +263,7 @@ class Timestamps:
 
     def dump_timestamps(self) -> None:
         """Serialize timestamps and dump to file."""
-        yaml: Dict = {}
+        yaml: dict = {}
         self._set_dumpable_config(yaml)
         dumpable_timestamps = self._serialize_timestamps()
         yaml.update(dumpable_timestamps)

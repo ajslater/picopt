@@ -1,7 +1,7 @@
 """WebP format."""
 from abc import ABC
 from pathlib import Path
-from typing import Any, Dict, List, Tuple
+from typing import Any
 
 from PIL import Image
 from PIL.WebPImagePlugin import WebPImageFile
@@ -14,10 +14,10 @@ from picopt.handlers.png import Png
 class WebPBase(ImageHandler, ABC):
     """Base for handlers that use WebP utility commands."""
 
-    PIL2WEBP_KWARGS: Dict[str, Any] = {"lossless": True, "quality": 100, "method": 6}
-    PIL2_ARGS: Dict[str, Any] = PIL2WEBP_KWARGS
+    PIL2WEBP_KWARGS: dict[str, Any] = {"lossless": True, "quality": 100, "method": 6}
+    PIL2_ARGS: dict[str, Any] = PIL2WEBP_KWARGS
 
-    def get_metadata_args(self) -> List[str]:
+    def get_metadata_args(self) -> list[str]:
         """Get webp utility metadata args."""
         args = ["-metadata"]
         if self.config.keep_metadata:
@@ -35,7 +35,7 @@ class WebP(WebPBase, ABC):
     """WebP format class."""
 
     OUTPUT_FORMAT = WebPImageFile.format
-    PROGRAMS: Tuple[str, ...] = ("cwebp",)
+    PROGRAMS: tuple[str, ...] = ("cwebp",)
     ARGS_PREFIX = [
         "cwebp",
         "-mt",
@@ -63,7 +63,7 @@ class WebPLossless(WebP):
     BEST_ONLY: bool = False
     OUTPUT_FORMAT_OBJ = Format(WebP.OUTPUT_FORMAT, True, False)
     PREFERRED_PROGRAM: str = "cwebp"
-    PROGRAMS: Tuple[str, ...] = ("pil2png", *WebP.PROGRAMS, "pil2webp")
+    PROGRAMS: tuple[str, ...] = ("pil2png", *WebP.PROGRAMS, "pil2webp")
     ARGS_PREFIX = WebP.ARGS_PREFIX + [
         "-lossless",
         "-z",
@@ -114,12 +114,12 @@ class Gif2WebP(WebPBase):
 
     OUTPUT_FORMAT = WebP.OUTPUT_FORMAT
     OUTPUT_FORMAT_OBJ = Format(WebP.OUTPUT_FORMAT, True, True)
-    PIL2WEBP_KWARGS: Dict[str, Any] = {
+    PIL2WEBP_KWARGS: dict[str, Any] = {
         **WebPLossless.PIL2WEBP_KWARGS,
         "minimize_size": True,
     }
     PREFERRED_PROGRAM = "gif2webp"
-    PROGRAMS: Tuple[str, ...] = ("gif2webp", "pil2webp")
+    PROGRAMS: tuple[str, ...] = ("gif2webp", "pil2webp")
     _ARGS_PREFIX = [
         "gif2webp",
         "-mixed",

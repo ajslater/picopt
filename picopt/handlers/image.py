@@ -1,7 +1,7 @@
 """Format Superclass."""
 from abc import ABCMeta
 from pathlib import Path
-from typing import Dict
+from typing import Any
 
 from PIL import Image
 from PIL.BmpImagePlugin import BmpImageFile
@@ -24,7 +24,7 @@ TIFF_ANIMATED_FORMAT_OBJ = Format(TIFF_FORMAT, True, True)
 class ImageHandler(Handler, metaclass=ABCMeta):
     """Format superclass."""
 
-    PIL2_ARGS: Dict = {}
+    PIL2_ARGS: dict[str, Any] = {}
     PREFERRED_PROGRAM: str = "unimplemented"
 
     def _optimize_with_progs(self) -> ReportStats:

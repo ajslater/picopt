@@ -26,7 +26,7 @@ packages = [{ include = "picopt" }, { include = "tests", format = "sdist" }]
 include = ["NEWS.md"]
 
 [tool.poetry.dependencies]
-python = "^3.8"
+python = "^3.9"
 python-dateutil = "^2.8"
 rarfile = "^4.0"
 "ruamel.yaml" = "^0.17.16"

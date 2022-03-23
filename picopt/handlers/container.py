@@ -3,7 +3,7 @@ import shutil
 
 from abc import ABCMeta, abstractmethod
 from pathlib import Path
-from typing import Optional, Tuple, Union
+from typing import Optional, Union
 
 from confuse.templates import AttrDict
 
@@ -66,7 +66,7 @@ class ContainerHandler(Handler, metaclass=ABCMeta):
         except Exception as exc:
             return self.error(exc)
 
-    def cleanup_after_optimize(self, working_path: Path) -> Tuple[int, int]:
+    def cleanup_after_optimize(self, working_path: Path) -> tuple[int, int]:
         """Clean up the temp dir as well as thte old container."""
         if self.config.verbose:
             print(".", end="")
