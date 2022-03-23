@@ -1,7 +1,6 @@
 v3.0.0-a0
 
 - .picoptrc.yaml files can configure options
-- Recording timestamps is now the default behavior
 - Timestamps are now kept in .picopt_timestamps.yaml files.
 - Picopt will convert and clean up old style timestamps.
 - Timestamps are now recorded after optimizing every image for

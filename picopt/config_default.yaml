@@ -8,7 +8,7 @@ ignore: []
 jobs: 0
 list_only: False
 paths: []
-record_timestamp: True
 recurse: False
+timestamps: False
 test: False
 verbose: 1

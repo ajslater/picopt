@@ -78,9 +78,9 @@ TEMPLATE = MappingTemplate(
         "jobs": Integer(),
         "list_only": bool,
         "paths": Sequence(Path()),
-        "record_timestamp": bool,
         "recurse": bool,
         "test": bool,
+        "timestamps": bool,
         "verbose": Integer(),
         "_available_programs": set,
         "_extra_formats": Optional(Sequence(Choice(ALL_FORMATS))),
@@ -231,6 +231,16 @@ def _set_ignore(config) -> None:
     config["ignore"].set(tuple(sorted(set(ignore_list))))
 
 
+def _set_timestamps(config) -> None:
+    """Set the timestamps attribute."""
+    timestamps = (
+        config["timestamps"].get(bool)
+        and not config["test"].get(bool)
+        and not config["list_only"].get(bool)
+    )
+    config["timestamps"].set(timestamps)
+
+
 def get_config(args: typing.Optional[Namespace] = None) -> AttrDict:
     """Get the config dict, layering env and args over defaults."""
     config = Configuration(PROGRAM_NAME, PROGRAM_NAME)
@@ -243,6 +253,7 @@ def get_config(args: typing.Optional[Namespace] = None) -> AttrDict:
     convert_handlers = _update_formats(config)
     _create_format_handler_map(config, convert_handlers)
     _set_ignore(config)
+    _set_timestamps(config)
     ad = config.get(TEMPLATE)
     if not isinstance(ad, AttrDict):
         raise ValueError()
