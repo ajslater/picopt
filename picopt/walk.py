@@ -1,4 +1,5 @@
 """Walk the directory trees and files and call the optimizers."""
+import shutil
 import time
 
 from multiprocessing.pool import ApplyResult, Pool
@@ -68,12 +69,6 @@ class Walk:
             skip = True
         elif path.name in self._timestamps_filenames:
             skip = True
-        elif path.name.rfind(Handler.WORKING_SUFFIX) > -1:
-            # auto-clean old working temp files if encountered.
-            path.unlink()
-            if self._config.verbose > 1:
-                print(f"Deleted {path}")
-            skip = True
         elif not path.exists():
             if self._config.verbose > 1:
                 print(f"{path} not found.")
@@ -116,6 +111,15 @@ class Walk:
 
         return bool(mtime <= walk_after)
 
+    def _clean_up_working_files(self, path):
+        """Auto-clean old working temp files if encountered."""
+        try:
+            shutil.rmtree(path, ignore_errors=True)
+            if self._config.verbose > 1:
+                print(f"Deleted {path}")
+        except Exception as exc:
+            print(exc)
+
     def walk_file(
         self,
         path: Path,
@@ -126,6 +130,10 @@ class Walk:
         result: Union[ApplyResult, DirResult, None] = None
         try:
             if self._is_skippable(path):
+                return result
+
+            if path.name.rfind(Handler.WORKING_SUFFIX) > -1:
+                self._clean_up_working_files(path)
                 return result
 
             if path.is_dir():
