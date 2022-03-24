@@ -24,19 +24,18 @@ class TestCLI:
             shutil.rmtree(TMP_ROOT)
 
     def test_get_arguments(self) -> None:
-        args = ("picopt", "-rqczpwSbINlM", str(TMP_ROOT))
+        args = ("picopt", "-rqc", "PNG,WEBP", "-x", "CBZ,ZIP", "-bTLM", str(TMP_ROOT))
         arguments = cli.get_arguments(args)
-        assert arguments.verbose == -1
-        assert arguments.convert_to["PNG"]
-        assert arguments.convert_to["WEBP"]
+        assert arguments.verbose == 0
+        assert ("PNG", "WEBP") == arguments.convert_to
         assert arguments.formats is None
-        assert arguments._extra_formats == [CBZ.FORMAT_STR, Zip.FORMAT_STR]
-        assert not arguments.follow_symlinks
+        assert arguments._extra_formats == (CBZ.OUTPUT_FORMAT, Zip.OUTPUT_FORMAT)
+        assert arguments.follow_symlinks
         assert arguments.bigger
-        assert not arguments.record_timestamp
+        assert not arguments.timestamps
         assert arguments.test
         assert arguments.list_only
-        assert arguments.destroy_metadata
+        assert not arguments.keep_metadata
         assert arguments.paths[0] == str(TMP_ROOT)
 
     def test_main(self) -> None:

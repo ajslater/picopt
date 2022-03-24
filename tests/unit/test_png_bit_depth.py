@@ -6,9 +6,9 @@ from tests import IMAGES_DIR
 
 
 __all__ = ()  # hides module from pydocstring
-TEST_SRC_PATH = str(IMAGES_DIR / "test_png.png")
-TEST_SRC_PATH_16 = str(IMAGES_DIR / "test_png_16rgba.png")
-TEST_SRC_PATH_JPG = str(IMAGES_DIR / "test_jpg.jpg")
+TEST_SRC_PATH = IMAGES_DIR / "test_png.png"
+TEST_SRC_PATH_16 = IMAGES_DIR / "test_png_16rgba.png"
+TEST_SRC_PATH_JPG = IMAGES_DIR / "test_jpg.jpg"
 
 
 def test_png_bit_depth() -> None:
