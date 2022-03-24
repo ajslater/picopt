@@ -1,25 +1,26 @@
 v3.0.0-a0
 
-- .picoptrc.yaml files can configure options
-- Timestamps are now kept in .picopt_timestamps.yaml files.
-- Picopt will convert and clean up old style timestamps.
-- Timestamps are now recorded after optimizing every image for
-  each image individually instead of directories, preserving progress.
-- Clean up old temporary files from aborted picopt runs.
-- Setting timestamps is now the default behavior
-- Remove cli args for manually disabling programs
-- Change long name of 'disable*\*' cli args to 'no*\*'
-- Fix condition where new files in an old archive were not processed.
-- WebP lossless, lossy and animated support.
-- Gain support for .zip archives
-- Drop support for rarfiles.
-- optiping optimization level changed to o5
-- Exif & icc metadata preserved in all formats much better by default.
-- Fall back to Pillow optimization if no external programs.
-- EPub support
-- TIFF support
-- use multiprocessing for unpacking and repacking containers.
-- Timestamps record configuration. Running with a new config invalidates non-matching timestamps.
+- Formats
+  - WebP lossless, lossy and animated support.
+  - Gain support for .zip archives
+  - EPub support
+  - TIFF support
+- Timestamps
+  - Timestamps are now kept in .picopt_timestamps.yaml files.
+  - Picopt will convert and clean up old style timestamps.
+  - Timestamps are now recorded after optimizing every image for
+    each image individually instead of directories, preserving progress.
+  - Timestamps record configuration. Running with a new config invalidates non-matching timestamps.
+- Configuration
+  - .picoptrc.yaml files can configure options
+  - Changed option names.
+  - Removed cli args for manually disabling programs
+- Fall back to Pillow optimization if better external programs not found.
+- Fixes
+  - Cleans up old temporary files from aborted picopt runs.
+  - Fix condition where new files in an old archive were not processed.
+  - optiping optimization level changed to o5
+  - Exif & icc metadata preserved in all formats much better by default.
 
 v2.2.1
 
