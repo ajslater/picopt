@@ -1,5 +1,4 @@
 """Walk the directory trees and files and call the optimizers."""
-import os
 import time
 
 from multiprocessing.pool import ApplyResult, Pool
@@ -163,13 +162,9 @@ class Walk:
     ) -> DirResult:
         """Recursively optimize a directory."""
         dir_result = DirResult(dir_path, [])
-        for root, _, filenames in os.walk(dir_path):
-            root_path = Path(root)
-            for filename in sorted(filenames):
-                full_path = root_path / filename
-                result = self.walk_file(full_path, top_path, container_mtime)
-                if result:
-                    dir_result.results.append(result)
+        for path in dir_path.iterdir():
+            result = self.walk_file(path, top_path, container_mtime)
+            dir_result.results.append(result)
 
         return dir_result
 
@@ -236,6 +231,20 @@ class Walk:
             for rs in totals.errors:
                 rs.report(self._config.test)
 
+    def _handle_queue_item_dir(self, top_path: Path, dir_result: DirResult):
+        """Reverse the results tree to handle directories bottom up."""
+        queue = self.queues[top_path]
+        for dir_member_result in dir_result.results:
+            if isinstance(dir_member_result, DirResult):
+                self._handle_queue_item_dir(top_path, dir_member_result)
+            else:
+                queue.put(dir_member_result)
+        if isinstance(dir_result, ContainerDirResult):
+            task = ContainerRepackResult(dir_result.handler)
+        else:
+            task = DirCompactTask(dir_result.path)
+        queue.put(task)
+
     def _handle_queue_item(
         self,
         top_path: Path,
@@ -262,14 +271,7 @@ class Walk:
             container_res = self._walk_container_dir(top_path, item)
             queue.put(container_res)
         elif isinstance(item, DirResult):
-            for dir_member_result in item.results:
-                # Put all the directory results on the queue
-                queue.put(dir_member_result)
-            if isinstance(item, ContainerDirResult):
-                task = ContainerRepackResult(item.handler)
-                queue.put(task)
-            else:
-                queue.put(DirCompactTask(item.path))
+            self._handle_queue_item_dir(top_path, item)
         elif isinstance(item, DirCompactTask):
             if self._should_record_timestamp(item.path):
                 # Dump timestamps after every directory completes
