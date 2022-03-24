@@ -27,7 +27,7 @@ except PackageNotFoundError:
 class SplitArgsAction(Action):
     """Convert csv string from argparse to a list."""
 
-    def __call__(self, parser, namespace, values, option_string=None):
+    def __call__(self, parser, namespace, values, _option_string=None):
         """Split values string into list."""
         if isinstance(values, str):
             values = tuple(sorted(values.strip().split(FORMAT_DELIMETER)))

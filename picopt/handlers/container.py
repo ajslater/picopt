@@ -67,7 +67,7 @@ class ContainerHandler(Handler, metaclass=ABCMeta):
             return self.error(exc)
 
     def cleanup_after_optimize(self, working_path: Path) -> tuple[int, int]:
-        """Clean up the temp dir as well as thte old container."""
+        """Clean up the temp dir as well as the old container."""
         if self.config.verbose:
             print(".", end="")
         shutil.rmtree(self.tmp_container_dir)
