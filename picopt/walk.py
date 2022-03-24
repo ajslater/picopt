@@ -25,9 +25,9 @@ from picopt.handlers.zip import CBZ, Zip
 from picopt.old_timestamps import OldTimestamps
 from picopt.stats import ReportStats
 from picopt.tasks import (
-    ContainerDirResult,
-    ContainerRepackResult,
-    DirCompactTask,
+    ContainerResult,
+    ContainerCompleteTask,
+    DirCompleteTask,
     DirResult,
     Totals,
 )
@@ -170,9 +170,9 @@ class Walk:
 
     def _walk_container_dir(
         self, top_path: Path, handler: ContainerHandler
-    ) -> Union[ContainerDirResult, ApplyResult]:
+    ) -> Union[ContainerResult, ApplyResult]:
         """Optimize a container."""
-        result: Union[ContainerDirResult, ApplyResult]
+        result: Union[ContainerResult, ApplyResult]
         try:
             container_mtime = handler.original_path.stat().st_mtime
             dir_result = self.walk_dir(
@@ -180,7 +180,7 @@ class Walk:
                 top_path,
                 container_mtime,
             )
-            result = ContainerDirResult(handler.final_path, dir_result.results, handler)
+            result = ContainerResult(handler.final_path, dir_result.results, handler)
         except Exception as exc:
             args = tuple([exc])
             result = self._pool.apply_async(handler.error, args=args)
@@ -240,10 +240,10 @@ class Walk:
                 self._handle_queue_item_dir(top_path, dir_member_result)
             else:
                 queue.put(dir_member_result)
-        if isinstance(dir_result, ContainerDirResult):
-            task = ContainerRepackResult(dir_result.handler)
+        if isinstance(dir_result, ContainerResult):
+            task = ContainerCompleteTask(dir_result.handler)
         else:
-            task = DirCompactTask(dir_result.path)
+            task = DirCompleteTask(dir_result.path)
         queue.put(task)
 
     def _handle_queue_item(
@@ -273,13 +273,13 @@ class Walk:
             queue.put(container_res)
         elif isinstance(item, DirResult):
             self._handle_queue_item_dir(top_path, item)
-        elif isinstance(item, DirCompactTask):
+        elif isinstance(item, DirCompleteTask):
             if self._should_record_timestamp(item.path):
                 # Dump timestamps after every directory completes
                 timestamps = self._timestamps[top_path]
                 timestamps.set(item.path, compact=True)
                 timestamps.dump_timestamps()
-        elif isinstance(item, ContainerRepackResult):
+        elif isinstance(item, ContainerCompleteTask):
             repack_result = self._pool.apply_async(item.handler.repack)
             queue.put(repack_result)
         else:

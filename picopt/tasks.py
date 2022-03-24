@@ -15,21 +15,21 @@ class DirResult:
 
 
 @dataclass
-class DirCompactTask:
-    """Task to compact timestamps."""
-
-    path: Path
-
-
-@dataclass
-class ContainerDirResult(DirResult):
+class ContainerResult(DirResult):
     """Results from a container."""
 
     handler: ContainerHandler
 
 
 @dataclass
-class ContainerRepackResult:
+class DirCompleteTask:
+    """Task to compact timestamps."""
+
+    path: Path
+
+
+@dataclass
+class ContainerCompleteTask:
     """Task to fire off repack once all container optimizations are done."""
 
     handler: ContainerHandler
