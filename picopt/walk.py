@@ -192,6 +192,7 @@ class Walk:
             self._config.timestamps
             and (self._config.follow_symlinks or not path.is_symlink())
             and path.exists()
+            and Handler.WORKING_SUFFIX not in str(path)
         )
 
     def _report_totals(self, totals: Totals) -> None:
