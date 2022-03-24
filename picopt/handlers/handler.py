@@ -37,7 +37,7 @@ class Handler(ABC):
     OUTPUT_FORMAT_OBJ: Format = Format(OUTPUT_FORMAT, False, False)
     INTERNAL: str = "python_internal"
     PROGRAMS: tuple[str, ...] = tuple()
-    WORKING_SUFFIX: str = f"{PROGRAM_NAME}-tmp"
+    WORKING_SUFFIX: str = f"{PROGRAM_NAME}--tmp"
 
     @staticmethod
     def run_ext(args: tuple[str, ...]) -> None:
