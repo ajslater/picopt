@@ -85,6 +85,8 @@ class ContainerHandler(Handler, metaclass=ABCMeta):
         try:
             # archive into new filename
             new_path = self.get_working_path()
+            if self.config.verbose:
+                print(f"Repacking {new_path}", end="")
             self.pack_into(new_path)
 
             bytes_count = self.cleanup_after_optimize(new_path)

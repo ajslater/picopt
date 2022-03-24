@@ -1,4 +1,5 @@
 """Queue tasks."""
+from abc import ABC
 from dataclasses import dataclass, field
 from pathlib import Path
 
@@ -22,14 +23,21 @@ class ContainerResult(DirResult):
 
 
 @dataclass
-class DirCompleteTask:
+class CompleteTask(ABC):
+    """Generic abstract completion task."""
+
+    pass
+
+
+@dataclass
+class CompleteDirTask(CompleteTask):
     """Task to compact timestamps."""
 
     path: Path
 
 
 @dataclass
-class ContainerCompleteTask:
+class CompleteContainerTask(CompleteTask):
     """Task to fire off repack once all container optimizations are done."""
 
     handler: ContainerHandler

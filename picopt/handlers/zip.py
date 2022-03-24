@@ -5,6 +5,7 @@ from pathlib import Path
 from typing import Optional, Union
 from zipfile import ZIP_DEFLATED, ZipFile, is_zipfile
 
+from PIL import Image, UnidentifiedImageError
 from rarfile import RarFile, is_rarfile
 
 from picopt.handlers.container import ContainerHandler
@@ -55,22 +56,38 @@ class Zip(ContainerHandler):
             archive.extractall(self.tmp_container_dir)
             self._set_comment(archive.comment)
 
+    @staticmethod
+    def _is_image(path: Path) -> bool:
+        """Is a file an image."""
+        result = False
+        try:
+            with Image.open(path, mode="r") as image:
+                if image.format:
+                    result = True
+        except UnidentifiedImageError:
+            pass
+        return result
+
     def pack_into(self, working_path: Path) -> None:
         """Zip up the files in the tempdir into the new filename."""
-        if self.config.verbose:
-            print("Rezipping archive", end="")
         with ZipFile(
             working_path, "w", compression=ZIP_DEFLATED, compresslevel=9
         ) as new_zf:
             for root, _, filenames in os.walk(self.tmp_container_dir):
                 root_path = Path(root)
-                filenames.sort()
                 for fname in sorted(filenames):
                     if self.config.verbose:
                         print(".", end="")
                     full_path = root_path / fname
+                    if self._is_image(full_path):
+                        # Do not deflate images in zipfile.
+                        # Picopte should have already achieved maximum
+                        # compression over deflate.
+                        compress_type = None
+                    else:
+                        compress_type = ZIP_DEFLATED
                     archive_path = full_path.relative_to(self.tmp_container_dir)
-                    new_zf.write(full_path, archive_path, ZIP_DEFLATED)
+                    new_zf.write(full_path, archive_path, compress_type)
             if self.comment:
                 new_zf.comment = self.comment
 

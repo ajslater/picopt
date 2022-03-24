@@ -25,9 +25,10 @@ from picopt.handlers.zip import CBZ, Zip
 from picopt.old_timestamps import OldTimestamps
 from picopt.stats import ReportStats
 from picopt.tasks import (
+    CompleteContainerTask,
+    CompleteDirTask,
+    CompleteTask,
     ContainerResult,
-    ContainerCompleteTask,
-    DirCompleteTask,
     DirResult,
     Totals,
 )
@@ -145,7 +146,9 @@ class Walk:
                 return result
 
             if isinstance(handler, ContainerHandler):
-                result = self._pool.apply_async(handler.unpack)
+                # Unpack inline, not in the pool, and walk immediately like dirs.
+                handler.unpack()
+                result = self._walk_container_dir(top_path, handler)
             elif isinstance(handler, ImageHandler):
                 result = self._pool.apply_async(handler.optimize_image)
             else:
@@ -241,10 +244,24 @@ class Walk:
             else:
                 queue.put(dir_member_result)
         if isinstance(dir_result, ContainerResult):
-            task = ContainerCompleteTask(dir_result.handler)
+            task = CompleteContainerTask(dir_result.handler)
         else:
-            task = DirCompleteTask(dir_result.path)
+            task = CompleteDirTask(dir_result.path)
         queue.put(task)
+
+    def _handle_queue_complete_task(self, top_path: Path, task: CompleteTask):
+        if isinstance(task, CompleteDirTask):
+            if self._should_record_timestamp(task.path):
+                # Dump timestamps after every directory completes
+                timestamps = self._timestamps[top_path]
+                timestamps.set(task.path, compact=True)
+                timestamps.dump_timestamps()
+        elif isinstance(task, CompleteContainerTask):
+            # Repack inline, not in pool, to complete directories immediately
+            repack_result = task.handler.repack()
+            self.queues[top_path].put(repack_result)
+        else:
+            print(f"Unhandled Complete task {task}")
 
     def _handle_queue_item(
         self,
@@ -268,20 +285,10 @@ class Walk:
                     self._timestamps[top_path].set(item.path)
                 totals.bytes_in += item.bytes_in
                 totals.bytes_out += item.bytes_out
-        elif isinstance(item, ContainerHandler):
-            container_res = self._walk_container_dir(top_path, item)
-            queue.put(container_res)
         elif isinstance(item, DirResult):
             self._handle_queue_item_dir(top_path, item)
-        elif isinstance(item, DirCompleteTask):
-            if self._should_record_timestamp(item.path):
-                # Dump timestamps after every directory completes
-                timestamps = self._timestamps[top_path]
-                timestamps.set(item.path, compact=True)
-                timestamps.dump_timestamps()
-        elif isinstance(item, ContainerCompleteTask):
-            repack_result = self._pool.apply_async(item.handler.repack)
-            queue.put(repack_result)
+        elif isinstance(item, CompleteTask):
+            self._handle_queue_complete_task(top_path, item)
         else:
             print(f"Unhandled queue item {item}")
 
