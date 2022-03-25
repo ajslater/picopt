@@ -164,18 +164,22 @@ def _update_formats(config: Configuration) -> dict:
 
     convert_handlers: dict[typing.Type[Handler], set[Format]] = {}
     if Png.OUTPUT_FORMAT in convert_to:
-        formats |= PNG_CONVERTABLE_FORMATS
-        convert_handlers[Png] = _PNG_CONVERTABLE_FORMAT_OBJS
-        if TIFF_FORMAT in formats:
-            convert_handlers[Png].add(TIFF_FORMAT_OBJ)
+        formats |= PNG_CONVERTABLE_FORMATS - set([TIFF_FORMAT])
+        format_objs = _PNG_CONVERTABLE_FORMAT_OBJS
+        if TIFF_FORMAT not in formats:
+            format_objs.remove(TIFF_FORMAT_OBJ)
+        convert_handlers[Png] = format_objs
     if WebPLossless.OUTPUT_FORMAT in convert_to:
-        formats |= WEBP_CONVERTABLE_FORMATS
-        convert_handlers[WebPLossless] = _WEBP_CONVERTABLE_FORMAT_OBJS
+        formats |= WEBP_CONVERTABLE_FORMATS - set([TIFF_FORMAT])
+        format_objs = _WEBP_CONVERTABLE_FORMAT_OBJS
+        if TIFF_FORMAT not in formats:
+            format_objs.remove(TIFF_FORMAT_OBJ)
+        convert_handlers[WebPLossless] = format_objs
+
         convert_handlers[Gif2WebP] = set(
             [Gif.OUTPUT_FORMAT_OBJ, AnimatedGif.OUTPUT_FORMAT_OBJ]
         )
         if TIFF_FORMAT in formats:
-            convert_handlers[WebPLossless].add(TIFF_FORMAT_OBJ)
             convert_handlers[WebPAnimated] = set([TIFF_ANIMATED_FORMAT_OBJ])
     if Zip.OUTPUT_FORMAT in convert_to:
         formats |= set([Zip.INPUT_FORMAT_RAR])

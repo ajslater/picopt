@@ -317,7 +317,9 @@ class Walk:
     def _convert_message(
         self, convert_from_formats: frozenset[str], convert_handler: Type[Handler]
     ):
-        convert_from = ", ".join(sorted(convert_from_formats))
+        convert_from = ", ".join(
+            sorted(convert_from_formats & frozenset(self._config.formats))
+        )
         convert_to = convert_handler.OUTPUT_FORMAT
         print(f"Converting {convert_from} to {convert_to}")
 
