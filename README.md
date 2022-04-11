@@ -40,6 +40,10 @@ Animated GIFs are optimized with [gifsicle](http://www.lcdf.org/gifsicle/) if it
 
 WebP lossless & lossy formats are optimized with [cwebp](https://developers.google.com/speed/webp/docs/cwebp).
 
+### EPub
+
+EPub Books are zip files that often contain images.
+
 ### CBZ & CBR
 
 Picopt uncompresses, optimizes and rezips [comic book archive files](https://en.wikipedia.org/wiki/Comic_book_archive). Be aware that CBR rar archives will be rezipped into CBZs instead of CBR. Comic book archive optimization is not turned on by default to prevent surprises.

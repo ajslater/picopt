@@ -2,11 +2,11 @@
   "description": "linting for picopt",
   "scripts": {
     "check": "remark . --quiet",
-    "fix": "eslint --cache --fix --ext .cjs,.mjs.js,.json,.yaml,.md . && prettier --write .",
-    "lint": "eslint --cache --ext .cjs,.mjs.js,.json,.yaml,.md . && prettier --check ."
+    "fix": "eslint_d --cache --fix --ext .cjs,.mjs.js,.json,.yaml,.md . && prettier --write .",
+    "lint": "eslint_d --cache --ext .cjs,.mjs.js,.json,.yaml,.md . && prettier --check ."
   },
   "devDependencies": {
-    "@fsouza/prettierd": "^0.19.2",
+    "@fsouza/prettierd": "^0.20",
     "eslint-config-prettier": "^8.3.0",
     "eslint-plugin-eslint-comments": "^3.2.0",
     "eslint-plugin-json": "^3.1.0",
