@@ -50,6 +50,7 @@ class Walk:
         config_paths: Sequence[Path] = self._config.paths
         self._top_paths: tuple[Path, ...] = tuple(sorted(set(config_paths)))
         self._timestamps: dict[Path, Timestamps] = {}
+        self._queues: dict[Path, SimpleQueue[Any]] = {}
         if self._config.jobs:
             self._pool = Pool(self._config.jobs)
         else:
@@ -57,7 +58,6 @@ class Walk:
         timestamps_filename = Timestamps.get_timestamps_filename(PROGRAM_NAME)
         timestamps_wal_filename = Timestamps.get_wal_filename(PROGRAM_NAME)
         self._timestamps_filenames = set([timestamps_filename, timestamps_wal_filename])
-        self.queues: dict[Path, SimpleQueue[Any]] = {}
 
     def _is_skippable(self, path: Path) -> bool:
         """Handle things that are not optimizable files."""
@@ -245,7 +245,7 @@ class Walk:
 
     def _handle_queue_item_dir(self, top_path: Path, dir_result: DirResult):
         """Reverse the results tree to handle directories bottom up."""
-        queue = self.queues[top_path]
+        queue = self._queues[top_path]
         for dir_member_result in dir_result.results:
             if isinstance(dir_member_result, DirResult):
                 self._handle_queue_item_dir(top_path, dir_member_result)
@@ -267,7 +267,7 @@ class Walk:
         elif isinstance(task, CompleteContainerTask):
             # Repack inline, not in pool, to complete directories immediately
             repack_result = task.handler.repack()
-            self.queues[top_path].put(repack_result)
+            self._queues[top_path].put(repack_result)
         else:
             print(f"Unhandled Complete task {task}")
 
@@ -276,7 +276,7 @@ class Walk:
         top_path: Path,
         totals: Totals,
     ):
-        queue: SimpleQueue = self.queues[top_path]
+        queue: SimpleQueue = self._queues[top_path]
         item = queue.get()
         if isinstance(item, ApplyResult):
             # unpack apply results inline to preserve directory order
@@ -368,22 +368,23 @@ class Walk:
         for top_path in self._top_paths:
             dirpath = self.dirpath(top_path)
             result = self.walk_file(top_path, dirpath)
-            if dirpath not in self.queues:
-                self.queues[dirpath] = SimpleQueue()
-            queue = self.queues[dirpath]
-            self.queues[dirpath].put(result)
+            if dirpath not in self._queues:
+                self._queues[dirpath] = SimpleQueue()
+            queue = self._queues[dirpath]
+            self._queues[dirpath].put(result)
 
         # Process each queue
-        for top_path, queue in self.queues.items():
+        for top_path, queue in self._queues.items():
             while not queue.empty():
                 self._handle_queue_item(top_path, totals)
-            if self._should_record_timestamp(top_path):
-                self._timestamps[top_path].dump_timestamps()
 
         # Shut down multiprocessing
         self._pool.close()
         self._pool.join()
 
+        for top_path, timestamps in self._timestamps.items():
+            if self._should_record_timestamp(top_path):
+                timestamps.dump_timestamps()
         # Finish by reporting totals
         self._report_totals(totals)
         return True
