@@ -1,4 +1,4 @@
-FROM cimg/python:3.9-node
+FROM cimg/python:3.10-node
 
 ENV DEBIAN_FRONTEND noninteractive
 
@@ -19,6 +19,7 @@ RUN apt-get update \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
+RUN sudo chown circlecli:circleci /app
 COPY --chown=circleci:circleci ci ci
 RUN ci/mozjpeg.sh
 # hadolint ignore=DL3059
