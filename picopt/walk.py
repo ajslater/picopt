@@ -39,11 +39,6 @@ from picopt.timestamps import Timestamps
 class Walk:
     """Walk object for storing state of a walk run."""
 
-    @staticmethod
-    def dirpath(path: Path):
-        """Return a directory for a path."""
-        return path if path.is_dir() else path.parent
-
     def __init__(self, config: AttrDict) -> None:
         """Initialize."""
         self._config: AttrDict = config
@@ -302,7 +297,7 @@ class Walk:
 
     def _set_timestamps(self, path: Path, timestamps_config: dict[str, Any]):
         """Read timestamps."""
-        dirpath = self.dirpath(path)
+        dirpath = Timestamps.dirpath(path)
         if dirpath in self._timestamps:
             return
         timestamps = Timestamps(
@@ -366,7 +361,7 @@ class Walk:
         # Start each queue
         totals = Totals()
         for top_path in self._top_paths:
-            dirpath = self.dirpath(top_path)
+            dirpath = Timestamps.dirpath(top_path)
             result = self.walk_file(top_path, dirpath)
             if dirpath not in self._queues:
                 self._queues[dirpath] = SimpleQueue()
