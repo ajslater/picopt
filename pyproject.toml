@@ -6,7 +6,7 @@ build-backend = ["poetry.core.masonry.api"]
 name = "picopt"
 version = "3.0.0"
 description = "A multi format lossless image optimizer that uses external tools"
-license = "GPL-2.0-only"
+license = "GPL-3.0-only"
 authors = ["AJ Slater <aj@slater.net>"]
 readme = "README.md"
 homepage = "https://github.com/ajslater/picopt"
@@ -20,7 +20,8 @@ classifiers = [
   "Intended Audience :: Developers",
   "Intended Audience :: System Administrators",
   "Environment :: Console",
-  "Programming Language :: Python :: 3"
+  "Programming Language :: Python :: 3 :: Only",
+  "Typing :: Typed",
 ]
 packages = [{ include = "picopt" }, { include = "tests", format = "sdist" }]
 include = ["NEWS.md"]
@@ -69,7 +70,6 @@ picopt = "picopt.cli:main"
 [tool.black]
 exclude = "/(.git|.mypy_cache|.pytest_cache|.venv|__pycache__|dist|node_modules|test-results|typings)/"
 
-
 [tool.coverage.run]
 source = ["picopt"]
 branch = true
@@ -116,13 +116,7 @@ addopts = """
 """
 
 [tool.vulture]
-exclude = [
-  ".git/", 
-  ".mypy_cache/",
-  ".pytest_cache",
-  ".venv",
-  "*__pycache__*",
-]
+exclude = [".git/", ".mypy_cache/", ".pytest_cache", ".venv", "*__pycache__*"]
 min_confidence = 61
 sort_by_size = true
 

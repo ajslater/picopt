@@ -31,8 +31,8 @@ By default picopt does not convert images between formats. You must turn on conv
 - By default picopt will optimize GIF, JPEG, PNG and WEBP images.
 - Picopt can optionally optimize ZIP, ePub, and CBZ containers.
 - Picopt can be told to convert lossless images such as BPM, PPM, GIF, TIFF into PNG, and all of the mentioned lossless formats into WebP.
-- Picopt can covert Animated GIFS into Animated WebP files.
-- Picopt can covert RAR files into Zipfiles and CBR files into CBZ files.
+- Picopt can convert Animated GIFS into Animated WebP files.
+- Picopt can convert RAR files into Zipfiles and CBR files into CBZ files.
 
 ## <a name="programs">External Programs</a>
 
@@ -118,7 +118,7 @@ Optimize all files and recurse directories:
 
     picopt -r *
 
-Optimize files, recurse directories, also optimize ePub & CBZ containers, covert lossless images into WEBP, convert CBR into CBZ.
+Optimize files, recurse directories, also optimize ePub & CBZ containers, convert lossless images into WEBP, convert CBR into CBZ.
 
     picopt -rx EPUB -c WEBP,CBZ *
 

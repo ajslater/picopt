@@ -5,6 +5,9 @@
     "fix": "eslint_d --cache --fix --ext .cjs,.mjs.js,.json,.yaml,.md . && prettier --write .",
     "lint": "eslint_d --cache --ext .cjs,.mjs.js,.json,.yaml,.md . && prettier --check ."
   },
+  "dependencies": {
+    "prettier-plugin-toml": "^0.3.1"
+  },
   "devDependencies": {
     "@fsouza/prettierd": "^0.20",
     "eslint-config-prettier": "^8.3.0",
