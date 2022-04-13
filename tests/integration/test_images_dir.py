@@ -8,78 +8,75 @@ from tests import IMAGES_DIR, get_test_dir
 
 __all__ = ()
 TMP_ROOT = get_test_dir()
+FNS = {
+    "07themecamplist.pdf": (93676, 93676, ("pdf", 93676), ("pdf", 93676)),
+    "test_animated_gif.gif": (16383, 16358, ("gif", 16358), ("webp", 11846)),
+    "test_animated_webp.webp": (13610, 11854, ("webp", 11854), ("webp", 11854)),
+    "test_png.png": (7967, 4379, ("png", 4379), ("webp", 3870)),
+    "test_pre-optimized_jpg.jpg": (
+        22664,
+        22664,
+        ("jpg", 22664),
+        ("jpg", 22664),
+    ),
+    "test_txt.txt": (6, 6, ("txt", 6), ("txt", 6)),
+    "test_webp_lossless.webp": (5334, 3870, ("webp", 3870), ("webp", 3870)),
+    "test_webp_lossless_pre-optimized.webp": (
+        8914,
+        8914,
+        ("webp", 8914),
+        ("webp", 8914),
+    ),
+    "mri.tif": (230578, 230578, ("tif", 230578), ("webp", 128416)),
+}
 if platform.system() == "Darwin":
-    FNS = {
-        "07themecamplist.pdf": (93676, 93676, ("pdf", 93676), ("pdf", 93676)),
-        "test_animated_gif.gif": (16383, 16358, ("gif", 16358), ("webp", 11846)),
-        "test_animated_webp.webp": (13610, 11854, ("webp", 11854), ("webp", 11854)),
-        "test_bmp.bmp": (141430, 141430, ("png", 67215), ("webp", 47524)),
-        "test_gif.gif": (138952, 138944, ("png", 112467), ("webp", 26504)),
-        "test_jpg.jpg": (97373, 87913, ("jpg", 87913), ("jpg", 87913)),
-        "test_png.png": (7967, 4379, ("png", 4379), ("webp", 3870)),
-        "test_png_16rgba.png": (3435, 2870, ("png", 2870), ("webp", 1142)),
-        "test_pnm.pnm": (27661, 27661, ("png", 15510), ("webp", 12808)),
-        "test_pre-optimized_jpg.jpg": (22664, 22664, ("jpg", 22664), ("jpg", 22664)),
-        "test_pre-optimized_png.png": (
-            256572,
-            256572,
-            ("png", 256572),
-            ("webp", 197680),
-        ),
-        "test_txt.txt": (6, 6, ("txt", 6), ("txt", 6)),
-        "test_webp_lossless.webp": (5334, 3870, ("webp", 3870), ("webp", 3870)),
-        "test_webp_lossless_pre-optimized.webp": (
-            8914,
-            8914,
-            ("webp", 8914),
-            ("webp", 8914),
-        ),
-        "test_webp_lossy.webp": (2764, 1760, ("webp", 1760), ("webp", 1760)),
-        "test_webp_lossy_pre-optimized.webp": (
-            1514,
-            1514,
-            ("webp", 1514),
-            ("webp", 1514),
-        ),
-        "eight.tif": (59640, 59640, ("png", 30564), ("webp", 24982)),
-        "mri.tif": (230578, 230578, ("tif", 230578), ("webp", 128416)),
-    }
+    FNS.update(
+        {
+            "test_bmp.bmp": (141430, 141430, ("png", 67215), ("webp", 47524)),
+            "test_gif.gif": (138952, 138944, ("png", 112467), ("webp", 26504)),
+            "test_jpg.jpg": (97373, 87913, ("jpg", 87913), ("jpg", 87913)),
+            "test_png_16rgba.png": (3435, 2870, ("png", 2870), ("webp", 1142)),
+            "test_pnm.pnm": (27661, 27661, ("png", 15510), ("webp", 12808)),
+            "test_pre-optimized_png.png": (
+                256572,
+                256572,
+                ("png", 256572),
+                ("webp", 197680),
+            ),
+            "test_webp_lossy.webp": (2764, 1760, ("webp", 1760), ("webp", 1760)),
+            "test_webp_lossy_pre-optimized.webp": (
+                1514,
+                1514,
+                ("webp", 1514),
+                ("webp", 1514),
+            ),
+            "eight.tif": (59640, 59640, ("png", 30564), ("webp", 24982)),
+        }
+    )
 else:
-    FNS = {
-        "07themecamplist.pdf": (93676, 93676, ("pdf", 93676), ("pdf", 93676)),
-        "test_animated_gif.gif": (16383, 16358, ("gif", 16358), ("webp", 11846)),
-        "test_animated_webp.webp": (13610, 11854, ("webp", 11854), ("webp", 11854)),
-        "test_bmp.bmp": (141430, 141430, ("png", 67215), ("webp", 47594)),
-        "test_gif.gif": (138952, 138944, ("png", 112467), ("webp", 26148)),
-        "test_jpg.jpg": (97373, 87922, ("jpg", 87922), ("jpg", 87922)),
-        "test_png.png": (7967, 4379, ("png", 4379), ("webp", 3870)),
-        "test_png_16rgba.png": (3435, 2870, ("png", 2870), ("webp", 684)),
-        "test_pnm.pnm": (27661, 27661, ("png", 15510), ("webp", 12816)),
-        "test_pre-optimized_jpg.jpg": (22664, 22664, ("jpg", 22664), ("jpg", 22664)),
-        "test_pre-optimized_png.png": (
-            256572,
-            256572,
-            ("png", 256572),
-            ("webp", 197750),
-        ),
-        "test_txt.txt": (6, 6, ("txt", 6), ("txt", 6)),
-        "test_webp_lossless.webp": (5334, 3870, ("webp", 3870), ("webp", 3870)),
-        "test_webp_lossless_pre-optimized.webp": (
-            8914,
-            8914,
-            ("webp", 8914),
-            ("webp", 8914),
-        ),
-        "test_webp_lossy.webp": (2764, 1704, ("webp", 1704), ("webp", 1704)),
-        "test_webp_lossy_pre-optimized.webp": (  # XXX SHOULD NOT CONVERT MORE?
-            1514,
-            1496,
-            ("webp", 1496),
-            ("webp", 1496),
-        ),
-        "eight.tif": (59640, 59640, ("png", 30564), ("webp", 26642)),
-        "mri.tif": (230578, 230578, ("tif", 230578), ("webp", 128416)),
-    }
+    FNS.update(
+        {
+            "test_bmp.bmp": (141430, 141430, ("png", 67215), ("webp", 47594)),
+            "test_gif.gif": (138952, 138944, ("png", 112467), ("webp", 26148)),
+            "test_jpg.jpg": (97373, 87922, ("jpg", 87922), ("jpg", 87922)),
+            "test_png_16rgba.png": (3435, 2870, ("png", 2870), ("webp", 684)),
+            "test_pnm.pnm": (27661, 27661, ("png", 15510), ("webp", 12816)),
+            "test_pre-optimized_png.png": (
+                256572,
+                256572,
+                ("png", 256572),
+                ("webp", 197750),
+            ),
+            "test_webp_lossy.webp": (2764, 1704, ("webp", 1704), ("webp", 1704)),
+            "test_webp_lossy_pre-optimized.webp": (  # XXX SHOULD NOT CONVERT MORE?
+                1514,
+                1496,
+                ("webp", 1496),
+                ("webp", 1496),
+            ),
+            "eight.tif": (59640, 59640, ("png", 30564), ("webp", 26642)),
+        }
+    )
 
 
 class TestImagesDir:
