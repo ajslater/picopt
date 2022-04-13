@@ -12,9 +12,8 @@ RUN apt-get update \
         libjpeg-progs \
         optipng \
         shellcheck \
-#        python3-setuptools \
-#        python3-venv \
         unrar \
+        webp \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
