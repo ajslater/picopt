@@ -13,7 +13,7 @@ v3.0.0-a0
   - Timestamps record configuration. Running with a new config invalidates non-matching timestamps.
 - Configuration
   - .picoptrc.yaml files can configure options
-  - Changed option names.
+  - Changed cli option names.
   - Removed cli args for manually disabling programs
 - Fall back to Pillow optimization if better external programs not found.
 - Fixes

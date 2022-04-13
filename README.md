@@ -4,15 +4,15 @@ A multi-format, recursive, multiprocessor aware, command line lossless image opt
 
 Picopt depends on Python [PIL](http://www.pythonware.com/products/pil/) to identify files and Python [rarfile](https://pypi.python.org/pypi/rarfile) to open CBRs.
 
-Picopt drops hidden timestamps at the root of your image directories to avoid reoptimizing images picopt has already optimized.
+Picopt will optionally drop hidden timestamps at the root of your image directories to avoid reoptimizing images picopt has already optimized.
 
-The actual image optimization is accomplished by external programs.
+The actual image optimization is best accomplished by external programs.
 
 ## <a name="philosophy">Conversion Philosophy</a>
 
 ### Lossy Images
 
-JPEG & WebP images are likely the best and most practical lossy image formats. Converting lossy images rarely makes sense and so picopt optimizes them in their current format.
+JPEG & Lossy WebP images are likely the best and most practical lossy image formats. Converting lossy images rarely makes sense and so picopt only optimizes them in their current format.
 
 ### Lossless Images
 
@@ -22,19 +22,33 @@ Lossless WebP images are smaller than PNG, much smaller than GIF and, of course,
 
 Sequenced Images, like animated GIFs and WebP, most of the time, should be converted to a compressed video format like HEVC or VP9. There are several situations where this is impractical and so Animated WebP is now a good substitute.
 
+### Conversion
+
+By default picopt does not convert images between formats. You must turn on conversion to PNG or WebP explicitly.
+
+## <a name="formats">Formats</a>
+
+- By default picopt will optimize GIF, JPEG, PNG and WEBP images.
+- Picopt can optionally optimize ZIP, ePub, and CBZ containers.
+- Picopt can be told to convert lossless images such as BPM, PPM, GIF, TIFF into PNG, and all of the mentioned lossless formats into WebP.
+- Picopt can covert Animated GIFS into Animated WebP files.
+- Picopt can covert RAR files into Zipfiles and CBR files into CBZ files.
+
 ## <a name="programs">External Programs</a>
+
+Picopt will perform some minor optimization on most formats natively without using external programs, but this is not very good compared to the optimizations external programs can provide.
 
 ### JPEG
 
 To optimize JPEG images. Picopt needs one of [mozjpeg](https://github.com/mozilla/mozjpeg) or [jpegtran](http://jpegclub.org/jpegtran/) on the path. in order of preference.
 
-### PNG, PNM, GIF, BMP
+### PNG
 
-To optimize lossless images like PNG, PNM, GIF, and BMP, picopt requires either [optipng](http://optipng.sourceforge.net/) or [pngout](http://advsys.net/ken/utils.htm) be on the path. Optipng provides the most advantage, but best results will be had by using pngout as well.
+To optimize PNG images or convert other lossless formats to PNG picopt requires either [optipng](http://optipng.sourceforge.net/) or [pngout](http://advsys.net/ken/utils.htm) be on the path. Optipng provides the most advantage, but best results will be had by using pngout as well.
 
 ### Animated GIF
 
-Animated GIFs are optimized with [gifsicle](http://www.lcdf.org/gifsicle/) if it is available. Picopt nag you to convert your file to [HTML5 video](http://gfycat.com/about), but does not provide this service itself.
+Animated GIFs are optimized with [gifsicle](http://www.lcdf.org/gifsicle/) if it is available.
 
 ### WebP
 
@@ -42,11 +56,11 @@ WebP lossless & lossy formats are optimized with [cwebp](https://developers.goog
 
 ### EPub
 
-EPub Books are zip files that often contain images.
+EPub Books are zip files that often contain images and picopt unpacks and repacks this format natively. Images within the epub are handled by other programs. EPub optimization is not turned on by default.
 
 ### CBZ & CBR
 
-Picopt uncompresses, optimizes and rezips [comic book archive files](https://en.wikipedia.org/wiki/Comic_book_archive). Be aware that CBR rar archives will be rezipped into CBZs instead of CBR. Comic book archive optimization is not turned on by default to prevent surprises.
+Picopt uncompresses, optimizes and rezips [comic book archive files](https://en.wikipedia.org/wiki/Comic_book_archive). Be aware that CBR rar archives may only be rezipped into CBZs instead of CBR. Comic book archive optimization is not turned on by default to prevent surprises.
 
 ## <a name="install">Install</a>
 
@@ -104,29 +118,33 @@ Optimize all files and recurse directories:
 
     picopt -r *
 
+Optimize files, recurse directories, also optimize ePub & CBZ containers, covert lossless images into WEBP, convert CBR into CBZ.
+
+    picopt -rx EPUB -c WEBP,CBZ *
+
 Optimize files and recurse directories AND optimize comic book archives:
 
-    picopt -rc *
+    picopt -rx CBZ *
 
-Optimize files, but not lossless files:
+Optimize all files, but only JPEG format files:
 
-    picopt -OPG *
+    picopt -f JPEG *
 
-Optimize files, but not jpegs:
+Optimize files and containers, but not JPEGS:
 
-    picopt -JT *
+    picopt -f GIF,PNG,WEBP,ZIP,CBZ,EPUB *
 
 Optimize files, but not animated gifs:
 
-    picopt -G *
+    picopt -f PNG,WEBP,ZIP,CBZ,EPUB *
 
 Just list files picopt.py would try to optimize:
 
-    picopt -l *
+    picopt -L *
 
-Optimize everything in my iPhoto library, but only after the last time i did this, skipping symlinks to avoid massive amounts of duplicate work. Don't convert lossless files to PNGs because that would confuse iPhoto. Also drop a timestamp file so I don't have to remember the last time I did this:
+Optimize everything in my iPhoto library, but only after the last time I did this, skipping symlinks to avoid duplicate work. Also drop a timestamp file so I don't have to remember the last time I did this:
 
-    picopt -rSYt -D '2013 June 1 14:00' 'Pictures/iPhoto Library'
+    picopt -rSt -D '2013 June 1 14:00' 'Pictures/iPhoto Library'
 
 ## <a name="package">Packages</a>
 
