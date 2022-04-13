@@ -1,6 +1,8 @@
 """Test comic format."""
 import shutil
 
+from platform import system
+
 from picopt import PROGRAM_NAME, cli
 from tests import CONTAINER_DIR, get_test_dir
 
@@ -9,13 +11,22 @@ __all__ = ()
 TMP_ROOT = get_test_dir()
 SRC_CBZ = CONTAINER_DIR / "test_cbz.cbz"
 
-FNS = {
-    "test_cbz.cbz": (93408, 84493, ("cbz", 93408)),
-    "test_cbr.cbr": (93725, 93725, ("cbz", 84506)),
-    "test_rar.rar": (93675, 93675, ("zip", 84493)),
-    "test_zip.zip": (2974, 1917, ("zip", 2974)),
-    "igp-twss.epub": (181397, 175224, ("epub", 181397)),
-}
+if system() == "Darwin":
+    FNS = {
+        "test_cbz.cbz": (93408, 84493, ("cbz", 93408)),
+        "test_cbr.cbr": (93725, 93725, ("cbz", 84506)),
+        "test_rar.rar": (93675, 93675, ("zip", 84493)),
+        "test_zip.zip": (2974, 1917, ("zip", 2974)),
+        "igp-twss.epub": (181397, 175224, ("epub", 181397)),
+    }
+else:
+    FNS = {
+        "test_cbz.cbz": (93408, 84481, ("cbz", 93408)),
+        "test_cbr.cbr": (93725, 93725, ("cbz", 84494)),
+        "test_rar.rar": (93675, 93675, ("zip", 84481)),
+        "test_zip.zip": (2974, 1861, ("zip", 2974)),
+        "igp-twss.epub": (181397, 174676, ("epub", 181397)),
+    }
 
 
 class TestContainersDir:

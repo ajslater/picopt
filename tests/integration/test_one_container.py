@@ -1,6 +1,8 @@
 """Test comic format."""
 import shutil
 
+from platform import system
+
 from picopt import PROGRAM_NAME, cli
 from tests import CONTAINER_DIR, get_test_dir
 
@@ -10,9 +12,14 @@ TMP_ROOT = get_test_dir()
 FN = "test_zip.zip"
 SRC_CBZ = CONTAINER_DIR / FN
 
-FNS = {
-    FN: (2974, 1917),
-}
+if system() == "Darwin":
+    FNS = {
+        FN: (2974, 1917),
+    }
+else:
+    FNS = {
+        FN: (2974, 1861),
+    }
 
 
 class TestContainersDir:

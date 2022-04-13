@@ -1,4 +1,5 @@
 """Test comic format."""
+import platform
 import shutil
 
 from datetime import datetime
@@ -16,9 +17,15 @@ SRC_JPG = IMAGES_DIR / FN
 TMP_FN = str(TMP_ROOT / FN)
 TIMESTAMPS_PATH = TMP_ROOT / ".picopt_timestamps.yaml"
 WAL_PATH = TMP_ROOT / ".picopt_timestamps.wal.yaml"
-FNS = {
-    FN: (97373, 87913),
-}
+
+if platform.system() == "Darwin":
+    FNS = {
+        FN: (97373, 87913),
+    }
+else:
+    FNS = {
+        FN: (97373, 87922),
+    }
 
 DEFAULT_CONFIG = {
     "bigger": False,
