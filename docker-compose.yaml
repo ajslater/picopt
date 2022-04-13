@@ -9,22 +9,19 @@ services:
   picopt-lint:
     image: ajslater/picopt-builder
     container_name: picopt-lint
-    command:
-      - ./lint.sh
+    command: ./lint.sh
   picopt-test:
     image: ajslater/picopt-builder
     container_name: picopt-test
     volumes:
       - ./test-results:/home/circleci/project/test-results
-    command:
-      - ./test.sh
+    command: ./test.sh
   picopt-build:
     image: ajslater/picopt-builder
     container_name: picopt-build
     volumes:
       - ./dist:/home/circleci/project/dist
-    command:
-      - poetry build
+    command: poetry build
   picopt:
     build:
       context: .
