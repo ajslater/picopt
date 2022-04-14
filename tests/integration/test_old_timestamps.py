@@ -47,7 +47,7 @@ class TestContainersDir:
         old_ts_path = TMP_ROOT / _OLD_TIMESTAMPS_NAME
         old_ts_path.touch()
         args = (PROGRAM_NAME, "-rtvv", str(TMP_ROOT))
-        res = cli.run(args)
+        res = cli.main(args)
         assert res
         assert not old_ts_path.exists()
         self._assert_sizes(0)
@@ -59,7 +59,7 @@ class TestContainersDir:
         old_ts_path = child_root / _OLD_TIMESTAMPS_NAME
         old_ts_path.touch()
         args = (PROGRAM_NAME, "-rtvv", str(child_root))
-        res = cli.run(args)
+        res = cli.main(args)
         assert res
         assert not old_ts_path.exists()
         self._assert_sizes(0)
@@ -71,7 +71,7 @@ class TestContainersDir:
         old_ts_path = TMP_ROOT / _OLD_TIMESTAMPS_NAME
         old_ts_path.touch()
         args = (PROGRAM_NAME, "-rtvv", str(child_root))
-        res = cli.run(args)
+        res = cli.main(args)
         assert res
         assert old_ts_path.exists()
         self._assert_sizes(0)

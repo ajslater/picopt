@@ -93,7 +93,7 @@ class TestImagesDir:
 
     def test_no_convert(self) -> None:
         args = (PROGRAM_NAME, "-r", str(TMP_ROOT))
-        res = cli.run(args)
+        res = cli.main(args)
         assert res
         for name, sizes in FNS.items():
             path = TMP_ROOT / name
@@ -101,7 +101,7 @@ class TestImagesDir:
 
     def test_convert_to_png(self) -> None:
         args = (PROGRAM_NAME, "-rx", "TIFF", "-c", "PNG", str(TMP_ROOT))
-        res = cli.run(args)
+        res = cli.main(args)
         assert res
         for name, sizes in FNS.items():
             path = (TMP_ROOT / name).with_suffix("." + sizes[2][0])
@@ -109,7 +109,7 @@ class TestImagesDir:
 
     def test_convert_to_webp(self) -> None:
         args = (PROGRAM_NAME, "-rx", "TIFF", "-c", "WEBP", str(TMP_ROOT))
-        res = cli.run(args)
+        res = cli.main(args)
         assert res
         for name, sizes in FNS.items():
             path = (TMP_ROOT / name).with_suffix("." + sizes[3][0])

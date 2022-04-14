@@ -37,7 +37,7 @@ class TestContainersDir:
 
     def test_containers_no_convert(self) -> None:
         args = (PROGRAM_NAME, "-x", "ZIP", str(TMP_ROOT / FN))
-        res = cli.run(args)
+        res = cli.main(args)
         assert res
         for name, sizes in FNS.items():
             path = TMP_ROOT / name

@@ -66,28 +66,28 @@ class TestContainersDir:
 
     def test_no_timestamp(self) -> None:
         args = (PROGRAM_NAME, "-rtvv", TMP_FN)
-        res = cli.run(args)
+        res = cli.main(args)
         assert res
         self._assert_sizes(1)
 
     def test_timestamp(self):
         self._write_timestamp(FN)
         args = (PROGRAM_NAME, "-rtvv", TMP_FN)
-        res = cli.run(args)
+        res = cli.main(args)
         assert res
         self._assert_sizes(0)
 
     def test_different_config(self):
         self._write_timestamp(FN)
         args = (PROGRAM_NAME, "-brtvv", TMP_FN)
-        res = cli.run(args)
+        res = cli.main(args)
         assert res
         self._assert_sizes(1)
 
     def test_timestamp_dir(self):
         self._write_timestamp(TMP_ROOT)
         args = (PROGRAM_NAME, "-rtvv", TMP_FN)
-        res = cli.run(args)
+        res = cli.main(args)
         assert res
         self._assert_sizes(0)
 
@@ -102,7 +102,7 @@ class TestContainersDir:
         tmp_child_dir = self._setup_child_dir()
         self._write_timestamp(tmp_child_dir)
         args = (PROGRAM_NAME, "-rtvv", str(TMP_ROOT))
-        res = cli.run(args)
+        res = cli.main(args)
         assert res
         self._assert_sizes(1)
         self._assert_sizes(0, tmp_child_dir)
@@ -112,13 +112,13 @@ class TestContainersDir:
 
         self._write_timestamp(TMP_ROOT)
         args = (PROGRAM_NAME, "-rtvv", str(tmp_child_dir))
-        res = cli.run(args)
+        res = cli.main(args)
         assert res
         self._assert_sizes(0, tmp_child_dir)
 
     def test_journal_cleanup(self) -> None:
         args = (PROGRAM_NAME, "-rtvv", TMP_FN)
-        res = cli.run(args)
+        res = cli.main(args)
         assert res
         assert not WAL_PATH.exists()
 
@@ -134,6 +134,6 @@ class TestContainersDir:
     def test_timestamp_read_journal(self):
         self._write_wal(TMP_FN)
         args = (PROGRAM_NAME, "-rtvv", TMP_FN)
-        res = cli.run(args)
+        res = cli.main(args)
         assert res
         self._assert_sizes(0)

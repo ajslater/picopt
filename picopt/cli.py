@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 """Run pictures through image specific external optimizers."""
 import argparse
-import sys
 
 from argparse import Action, Namespace
 from importlib.metadata import PackageNotFoundError, version
+from typing import Optional
 
 from picopt import PROGRAM_NAME, walk
 from picopt.config import ALL_FORMATS, DEFAULT_HANDLERS, get_config
@@ -39,11 +39,10 @@ def _comma_join(formats: frozenset[str]) -> str:
     return ", ".join(sorted(formats))
 
 
-def get_arguments(args: tuple[str, ...]) -> Namespace:
+def get_arguments(params: Optional[tuple[str, ...]] = None) -> Namespace:
     """Parse the command line."""
-    usage = "%(prog)s [arguments] [paths]"
     description = "Losslessly optimizes and optionally converts images."
-    parser = argparse.ArgumentParser(usage=usage, description=description)
+    parser = argparse.ArgumentParser(description=description)
     parser.add_argument(
         "-r",
         "--recurse",
@@ -182,23 +181,18 @@ def get_arguments(args: tuple[str, ...]) -> Namespace:
         action="store",
         help="Path to a config file",
     )
+    if params is not None:
+        params = params[1:]
 
-    return parser.parse_args(args[1:])
+    return parser.parse_args(params)
 
 
-def run(args: tuple[str, ...]) -> bool:
+def main(args: Optional[tuple[str, ...]] = None) -> bool:
     """Process command line arguments and walk inputs."""
     arguments = get_arguments(args)
     config = get_config(arguments)
     wob = walk.Walk(config)
     return wob.run()
-
-
-def main() -> None:
-    """CLI entry point."""
-    res = run(tuple(sys.argv))
-    if not res:
-        sys.exit(1)
 
 
 if __name__ == "__main__":
