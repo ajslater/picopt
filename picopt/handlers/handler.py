@@ -43,7 +43,7 @@ class Handler(ABC):
     def run_ext(args: tuple[str, ...]) -> None:
         """Run EXTERNAL program."""
         try:
-            subprocess.check_call(args)
+            subprocess.run(args, check=True)
         except subprocess.CalledProcessError as exc:
             print(exc)
             print(exc.cmd)
