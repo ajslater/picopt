@@ -25,8 +25,8 @@ RUN ci/mozjpeg.sh
 RUN ci/pngout.sh
 
 USER circleci
-# hadolint ignore=DL3013
 COPY --chown=circleci:circleci pyproject.toml poetry.lock ./
+# hadolint ignore=DL3013
 RUN pip3 install --no-cache-dir poetry
 # hadolint ignore=DL3016,DL3059
 COPY --chown=circleci:circleci package.json package-lock.json ./
