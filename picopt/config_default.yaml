@@ -2,7 +2,7 @@ after: null
 bigger: False
 convert_to: []
 keep_metadata: True
-follow_symlinks: True
+symlinks: True
 formats: ["GIF", "JPEG", "PNG", "WEBP"]
 ignore: []
 jobs: 0

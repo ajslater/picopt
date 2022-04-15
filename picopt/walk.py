@@ -58,7 +58,7 @@ class Walk:
         """Handle things that are not optimizable files."""
         # File types
         skip = False
-        if not self._config.follow_symlinks and path.is_symlink():
+        if not self._config.symlinks and path.is_symlink():
             if self._config.verbose > 1:
                 print(f"Skip symlink {path}")
             skip = True
@@ -196,7 +196,7 @@ class Walk:
         """Determine if we should we record a timestamp at all."""
         return (
             self._config.timestamps
-            and (self._config.follow_symlinks or not path.is_symlink())
+            and (self._config.symlinks or not path.is_symlink())
             and path.exists()
             and Handler.WORKING_SUFFIX not in str(path)
         )

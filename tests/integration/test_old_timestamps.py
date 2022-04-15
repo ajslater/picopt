@@ -18,11 +18,11 @@ FNS = {
 DEFAULT_CONFIG = {
     "bigger": False,
     "convert_to": [],
-    "keep_metadata": True,
-    "follow_symlinks": True,
     "formats": ["GIF", "PNG", "JPEG", "WEBP"],
+    "keep_metadata": True,
     "ignore": [],
     "recurse": True,
+    "symlinks": True,
 }
 
 

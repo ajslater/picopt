@@ -71,13 +71,13 @@ TEMPLATE = MappingTemplate(
         "bigger": bool,
         "convert_to": Optional(Sequence(Choice(CONVERT_TO_FORMATS))),
         "keep_metadata": bool,
-        "follow_symlinks": bool,
         "formats": Sequence(Choice(ALL_FORMATS)),
         "ignore": Sequence(str),
         "jobs": Integer(),
         "list_only": bool,
         "paths": Sequence(Path()),
         "recurse": bool,
+        "symlinks": bool,
         "test": bool,
         "timestamps": bool,
         "verbose": Integer(),
@@ -89,11 +89,11 @@ TEMPLATE = MappingTemplate(
 TIMESTAMPS_CONFIG_KEYS = (
     "bigger",
     "convert_to",
-    "keep_metadata",
-    "follow_symlinks",
     "formats",
     "ignore",
+    "keep_metadata",
     "recurse",
+    "symlinks",
 )
 # Handlers for formats are listed in priority order
 FORMAT_HANDLERS = {

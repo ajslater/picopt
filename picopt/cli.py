@@ -94,9 +94,9 @@ def get_arguments(params: Optional[tuple[str, ...]] = None) -> Namespace:
     )
     parser.add_argument(
         "-S",
-        "--no-follow-symlinks",
+        "--no-symlinks",
         action="store_false",
-        dest="follow_symlinks",
+        dest="symlinks",
         help="Do not follow symlinks for files and directories",
     )
     parser.add_argument(

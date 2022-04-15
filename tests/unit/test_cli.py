@@ -30,7 +30,7 @@ class TestCLI:
         assert ("PNG", "WEBP") == arguments.convert_to
         assert arguments.formats is None
         assert arguments._extra_formats == (CBZ.OUTPUT_FORMAT, Zip.OUTPUT_FORMAT)
-        assert arguments.follow_symlinks
+        assert arguments.symlinks
         assert arguments.bigger
         assert not arguments.timestamps
         assert arguments.test
