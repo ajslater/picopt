@@ -17,6 +17,7 @@ from confuse.templates import (
     Sequence,
 )
 from dateutil.parser import parse
+from termcolor import cprint
 
 from picopt import PROGRAM_NAME
 from picopt.handlers.gif import AnimatedGif, Gif
@@ -130,7 +131,9 @@ def _is_external_program_executable(
         result = bool(mode & MODE_EXECUTABLE)
     except Exception:
         if bin_path and verbose:
-            print(f"WARNING: Could not find executable program for {program}")
+            cprint(
+                f"WARNING: Could not find executable program for {program}", "yelllow"
+            )
         result = False
 
     return result

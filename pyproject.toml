@@ -28,12 +28,13 @@ include = ["NEWS.md"]
 
 [tool.poetry.dependencies]
 python = "^3.9"
+confuse = "^1.7.0"
+humanize = "^4.0.0"
 python-dateutil = "^2.8"
 rarfile = "^4.0"
 "ruamel.yaml" = "^0.17.16"
+termcolor = "^1.1.0"
 Pillow = "^6 || ^7 || ^8 || ^9"
-confuse = "^1.7.0"
-humanize = "^4.0.0"
 
 [tool.poetry.dev-dependencies]
 codespell = "^2.1.0"

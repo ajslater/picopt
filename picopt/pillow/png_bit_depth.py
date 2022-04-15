@@ -8,6 +8,8 @@ This should be a part of Pillow
 from pathlib import Path
 from typing import Optional
 
+from termcolor import cprint
+
 from picopt.pillow.unpack import compare_header, unpack
 
 
@@ -24,7 +26,7 @@ def png_bit_depth(path: Path) -> Optional[int]:
             depth = unpack("b", 1, img)[0]
         return int(depth)
     except ValueError:
-        print(path, "is not a png!")
+        cprint(f"WARNING: {path} is not a png!", "yellow")
         return None
 
 

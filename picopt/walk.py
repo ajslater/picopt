@@ -9,6 +9,7 @@ from typing import Any, Optional, Sequence, Type, Union
 
 from confuse.templates import AttrDict
 from humanize import naturalsize
+from termcolor import cprint
 
 from picopt import PROGRAM_NAME
 from picopt.config import (
@@ -60,13 +61,13 @@ class Walk:
         skip = False
         if not self._config.symlinks and path.is_symlink():
             if self._config.verbose > 1:
-                print(f"Skip symlink {path}")
+                cprint(f"Skip symlink {path}", "white", attrs=["dark"])
             skip = True
         elif path.name in self._timestamps_filenames:
             skip = True
         elif not path.exists():
             if self._config.verbose > 1:
-                print(f"{path} not found.")
+                cprint(f"WARNING: {path} not found.", "yellow")
             skip = True
 
         for ignore_glob in self._config.ignore:
@@ -113,7 +114,7 @@ class Walk:
             if self._config.verbose > 1:
                 print(f"Deleted {path}")
         except Exception as exc:
-            print(exc)
+            cprint(str(exc), "red")
 
     def walk_file(
         self,
@@ -234,9 +235,9 @@ class Walk:
                 print("Didn't optimize any files.")
 
         if totals.errors:
-            print("Errors with the following files:")
+            cprint("Errors with the following files:", "yellow")
             for rs in totals.errors:
-                rs.report(self._config.test)
+                rs.report(self._config.test, "yellow")
 
     def _handle_queue_item_dir(self, top_path: Path, dir_result: DirResult):
         """Reverse the results tree to handle directories bottom up."""
@@ -264,7 +265,7 @@ class Walk:
             repack_result = task.handler.repack()
             self._queues[top_path].put(repack_result)
         else:
-            print(f"Unhandled Complete task {task}")
+            cprint(f"WARNING: Unhandled Complete task {task}", "yellow")
 
     def _handle_queue_item(
         self,
@@ -281,7 +282,7 @@ class Walk:
             pass
         elif isinstance(item, ReportStats):
             if item.error:
-                print(item.error)
+                cprint(item.error, "yellow")
                 totals.errors.append(item)
             else:
                 if self._should_record_timestamp(item.path):
@@ -293,7 +294,7 @@ class Walk:
         elif isinstance(item, CompleteTask):
             self._handle_queue_complete_task(top_path, item)
         else:
-            print(f"Unhandled queue item {item}")
+            cprint(f"Unhandled queue item {item}", "yellow")
 
     def _set_timestamps(self, path: Path, timestamps_config: dict[str, Any]):
         """Read timestamps."""
@@ -316,7 +317,7 @@ class Walk:
             sorted(convert_from_formats & frozenset(self._config.formats))
         )
         convert_to = convert_handler.OUTPUT_FORMAT
-        print(f"Converting {convert_from} to {convert_to}")
+        cprint(f"Converting {convert_from} to {convert_to}", "cyan")
 
     def _init_run(self):
         """Init Run."""
@@ -355,7 +356,7 @@ class Walk:
         try:
             self._init_run()
         except Exception as exc:
-            print(exc)
+            cprint(str(exc), "red")
             return False
 
         # Start each queue

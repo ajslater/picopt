@@ -6,6 +6,7 @@ from pathlib import Path
 from typing import Optional
 
 from PIL.PngImagePlugin import PngImageFile
+from termcolor import cprint
 
 from picopt.handlers.handler import Format
 from picopt.handlers.image import ImageHandler
@@ -44,7 +45,11 @@ class Png(ImageHandler):
         """Run the external program pngout on the file."""
         depth = png_bit_depth(old_path)
         if depth in (16, None):
-            print(f"Skipped pngout for {depth} bit PNG:")
+            cprint(
+                f"Skipped pngout for {depth} bit PNG: {old_path}",
+                "white",
+                attrs=["dark"],
+            )
             result = old_path
         else:
             args = tuple(self._PNGOUT_ARGS + [str(old_path), str(new_path)])

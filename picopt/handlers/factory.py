@@ -4,6 +4,7 @@ from typing import Optional, Type
 
 from confuse.templates import AttrDict
 from PIL import Image, UnidentifiedImageError
+from termcolor import cprint
 
 from picopt.config import WEBP_CONVERTABLE_FORMATS
 from picopt.handlers.container import ContainerHandler
@@ -81,15 +82,14 @@ def create_handler(config: AttrDict, path: Path) -> Optional[Handler]:
             format = _get_container_format(path)
         handler_cls = config._format_handlers.get(format)
     except OSError as exc:
-        print(exc)
+        cprint(str(exc), "yellow")
 
     if handler_cls and format is not None:
         handler = handler_cls(config, path, format, metadata)
     else:
         if config.verbose > 2 and not config.list_only:
-            print(
-                path,
-                "is not an enabled image or container.",
+            cprint(
+                f"{path} is not an enabled image or container.", "white", attrs=["dark"]
             )
         handler = None
     return handler

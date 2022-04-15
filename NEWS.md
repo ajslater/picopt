@@ -17,6 +17,7 @@ v3.0.0-a0
   - Removed cli args for manually disabling programs
   - Faster checking for external programs
 - Fall back to Pillow optimization if better external programs not found.
+- Colored terminal output.
 - Fixes
   - Cleans up old temporary files from aborted picopt runs.
   - Fix condition where new files in an old archive were not processed.

@@ -8,6 +8,7 @@ from pathlib import Path
 from typing import Optional
 
 from confuse.templates import AttrDict
+from termcolor import cprint
 
 from picopt import PROGRAM_NAME
 from picopt.stats import ReportStats
@@ -56,15 +57,14 @@ class Handler(ABC):
     def run_ext(args: tuple[str, ...]) -> None:
         """Run EXTERNAL program."""
         try:
-            print(args)
             if not args[0]:
                 raise ValueError(f"{args}")
             subprocess.run(args, check=True)
         except subprocess.CalledProcessError as exc:
-            print(exc)
-            print(exc.cmd)
-            print(exc.returncode)
-            print(exc.output)
+            cprint(str(exc), "red")
+            cprint(exc.cmd, "red")
+            cprint(f"retcode: {exc.returncode}", "red")
+            cprint(str(exc.output), "red")
             raise
 
     @classmethod
@@ -143,7 +143,8 @@ class Handler(ABC):
             for working_path in self.working_paths:
                 working_path.unlink(missing_ok=True)
         except OSError as exc:
-            print(exc)
+            cprint(f"ERROR: cleanup_after_optimize: {exc}", "red")
+            raise
 
         return (bytes_in, bytes_out)
 

@@ -3,6 +3,7 @@ from pathlib import Path
 from typing import Optional
 
 from humanize import naturalsize
+from termcolor import cprint
 
 
 class ReportStats:
@@ -48,10 +49,10 @@ class ReportStats:
             report += " could be saved."
         return report
 
-    def report(self, test: bool) -> None:
+    def report(self, test: bool, color="white") -> None:
         """Record the percent saved & print it."""
         if self.error:
             report = f"{self.path} error: {self.error}"
         else:
             report = self._report_saved(test)
-        print(report)
+        cprint(report, color)
