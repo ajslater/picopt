@@ -1,7 +1,7 @@
 """WebP format."""
 from abc import ABC
 from pathlib import Path
-from typing import Any
+from typing import Any, Optional
 
 from PIL import Image
 from PIL.WebPImagePlugin import WebPImageFile
@@ -35,9 +35,9 @@ class WebP(WebPBase, ABC):
     """WebP format class."""
 
     OUTPUT_FORMAT = WebPImageFile.format
-    PROGRAMS: tuple[str, ...] = ("cwebp",)
+    PROGRAMS: dict[str, Optional[str]] = WebPBase.init_programs(("cwebp",))
     ARGS_PREFIX = [
-        "cwebp",
+        PROGRAMS["cwebp"],
         "-mt",
         "-quiet",
         "-sharp_yuv",
@@ -63,7 +63,11 @@ class WebPLossless(WebP):
     BEST_ONLY: bool = False
     OUTPUT_FORMAT_OBJ = Format(WebP.OUTPUT_FORMAT, True, False)
     PREFERRED_PROGRAM: str = "cwebp"
-    PROGRAMS: tuple[str, ...] = ("pil2png", *WebP.PROGRAMS, "pil2webp")
+    PROGRAMS: dict[str, Optional[str]] = {
+        "pil2png": None,
+        **WebP.PROGRAMS,
+        "pil2webp": None,
+    }
     ARGS_PREFIX = WebP.ARGS_PREFIX + [
         "-lossless",
         "-z",
@@ -119,9 +123,11 @@ class Gif2WebP(WebPBase):
         "minimize_size": True,
     }
     PREFERRED_PROGRAM = "gif2webp"
-    PROGRAMS: tuple[str, ...] = ("gif2webp", "pil2webp")
+    PROGRAMS: dict[str, Optional[str]] = WebPBase.init_programs(
+        ("gif2webp", "pil2webp")
+    )
     _ARGS_PREFIX = [
-        "gif2webp",
+        PROGRAMS["gif2webp"],
         "-mixed",
         "-min_size",
         "-m",

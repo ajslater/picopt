@@ -3,7 +3,7 @@ import shutil
 
 from copy import copy
 from pathlib import Path
-from typing import Any
+from typing import Optional
 
 from PIL.PngImagePlugin import PngImageFile
 
@@ -18,11 +18,13 @@ class Png(ImageHandler):
     BEST_ONLY: bool = False
     OUTPUT_FORMAT = PngImageFile.format
     OUTPUT_FORMAT_OBJ = Format(OUTPUT_FORMAT, True, False)
-    PIL2_ARGS: dict[str, Any] = {"optimize": True}
-    PROGRAMS: tuple[str, ...] = ("pil2png", "optipng", "pngout")
+    PIL2_ARGS: dict[str, bool] = {"optimize": True}
+    PROGRAMS: dict[str, Optional[str]] = ImageHandler.init_programs(
+        ("pil2png", "optipng", "pngout")
+    )
     PREFERRED_PROGRAM: str = "optipng"
-    _OPTIPNG_ARGS = ["optipng", "-o5", "-fix", "-force", "-quiet"]
-    _PNGOUT_ARGS = ["pngout", "-q", "-force", "-y"]
+    _OPTIPNG_ARGS = [PROGRAMS["optipng"], "-o5", "-fix", "-force", "-quiet"]
+    _PNGOUT_ARGS = [PROGRAMS["pngout"], "-q", "-force", "-y"]
 
     def pil2png(self, old_path: Path, new_path: Path) -> Path:
         """Pillow png optimization."""

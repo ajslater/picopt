@@ -1,5 +1,6 @@
 """Confuse config for picopt."""
-import subprocess
+import pathlib
+import stat
 import time
 import typing
 
@@ -114,17 +115,22 @@ FORMAT_HANDLERS = {
     TIFF_FORMAT_OBJ: (WebPLossless, Png),
     TIFF_ANIMATED_FORMAT_OBJ: (WebPAnimated,),
 }
+MODE_EXECUTABLE = stat.S_IXUSR ^ stat.S_IXGRP ^ stat.S_IXOTH
 
 
-def _does_external_program_run(prog: str, verbose: int) -> bool:
+def _is_external_program_executable(
+    program: str, bin_path: typing.Optional[str], verbose: int
+) -> bool:
     """Test to see if the external programs can be run."""
     try:
-        with open("/dev/null") as null:
-            subprocess.call([prog, "-h"], stdout=null, stderr=null)
-        result = True
-    except OSError:
-        if verbose > 1:
-            print(f"couldn't run {prog}")
+        if not bin_path:
+            raise ValueError()
+        path = pathlib.Path(bin_path)
+        mode = path.stat().st_mode
+        result = bool(mode & MODE_EXECUTABLE)
+    except Exception:
+        if bin_path and verbose:
+            print(f"WARNING: Could not find executable program for {program}")
         result = False
 
     return result
@@ -134,14 +140,14 @@ def _get_available_programs(config: Configuration) -> set:
     """Run the external program tester on the required binaries."""
     verbose = config["verbose"].get(int)
     if not isinstance(verbose, int):
-        raise ValueError(f"wrong type for covnert_to: {type(verbose)} {verbose}")
+        raise ValueError(f"wrong type for convert_to: {type(verbose)} {verbose}")
     programs = set()
     for handler in HANDLERS:
-        for program in handler.PROGRAMS:
+        for program, bin_path in handler.PROGRAMS.items():
             if (
                 program == Handler.INTERNAL
                 or program.startswith("pil2")
-                or _does_external_program_run(program, verbose)
+                or _is_external_program_executable(program, bin_path, verbose)
             ):
                 programs.add(program)
     if not programs:

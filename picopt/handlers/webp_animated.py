@@ -15,10 +15,10 @@ class WebPAnimated(ContainerHandler):
 
     OUTPUT_FORMAT: str = WebP.OUTPUT_FORMAT
     OUTPUT_FORMAT_OBJ = Format(OUTPUT_FORMAT, False, True)
-    PROGRAMS = ("webpmux", "img2webp")
+    PROGRAMS = ContainerHandler.init_programs(("webpmux", "img2webp"))
     _OPEN_WITH_PIL_FORMAT_OBJS = set([TIFF_ANIMATED_FORMAT_OBJ])
-    _IMG2WEBP_ARGS_PREFIX = ("img2webp", "-min_size")
-    _WEBPMUX_ARGS_PREFIX = ("webpmux", "-get", "frame")
+    _IMG2WEBP_ARGS_PREFIX = (PROGRAMS["img2webp"], "-min_size")
+    _WEBPMUX_ARGS_PREFIX = (PROGRAMS["webpmux"], "-get", "frame")
 
     @classmethod
     def identify_format(cls, _path: Path) -> Optional[Format]:

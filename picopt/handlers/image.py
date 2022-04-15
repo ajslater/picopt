@@ -34,7 +34,7 @@ class ImageHandler(Handler, metaclass=ABCMeta):
         And report back statistics.
         """
         path = self.original_path
-        for func in self.PROGRAMS:
+        for func in self.PROGRAMS.keys():
             if path != self.original_path:
                 self.working_paths.add(path)
             new_path = self.get_working_path(func)

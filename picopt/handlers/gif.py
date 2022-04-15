@@ -2,6 +2,7 @@
 import shutil
 
 from pathlib import Path
+from typing import Optional
 
 from PIL import Image
 from PIL.GifImagePlugin import GifImageFile
@@ -15,11 +16,20 @@ class Gif(ImageHandler):
 
     OUTPUT_FORMAT = GifImageFile.format
     OUTPUT_FORMAT_OBJ = Format(OUTPUT_FORMAT, True, False)
-    PROGRAMS: tuple[str, ...] = ("gifsicle", "pil2gif")
-    _ARGS_PREFIX = ["gifsicle", "--optimize=3", "--batch"]
+    PROGRAMS: dict[str, Optional[str]] = ImageHandler.init_programs(
+        ("gifsicle", "pil2gif")
+    )
+    _ARGS_PREFIX = [
+        PROGRAMS["gifsicle"],
+        "--optimize=3",
+        "--batch",
+    ]
 
     def gifsicle(self, old_path: Path, new_path: Path) -> Path:
         """Return gifsicle args."""
+        if not self._ARGS_PREFIX[0]:
+            return old_path
+
         shutil.copy2(old_path, new_path)
         args = tuple(self._ARGS_PREFIX + [str(new_path)])
         self.run_ext(args)

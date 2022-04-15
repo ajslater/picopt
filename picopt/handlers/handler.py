@@ -1,9 +1,11 @@
 """FileType abstract class for image and container formats."""
+import shutil
 import subprocess
 
 from abc import ABC
 from dataclasses import dataclass
 from pathlib import Path
+from typing import Optional
 
 from confuse.templates import AttrDict
 
@@ -36,13 +38,27 @@ class Handler(ABC):
     OUTPUT_FORMAT: str = "unimplemented"
     OUTPUT_FORMAT_OBJ: Format = Format(OUTPUT_FORMAT, False, False)
     INTERNAL: str = "python_internal"
-    PROGRAMS: tuple[str, ...] = tuple()
-    WORKING_SUFFIX: str = f"{PROGRAM_NAME}--tmp"
+    PROGRAMS: dict[str, Optional[str]] = {}
+    WORKING_SUFFIX: str = f"{PROGRAM_NAME}__tmp"
+
+    @classmethod
+    def init_programs(cls, programs: tuple[str, ...]) -> dict[str, Optional[str]]:
+        """Initialize the PROGRAM map."""
+        program_dict = {}
+        for program in programs:
+            bin_path = None
+            if not program.startswith("pil2") and program != cls.INTERNAL:
+                bin_path = shutil.which(program)
+            program_dict[program] = bin_path
+        return program_dict
 
     @staticmethod
     def run_ext(args: tuple[str, ...]) -> None:
         """Run EXTERNAL program."""
         try:
+            print(args)
+            if not args[0]:
+                raise ValueError(f"{args}")
             subprocess.run(args, check=True)
         except subprocess.CalledProcessError as exc:
             print(exc)
@@ -78,7 +94,7 @@ class Handler(ABC):
             cls, set()
         )
         return format_obj in handled_format_objs and bool(
-            available_programs & set(cls.PROGRAMS)
+            available_programs & set(cls.PROGRAMS.keys())
         )
 
     def __init__(

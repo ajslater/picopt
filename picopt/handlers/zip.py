@@ -15,12 +15,12 @@ from picopt.handlers.handler import Format
 class Zip(ContainerHandler):
     """Ziplike container."""
 
-    OUTPUT_FORMAT = "ZIP"
-    OUTPUT_FORMAT_OBJ = Format(OUTPUT_FORMAT)
-    INPUT_FORMAT_RAR = "RAR"
-    INPUT_FORMAT_OBJ_RAR = Format(INPUT_FORMAT_RAR)
-    RAR_SUFFIX = "." + INPUT_FORMAT_RAR.lower()
-    PROGRAMS = (ContainerHandler.INTERNAL,)
+    OUTPUT_FORMAT: str = "ZIP"
+    OUTPUT_FORMAT_OBJ: Format = Format(OUTPUT_FORMAT)
+    INPUT_FORMAT_RAR: str = "RAR"
+    INPUT_FORMAT_OBJ_RAR: Format = Format(INPUT_FORMAT_RAR)
+    RAR_SUFFIX: str = "." + INPUT_FORMAT_RAR.lower()
+    PROGRAMS: dict[str, Optional[str]] = {ContainerHandler.INTERNAL: None}
 
     @classmethod
     def identify_format(cls, path: Path) -> Optional[Format]:
@@ -95,15 +95,15 @@ class Zip(ContainerHandler):
 class CBZ(Zip):
     """CBZ Container."""
 
-    OUTPUT_FORMAT = "CBZ"
-    OUTPUT_FORMAT_OBJ = Format(OUTPUT_FORMAT)
-    INPUT_FORMAT_RAR = "CBR"
-    INPUT_FORMAT_OBJ_RAR = Format(INPUT_FORMAT_RAR)
-    RAR_SUFFIX = "." + INPUT_FORMAT_RAR.lower()
+    OUTPUT_FORMAT: str = "CBZ"
+    OUTPUT_FORMAT_OBJ: Format = Format(OUTPUT_FORMAT)
+    INPUT_FORMAT_RAR: str = "CBR"
+    INPUT_FORMAT_OBJ_RAR: Format = Format(INPUT_FORMAT_RAR)
+    RAR_SUFFIX: str = "." + INPUT_FORMAT_RAR.lower()
 
 
 class EPub(Zip):
     """Epub Container."""
 
-    OUTPUT_FORMAT = "EPUB"
-    OUTPUT_FORMAT_OBJ = Format(OUTPUT_FORMAT)
+    OUTPUT_FORMAT: str = "EPUB"
+    OUTPUT_FORMAT_OBJ: Format = Format(OUTPUT_FORMAT)

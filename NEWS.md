@@ -15,6 +15,7 @@ v3.0.0-a0
   - .picoptrc.yaml files can configure options
   - Changed cli option names.
   - Removed cli args for manually disabling programs
+  - Faster checking for external programs
 - Fall back to Pillow optimization if better external programs not found.
 - Fixes
   - Cleans up old temporary files from aborted picopt runs.
