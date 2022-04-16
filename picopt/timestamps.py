@@ -1,4 +1,5 @@
 """Timestamp writer for keeping track of bulk optimizations."""
+from collections.abc import Iterable
 from datetime import datetime
 from pathlib import Path
 from typing import Any, Optional, TextIO
@@ -31,6 +32,39 @@ class Timestamps:
     def get_wal_filename(program_name: str) -> str:
         """Return the write ahead log filename for the program."""
         return f".{program_name}_timestamps.wal.yaml"
+
+    @staticmethod
+    def prune_config(config: dict, allowed_keys: set) -> dict:
+        """Prune a dictionry to only the allowed keys."""
+        timestamps_config = {}
+        for key in allowed_keys:
+            timestamps_config[key] = config.get(key)
+        return timestamps_config
+
+    @classmethod
+    def path_timestamps_map_factory(
+        cls,
+        paths: Iterable[Path],
+        program_name: str,
+        verbose: int,
+        config: dict,
+        prune_keys: Optional[set] = None,
+    ):
+        """Create a map of paths to timestamps."""
+        if prune_keys:
+            timestamps_config = cls.prune_config(config, prune_keys)
+        else:
+            timestamps_config = config
+
+        timestamps = {}
+        for path in paths:
+            top_path = Timestamps.dirpath(path)
+            if top_path in timestamps:
+                continue
+            timestamps[top_path] = Timestamps(
+                program_name, top_path, verbose=verbose, config=timestamps_config
+            )
+        return timestamps
 
     @classmethod
     def _normalize_config(cls, config: Optional[dict]) -> Optional[dict]:
