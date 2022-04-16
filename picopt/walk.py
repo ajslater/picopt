@@ -40,20 +40,29 @@ from picopt.timestamps import Timestamps
 class Walk:
     """Walk object for storing state of a walk run."""
 
+    TIMESTAMPS_FILENAMES = set(
+        (
+            Timestamps.get_timestamps_filename(PROGRAM_NAME),
+            Timestamps.get_wal_filename(PROGRAM_NAME),
+        )
+    )
+
     def __init__(self, config: AttrDict) -> None:
         """Initialize."""
         self._config: AttrDict = config
         config_paths: Sequence[Path] = self._config.paths
-        self._top_paths: tuple[Path, ...] = tuple(sorted(set(config_paths)))
+        top_paths = []
+        for path in sorted(set(config_paths)):
+            if path.is_symlink() and not self._config.symlinks:
+                continue
+            top_paths.append(path)
+        self._top_paths: tuple[Path, ...] = tuple(top_paths)
         self._timestamps: dict[Path, Timestamps] = {}
         self._queues: dict[Path, SimpleQueue[Any]] = {}
         if self._config.jobs:
             self._pool = Pool(self._config.jobs)
         else:
             self._pool = Pool()
-        timestamps_filename = Timestamps.get_timestamps_filename(PROGRAM_NAME)
-        timestamps_wal_filename = Timestamps.get_wal_filename(PROGRAM_NAME)
-        self._timestamps_filenames = set([timestamps_filename, timestamps_wal_filename])
 
     def _is_skippable(self, path: Path) -> bool:
         """Handle things that are not optimizable files."""
@@ -63,7 +72,7 @@ class Walk:
             if self._config.verbose > 1:
                 cprint(f"Skip symlink {path}", "white", attrs=["dark"])
             skip = True
-        elif path.name in self._timestamps_filenames:
+        elif path.name in self.TIMESTAMPS_FILENAMES:
             skip = True
         elif not path.exists():
             if self._config.verbose > 1:
@@ -98,9 +107,7 @@ class Walk:
         if self._config.after is not None:
             walk_after = self._config.after
         elif container_mtime is None:
-            timestamps = self._timestamps.get(top_path)
-            if timestamps:
-                walk_after = timestamps.get(path)
+            walk_after = self._timestamps.get(top_path, {}).get(path)
 
         if walk_after is None:
             return False
@@ -193,15 +200,6 @@ class Walk:
             result = self._pool.apply_async(handler.error, args=args)
         return result
 
-    def _should_record_timestamp(self, path: Path) -> bool:
-        """Determine if we should we record a timestamp at all."""
-        return (
-            self._config.timestamps
-            and (self._config.symlinks or not path.is_symlink())
-            and path.exists()
-            and Handler.WORKING_SUFFIX not in str(path)
-        )
-
     def _report_totals(self, totals: Totals) -> None:
         """Report the total number and percent of bytes saved."""
         if totals.bytes_in:
@@ -255,7 +253,7 @@ class Walk:
 
     def _handle_queue_complete_task(self, top_path: Path, task: CompleteTask):
         if isinstance(task, CompleteDirTask):
-            if self._should_record_timestamp(task.path):
+            if self._config.timestamps:
                 # Dump timestamps after every directory completes
                 timestamps = self._timestamps[top_path]
                 timestamps.set(task.path, compact=True)
@@ -285,7 +283,7 @@ class Walk:
                 cprint(item.error, "yellow")
                 totals.errors.append(item)
             else:
-                if self._should_record_timestamp(item.path):
+                if self._config.timestamps:
                     self._timestamps[top_path].set(item.path)
                 totals.bytes_in += item.bytes_in
                 totals.bytes_out += item.bytes_out
@@ -295,20 +293,6 @@ class Walk:
             self._handle_queue_complete_task(top_path, item)
         else:
             cprint(f"Unhandled queue item {item}", "yellow")
-
-    def _set_timestamps(self, path: Path, timestamps_config: dict[str, Any]):
-        """Read timestamps."""
-        dirpath = Timestamps.dirpath(path)
-        if dirpath in self._timestamps:
-            return
-        timestamps = Timestamps(
-            PROGRAM_NAME,
-            dirpath,
-            verbose=self._config.verbose,
-            config=timestamps_config,
-        )
-        OldTimestamps(timestamps).import_old_timestamps()
-        self._timestamps[dirpath] = timestamps
 
     def _convert_message(
         self, convert_from_formats: frozenset[str], convert_handler: Type[Handler]
@@ -345,11 +329,15 @@ class Walk:
 
         # Init timestamps
         if self._config.timestamps:
-            timestamps_config: dict[str, Any] = {}
-            for key in TIMESTAMPS_CONFIG_KEYS:
-                timestamps_config[key] = self._config.get(key)
-            for top_path in self._top_paths:
-                self._set_timestamps(top_path, timestamps_config)
+            self._timestamps = Timestamps.path_timestamps_map_factory(
+                self._top_paths,
+                PROGRAM_NAME,
+                self._config.verbose,
+                self._config,
+                TIMESTAMPS_CONFIG_KEYS,
+            )
+            for timestamps in self._timestamps.values():
+                OldTimestamps(timestamps).import_old_timestamps()
 
     def run(self) -> bool:
         """Optimize all configured files."""
@@ -378,8 +366,8 @@ class Walk:
         self._pool.close()
         self._pool.join()
 
-        for top_path, timestamps in self._timestamps.items():
-            if self._should_record_timestamp(top_path):
+        if self._config.timestamps:
+            for timestamps in self._timestamps.values():
                 timestamps.dump_timestamps()
         # Finish by reporting totals
         self._report_totals(totals)
