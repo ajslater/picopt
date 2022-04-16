@@ -1,4 +1,5 @@
 """JPEG format."""
+from copy import copy
 from pathlib import Path
 from typing import Optional
 
@@ -29,6 +30,7 @@ class Jpeg(ImageHandler):
         self, args: list[Optional[str]], old_path: Path, new_path: Path
     ) -> Path:
         """Run the jpegtran type program."""
+        args = copy(args)
         if not bin:
             return old_path
         if self.config.keep_metadata:
