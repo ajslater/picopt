@@ -88,14 +88,16 @@ TEMPLATE = MappingTemplate(
         "_format_handlers": dict,
     }
 )
-TIMESTAMPS_CONFIG_KEYS = (
-    "bigger",
-    "convert_to",
-    "formats",
-    "ignore",
-    "keep_metadata",
-    "recurse",
-    "symlinks",
+TIMESTAMPS_CONFIG_KEYS = set(
+    (
+        "bigger",
+        "convert_to",
+        "formats",
+        "ignore",
+        "keep_metadata",
+        "recurse",
+        "symlinks",
+    )
 )
 # Handlers for formats are listed in priority order
 FORMAT_HANDLERS = {
