@@ -43,6 +43,9 @@ def get_arguments(params: Optional[tuple[str, ...]] = None) -> Namespace:
     """Parse the command line."""
     description = "Losslessly optimizes and optionally converts images."
     parser = argparse.ArgumentParser(description=description)
+    ###########
+    # Options #
+    ###########
     parser.add_argument(
         "-r",
         "--recurse",
@@ -144,26 +147,13 @@ def get_arguments(params: Optional[tuple[str, ...]] = None) -> Namespace:
         dest="list_only",
         help="Only list files that would be optimized",
     )
-    parser.add_argument(
-        "-V",
-        "--version",
-        action="version",
-        version=VERSION,
-        help="Display the version number",
-    )
+
     parser.add_argument(
         "-M",
         "--destroy-metadata",
         action="store_false",
         dest="keep_metadata",
         help="Destroy metadata like EXIF and ICC Profiles",
-    )
-    parser.add_argument(
-        "paths",
-        metavar="path",
-        type=str,
-        nargs="+",
-        help="File or directory paths to optimize",
     )
     parser.add_argument(
         "-j",
@@ -181,15 +171,38 @@ def get_arguments(params: Optional[tuple[str, ...]] = None) -> Namespace:
         action="store",
         help="Path to a config file",
     )
+    ###########
+    # Actions #
+    ###########
+    parser.add_argument(
+        "-V",
+        "--version",
+        action="version",
+        version=VERSION,
+        help="Display the version number",
+    )
+    ###########
+    # Targets #
+    ###########
+    parser.add_argument(
+        "paths",
+        metavar="path",
+        type=str,
+        nargs="+",
+        help="File or directory paths to optimize",
+    )
+
     if params is not None:
         params = params[1:]
 
-    return parser.parse_args(params)
+    pns = parser.parse_args(params)
+    return Namespace(picopt=pns)
 
 
 def main(args: Optional[tuple[str, ...]] = None) -> bool:
     """Process command line arguments and walk inputs."""
     arguments = get_arguments(args)
+
     config = get_config(arguments)
     wob = walk.Walk(config)
     return wob.run()

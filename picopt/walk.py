@@ -5,7 +5,7 @@ import time
 from multiprocessing.pool import ApplyResult, Pool
 from pathlib import Path
 from queue import SimpleQueue
-from typing import Any, Optional, Sequence, Type, Union
+from typing import Any, Optional, Type, Union
 
 from confuse.templates import AttrDict
 from humanize import naturalsize
@@ -50,9 +50,8 @@ class Walk:
     def __init__(self, config: AttrDict) -> None:
         """Initialize."""
         self._config: AttrDict = config
-        config_paths: Sequence[Path] = self._config.paths
         top_paths = []
-        for path in sorted(set(config_paths)):
+        for path in sorted(set(self._config.paths)):
             if path.is_symlink() and not self._config.symlinks:
                 continue
             top_paths.append(path)

@@ -69,23 +69,27 @@ ALL_FORMATS: frozenset[str] = (
 )
 TEMPLATE = MappingTemplate(
     {
-        "after": Optional(float),
-        "bigger": bool,
-        "convert_to": Optional(Sequence(Choice(CONVERT_TO_FORMATS))),
-        "keep_metadata": bool,
-        "formats": Sequence(Choice(ALL_FORMATS)),
-        "ignore": Sequence(str),
-        "jobs": Integer(),
-        "list_only": bool,
-        "paths": Sequence(Path()),
-        "recurse": bool,
-        "symlinks": bool,
-        "test": bool,
-        "timestamps": bool,
-        "verbose": Integer(),
-        "_available_programs": set,
-        "_extra_formats": Optional(Sequence(Choice(ALL_FORMATS))),
-        "_format_handlers": dict,
+        "picopt": MappingTemplate(
+            {
+                "after": Optional(float),
+                "bigger": bool,
+                "convert_to": Optional(Sequence(Choice(CONVERT_TO_FORMATS))),
+                "keep_metadata": bool,
+                "formats": Sequence(Choice(ALL_FORMATS)),
+                "ignore": Sequence(str),
+                "jobs": Integer(),
+                "list_only": bool,
+                "paths": Sequence(Path()),
+                "recurse": bool,
+                "symlinks": bool,
+                "test": bool,
+                "timestamps": bool,
+                "verbose": Integer(),
+                "_available_programs": set,
+                "_extra_formats": Optional(Sequence(Choice(ALL_FORMATS))),
+                "_format_handlers": dict,
+            }
+        )
     }
 )
 TIMESTAMPS_CONFIG_KEYS = set(
@@ -143,7 +147,7 @@ def _is_external_program_executable(
 
 def _get_available_programs(config: Configuration) -> set:
     """Run the external program tester on the required binaries."""
-    verbose = config["verbose"].get(int)
+    verbose = config["picopt"]["verbose"].get(int)
     if not isinstance(verbose, int):
         raise ValueError(f"wrong type for convert_to: {type(verbose)} {verbose}")
     programs = set()
@@ -161,7 +165,7 @@ def _get_available_programs(config: Configuration) -> set:
 
 
 def _config_list_to_set(config, key) -> set[str]:
-    val_list = config[key].get(list)
+    val_list = config["picopt"][key].get(list)
     if not isinstance(val_list, (tuple, list, set)):
         raise ValueError(f"wrong type for convert_to: {type(val_list)} {val_list}")
     return set(val_list)
@@ -199,7 +203,7 @@ def _update_formats(config: Configuration) -> dict:
         formats |= set([CBZ.INPUT_FORMAT_RAR])
         convert_handlers[CBZ] = set([CBZ.INPUT_FORMAT_OBJ_RAR])
 
-    config["formats"].set(sorted(formats))
+    config["picopt"]["formats"].set(sorted(formats))
     return convert_handlers
 
 
@@ -207,7 +211,7 @@ def _create_format_handler_map(config: Configuration, convert_handlers: dict) ->
     """Create a format to handler map from config."""
     available_programs = _get_available_programs(config)
     format_handlers = {}
-    formats = config["formats"].get(list)
+    formats = config["picopt"]["formats"].get(list)
     if not isinstance(formats, list):
         raise ValueError(f"wrong type for formats: {type(formats)}{formats}")
     formats = set(formats)
@@ -220,12 +224,12 @@ def _create_format_handler_map(config: Configuration, convert_handlers: dict) ->
                 format_handlers[format] = handler_class
                 break
 
-    config["_format_handlers"].set(format_handlers)
-    config["_available_programs"].set(available_programs)
+    config["picopt"]["_format_handlers"].set(format_handlers)
+    config["picopt"]["_available_programs"].set(available_programs)
 
 
 def _set_after(config) -> None:
-    after = config["after"].get()
+    after = config["picopt"]["after"].get()
     if after is None:
         return
 
@@ -235,30 +239,36 @@ def _set_after(config) -> None:
         after_dt = parse(after)
         timestamp = time.mktime(after_dt.timetuple())
 
-    config["after"].set(timestamp)
+    config["picopt"]["after"].set(timestamp)
 
 
 def _set_ignore(config) -> None:
     """Remove duplicates from the ignore list."""
-    ignore_list: list[str] = config["ignore"].get(list)
-    config["ignore"].set(tuple(sorted(set(ignore_list))))
+    ignore_list: list[str] = config["picopt"]["ignore"].get(list)
+    config["picopt"]["ignore"].set(tuple(sorted(set(ignore_list))))
 
 
 def _set_timestamps(config) -> None:
     """Set the timestamps attribute."""
     timestamps = (
-        config["timestamps"].get(bool)
-        and not config["test"].get(bool)
-        and not config["list_only"].get(bool)
+        config["picopt"]["timestamps"].get(bool)
+        and not config["picopt"]["test"].get(bool)
+        and not config["picopt"]["list_only"].get(bool)
     )
-    config["timestamps"].set(timestamps)
+    config["picopt"]["timestamps"].set(timestamps)
 
 
-def get_config(args: typing.Optional[Namespace] = None) -> AttrDict:
+def get_config(
+    args: typing.Optional[Namespace] = None, modname=PROGRAM_NAME
+) -> AttrDict:
     """Get the config dict, layering env and args over defaults."""
-    config = Configuration(PROGRAM_NAME, PROGRAM_NAME)
-    if args and args.config:
-        config.set_file(args.config)
+    config = Configuration(PROGRAM_NAME, modname=modname, read=False)
+    try:
+        config.read()
+    except Exception as exc:
+        cprint(f"WARNING: {exc}")
+    if args and args.picopt and args.picopt.config:
+        config.set_file(args.picopt.config)
     config.set_env()
     if args:
         config.set_args(args)
@@ -270,4 +280,4 @@ def get_config(args: typing.Optional[Namespace] = None) -> AttrDict:
     ad = config.get(TEMPLATE)
     if not isinstance(ad, AttrDict):
         raise ValueError()
-    return ad
+    return ad.picopt
