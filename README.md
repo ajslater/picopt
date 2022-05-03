@@ -99,7 +99,9 @@ if you don't want to install mozjpeg using the instructions below then use jpegt
 mozjpeg offers better compression than libjpeg-progs jpegtran. It may or
 may not be packaged for your \*nix, but even when it is, picopt requires that its separately compiled version of jpegtran be symlinked to 'mozjpeg' somewhere in the path.
 
-Instructions for installing on macOS are given above, but most Linux distributions still require a more manual install as elucidated here on [Casey Hoffer's blog](https://www.caseyhofford.com/2019/05/01/improved-image-compression-install-mozjpeg-on-ubuntu-server/)
+Instructions for installing on macOS are given above.
+Some near recent binaries for Windows and Debian x86 [can be found here](https://mozjpeg.codelove.de/binaries.html).
+Most Linux distributions still require a more manual install as elucidated here on [Casey Hoffer's blog](https://www.caseyhofford.com/2019/05/01/improved-image-compression-install-mozjpeg-on-ubuntu-server/)
 
 #### pngout
 
