@@ -3,7 +3,7 @@ v3.0.0-a0
 - Formats
   - WebP lossless, lossy and animated support.
   - Gain support for .zip archives
-  - EPub support
+  - EPub support. ePub contents are never converted.
   - TIFF support
 - Timestamps
   - Timestamps are now kept in .picopt_timestamps.yaml files.

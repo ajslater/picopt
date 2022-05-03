@@ -2,6 +2,7 @@
 import shutil
 
 from platform import system
+from zipfile import ZipFile
 
 from picopt import PROGRAM_NAME, cli
 from tests import CONTAINER_DIR, get_test_dir
@@ -17,7 +18,7 @@ if system() == "Darwin":
         "test_cbr.cbr": (93725, 93725, ("cbz", 84506)),
         "test_rar.rar": (93675, 93675, ("zip", 84493)),
         "test_zip.zip": (2974, 1917, ("zip", 2974)),
-        "igp-twss.epub": (181397, 175224, ("epub", 181397)),
+        "igp-twss.epub": (292448, 281248, ("epub", 292448)),
     }
 else:
     FNS = {
@@ -25,7 +26,7 @@ else:
         "test_cbr.cbr": (93725, 93725, ("cbz", 84494)),
         "test_rar.rar": (93675, 93675, ("zip", 84481)),
         "test_zip.zip": (2974, 1861, ("zip", 2974)),
-        "igp-twss.epub": (181397, 174676, ("epub", 181397)),
+        "igp-twss.epub": (292448, 281248, ("epub", 292448)),
     }
 
 
@@ -46,15 +47,22 @@ class TestContainersDir:
         res = cli.main(args)
         assert res
         for name, sizes in FNS.items():
+            if name == "igp-twss.epub":
+                path = TMP_ROOT / name
+                with ZipFile(path, "r") as zf:
+                    assert "OPS/test_bmp.bmp" in zf.namelist()
             path = TMP_ROOT / name
             assert path.stat().st_size == sizes[0]
 
     def test_containers_no_convert(self) -> None:
-        args = (PROGRAM_NAME, "-rx", "CBZ,ZIP,EPUB", str(TMP_ROOT))
+        args = (PROGRAM_NAME, "-rx", "CBZ,ZIP,EPUB", "-c WEBP", str(TMP_ROOT))
         res = cli.main(args)
         assert res
         for name, sizes in FNS.items():
             path = TMP_ROOT / name
+            if name == "igp-twss.epub":
+                with ZipFile(path, "r") as zf:
+                    assert "OPS/test_bmp.bmp" in zf.namelist()
             assert path.stat().st_size == sizes[1]
 
     def test_containers_convert_to_zip(self) -> None:

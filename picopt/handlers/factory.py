@@ -71,8 +71,20 @@ def _get_container_format(path: Path) -> Optional[Format]:
     return format
 
 
-def create_handler(config: AttrDict, path: Path) -> Optional[Handler]:
+def _get_handler_class(config: AttrDict, key: str, format: Format) -> Type[Handler]:
+    handler_classes = config._format_handlers.get(format)
+    if handler_classes:
+        handler_cls = handler_classes.get(key)
+    else:
+        handler_cls = None
+    return handler_cls
+
+
+def create_handler(
+    config: AttrDict, path: Path, convert: bool = True
+) -> Optional[Handler]:
     """Get the image format."""
+    # This is the consumer of config._format_handlers
     format: Optional[Format] = None
     metadata: Metadata = Metadata()
     handler_cls: Optional[Type[Handler]] = None
@@ -80,9 +92,14 @@ def create_handler(config: AttrDict, path: Path) -> Optional[Handler]:
         format, metadata = _get_image_format(path, config.keep_metadata)
         if not format:
             format = _get_container_format(path)
-        handler_cls = config._format_handlers.get(format)
+
+        if format:
+            if convert:
+                handler_cls = _get_handler_class(config, "convert", format)
+            if not handler_cls:
+                handler_cls = _get_handler_class(config, "native", format)
     except OSError as exc:
-        cprint(str(exc), "yellow")
+        cprint("WARNING: getting handler", str(exc), "yellow")
 
     if handler_cls and format is not None:
         handler = handler_cls(config, path, format, metadata)

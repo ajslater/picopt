@@ -26,6 +26,7 @@ class TestCLI:
     def test_get_arguments(self) -> None:
         args = ("picopt", "-rqc", "PNG,WEBP", "-x", "CBZ,ZIP", "-bTLM", str(TMP_ROOT))
         arguments = cli.get_arguments(args)
+        arguments = arguments.picopt
         assert arguments.verbose == 0
         assert ("PNG", "WEBP") == arguments.convert_to
         assert arguments.formats is None

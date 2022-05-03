@@ -92,7 +92,7 @@ class TestImagesDir:
             shutil.rmtree(TMP_ROOT)
 
     def test_no_convert(self) -> None:
-        args = (PROGRAM_NAME, "-r", str(TMP_ROOT))
+        args = (PROGRAM_NAME, "-rvv", str(TMP_ROOT))
         res = cli.main(args)
         assert res
         for name, sizes in FNS.items():
@@ -100,7 +100,7 @@ class TestImagesDir:
             assert path.stat().st_size == sizes[1]
 
     def test_convert_to_png(self) -> None:
-        args = (PROGRAM_NAME, "-rx", "TIFF", "-c", "PNG", str(TMP_ROOT))
+        args = (PROGRAM_NAME, "-rvvx", "TIFF", "-c", "PNG", str(TMP_ROOT))
         res = cli.main(args)
         assert res
         for name, sizes in FNS.items():
@@ -108,7 +108,7 @@ class TestImagesDir:
             assert path.stat().st_size == sizes[2][1]
 
     def test_convert_to_webp(self) -> None:
-        args = (PROGRAM_NAME, "-rx", "TIFF", "-c", "WEBP", str(TMP_ROOT))
+        args = (PROGRAM_NAME, "-rvvx", "TIFF", "-c", "WEBP", str(TMP_ROOT))
         res = cli.main(args)
         assert res
         for name, sizes in FNS.items():

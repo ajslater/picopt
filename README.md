@@ -57,6 +57,7 @@ WebP lossless & lossy formats are optimized with [cwebp](https://developers.goog
 ### EPub
 
 EPub Books are zip files that often contain images and picopt unpacks and repacks this format natively. Images within the epub are handled by other programs. EPub optimization is not turned on by default.
+EPub contents are never converted to other formats because it would break internal references to them.
 
 ### CBZ & CBR
 

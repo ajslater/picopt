@@ -1,6 +1,7 @@
 """Walk the directory trees and files and call the optimizers."""
 import shutil
 import time
+import traceback
 
 from multiprocessing.pool import ApplyResult, Pool
 from pathlib import Path
@@ -127,6 +128,7 @@ class Walk:
         path: Path,
         top_path: Path,
         container_mtime: Optional[float] = None,
+        convert: bool = True,
     ) -> Union[ApplyResult, DirResult, None]:
         """Optimize an individual file."""
         result: Union[ApplyResult, DirResult, None] = None
@@ -140,13 +142,15 @@ class Walk:
 
             if path.is_dir():
                 if self._config.recurse or container_mtime is not None:
-                    result = self.walk_dir(path, top_path, container_mtime)
+                    result = self.walk_dir(
+                        path, top_path, container_mtime, convert=convert
+                    )
                 return result
 
             if self._is_older_than_timestamp(path, top_path, container_mtime):
                 return result
 
-            handler = create_handler(self._config, path)
+            handler = create_handler(self._config, path, convert=convert)
 
             if handler is None:
                 return result
@@ -164,6 +168,8 @@ class Walk:
             else:
                 raise ValueError(f"bad handler {handler}")
         except Exception as exc:
+            traceback.print_exc()
+
             result = self._pool.apply_async(ReportStats, args=(path, None, exc))
         return result
 
@@ -172,11 +178,12 @@ class Walk:
         dir_path: Path,
         top_path: Path,
         container_mtime: Optional[float] = None,
+        convert: bool = True,
     ) -> DirResult:
         """Recursively optimize a directory."""
         dir_result = DirResult(dir_path, [])
         for path in dir_path.iterdir():
-            result = self.walk_file(path, top_path, container_mtime)
+            result = self.walk_file(path, top_path, container_mtime, convert=convert)
             dir_result.results.append(result)
 
         return dir_result
@@ -192,6 +199,7 @@ class Walk:
                 handler.tmp_container_dir,
                 top_path,
                 container_mtime,
+                convert=handler.CONVERT,
             )
             result = ContainerResult(handler.final_path, dir_result.results, handler)
         except Exception as exc:

@@ -5,6 +5,7 @@ import time
 import typing
 
 from argparse import Namespace
+from copy import deepcopy
 
 from confuse import Configuration
 from confuse.templates import (
@@ -104,23 +105,23 @@ TIMESTAMPS_CONFIG_KEYS = set(
     )
 )
 # Handlers for formats are listed in priority order
-FORMAT_HANDLERS = {
-    PPM_FORMAT_OBJ: (WebPLossless, Png),
-    BPM_FORMAT_OBJ: (WebPLossless, Png),
-    Gif.OUTPUT_FORMAT_OBJ: (Gif2WebP, Png, Gif),
-    AnimatedGif.OUTPUT_FORMAT_OBJ: (Gif2WebP, AnimatedGif),
-    Jpeg.OUTPUT_FORMAT_OBJ: (Jpeg,),
-    Png.OUTPUT_FORMAT_OBJ: (WebPLossless, Png),
-    WebPLossy.OUTPUT_FORMAT_OBJ: (WebPLossy,),
-    WebPLossless.OUTPUT_FORMAT_OBJ: (WebPLossless,),
-    WebPAnimated.OUTPUT_FORMAT_OBJ: (WebPAnimated,),
-    Zip.OUTPUT_FORMAT_OBJ: (Zip,),
-    CBZ.OUTPUT_FORMAT_OBJ: (CBZ,),
-    Zip.INPUT_FORMAT_OBJ_RAR: (Zip,),
-    CBZ.INPUT_FORMAT_OBJ_RAR: (CBZ,),
-    EPub.OUTPUT_FORMAT_OBJ: (EPub,),
-    TIFF_FORMAT_OBJ: (WebPLossless, Png),
-    TIFF_ANIMATED_FORMAT_OBJ: (WebPAnimated,),
+_FORMAT_HANDLERS = {
+    PPM_FORMAT_OBJ: {"convert": (WebPLossless, Png)},
+    BPM_FORMAT_OBJ: {"convert": (WebPLossless, Png)},
+    Gif.OUTPUT_FORMAT_OBJ: {"convert": (Gif2WebP, Png), "native": (Gif,)},
+    AnimatedGif.OUTPUT_FORMAT_OBJ: {"convert": (Gif2WebP,), "native": (AnimatedGif,)},
+    Jpeg.OUTPUT_FORMAT_OBJ: {"native": (Jpeg,)},
+    Png.OUTPUT_FORMAT_OBJ: {"convert": (WebPLossless,), "native": (Png,)},
+    WebPLossy.OUTPUT_FORMAT_OBJ: {"native": (WebPLossy,)},
+    WebPLossless.OUTPUT_FORMAT_OBJ: {"native": (WebPLossless,)},
+    WebPAnimated.OUTPUT_FORMAT_OBJ: {"native": (WebPAnimated,)},
+    Zip.OUTPUT_FORMAT_OBJ: {"native": (Zip,)},
+    CBZ.OUTPUT_FORMAT_OBJ: {"native": (CBZ,)},
+    Zip.INPUT_FORMAT_OBJ_RAR: {"convert": (Zip,)},
+    CBZ.INPUT_FORMAT_OBJ_RAR: {"convert": (CBZ,)},
+    EPub.OUTPUT_FORMAT_OBJ: {"native": (EPub,)},
+    TIFF_FORMAT_OBJ: {"convert": (WebPLossless, Png)},
+    TIFF_ANIMATED_FORMAT_OBJ: {"convert": (WebPAnimated,)},
 }
 MODE_EXECUTABLE = stat.S_IXUSR ^ stat.S_IXGRP ^ stat.S_IXOTH
 
@@ -172,21 +173,21 @@ def _config_list_to_set(config, key) -> set[str]:
 
 
 def _update_formats(config: Configuration) -> dict:
-    convert_to = _config_list_to_set(config, "convert_to")
     formats = _config_list_to_set(config, "formats")
-    if "_extra_formats" in config:
+    if "_extra_formats" in config["picopt"]:
         formats |= _config_list_to_set(config, "_extra_formats")
 
+    convert_to = _config_list_to_set(config, "convert_to")
     convert_handlers: dict[typing.Type[Handler], set[Format]] = {}
     if Png.OUTPUT_FORMAT in convert_to:
         formats |= PNG_CONVERTABLE_FORMATS - set([TIFF_FORMAT])
-        format_objs = _PNG_CONVERTABLE_FORMAT_OBJS
+        format_objs = deepcopy(_PNG_CONVERTABLE_FORMAT_OBJS)
         if TIFF_FORMAT not in formats:
             format_objs.remove(TIFF_FORMAT_OBJ)
         convert_handlers[Png] = format_objs
     if WebPLossless.OUTPUT_FORMAT in convert_to:
         formats |= WEBP_CONVERTABLE_FORMATS - set([TIFF_FORMAT])
-        format_objs = _WEBP_CONVERTABLE_FORMAT_OBJS
+        format_objs = deepcopy(_WEBP_CONVERTABLE_FORMAT_OBJS)
         if TIFF_FORMAT not in formats:
             format_objs.remove(TIFF_FORMAT_OBJ)
         convert_handlers[WebPLossless] = format_objs
@@ -204,6 +205,7 @@ def _update_formats(config: Configuration) -> dict:
         convert_handlers[CBZ] = set([CBZ.INPUT_FORMAT_OBJ_RAR])
 
     config["picopt"]["formats"].set(sorted(formats))
+
     return convert_handlers
 
 
@@ -216,14 +218,22 @@ def _create_format_handler_map(config: Configuration, convert_handlers: dict) ->
         raise ValueError(f"wrong type for formats: {type(formats)}{formats}")
     formats = set(formats)
 
-    for format, possible_handler_classes in FORMAT_HANDLERS.items():
-        for handler_class in possible_handler_classes:
-            if format.format in formats and handler_class.is_handler_available(
-                convert_handlers, available_programs, format
-            ):
-                format_handlers[format] = handler_class
-                break
-
+    for format, possible_handler_classes_group in _FORMAT_HANDLERS.items():
+        if format.format not in formats:
+            continue
+        for (
+            handler_type,
+            possible_handler_classes,
+        ) in possible_handler_classes_group.items():
+            for handler_class in possible_handler_classes:
+                available = handler_class.is_handler_available(
+                    convert_handlers, available_programs, format
+                )
+                if available:
+                    if format not in format_handlers:
+                        format_handlers[format] = {}
+                    format_handlers[format][handler_type] = handler_class
+                    break
     config["picopt"]["_format_handlers"].set(format_handlers)
     config["picopt"]["_available_programs"].set(available_programs)
 

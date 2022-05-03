@@ -107,3 +107,4 @@ class EPub(Zip):
 
     OUTPUT_FORMAT: str = "EPUB"
     OUTPUT_FORMAT_OBJ: Format = Format(OUTPUT_FORMAT)
+    CONVERT: bool = False
