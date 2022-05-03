@@ -26,7 +26,7 @@ else:
         "test_cbr.cbr": (93725, 93725, ("cbz", 84494)),
         "test_rar.rar": (93675, 93675, ("zip", 84481)),
         "test_zip.zip": (2974, 1861, ("zip", 2974)),
-        "igp-twss.epub": (292448, 281248, ("epub", 292448)),
+        "igp-twss.epub": (292448, 280700, ("epub", 292448)),
     }
 
 
@@ -50,7 +50,8 @@ class TestContainersDir:
             if name == "igp-twss.epub":
                 path = TMP_ROOT / name
                 with ZipFile(path, "r") as zf:
-                    assert "OPS/test_bmp.bmp" in zf.namelist()
+                    namelist = zf.namelist()
+                assert "OPS/test_bmp.bmp" in namelist
             path = TMP_ROOT / name
             assert path.stat().st_size == sizes[0]
 
@@ -62,7 +63,8 @@ class TestContainersDir:
             path = TMP_ROOT / name
             if name == "igp-twss.epub":
                 with ZipFile(path, "r") as zf:
-                    assert "OPS/test_bmp.bmp" in zf.namelist()
+                    namelist = zf.namelist()
+                assert "OPS/test_bmp.bmp" in namelist
             assert path.stat().st_size == sizes[1]
 
     def test_containers_convert_to_zip(self) -> None:

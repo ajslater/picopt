@@ -67,18 +67,18 @@ class Walk:
     def _is_skippable(self, path: Path) -> bool:
         """Handle things that are not optimizable files."""
         # File types
-        skip = False
         if not self._config.symlinks and path.is_symlink():
             if self._config.verbose > 1:
                 cprint(f"Skip symlink {path}", "white", attrs=["dark"])
-            skip = True
+            return True
         elif path.name in self.TIMESTAMPS_FILENAMES:
-            skip = True
+            return True
         elif not path.exists():
             if self._config.verbose > 1:
                 cprint(f"WARNING: {path} not found.", "yellow")
-            skip = True
+            return True
 
+        skip = False
         for ignore_glob in self._config.ignore:
             if path.match(ignore_glob):
                 skip = True
