@@ -44,6 +44,7 @@ class WebPAnimated(ContainerHandler):
                         method=0,
                     )
                     frame_index += 1
+            image.close()
         else:
             for frame_index in range(0, self.metadata.n_frames):
                 frame_path = self._get_frame_path(frame_index)

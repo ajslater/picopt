@@ -64,6 +64,7 @@ class Zip(ContainerHandler):
             with Image.open(path, mode="r") as image:
                 if image.format:
                     result = True
+            image.close()
         except UnidentifiedImageError:
             pass
         return result

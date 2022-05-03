@@ -90,6 +90,7 @@ class WebPLossless(WebP):
                     exif=self.metadata.exif,
                     icc_profile=self.metadata.icc_profile,
                 )
+            image.close()
             self.input_format_obj = Png.OUTPUT_FORMAT_OBJ
         else:
             new_path = old_path

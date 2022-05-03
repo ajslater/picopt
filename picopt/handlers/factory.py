@@ -42,6 +42,7 @@ def _get_image_format(
     try:
         with Image.open(path, mode="r") as image:
             image.verify()
+        image.close()  # for animated images
         with Image.open(path, mode="r") as image:
             image_format = image.format
             if image_format is None:
@@ -50,6 +51,7 @@ def _get_image_format(
             info = image.info
             if keep_metadata and animated:
                 n_frames = getattr(image, "n_frames", 1)
+        image.close()  # for animated images
         if keep_metadata:
             exif = info.get("exif", b"")
             icc = info.get("icc_profile", "")

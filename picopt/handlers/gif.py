@@ -39,6 +39,7 @@ class Gif(ImageHandler):
         """Pillow gif optimization."""
         with Image.open(old_path) as image:
             image.save(new_path, self.OUTPUT_FORMAT, optimize=True, save_all=True)
+        image.close()  # for animated images
         return new_path
 
 

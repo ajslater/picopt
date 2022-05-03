@@ -71,6 +71,7 @@ class ImageHandler(Handler, metaclass=ABCMeta):
                     icc_profile=self.metadata.icc_profile,
                     **self.PIL2_ARGS,
                 )
+            image.close()  # for animated images
         else:
             new_path = old_path
         return new_path
