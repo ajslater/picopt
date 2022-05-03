@@ -40,7 +40,7 @@ from picopt.handlers.zip import CBZ, EPub, Zip
 
 
 _PNG_CONVERTABLE_FORMAT_OBJS = CONVERTABLE_FORMAT_OBJS | frozenset(
-    [Gif.OUTPUT_FORMAT_OBJ, TIFF_FORMAT_OBJ]
+    [Gif.OUTPUT_FORMAT_OBJ]
 )
 _WEBP_CONVERTABLE_FORMAT_OBJS = _PNG_CONVERTABLE_FORMAT_OBJS | frozenset(
     [Png.OUTPUT_FORMAT_OBJ]
@@ -180,16 +180,16 @@ def _update_formats(config: Configuration) -> dict:
     convert_to = _config_list_to_set(config, "convert_to")
     convert_handlers: dict[typing.Type[Handler], set[Format]] = {}
     if Png.OUTPUT_FORMAT in convert_to:
-        formats |= PNG_CONVERTABLE_FORMATS - set([TIFF_FORMAT])
+        formats |= PNG_CONVERTABLE_FORMATS
         format_objs = deepcopy(_PNG_CONVERTABLE_FORMAT_OBJS)
-        if TIFF_FORMAT not in formats:
-            format_objs.remove(TIFF_FORMAT_OBJ)
+        if TIFF_FORMAT in formats:
+            format_objs.add(TIFF_FORMAT_OBJ)
         convert_handlers[Png] = format_objs
     if WebPLossless.OUTPUT_FORMAT in convert_to:
-        formats |= WEBP_CONVERTABLE_FORMATS - set([TIFF_FORMAT])
+        formats |= WEBP_CONVERTABLE_FORMATS
         format_objs = deepcopy(_WEBP_CONVERTABLE_FORMAT_OBJS)
-        if TIFF_FORMAT not in formats:
-            format_objs.remove(TIFF_FORMAT_OBJ)
+        if TIFF_FORMAT in formats:
+            format_objs.add(TIFF_FORMAT_OBJ)
         convert_handlers[WebPLossless] = format_objs
 
         convert_handlers[Gif2WebP] = set(

@@ -21,7 +21,7 @@ from picopt.config import (
 from picopt.handlers.container import ContainerHandler
 from picopt.handlers.factory import create_handler
 from picopt.handlers.handler import Handler
-from picopt.handlers.image import ImageHandler
+from picopt.handlers.image import TIFF_FORMAT, ImageHandler
 from picopt.handlers.png import Png
 from picopt.handlers.webp import WebP
 from picopt.handlers.zip import CBZ, Zip
@@ -310,6 +310,14 @@ class Walk:
         convert_to = convert_handler.OUTPUT_FORMAT
         cprint(f"Converting {convert_from} to {convert_to}", "cyan")
 
+    def _get_covertable_formats(
+        self, convertable_formats: frozenset[str]
+    ) -> frozenset[str]:
+        formats = set(convertable_formats)
+        if TIFF_FORMAT in self._config.formats:
+            formats.add(TIFF_FORMAT)
+        return frozenset(formats)
+
     def _init_run(self):
         """Init Run."""
         # Validate top_paths
@@ -324,9 +332,11 @@ class Walk:
             print("Optimizing formats:", *sorted(self._config.formats))
             if self._config.convert_to:
                 if WebP.OUTPUT_FORMAT in self._config.convert_to:
-                    self._convert_message(WEBP_CONVERTABLE_FORMATS, WebP)
+                    formats = self._get_covertable_formats(WEBP_CONVERTABLE_FORMATS)
+                    self._convert_message(formats, WebP)
                 elif Png.OUTPUT_FORMAT in self._config.convert_to:
-                    self._convert_message(PNG_CONVERTABLE_FORMATS, Png)
+                    formats = self._get_covertable_formats(PNG_CONVERTABLE_FORMATS)
+                    self._convert_message(formats, Png)
                 if Zip.OUTPUT_FORMAT in self._config.convert_to:
                     self._convert_message(frozenset([Zip.INPUT_FORMAT_RAR]), Zip)
                 if CBZ.OUTPUT_FORMAT in self._config.convert_to:
