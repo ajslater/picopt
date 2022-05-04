@@ -1,15 +1,12 @@
 jobs:
   build:
     machine:
-      image: ubuntu-2004:202010-01
+      image: ubuntu-2004:current
     steps:
       - checkout
       - run:
           command: docker-compose build picopt-build-builder
-          name: Install Build Dependancies
-      - run:
-          command: docker-compose up --exit-code-from picopt-lint picopt-lint
-          name: Lint
+          name: Install Build Dependencies
       - run:
           command: ci/create-output-dirs.sh
           name: Create Output Dirs
@@ -20,6 +17,9 @@ jobs:
           path: test-results/pytest
       - store_artifacts:
           path: test-results/coverage
+      - run:
+          command: docker-compose up --exit-code-from picopt-lint picopt-lint
+          name: Lint
       - run:
           command: docker-compose up --exit-code-from picopt-build picopt-build
           name: Build
@@ -32,7 +32,7 @@ jobs:
           root: .
   deploy:
     docker:
-      - image: cimg/python:3.9
+      - image: cimg/python:3.10
     steps:
       - attach_workspace:
           at: .
@@ -50,11 +50,9 @@ workflows:
           filters:
             branches:
               only:
-                - dev
-                - develop
                 - circleci
+                - develop
                 - main
-                - master
                 - /.*-ci/
       - deploy:
           filters:
@@ -62,7 +60,6 @@ workflows:
               only:
                 - circleci
                 - main
-                - master
           requires:
             - build
   version: 2.1

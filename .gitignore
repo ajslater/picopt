@@ -3,10 +3,13 @@
 *~
 .DS_Store
 .coverage*
+.eslintcache
 .mypy_cache
 .picopt_timestamp
 .ropeproject
+.venv
 MANIFEST
+TODO.md
 __pycache__
 build
 dist

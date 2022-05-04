@@ -1,253 +1,386 @@
 """Walk the directory trees and files and call the optimizers."""
-import multiprocessing
-import os
+import shutil
 import time
+import traceback
 
-from multiprocessing.pool import AsyncResult
-from multiprocessing.pool import Pool
+from multiprocessing.pool import ApplyResult, Pool
 from pathlib import Path
-from typing import Any
-from typing import List
-from typing import Optional
-from typing import Set
-from typing import Tuple
+from queue import SimpleQueue
+from typing import Any, Optional, Type, Union
 
-from . import detect_format
-from . import optimize
-from . import stats
-from . import timestamp
-from .formats.comic import Comic
-from .settings import Settings
-from .stats import ReportStats
-from .timestamp import Timestamp
+from confuse.templates import AttrDict
+from humanize import naturalsize
+from termcolor import cprint
+from treestamps import Treestamps
+
+from picopt import PROGRAM_NAME
+from picopt.config import (
+    PNG_CONVERTABLE_FORMATS,
+    TIMESTAMPS_CONFIG_KEYS,
+    WEBP_CONVERTABLE_FORMATS,
+)
+from picopt.handlers.container import ContainerHandler
+from picopt.handlers.factory import create_handler
+from picopt.handlers.handler import Handler
+from picopt.handlers.image import TIFF_FORMAT, ImageHandler
+from picopt.handlers.png import Png
+from picopt.handlers.webp import WebP
+from picopt.handlers.zip import CBZ, Zip
+from picopt.old_timestamps import OldTimestamps
+from picopt.stats import ReportStats
+from picopt.tasks import (
+    CompleteContainerTask,
+    CompleteDirTask,
+    CompleteTask,
+    ContainerResult,
+    DirResult,
+    Totals,
+)
 
 
-class Walk(object):
+class Walk:
     """Walk object for storing state of a walk run."""
 
-    def __init__(self, settings: Settings) -> None:
-        """Set the settings and initialize the threadpool & Timstamp."""
-        self._settings = settings
-        self._pool = Pool(self._settings.jobs)
-        self._tso = Timestamp(self._settings)
+    TIMESTAMPS_FILENAMES = set(Treestamps.get_filenames(PROGRAM_NAME))
 
-    @staticmethod
-    def _comic_archive_skip(args: Tuple[ReportStats]) -> ReportStats:
-        return args[0]
-
-    def walk_comic_archive(
-        self, path: Path, image_format: str, optimize_after: Optional[float]
-    ) -> Set[AsyncResult]:
-        """
-        Optimize a comic archive.
-
-        This is done mostly inline to use the master processes process pool
-        for workers. And to avoid calling back up into walk from a dedicated
-        module or format processor. It does mean that we block on uncompress
-        and on waiting for the contents subprocesses to compress.
-        """
-        # uncompress archive
-        tmp_dir, report_stats, comment = Comic.comic_archive_uncompress(
-            self._settings, path, image_format
-        )
-        if tmp_dir is None:
-            skip_args = tuple([report_stats])
-            return set(
-                [self._pool.apply_async(self._comic_archive_skip, args=(skip_args,))]
-            )
-
-        # optimize contents of archive
-        archive_mtime = path.stat().st_mtime
-        result_set = self.walk_dir(tmp_dir, optimize_after, True, archive_mtime)
-
-        # wait for archive contents to optimize before recompressing
-        nag_about_gifs = False
-        for result in result_set:
-            res = result.get()
-            nag_about_gifs = nag_about_gifs or res.nag_about_gifs
-
-        # recompress archive
-        args = (path, image_format, self._settings, nag_about_gifs, comment)
-        return set([self._pool.apply_async(Comic.comic_archive_compress, args=(args,))])
+    def __init__(self, config: AttrDict) -> None:
+        """Initialize."""
+        self._config: AttrDict = config
+        top_paths = []
+        for path in sorted(set(self._config.paths)):
+            if path.is_symlink() and not self._config.symlinks:
+                continue
+            top_paths.append(path)
+        self._top_paths: tuple[Path, ...] = tuple(top_paths)
+        self._timestamps: dict[Path, Treestamps] = {}
+        self._queues: dict[Path, SimpleQueue[Any]] = {}
+        if self._config.jobs:
+            self._pool = Pool(self._config.jobs)
+        else:
+            self._pool = Pool()
 
     def _is_skippable(self, path: Path) -> bool:
         """Handle things that are not optimizable files."""
         # File types
-        if not self._settings.follow_symlinks and path.is_symlink():
-            if self._settings.verbose > 1:
-                print(path, "is a symlink, skipping.")
+        if not self._config.symlinks and path.is_symlink():
+            if self._config.verbose > 1:
+                cprint(f"Skip symlink {path}", "white", attrs=["dark"])
             return True
-        if path.name == timestamp.RECORD_FILENAME:
+        elif path.name in self.TIMESTAMPS_FILENAMES:
             return True
-        if not path.exists():
-            if self._settings.verbose:
-                print(path, "was not found.")
+        elif not path.exists():
+            if self._config.verbose > 1:
+                cprint(f"WARNING: {path} not found.", "yellow")
             return True
 
-        return False
+        skip = False
+        for ignore_glob in self._config.ignore:
+            if path.match(ignore_glob):
+                skip = True
+                break
 
-    @staticmethod
+        return skip
+
     def _is_older_than_timestamp(
-        path: Path, walk_after: Optional[float], archive_mtime: Optional[float]
+        self,
+        path: Path,
+        top_path: Path,
+        container_mtime: Optional[float],
     ) -> bool:
+        """Is the file older than the timestamp."""
+        # If the file is in an container, use the container time.
+        # This helps if you have a new container that you
+        # collected from someone who put really old files in it that
+        # should still be optimised
+        if container_mtime is not None:
+            mtime = container_mtime
+        else:
+            mtime = path.stat().st_mtime
+
+        # The timestamp or configured walk after time for comparison.
+        walk_after = None
+        if self._config.after is not None:
+            walk_after = self._config.after
+        elif container_mtime is None:
+            walk_after = self._timestamps.get(top_path, {}).get(path)
+
         if walk_after is None:
             return False
 
-        # if the file is in an archive, use the archive time if it
-        # is newer. This helps if you have a new archive that you
-        # collected from someone who put really old files in it that
-        # should still be optimised
-        mtime = Timestamp.max_none((path.stat().st_mtime, archive_mtime))
-        return mtime is not None and mtime <= walk_after
+        return bool(mtime <= walk_after)
+
+    def _clean_up_working_files(self, path):
+        """Auto-clean old working temp files if encountered."""
+        try:
+            shutil.rmtree(path, ignore_errors=True)
+            if self._config.verbose > 1:
+                print(f"Deleted {path}")
+        except Exception as exc:
+            cprint(str(exc), "red")
 
     def walk_file(
         self,
-        filename: Path,
-        walk_after: Optional[float],
-        recurse: Optional[int] = None,
-        archive_mtime: Optional[float] = None,
-    ) -> Set[AsyncResult]:
+        path: Path,
+        top_path: Path,
+        container_mtime: Optional[float] = None,
+        convert: bool = True,
+    ) -> Union[ApplyResult, DirResult, None]:
         """Optimize an individual file."""
-        path = Path(filename)
-        result_set: Set[AsyncResult] = set()
-        if self._is_skippable(path):
-            return result_set
+        result: Union[ApplyResult, DirResult, None] = None
+        try:
+            if self._is_skippable(path):
+                return result
 
-        walk_after = self._tso.get_walk_after(path, walk_after)
+            if path.name.rfind(Handler.WORKING_SUFFIX) > -1:
+                self._clean_up_working_files(path)
+                return result
 
-        # File is a directory
-        if path.is_dir():
-            return self.walk_dir(path, walk_after, recurse, archive_mtime)
+            if path.is_dir():
+                if self._config.recurse or container_mtime is not None:
+                    result = self.walk_dir(
+                        path, top_path, container_mtime, convert=convert
+                    )
+                return result
 
-        if self._is_older_than_timestamp(path, walk_after, archive_mtime):
-            return result_set
+            if self._is_older_than_timestamp(path, top_path, container_mtime):
+                return result
 
-        # Check image format
-        #    try:
-        image_format = detect_format.detect_file(self._settings, path)
-        #    except Exception:
-        #        res = settings.pool.apply_async(
-        #            stats.ReportStats, (path,), {"error": "Detect Format"}
-        #        )
-        #        result_set.add(res)
-        #        image_format = None
+            handler = create_handler(self._config, path, convert=convert)
 
-        if not image_format:
-            return result_set
+            if handler is None:
+                return result
 
-        if self._settings.list_only:
-            # list only
-            print(f"{path}: {image_format}")
-            return result_set
+            if self._config.list_only:
+                print(f"{path}: {handler.__class__.__name__}")
+                return result
 
-        if detect_format.is_format_selected(
-            self._settings, image_format, Comic.FORMATS, Comic.PROGRAMS
-        ):
-            # comic archive
-            result_set |= self.walk_comic_archive(path, image_format, walk_after)
-        else:
-            # regular image
-            args = [path, image_format, self._settings]
-            result_set.add(
-                self._pool.apply_async(optimize.optimize_image, args=(args,))
-            )
-        return result_set
+            if isinstance(handler, ContainerHandler):
+                # Unpack inline, not in the pool, and walk immediately like dirs.
+                handler.unpack()
+                result = self._walk_container_dir(top_path, handler)
+            elif isinstance(handler, ImageHandler):
+                result = self._pool.apply_async(handler.optimize_image)
+            else:
+                raise ValueError(f"bad handler {handler}")
+        except Exception as exc:
+            traceback.print_exc()
+
+            result = self._pool.apply_async(ReportStats, args=(path, None, exc))
+        return result
 
     def walk_dir(
         self,
         dir_path: Path,
-        walk_after: Optional[float],
-        recurse: Optional[int] = None,
-        archive_mtime: Optional[float] = None,
-    ) -> Set[multiprocessing.pool.AsyncResult]:
+        top_path: Path,
+        container_mtime: Optional[float] = None,
+        convert: bool = True,
+    ) -> DirResult:
         """Recursively optimize a directory."""
-        if recurse is None:
-            recurse = self._settings.recurse
+        dir_result = DirResult(dir_path, [])
+        for path in dir_path.iterdir():
+            result = self.walk_file(path, top_path, container_mtime, convert=convert)
+            dir_result.results.append(result)
 
-        result_set: Set[AsyncResult] = set()
-        if not recurse:
-            return result_set
+        return dir_result
 
-        for root, _, filenames in os.walk(dir_path):
-            root_path = Path(root)
-            filenames.sort()
-            for filename in filenames:
-                full_path = root_path / filename
-                try:
-                    results = self.walk_file(
-                        full_path, walk_after, recurse, archive_mtime
-                    )
-                    result_set = result_set.union(results)
-                except Exception:
-                    print(f"Error with file: {full_path}")
-                    raise
+    def _walk_container_dir(
+        self, top_path: Path, handler: ContainerHandler
+    ) -> Union[ContainerResult, ApplyResult]:
+        """Optimize a container."""
+        result: Union[ContainerResult, ApplyResult]
+        try:
+            container_mtime = handler.original_path.stat().st_mtime
+            dir_result = self.walk_dir(
+                handler.tmp_container_dir,
+                top_path,
+                container_mtime,
+                convert=handler.CONVERT,
+            )
+            result = ContainerResult(handler.final_path, dir_result.results, handler)
+        except Exception as exc:
+            args = tuple([exc])
+            result = self._pool.apply_async(handler.error, args=args)
+        return result
 
-        return result_set
+    def _report_totals(self, totals: Totals) -> None:
+        """Report the total number and percent of bytes saved."""
+        if totals.bytes_in:
+            bytes_saved = totals.bytes_in - totals.bytes_out
+            percent_bytes_saved = bytes_saved / totals.bytes_in * 100
+            msg = ""
+            if self._config.test:
+                if percent_bytes_saved > 0:
+                    msg += "Could save"
+                elif percent_bytes_saved == 0:
+                    msg += "Could even out for"
+                else:
+                    msg += "Could lose"
+            else:
+                if percent_bytes_saved > 0:
+                    msg += "Saved"
+                elif percent_bytes_saved == 0:
+                    msg += "Evened out"
+                else:
+                    msg = "Lost"
+            msg += " a total of {} or {:.{prec}f}%".format(
+                naturalsize(bytes_saved), percent_bytes_saved, prec=2
+            )
+            if self._config.verbose:
+                print(msg)
+                if self._config.test:
+                    print("Test run did not change any files.")
 
-    def _walk_all_files(self) -> Tuple[Set[Path], int, int, bool, List[Any]]:
-        """
-        Optimize the files from the arugments list in two batches.
+        else:
+            if self._config.verbose:
+                print("Didn't optimize any files.")
 
-        One for absolute paths which are probably outside the current
-        working directory tree and one for relative files.
-        """
-        # Init records
-        record_dirs: Set[Path] = set()
-        result_set: Set[AsyncResult] = set()
+        if totals.errors:
+            cprint("Errors with the following files:", "yellow")
+            for rs in totals.errors:
+                rs.report(self._config.test, "yellow")
 
-        for filename in self._settings.paths:
-            path = Path(filename)
-            # Record dirs to put timestamps in later
-            if self._settings.recurse and path.is_dir():
-                record_dirs.add(path)
+    def _handle_queue_item_dir(self, top_path: Path, dir_result: DirResult):
+        """Reverse the results tree to handle directories bottom up."""
+        queue = self._queues[top_path]
+        for dir_member_result in dir_result.results:
+            if isinstance(dir_member_result, DirResult):
+                self._handle_queue_item_dir(top_path, dir_member_result)
+            else:
+                queue.put(dir_member_result)
+        if isinstance(dir_result, ContainerResult):
+            task = CompleteContainerTask(dir_result.handler)
+        else:
+            task = CompleteDirTask(dir_result.path)
+        queue.put(task)
 
-            walk_after = self._tso.get_walk_after(path)
-            # TODO is passing this recurse argument neccissary?
-            results = self.walk_file(path, walk_after, self._settings.recurse)
-            result_set = result_set.union(results)
+    def _handle_queue_complete_task(self, top_path: Path, task: CompleteTask):
+        if isinstance(task, CompleteDirTask):
+            if self._config.timestamps:
+                # Dump timestamps after every directory completes
+                timestamps = self._timestamps[top_path]
+                timestamps.set(task.path, compact=True)
+                timestamps.dump()
+        elif isinstance(task, CompleteContainerTask):
+            # Repack inline, not in pool, to complete directories immediately
+            repack_result = task.handler.repack()
+            self._queues[top_path].put(repack_result)
+        else:
+            cprint(f"WARNING: Unhandled Complete task {task}", "yellow")
 
-        bytes_in = 0
-        bytes_out = 0
-        nag_about_gifs = False
-        errors: List[Tuple[Path, str]] = []
-        for result in result_set:
-            res = result.get()
-            if res.error:
-                errors += [(res.final_path, res.error)]
-                continue
-            bytes_in += res.bytes_in
-            bytes_out += res.bytes_out
-            nag_about_gifs = nag_about_gifs or res.nag_about_gifs
+    def _handle_queue_item(
+        self,
+        top_path: Path,
+        totals: Totals,
+    ):
+        queue: SimpleQueue = self._queues[top_path]
+        item = queue.get()
+        if isinstance(item, ApplyResult):
+            # unpack apply results inline to preserve directory order
+            item = item.get()
 
-        return record_dirs, bytes_in, bytes_out, nag_about_gifs, errors
+        if item is None:
+            pass
+        elif isinstance(item, ReportStats):
+            if item.error:
+                cprint(item.error, "yellow")
+                totals.errors.append(item)
+            else:
+                if self._config.timestamps:
+                    self._timestamps[top_path].set(item.path)
+                totals.bytes_in += item.bytes_in
+                totals.bytes_out += item.bytes_out
+        elif isinstance(item, DirResult):
+            self._handle_queue_item_dir(top_path, item)
+        elif isinstance(item, CompleteTask):
+            self._handle_queue_complete_task(top_path, item)
+        else:
+            cprint(f"Unhandled queue item {item}", "yellow")
+
+    def _convert_message(
+        self, convert_from_formats: frozenset[str], convert_handler: Type[Handler]
+    ):
+        convert_from = ", ".join(
+            sorted(convert_from_formats & frozenset(self._config.formats))
+        )
+        convert_to = convert_handler.OUTPUT_FORMAT
+        cprint(f"Converting {convert_from} to {convert_to}", "cyan")
+
+    def _get_covertable_formats(
+        self, convertable_formats: frozenset[str]
+    ) -> frozenset[str]:
+        formats = set(convertable_formats)
+        if TIFF_FORMAT in self._config.formats:
+            formats.add(TIFF_FORMAT)
+        return frozenset(formats)
+
+    def _init_run(self):
+        """Init Run."""
+        # Validate top_paths
+        if not self._top_paths:
+            raise ValueError("No paths to optimize.")
+        for path in self._top_paths:
+            if not path.exists():
+                raise ValueError(f"Path does not exist: {path}")
+
+        # Tell the user what we're doing
+        if self._config.verbose:
+            print("Optimizing formats:", *sorted(self._config.formats))
+            if self._config.convert_to:
+                if WebP.OUTPUT_FORMAT in self._config.convert_to:
+                    formats = self._get_covertable_formats(WEBP_CONVERTABLE_FORMATS)
+                    self._convert_message(formats, WebP)
+                elif Png.OUTPUT_FORMAT in self._config.convert_to:
+                    formats = self._get_covertable_formats(PNG_CONVERTABLE_FORMATS)
+                    self._convert_message(formats, Png)
+                if Zip.OUTPUT_FORMAT in self._config.convert_to:
+                    self._convert_message(frozenset([Zip.INPUT_FORMAT_RAR]), Zip)
+                if CBZ.OUTPUT_FORMAT in self._config.convert_to:
+                    self._convert_message(frozenset([CBZ.INPUT_FORMAT_RAR]), CBZ)
+            if self._config.after is not None:
+                print("Optimizing after", time.ctime(self._config.after))
+
+        # Init timestamps
+        if self._config.timestamps:
+            self._timestamps = Treestamps.path_to_treestamps_map_factory(
+                self._top_paths,
+                PROGRAM_NAME,
+                self._config.verbose,
+                self._config,
+                TIMESTAMPS_CONFIG_KEYS,
+            )
+            for timestamps in self._timestamps.values():
+                OldTimestamps(timestamps).import_old_timestamps()
 
     def run(self) -> bool:
-        """Use preconfigured settings to optimize files."""
-        if not self._settings.can_do:
-            print("All optimizers are not available or disabled.")
+        """Optimize all configured files."""
+        try:
+            self._init_run()
+        except Exception as exc:
+            cprint(str(exc), "red")
             return False
 
-        if self._settings.optimize_after is not None and self._settings.verbose:
-            print("Optimizing after", time.ctime(self._settings.optimize_after))
+        # Start each queue
+        totals = Totals()
+        for top_path in self._top_paths:
+            dirpath = Treestamps.dirpath(top_path)
+            result = self.walk_file(top_path, dirpath)
+            if dirpath not in self._queues:
+                self._queues[dirpath] = SimpleQueue()
+            queue = self._queues[dirpath]
+            self._queues[dirpath].put(result)
 
-        # Setup Multiprocessing
-        # Optimize Files
-        (
-            record_dirs,
-            bytes_in,
-            bytes_out,
-            nag_about_gifs,
-            errors,
-        ) = self._walk_all_files()
+        # Process each queue
+        for top_path, queue in self._queues.items():
+            while not queue.empty():
+                self._handle_queue_item(top_path, totals)
 
         # Shut down multiprocessing
         self._pool.close()
         self._pool.join()
 
-        # Write timestamps
-        for filename in record_dirs:
-            self._tso.record_timestamp(filename)
-
+        if self._config.timestamps:
+            for timestamps in self._timestamps.values():
+                timestamps.dump()
         # Finish by reporting totals
-        stats.report_totals(self._settings, bytes_in, bytes_out, nag_about_gifs, errors)
+        self._report_totals(totals)
         return True

@@ -1,0 +1,15 @@
+picopt:
+  after: null
+  bigger: False
+  convert_to: []
+  keep_metadata: True
+  symlinks: True
+  formats: ["GIF", "JPEG", "PNG", "WEBP"]
+  ignore: []
+  jobs: 0
+  list_only: False
+  paths: []
+  recurse: False
+  timestamps: False
+  test: False
+  verbose: 1

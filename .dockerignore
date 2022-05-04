@@ -7,6 +7,7 @@
 *.egg-info
 *Dockerfile
 .git*
+.venv
 LICENSE
 MANIFEST
 MANIFEST*

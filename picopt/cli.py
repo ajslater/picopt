@@ -2,240 +2,158 @@
 """Run pictures through image specific external optimizers."""
 import argparse
 
-from argparse import Namespace
-from typing import Callable
-from typing import Set
-from typing import Tuple
+from argparse import Action, Namespace
+from importlib.metadata import PackageNotFoundError, version
+from typing import Optional
 
-import pkg_resources
-
-from . import PROGRAM_NAME
-from . import walk
-from .extern import ExtArgs
-from .formats.comic import Comic
-from .formats.gif import Gif
-from .formats.jpeg import Jpeg
-from .formats.png import Png
-from .settings import Settings
+from picopt import PROGRAM_NAME, walk
+from picopt.config import ALL_FORMATS, DEFAULT_HANDLERS, get_config
+from picopt.handlers.png import Png
+from picopt.handlers.webp import WebP
+from picopt.handlers.zip import CBZ, Zip
 
 
-FORMAT_DELIMETER = ","
-DISTRIBUTION = pkg_resources.get_distribution(PROGRAM_NAME)
-PROGRAMS: Set[Callable[[Settings, ExtArgs], str]] = set(
-    Png.PROGRAMS + Gif.PROGRAMS + Jpeg.PROGRAMS
+DEFAULT_FORMATS = frozenset(
+    [handler_cls.OUTPUT_FORMAT for handler_cls in DEFAULT_HANDLERS]
 )
+EXTRA_FORMATS = ALL_FORMATS - DEFAULT_FORMATS
+FORMAT_DELIMETER = ","
+try:
+    VERSION = version(PROGRAM_NAME)
+except PackageNotFoundError:
+    VERSION = "test"
 
-ALL_DEFAULT_FORMATS: Set[str] = Jpeg.FORMATS | Gif.FORMATS | Png.CONVERTABLE_FORMATS
-ALL_FORMATS: Set[str] = ALL_DEFAULT_FORMATS | Comic.FORMATS
 
-
-def csv_set(csv_str: str) -> Set[str]:
+class SplitArgsAction(Action):
     """Convert csv string from argparse to a list."""
-    return set(csv_str.upper().split(FORMAT_DELIMETER))
+
+    def __call__(self, parser, namespace, values, _option_string=None):
+        """Split values string into list."""
+        if isinstance(values, str):
+            values = tuple(sorted(values.strip().split(FORMAT_DELIMETER)))
+        setattr(namespace, self.dest, values)
 
 
-def get_arguments(args: Tuple[str, ...]) -> Namespace:
+def _comma_join(formats: frozenset[str]) -> str:
+    """Sort and join a sequence into a human readable string."""
+    return ", ".join(sorted(formats))
+
+
+def get_arguments(params: Optional[tuple[str, ...]] = None) -> Namespace:
     """Parse the command line."""
-    usage = "%(prog)s [arguments] [image files]"
-    programs_str = ", ".join(
-        (prog.__func__.__name__ for prog in PROGRAMS)  # type: ignore
-    )
-    description = f"Uses {programs_str} if they are on the path."
-    parser = argparse.ArgumentParser(usage=usage, description=description)
-    all_formats = ", ".join(sorted(ALL_FORMATS))
-    lossless_formats = ", ".join(Png.LOSSLESS_FORMATS)
+    description = "Losslessly optimizes and optionally converts images."
+    parser = argparse.ArgumentParser(description=description)
+    ###########
+    # Options #
+    ###########
     parser.add_argument(
         "-r",
         "--recurse",
         action="store_true",
         dest="recurse",
-        default=0,
-        help="Recurse down through directories ignoring the"
-        "image file arguments on the command line",
+        help="Recurse down through directories on the command line.",
     )
     parser.add_argument(
         "-v",
         "--verbose",
         action="count",
         dest="verbose",
-        default=0,
-        help="Display more output. -v (default) and -vv " "(noisy)",
+        help="Display more output. Can be used multiple times for "
+        "increasingly noisy output.",
     )
     parser.add_argument(
-        "-Q",
+        "-q",
         "--quiet",
         action="store_const",
         dest="verbose",
-        const=-1,
+        const=0,
         help="Display little to no output",
-    )
-    #    parser.add_argument(
-    #        "-a",
-    #        "--enable_advpng",
-    #        action="store_true",
-    #        dest="advpng",
-    #        default=0,
-    #        help="Optimize with advpng (disabled by default)",
-    #    )
-    parser.add_argument(
-        "-c",
-        "--comics",
-        action="store_true",
-        dest="comics",
-        default=0,
-        help="Also optimize comic book archives (cbz & cbr)",
     )
     parser.add_argument(
         "-f",
         "--formats",
-        type=csv_set,
-        action="store",
+        action=SplitArgsAction,
         dest="formats",
-        default=set(),
-        help="Only optimize images of the specifed"
-        f"'{FORMAT_DELIMETER}' delimited formats from:"
-        f" {all_formats}",
+        help="Only optimize images of the specified "
+        f"'{FORMAT_DELIMETER}' delimited formats from: {_comma_join(ALL_FORMATS)}. "
+        f"Defaults to {_comma_join(DEFAULT_FORMATS)}",
     )
     parser.add_argument(
-        "-O",
-        "--disable_optipng",
-        action="store_false",
-        dest="optipng",
-        default=1,
-        help="Do not optimize with optipng",
+        "-x",
+        "--extra-formats",
+        action=SplitArgsAction,
+        dest="_extra_formats",
+        help="Append additional formats to the default formats.",
     )
     parser.add_argument(
-        "-P",
-        "--disable_pngout",
-        action="store_false",
-        dest="pngout",
-        default=1,
-        help="Do not optimize with pngout",
-    )
-    #    parser.add_argument(
-    #        "-J",
-    #        "--disable_jpegrescan",
-    #        action="store_false",
-    #        dest="jpegrescan",
-    #        default=1,
-    #        help="Do not optimize with jpegrescan",
-    #    )
-    parser.add_argument(
-        "-E",
-        "--disable_progressive",
-        action="store_false",
-        dest="jpegtran_prog",
-        default=1,
-        help="Don't try to reduce size by making " "progressive JPEGs with jpegtran",
-    )
-    parser.add_argument(
-        "-Z",
-        "--disable_mozjpeg",
-        action="store_false",
-        dest="mozjpeg",
-        default=1,
-        help="Do not optimize with mozjpeg",
-    )
-    parser.add_argument(
-        "-T",
-        "--disable_jpegtran",
-        action="store_false",
-        dest="jpegtran",
-        default=1,
-        help="Do not optimize with jpegtran",
-    )
-    parser.add_argument(
-        "-G",
-        "--disable_gifsicle",
-        action="store_false",
-        dest="gifsicle",
-        default=1,
-        help="disable optimizing animated GIFs",
-    )
-    parser.add_argument(
-        "-Y",
-        "--disable_convert_type",
-        action="store_const",
-        dest="to_png_formats",
-        const=Png.FORMATS,
-        default=Png.CONVERTABLE_FORMATS,
-        help="Do not convert other lossless formats"
-        f"like {lossless_formats} to PNG when "
-        f"optimizing. By default, {PROGRAM_NAME}"
-        " does convert these formats to PNG",
+        "-c",
+        "--convert-to",
+        action=SplitArgsAction,
+        dest="convert_to",
+        help="A list of formats to convert to. Lossless images may convert to "
+        f"{Png.OUTPUT_FORMAT} or {WebP.OUTPUT_FORMAT}. {Zip.INPUT_FORMAT_RAR} archives "
+        f"may convert to {Zip.OUTPUT_FORMAT} or {CBZ.OUTPUT_FORMAT}. "
+        "By default formats are not converted to other formats.",
     )
     parser.add_argument(
         "-S",
-        "--disable_follow_symlinks",
+        "--no-symlinks",
         action="store_false",
-        dest="follow_symlinks",
-        default=1,
-        help="disable following symlinks for files and " "directories",
+        dest="symlinks",
+        help="Do not follow symlinks for files and directories",
+    )
+    parser.add_argument(
+        "-i",
+        "--ignore",
+        action=SplitArgsAction,
+        dest="ignore",
+        help="List of globs to ignore.",
     )
     parser.add_argument(
         "-b",
         "--bigger",
         action="store_true",
         dest="bigger",
-        default=0,
-        help="Save optimized files that are larger than " "the originals",
+        help="Save optimized files that are larger than the originals",
     )
     parser.add_argument(
         "-t",
-        "--record_timestamp",
+        "--timestamps",
         action="store_true",
-        dest="record_timestamp",
-        default=0,
-        help="Store the time of the optimization of full "
-        "directories in directory local dotfiles.",
+        dest="timestamps",
+        help="Record the optimization time in a timestamps file. "
+        "Do not optimize files that are older than their timestamp record.",
     )
     parser.add_argument(
-        "-D",
-        "--optimize_after",
+        "-A",
+        "--after",
         action="store",
-        dest="optimize_after",
-        type=Settings.parse_date_string,
-        default=None,
-        help="only optimize files after the specified "
-        "timestamp. Supercedes .picopt_timestamp file.",
+        dest="after",
+        help="Only optimize files after the specified timestamp. "
+        "Supersedes recorded timestamp files. Can be an epoch number or "
+        "datetime string",
     )
     parser.add_argument(
-        "-N",
-        "--noop",
+        "-T",
+        "--test",
         action="store_true",
         dest="test",
-        default=0,
-        help="Do not replace files with optimized versions",
+        help="Report how much would be saved, but do not replace files.",
     )
     parser.add_argument(
-        "-l",
+        "-L",
         "--list",
         action="store_true",
         dest="list_only",
-        default=0,
         help="Only list files that would be optimized",
     )
-    parser.add_argument(
-        "-V",
-        "--version",
-        action="version",
-        version=DISTRIBUTION.version,
-        help="Display the version number",
-    )
+
     parser.add_argument(
         "-M",
-        "--destroy_metadata",
-        action="store_true",
-        dest="destroy_metadata",
-        default=0,
-        help="*Destroy* metadata like EXIF and JFIF",
-    )
-    parser.add_argument(
-        "paths",
-        metavar="path",
-        type=str,
-        nargs="+",
-        help="File or directory paths to optimize",
+        "--destroy-metadata",
+        action="store_false",
+        dest="keep_metadata",
+        help="Destroy metadata like EXIF and ICC Profiles",
     )
     parser.add_argument(
         "-j",
@@ -243,28 +161,51 @@ def get_arguments(args: Tuple[str, ...]) -> Namespace:
         type=int,
         action="store",
         dest="jobs",
-        default=0,
-        help="Number of parallel jobs to run simultaneously.",
+        help="Number of parallel jobs to run simultaneously. Defaults "
+        "to maximum available.",
+    )
+    parser.add_argument(
+        "-C",
+        "--config",
+        type=str,
+        action="store",
+        help="Path to a config file",
+    )
+    ###########
+    # Actions #
+    ###########
+    parser.add_argument(
+        "-V",
+        "--version",
+        action="version",
+        version=VERSION,
+        help="Display the version number",
+    )
+    ###########
+    # Targets #
+    ###########
+    parser.add_argument(
+        "paths",
+        metavar="path",
+        type=str,
+        nargs="+",
+        help="File or directory paths to optimize",
     )
 
-    return parser.parse_args(args[1:])
+    if params is not None:
+        params = params[1:]
+
+    pns = parser.parse_args(params)
+    return Namespace(picopt=pns)
 
 
-def run(args: Tuple[str, ...]) -> bool:
+def main(args: Optional[tuple[str, ...]] = None) -> bool:
     """Process command line arguments and walk inputs."""
     arguments = get_arguments(args)
-    settings = Settings(PROGRAMS, arguments)
-    wob = walk.Walk(settings)
+
+    config = get_config(arguments)
+    wob = walk.Walk(config)
     return wob.run()
-
-
-def main() -> None:
-    """CLI entry point."""
-    import sys
-
-    res = run(tuple(sys.argv))
-    if not res:
-        sys.exit(1)
 
 
 if __name__ == "__main__":
