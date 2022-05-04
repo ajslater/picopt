@@ -1,3 +1,9 @@
+v3.0.1
+
+- Fixes
+
+ - Update treestamps to accept string paths.
+
 v3.0.0
 
 - Formats
