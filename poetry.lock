@@ -741,7 +741,7 @@ python-versions = ">=3.7"
 
 [[package]]
 name = "treestamps"
-version = "0.1.1"
+version = "0.1.2"
 description = "Create timestamp records for recursive operations on directory trees."
 category = "main"
 optional = false
@@ -749,6 +749,7 @@ python-versions = ">=3.9,<4.0"
 
 [package.dependencies]
 "ruamel.yaml" = ">=0.17.21,<0.18.0"
+termcolor = ">=1.1.0,<2.0.0"
 
 [[package]]
 name = "types-python-dateutil"
@@ -792,7 +793,7 @@ toml = "*"
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.9"
-content-hash = "644499a26bac61c17da72c5d01ecd7a5fa058844a140a4a42ca2fc21d68eacbd"
+content-hash = "b656a8030dedc6713be216def77109d9c7b2dabc0aa1d1f678e4e84682c7feed"
 
 [metadata.files]
 atomicwrites = [
@@ -1307,8 +1308,8 @@ tomli = [
     {file = "tomli-2.0.1.tar.gz", hash = "sha256:de526c12914f0c550d15924c62d72abc48d6fe7364aa87328337a31007fe8a4f"},
 ]
 treestamps = [
-    {file = "treestamps-0.1.1-py3-none-any.whl", hash = "sha256:8f651a2d62dcc4152bf154539efe8232b43b7a9f528f3efb6f4f21da620a1822"},
-    {file = "treestamps-0.1.1.tar.gz", hash = "sha256:4ec63e4e4dcc322dd2a89fed9f37092eee49caa12274f0a4f71426d50199186c"},
+    {file = "treestamps-0.1.2-py3-none-any.whl", hash = "sha256:3cd5179f0bbb457f37c40fd121f4cebc65bbbdc3734e24473ea5889461736935"},
+    {file = "treestamps-0.1.2.tar.gz", hash = "sha256:3ae3374a0299dbc05dcf45680cd3edc88350616fec50abc2ffad0612706564ef"},
 ]
 types-python-dateutil = [
     {file = "types-python-dateutil-2.8.14.tar.gz", hash = "sha256:367c1ffa1a52a4b2a534c9b30b40b01f2b7f2ea47a97fd821f6c76d1c7ae3129"},
