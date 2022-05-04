@@ -15,8 +15,8 @@ TMP_ROOT = get_test_dir()
 FN = "test_jpg.jpg"
 SRC_JPG = IMAGES_DIR / FN
 TMP_FN = str(TMP_ROOT / FN)
-TIMESTAMPS_PATH = TMP_ROOT / ".picopt_timestamps.yaml"
-WAL_PATH = TMP_ROOT / ".picopt_timestamps.wal.yaml"
+TIMESTAMPS_PATH = TMP_ROOT / ".picopt_treestamps.yaml"
+WAL_PATH = TMP_ROOT / ".picopt_treestamps.wal.yaml"
 
 if platform.system() == "Darwin":
     FNS = {

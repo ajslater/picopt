@@ -11,6 +11,7 @@ from typing import Any, Optional, Type, Union
 from confuse.templates import AttrDict
 from humanize import naturalsize
 from termcolor import cprint
+from treestamps import Treestamps
 
 from picopt import PROGRAM_NAME
 from picopt.config import (
@@ -35,18 +36,12 @@ from picopt.tasks import (
     DirResult,
     Totals,
 )
-from picopt.timestamps import Timestamps
 
 
 class Walk:
     """Walk object for storing state of a walk run."""
 
-    TIMESTAMPS_FILENAMES = set(
-        (
-            Timestamps.get_timestamps_filename(PROGRAM_NAME),
-            Timestamps.get_wal_filename(PROGRAM_NAME),
-        )
-    )
+    TIMESTAMPS_FILENAMES = set(Treestamps.get_filenames(PROGRAM_NAME))
 
     def __init__(self, config: AttrDict) -> None:
         """Initialize."""
@@ -57,7 +52,7 @@ class Walk:
                 continue
             top_paths.append(path)
         self._top_paths: tuple[Path, ...] = tuple(top_paths)
-        self._timestamps: dict[Path, Timestamps] = {}
+        self._timestamps: dict[Path, Treestamps] = {}
         self._queues: dict[Path, SimpleQueue[Any]] = {}
         if self._config.jobs:
             self._pool = Pool(self._config.jobs)
@@ -264,7 +259,7 @@ class Walk:
                 # Dump timestamps after every directory completes
                 timestamps = self._timestamps[top_path]
                 timestamps.set(task.path, compact=True)
-                timestamps.dump_timestamps()
+                timestamps.dump()
         elif isinstance(task, CompleteContainerTask):
             # Repack inline, not in pool, to complete directories immediately
             repack_result = task.handler.repack()
@@ -346,7 +341,7 @@ class Walk:
 
         # Init timestamps
         if self._config.timestamps:
-            self._timestamps = Timestamps.path_timestamps_map_factory(
+            self._timestamps = Treestamps.path_to_treestamps_map_factory(
                 self._top_paths,
                 PROGRAM_NAME,
                 self._config.verbose,
@@ -367,7 +362,7 @@ class Walk:
         # Start each queue
         totals = Totals()
         for top_path in self._top_paths:
-            dirpath = Timestamps.dirpath(top_path)
+            dirpath = Treestamps.dirpath(top_path)
             result = self.walk_file(top_path, dirpath)
             if dirpath not in self._queues:
                 self._queues[dirpath] = SimpleQueue()
@@ -385,7 +380,7 @@ class Walk:
 
         if self._config.timestamps:
             for timestamps in self._timestamps.values():
-                timestamps.dump_timestamps()
+                timestamps.dump()
         # Finish by reporting totals
         self._report_totals(totals)
         return True

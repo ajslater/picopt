@@ -3,8 +3,9 @@ import os
 
 from pathlib import Path
 
+from treestamps import Treestamps
+
 from picopt import PROGRAM_NAME
-from picopt.timestamps import Timestamps
 
 
 _OLD_TIMESTAMPS_NAME = f".{PROGRAM_NAME}_timestamp"
@@ -44,6 +45,6 @@ class OldTimestamps:
         self._import_old_parent_timestamps(self._timestamps.dir)
         self._import_old_child_timestamps(self._timestamps.dir)
 
-    def __init__(self, timestamps: Timestamps):
+    def __init__(self, timestamps: Treestamps):
         """Hold new timestamp object."""
         self._timestamps = timestamps

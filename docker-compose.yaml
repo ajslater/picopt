@@ -14,13 +14,13 @@ services:
     image: ajslater/picopt-builder
     container_name: picopt-test
     volumes:
-      - ./test-results:/home/circleci/project/test-results
+      - ./test-results:/app/test-results
     command: ./test.sh
   picopt-build:
     image: ajslater/picopt-builder
     container_name: picopt-build
     volumes:
-      - ./dist:/home/circleci/project/dist
+      - ./dist:/app/dist
     command: poetry build
   picopt:
     build:
