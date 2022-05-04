@@ -74,7 +74,7 @@ class Timestamps:
         for key, value in config.items():
             if isinstance(value, (list, tuple, set)):
                 original_type = type(value)
-                new_config[key] = original_type(sorted(set(value)))
+                new_config[key] = original_type(sorted(frozenset(value)))
             elif isinstance(value, dict):
                 new_config[key] = cls._normalize_config(value)
             else:
