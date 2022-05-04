@@ -1,4 +1,4 @@
-v3.0.0-a0
+v3.0.0
 
 - Formats
   - WebP lossless, lossy and animated support.
@@ -6,7 +6,7 @@ v3.0.0-a0
   - EPub support. ePub contents are never converted.
   - TIFF support
 - Timestamps
-  - Timestamps are now kept in .picopt_timestamps.yaml files.
+  - Timestamps are now kept in .picopt_treestamps.yaml files.
   - Picopt will convert and clean up old style timestamps.
   - Timestamps are now recorded after optimizing every image for
     each image individually instead of directories, preserving progress.
