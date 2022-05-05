@@ -1,5 +1,9 @@
 # 📰 Picopt News
 
+## v3.0.5a0
+
+- Traverse directories alphabetically.
+
 ## v3.0.4
 
 - Fix timestamps not recording sometimes.
