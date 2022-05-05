@@ -13,6 +13,7 @@ class DirResult:
 
     path: Path
     results: list
+    in_container: bool
 
 
 @dataclass
@@ -34,6 +35,7 @@ class CompleteDirTask(CompleteTask):
     """Task to compact timestamps."""
 
     path: Path
+    in_container: bool
 
 
 @dataclass

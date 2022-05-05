@@ -3,6 +3,7 @@
 ## v3.0.5a0
 
 - Traverse directories alphabetically.
+- Don't record timestamps for items inside containers.
 
 ## v3.0.4
 

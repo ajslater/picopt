@@ -176,7 +176,7 @@ class Walk:
         convert: bool = True,
     ) -> DirResult:
         """Recursively optimize a directory."""
-        dir_result = DirResult(dir_path, [])
+        dir_result = DirResult(dir_path, [], bool(container_mtime))
         for path in sorted(dir_path.iterdir()):
             result = self.walk_file(path, top_path, container_mtime, convert=convert)
             dir_result.results.append(result)
@@ -196,7 +196,9 @@ class Walk:
                 container_mtime,
                 convert=handler.CONVERT,
             )
-            result = ContainerResult(handler.final_path, dir_result.results, handler)
+            result = ContainerResult(
+                handler.final_path, dir_result.results, True, handler
+            )
         except Exception as exc:
             args = tuple([exc])
             result = self._pool.apply_async(handler.error, args=args)
@@ -239,6 +241,10 @@ class Walk:
             for rs in totals.errors:
                 rs.report(self._config.test, "yellow")
 
+    ######################################################################
+    #                                QUEUE                               #
+    ######################################################################
+
     def _handle_queue_item_dir(self, top_path: Path, dir_result: DirResult):
         """Reverse the results tree to handle directories bottom up."""
         queue = self._queues[top_path]
@@ -250,12 +256,12 @@ class Walk:
         if isinstance(dir_result, ContainerResult):
             task = CompleteContainerTask(dir_result.handler)
         else:
-            task = CompleteDirTask(dir_result.path)
+            task = CompleteDirTask(dir_result.path, dir_result.in_container)
         queue.put(task)
 
     def _handle_queue_complete_task(self, top_path: Path, task: CompleteTask):
         if isinstance(task, CompleteDirTask):
-            if self._config.timestamps:
+            if self._config.timestamps and not task.in_container:
                 # Compact timestamps after every directory completes
                 timestamps = self._timestamps[top_path]
                 timestamps.set(task.path, compact=True)
