@@ -1,5 +1,9 @@
 # 📰 Picopt News
 
+## v3.0.3
+
+- Don't dump full timestamps after every dir completes.
+
 ## v3.0.2
 
 - Trap container repack errors.

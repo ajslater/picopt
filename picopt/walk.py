@@ -256,10 +256,9 @@ class Walk:
     def _handle_queue_complete_task(self, top_path: Path, task: CompleteTask):
         if isinstance(task, CompleteDirTask):
             if self._config.timestamps:
-                # Dump timestamps after every directory completes
+                # Compact timestamps after every directory completes
                 timestamps = self._timestamps[top_path]
                 timestamps.set(task.path, compact=True)
-                timestamps.dump()
         elif isinstance(task, CompleteContainerTask):
             # Repack inline, not in pool, to complete directories immediately
             repack_result = task.handler.repack()
@@ -286,7 +285,8 @@ class Walk:
                 totals.errors.append(item)
             else:
                 if self._config.timestamps:
-                    self._timestamps[top_path].set(item.path)
+                    timestamps = self._timestamps[top_path]
+                    timestamps.set(item.path)
                 totals.bytes_in += item.bytes_in
                 totals.bytes_out += item.bytes_out
         elif isinstance(item, DirResult):
