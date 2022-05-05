@@ -1,10 +1,10 @@
 # 📰 Picopt News
 
-## v3.0.5a0
+## v3.0.5
 
-- Traverse directories alphabetically.
+- Timestamps respect ignore option.
 - Don't record timestamps for items inside containers.
-- Fix looking for old timestamps in ignored globs
+- Traverse directories alphabetically.
 
 ## v3.0.4
 

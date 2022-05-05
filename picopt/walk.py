@@ -353,6 +353,7 @@ class Walk(Configurable):
                 self._top_paths,
                 PROGRAM_NAME,
                 self._config.verbose,
+                self._config.ignore,
                 self._config,
                 TIMESTAMPS_CONFIG_KEYS,
             )
