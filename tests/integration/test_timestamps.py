@@ -15,8 +15,10 @@ TMP_ROOT = get_test_dir()
 FN = "test_jpg.jpg"
 SRC_JPG = IMAGES_DIR / FN
 TMP_FN = str(TMP_ROOT / FN)
-TIMESTAMPS_PATH = TMP_ROOT / ".picopt_treestamps.yaml"
-WAL_PATH = TMP_ROOT / ".picopt_treestamps.wal.yaml"
+TIMESTAMPS_FN = ".picopt_treestamps.yaml"
+TIMESTAMPS_PATH = TMP_ROOT / TIMESTAMPS_FN
+WAL_FN = ".picopt_treestamps.wal.yaml"
+WAL_PATH = TMP_ROOT / WAL_FN
 
 if platform.system() == "Darwin":
     FNS = {
@@ -46,12 +48,16 @@ class TestContainersDir:
             assert path.stat().st_size == sizes[index]
 
     def setup_method(self) -> None:
-        self.teardown_method()
+        if TMP_ROOT.exists():
+            shutil.rmtree(TMP_ROOT)
         TMP_ROOT.mkdir(exist_ok=True)
         shutil.copy(SRC_JPG, TMP_ROOT)
         self._assert_sizes(0)
 
     def teardown_method(self) -> None:
+        print(sorted(TMP_ROOT.iterdir()))
+        assert TIMESTAMPS_PATH.exists()
+        assert not WAL_PATH.exists()
         if TMP_ROOT.exists():
             shutil.rmtree(TMP_ROOT)
 
@@ -63,8 +69,6 @@ class TestContainersDir:
             config = DEFAULT_CONFIG
         yaml = {"config": config, str(path): ts}
         YAML().dump(yaml, TIMESTAMPS_PATH)
-        assert TIMESTAMPS_PATH.exists()
-        assert not WAL_PATH.exists()
 
     def test_no_timestamp(self) -> None:
         args = (PROGRAM_NAME, "-rtvv", TMP_FN)
@@ -117,6 +121,8 @@ class TestContainersDir:
         res = cli.main(args)
         assert res
         self._assert_sizes(0, tmp_child_dir)
+        assert (tmp_child_dir / TIMESTAMPS_FN).exists()
+        assert not (tmp_child_dir / WAL_FN).exists()
 
     def test_journal_cleanup(self) -> None:
         args = (PROGRAM_NAME, "-rtvv", TMP_FN)
