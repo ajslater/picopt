@@ -254,8 +254,8 @@ def _set_after(config) -> None:
 
 def _set_ignore(config) -> None:
     """Remove duplicates from the ignore list."""
-    ignore_list: list[str] = config["picopt"]["ignore"].get(list)
-    config["picopt"]["ignore"].set(tuple(sorted(set(ignore_list))))
+    ignore: list[str] = config["picopt"]["ignore"].get(list)
+    config["picopt"]["ignore"].set(tuple(sorted(set(ignore))))
 
 
 def _set_timestamps(config) -> None:

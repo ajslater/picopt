@@ -19,6 +19,7 @@ from picopt.config import (
     TIMESTAMPS_CONFIG_KEYS,
     WEBP_CONVERTABLE_FORMATS,
 )
+from picopt.configurable import Configurable
 from picopt.handlers.container import ContainerHandler
 from picopt.handlers.factory import create_handler
 from picopt.handlers.handler import Handler
@@ -38,14 +39,14 @@ from picopt.tasks import (
 )
 
 
-class Walk:
+class Walk(Configurable):
     """Walk object for storing state of a walk run."""
 
     TIMESTAMPS_FILENAMES = set(Treestamps.get_filenames(PROGRAM_NAME))
 
     def __init__(self, config: AttrDict) -> None:
         """Initialize."""
-        self._config: AttrDict = config
+        super().__init__(config)
         top_paths = []
         for path in sorted(set(self._config.paths)):
             if path.is_symlink() and not self._config.symlinks:
@@ -73,11 +74,7 @@ class Walk:
                 cprint(f"WARNING: {path} not found.", "yellow")
             return True
 
-        skip = False
-        for ignore_glob in self._config.ignore:
-            if path.match(ignore_glob):
-                skip = True
-                break
+        skip = self.is_path_ignored(path)
 
         return skip
 
@@ -303,6 +300,10 @@ class Walk:
         else:
             cprint(f"Unhandled queue item {item}", "yellow")
 
+    ######################################################################
+    #                              END QUEUE                             #
+    ######################################################################
+
     def _convert_message(
         self, convert_from_formats: frozenset[str], convert_handler: Type[Handler]
     ):
@@ -356,7 +357,7 @@ class Walk:
                 TIMESTAMPS_CONFIG_KEYS,
             )
             for timestamps in self._timestamps.values():
-                OldTimestamps(timestamps).import_old_timestamps()
+                OldTimestamps(self._config, timestamps).import_old_timestamps()
 
     def run(self) -> bool:
         """Optimize all configured files."""

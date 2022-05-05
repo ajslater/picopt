@@ -3,15 +3,17 @@ import os
 
 from pathlib import Path
 
+from confuse.templates import AttrDict
 from treestamps import Treestamps
 
 from picopt import PROGRAM_NAME
+from picopt.configurable import Configurable
 
 
 _OLD_TIMESTAMPS_NAME = f".{PROGRAM_NAME}_timestamp"
 
 
-class OldTimestamps:
+class OldTimestamps(Configurable):
     """Old timestamps importer."""
 
     def _add_old_timestamp(self, old_timestamp_path: Path) -> None:
@@ -25,12 +27,16 @@ class OldTimestamps:
 
     def _import_old_parent_timestamps(self, path: Path) -> None:
         """Walk up to the root eating old style timestamps."""
+        if self.is_path_ignored(path):
+            return
         old_timestamp_path = path / _OLD_TIMESTAMPS_NAME
         self._add_old_timestamp(old_timestamp_path)
         if path.parent != path:
             self._import_old_parent_timestamps(path.parent)
 
     def _import_old_child_timestamps(self, path: Path) -> None:
+        if self.is_path_ignored(path):
+            return
         for root, dirnames, filenames in os.walk(path):
             root_path = Path(root)
             if _OLD_TIMESTAMPS_NAME in filenames:
@@ -45,6 +51,7 @@ class OldTimestamps:
         self._import_old_parent_timestamps(self._timestamps.dir)
         self._import_old_child_timestamps(self._timestamps.dir)
 
-    def __init__(self, timestamps: Treestamps):
+    def __init__(self, config: AttrDict, timestamps: Treestamps):
         """Hold new timestamp object."""
+        super().__init__(config)
         self._timestamps = timestamps

@@ -4,6 +4,7 @@
 
 - Traverse directories alphabetically.
 - Don't record timestamps for items inside containers.
+- Fix looking for old timestamps in ignored globs
 
 ## v3.0.4
 
