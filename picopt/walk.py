@@ -379,7 +379,9 @@ class Walk:
         self._pool.join()
 
         if self._config.timestamps:
-            for timestamps in self._timestamps.values():
+            for top_path, timestamps in self._timestamps.items():
+                print(f"Saving timestamps for {top_path}")
+                timestamps.set(top_path, compact=True)
                 timestamps.dump()
         # Finish by reporting totals
         self._report_totals(totals)

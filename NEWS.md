@@ -1,5 +1,9 @@
 # 📰 Picopt News
 
+## v3.0.4
+
+- Fix timestamps not recording sometimes.
+
 ## v3.0.3
 
 - Don't dump full timestamps after every dir completes.
