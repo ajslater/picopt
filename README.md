@@ -111,7 +111,7 @@ pngout is a useful compression to use after optipng. It is not packaged for linu
 
     pip install picopt
 
-## <a name="usage">Usage</a>
+## <a name="usage">Usage Examples</a>
 
 Optimize all JPEG files in a directory:
 
@@ -123,11 +123,15 @@ Optimize all files and recurse directories:
 
 Optimize files, recurse directories, also optimize ePub & CBZ containers, convert lossless images into WEBP, convert CBR into CBZ.
 
-    picopt -rx EPUB -c WEBP,CBZ *
+    picopt -rx EPUB,CBR,CBZ -c WEBP,CBZ *
 
 Optimize files and recurse directories AND optimize comic book archives:
 
     picopt -rx CBZ *
+
+Optimize comic directory recursively. Convert CBRs to CBZ. Convert lossless images, including TIFF, to lossless WEBP. Do not follow symlinks. Set timestamps.
+
+    picopt -rStc CBZ,WEBP -x TIFF,CBR,CBZ /Volumes/Media/Comics
 
 Optimize all files, but only JPEG format files:
 
@@ -145,7 +149,7 @@ Just list files picopt.py would try to optimize:
 
     picopt -L *
 
-Optimize everything in my iPhoto library, but only after the last time I did this, skipping symlinks to avoid duplicate work. Also drop a timestamp file so I don't have to remember the last time I did this:
+Optimize pictures in my iPhoto library, but only after the last time I did this, skipping symlinks to avoid duplicate work. Also drop a timestamp file so I don't have to remember the last time I did this:
 
     picopt -rSt -D '2013 June 1 14:00' 'Pictures/iPhoto Library'
 
