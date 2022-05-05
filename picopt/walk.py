@@ -177,7 +177,7 @@ class Walk:
     ) -> DirResult:
         """Recursively optimize a directory."""
         dir_result = DirResult(dir_path, [])
-        for path in dir_path.iterdir():
+        for path in sorted(dir_path.iterdir()):
             result = self.walk_file(path, top_path, container_mtime, convert=convert)
             dir_result.results.append(result)
 
@@ -262,7 +262,8 @@ class Walk:
         elif isinstance(task, CompleteContainerTask):
             # Repack inline, not in pool, to complete directories immediately
             repack_result = task.handler.repack()
-            self._queues[top_path].put(repack_result)
+            queue = self._queues[top_path]
+            queue.put(repack_result)
         else:
             cprint(f"WARNING: Unhandled Complete task {task}", "yellow")
 
