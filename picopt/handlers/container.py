@@ -98,4 +98,4 @@ class ContainerHandler(Handler, metaclass=ABCMeta):
             return report_stats
         except Exception as exc:
             cprint(f"ERROR: repack container: {exc}", "red")
-            raise exc
+            return self.error(exc)
