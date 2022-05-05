@@ -69,6 +69,8 @@ class TestContainersDir:
             config = DEFAULT_CONFIG
         yaml = {"config": config, str(path): ts}
         YAML().dump(yaml, TIMESTAMPS_PATH)
+        assert TIMESTAMPS_PATH.exists()
+        assert not WAL_PATH.exists()
 
     def test_no_timestamp(self) -> None:
         args = (PROGRAM_NAME, "-rtvv", TMP_FN)
