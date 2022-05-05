@@ -1,5 +1,11 @@
 # 📰 Picopt News
 
+## v3.0.5
+
+- Timestamps respect ignore option.
+- Don't record timestamps for items inside containers.
+- Traverse directories alphabetically.
+
 ## v3.0.4
 
 - Fix timestamps not recording sometimes.

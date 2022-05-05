@@ -2,14 +2,14 @@ picopt:
   after: null
   bigger: False
   convert_to: []
-  keep_metadata: True
-  symlinks: True
   formats: ["GIF", "JPEG", "PNG", "WEBP"]
   ignore: []
   jobs: 0
+  keep_metadata: True
   list_only: False
   paths: []
   recurse: False
-  timestamps: False
+  symlinks: True
   test: False
+  timestamps: False
   verbose: 1

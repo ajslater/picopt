@@ -70,15 +70,15 @@ ALL_FORMATS: frozenset[str] = (
 )
 TEMPLATE = MappingTemplate(
     {
-        "picopt": MappingTemplate(
+        PROGRAM_NAME: MappingTemplate(
             {
                 "after": Optional(float),
                 "bigger": bool,
                 "convert_to": Optional(Sequence(Choice(CONVERT_TO_FORMATS))),
-                "keep_metadata": bool,
                 "formats": Sequence(Choice(ALL_FORMATS)),
                 "ignore": Sequence(str),
                 "jobs": Integer(),
+                "keep_metadata": bool,
                 "list_only": bool,
                 "paths": Sequence(Path()),
                 "recurse": bool,
@@ -148,7 +148,7 @@ def _is_external_program_executable(
 
 def _get_available_programs(config: Configuration) -> set:
     """Run the external program tester on the required binaries."""
-    verbose = config["picopt"]["verbose"].get(int)
+    verbose = config[PROGRAM_NAME]["verbose"].get(int)
     if not isinstance(verbose, int):
         raise ValueError(f"wrong type for convert_to: {type(verbose)} {verbose}")
     programs = set()
@@ -166,7 +166,7 @@ def _get_available_programs(config: Configuration) -> set:
 
 
 def _config_list_to_set(config, key) -> set[str]:
-    val_list = config["picopt"][key].get(list)
+    val_list = config[PROGRAM_NAME][key].get(list)
     if not isinstance(val_list, (tuple, list, set)):
         raise ValueError(f"wrong type for convert_to: {type(val_list)} {val_list}")
     return set(val_list)
@@ -174,7 +174,7 @@ def _config_list_to_set(config, key) -> set[str]:
 
 def _update_formats(config: Configuration) -> dict:
     formats = _config_list_to_set(config, "formats")
-    if "_extra_formats" in config["picopt"]:
+    if "_extra_formats" in config[PROGRAM_NAME]:
         formats |= _config_list_to_set(config, "_extra_formats")
 
     convert_to = _config_list_to_set(config, "convert_to")
@@ -204,7 +204,7 @@ def _update_formats(config: Configuration) -> dict:
         formats |= set([CBZ.INPUT_FORMAT_RAR])
         convert_handlers[CBZ] = set([CBZ.INPUT_FORMAT_OBJ_RAR])
 
-    config["picopt"]["formats"].set(sorted(formats))
+    config[PROGRAM_NAME]["formats"].set(sorted(formats))
 
     return convert_handlers
 
@@ -213,7 +213,7 @@ def _create_format_handler_map(config: Configuration, convert_handlers: dict) ->
     """Create a format to handler map from config."""
     available_programs = _get_available_programs(config)
     format_handlers = {}
-    formats = config["picopt"]["formats"].get(list)
+    formats = config[PROGRAM_NAME]["formats"].get(list)
     if not isinstance(formats, list):
         raise ValueError(f"wrong type for formats: {type(formats)}{formats}")
     formats = set(formats)
@@ -234,12 +234,12 @@ def _create_format_handler_map(config: Configuration, convert_handlers: dict) ->
                         format_handlers[format] = {}
                     format_handlers[format][handler_type] = handler_class
                     break
-    config["picopt"]["_format_handlers"].set(format_handlers)
-    config["picopt"]["_available_programs"].set(available_programs)
+    config[PROGRAM_NAME]["_format_handlers"].set(format_handlers)
+    config[PROGRAM_NAME]["_available_programs"].set(available_programs)
 
 
 def _set_after(config) -> None:
-    after = config["picopt"]["after"].get()
+    after = config[PROGRAM_NAME]["after"].get()
     if after is None:
         return
 
@@ -249,23 +249,23 @@ def _set_after(config) -> None:
         after_dt = parse(after)
         timestamp = time.mktime(after_dt.timetuple())
 
-    config["picopt"]["after"].set(timestamp)
+    config[PROGRAM_NAME]["after"].set(timestamp)
 
 
 def _set_ignore(config) -> None:
     """Remove duplicates from the ignore list."""
-    ignore_list: list[str] = config["picopt"]["ignore"].get(list)
-    config["picopt"]["ignore"].set(tuple(sorted(set(ignore_list))))
+    ignore: list[str] = config[PROGRAM_NAME]["ignore"].get(list)
+    config[PROGRAM_NAME]["ignore"].set(tuple(sorted(set(ignore))))
 
 
 def _set_timestamps(config) -> None:
     """Set the timestamps attribute."""
     timestamps = (
-        config["picopt"]["timestamps"].get(bool)
-        and not config["picopt"]["test"].get(bool)
-        and not config["picopt"]["list_only"].get(bool)
+        config[PROGRAM_NAME]["timestamps"].get(bool)
+        and not config[PROGRAM_NAME]["test"].get(bool)
+        and not config[PROGRAM_NAME]["list_only"].get(bool)
     )
-    config["picopt"]["timestamps"].set(timestamps)
+    config[PROGRAM_NAME]["timestamps"].set(timestamps)
 
 
 def get_config(

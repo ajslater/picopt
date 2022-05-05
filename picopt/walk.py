@@ -19,6 +19,7 @@ from picopt.config import (
     TIMESTAMPS_CONFIG_KEYS,
     WEBP_CONVERTABLE_FORMATS,
 )
+from picopt.configurable import Configurable
 from picopt.handlers.container import ContainerHandler
 from picopt.handlers.factory import create_handler
 from picopt.handlers.handler import Handler
@@ -38,14 +39,14 @@ from picopt.tasks import (
 )
 
 
-class Walk:
+class Walk(Configurable):
     """Walk object for storing state of a walk run."""
 
     TIMESTAMPS_FILENAMES = set(Treestamps.get_filenames(PROGRAM_NAME))
 
     def __init__(self, config: AttrDict) -> None:
         """Initialize."""
-        self._config: AttrDict = config
+        super().__init__(config)
         top_paths = []
         for path in sorted(set(self._config.paths)):
             if path.is_symlink() and not self._config.symlinks:
@@ -73,11 +74,7 @@ class Walk:
                 cprint(f"WARNING: {path} not found.", "yellow")
             return True
 
-        skip = False
-        for ignore_glob in self._config.ignore:
-            if path.match(ignore_glob):
-                skip = True
-                break
+        skip = self.is_path_ignored(path)
 
         return skip
 
@@ -176,8 +173,8 @@ class Walk:
         convert: bool = True,
     ) -> DirResult:
         """Recursively optimize a directory."""
-        dir_result = DirResult(dir_path, [])
-        for path in dir_path.iterdir():
+        dir_result = DirResult(dir_path, [], bool(container_mtime))
+        for path in sorted(dir_path.iterdir()):
             result = self.walk_file(path, top_path, container_mtime, convert=convert)
             dir_result.results.append(result)
 
@@ -196,7 +193,9 @@ class Walk:
                 container_mtime,
                 convert=handler.CONVERT,
             )
-            result = ContainerResult(handler.final_path, dir_result.results, handler)
+            result = ContainerResult(
+                handler.final_path, dir_result.results, True, handler
+            )
         except Exception as exc:
             args = tuple([exc])
             result = self._pool.apply_async(handler.error, args=args)
@@ -239,6 +238,10 @@ class Walk:
             for rs in totals.errors:
                 rs.report(self._config.test, "yellow")
 
+    ######################################################################
+    #                                QUEUE                               #
+    ######################################################################
+
     def _handle_queue_item_dir(self, top_path: Path, dir_result: DirResult):
         """Reverse the results tree to handle directories bottom up."""
         queue = self._queues[top_path]
@@ -250,19 +253,20 @@ class Walk:
         if isinstance(dir_result, ContainerResult):
             task = CompleteContainerTask(dir_result.handler)
         else:
-            task = CompleteDirTask(dir_result.path)
+            task = CompleteDirTask(dir_result.path, dir_result.in_container)
         queue.put(task)
 
     def _handle_queue_complete_task(self, top_path: Path, task: CompleteTask):
         if isinstance(task, CompleteDirTask):
-            if self._config.timestamps:
+            if self._config.timestamps and not task.in_container:
                 # Compact timestamps after every directory completes
                 timestamps = self._timestamps[top_path]
                 timestamps.set(task.path, compact=True)
         elif isinstance(task, CompleteContainerTask):
             # Repack inline, not in pool, to complete directories immediately
             repack_result = task.handler.repack()
-            self._queues[top_path].put(repack_result)
+            queue = self._queues[top_path]
+            queue.put(repack_result)
         else:
             cprint(f"WARNING: Unhandled Complete task {task}", "yellow")
 
@@ -295,6 +299,10 @@ class Walk:
             self._handle_queue_complete_task(top_path, item)
         else:
             cprint(f"Unhandled queue item {item}", "yellow")
+
+    ######################################################################
+    #                              END QUEUE                             #
+    ######################################################################
 
     def _convert_message(
         self, convert_from_formats: frozenset[str], convert_handler: Type[Handler]
@@ -345,11 +353,12 @@ class Walk:
                 self._top_paths,
                 PROGRAM_NAME,
                 self._config.verbose,
+                self._config.ignore,
                 self._config,
                 TIMESTAMPS_CONFIG_KEYS,
             )
             for timestamps in self._timestamps.values():
-                OldTimestamps(timestamps).import_old_timestamps()
+                OldTimestamps(self._config, timestamps).import_old_timestamps()
 
     def run(self) -> bool:
         """Optimize all configured files."""
