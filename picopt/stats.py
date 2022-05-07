@@ -1,4 +1,5 @@
 """Statistics for the optimization operations."""
+from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Optional
 
@@ -56,3 +57,12 @@ class ReportStats:
         else:
             report = self._report_saved(test)
         cprint(report, color)
+
+
+@dataclass
+class Totals:
+    """Totals for final report."""
+
+    bytes_in: int = 0
+    bytes_out: int = 0
+    errors: list[ReportStats] = field(default_factory=list)

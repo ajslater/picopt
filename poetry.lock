@@ -496,7 +496,7 @@ diagrams = ["railroad-diagrams", "jinja2"]
 
 [[package]]
 name = "pyright"
-version = "1.1.244"
+version = "1.1.245"
 description = "Command line wrapper for pyright"
 category = "dev"
 optional = false
@@ -741,7 +741,7 @@ python-versions = ">=3.7"
 
 [[package]]
 name = "treestamps"
-version = "0.2.1"
+version = "0.3.0"
 description = "Create timestamp records for recursive operations on directory trees."
 category = "main"
 optional = false
@@ -753,7 +753,7 @@ termcolor = ">=1.1.0,<2.0.0"
 
 [[package]]
 name = "types-python-dateutil"
-version = "2.8.14"
+version = "2.8.15"
 description = "Typing stubs for python-dateutil"
 category = "dev"
 optional = false
@@ -793,7 +793,7 @@ toml = "*"
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.9"
-content-hash = "8291d42ba4155401b031d1d13d6eefb11c4fe0eca17f8b44d836233a81590a77"
+content-hash = "12bd005dba0c2828ec4b54a6794c268ba36288f12df5892b34280f9def80b87a"
 
 [metadata.files]
 atomicwrites = [
@@ -1169,8 +1169,8 @@ pyparsing = [
     {file = "pyparsing-3.0.8.tar.gz", hash = "sha256:7bf433498c016c4314268d95df76c81b842a4cb2b276fa3312cfb1e1d85f6954"},
 ]
 pyright = [
-    {file = "pyright-1.1.244-py3-none-any.whl", hash = "sha256:b12c186320b932d15b6e6f85b08077ca688c6ae572d8a6fef58ba3c0f9eca1d4"},
-    {file = "pyright-1.1.244.tar.gz", hash = "sha256:24aca93b33a72345cffcfcecd303b77bf53f08a54235f9949f51df7d4287fd57"},
+    {file = "pyright-1.1.245-py3-none-any.whl", hash = "sha256:1edfb44ea6318e4648e4d522d1d164774dd487e27cb954d202cbf7e9cf28d597"},
+    {file = "pyright-1.1.245.tar.gz", hash = "sha256:cbbd743f9de2b96b35a03b9b8f2d2b046f292c9967468b9a38132319954ddbf2"},
 ]
 pytest = [
     {file = "pytest-7.1.2-py3-none-any.whl", hash = "sha256:13d0e3ccfc2b6e26be000cb6568c832ba67ba32e719443bfe725814d3c42433c"},
@@ -1308,12 +1308,12 @@ tomli = [
     {file = "tomli-2.0.1.tar.gz", hash = "sha256:de526c12914f0c550d15924c62d72abc48d6fe7364aa87328337a31007fe8a4f"},
 ]
 treestamps = [
-    {file = "treestamps-0.2.1-py3-none-any.whl", hash = "sha256:aab6abfc04d472c94776c11a3f53d909362d2f0f736b5d1986211694d7e734df"},
-    {file = "treestamps-0.2.1.tar.gz", hash = "sha256:25783c1257cf90b8743859e8f4ad82c7dec112eb731b7c371952e9b0fdd704e8"},
+    {file = "treestamps-0.3.0-py3-none-any.whl", hash = "sha256:cfae0c91082b36dda5bbfbd155d0da4733391c331ffccc84855eb7d05fbf67b0"},
+    {file = "treestamps-0.3.0.tar.gz", hash = "sha256:a9e12783e5422eceaa8a64cf650efcd38b3964ef04b6bc2cf660dbb564c6b303"},
 ]
 types-python-dateutil = [
-    {file = "types-python-dateutil-2.8.14.tar.gz", hash = "sha256:367c1ffa1a52a4b2a534c9b30b40b01f2b7f2ea47a97fd821f6c76d1c7ae3129"},
-    {file = "types_python_dateutil-2.8.14-py3-none-any.whl", hash = "sha256:6ac40f66cf23a5200bd179b78d6be52e81a7750e4f8e45d7cfaf3ddda60ff01f"},
+    {file = "types-python-dateutil-2.8.15.tar.gz", hash = "sha256:7db1e4ed4916bd128cbee3eecdee0e06cc5684da2a1cdfd57f98541cdfbe0861"},
+    {file = "types_python_dateutil-2.8.15-py3-none-any.whl", hash = "sha256:9d6f01382d5ffe1977dc29f0782a01228dfaa36da148a7f4076cbd9beba26647"},
 ]
 typing-extensions = [
     {file = "typing_extensions-4.2.0-py3-none-any.whl", hash = "sha256:6657594ee297170d19f67d55c05852a874e7eb634f4f753dbd667855e07c1708"},
