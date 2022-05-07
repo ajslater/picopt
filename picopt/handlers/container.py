@@ -52,7 +52,7 @@ class ContainerHandler(Handler, metaclass=ABCMeta):
         """Create directory and unpack container."""
         try:
             if self.config.verbose:
-                print(f"Extracting {self.original_path}...", end="")
+                print(f"Unpacking {self.original_path}...", end="")
 
             # create a clean tmpdir
             if self.tmp_container_dir.exists():

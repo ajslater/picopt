@@ -1,4 +1,4 @@
-"""import old picopt timestamps to new ones."""
+"""import picopt 2.0 timestamps to Treestamps."""
 import os
 
 from pathlib import Path
@@ -27,7 +27,9 @@ class OldTimestamps(Configurable):
 
     def _import_old_parent_timestamps(self, path: Path) -> None:
         """Walk up to the root eating old style timestamps."""
-        if self.is_path_ignored(path):
+        if self.is_path_ignored(path) or (
+            not self._config.symlinks and path.is_symlink()
+        ):
             return
         old_timestamp_path = path / _OLD_TIMESTAMPS_NAME
         self._add_old_timestamp(old_timestamp_path)
@@ -35,7 +37,11 @@ class OldTimestamps(Configurable):
             self._import_old_parent_timestamps(path.parent)
 
     def _import_old_child_timestamps(self, path: Path) -> None:
-        if self.is_path_ignored(path):
+        if (
+            self.is_path_ignored(path)
+            or not self._config.symlinks
+            and path.is_symlink()
+        ):
             return
         for root, dirnames, filenames in os.walk(path):
             root_path = Path(root)

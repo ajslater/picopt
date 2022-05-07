@@ -86,7 +86,12 @@ TEMPLATE = MappingTemplate(
                 "test": bool,
                 "timestamps": bool,
                 "verbose": Integer(),
-                "_available_programs": set,
+                "_available_programs": frozenset,
+                "_convertable_formats": Optional(
+                    MappingTemplate(
+                        {"webp": Optional(frozenset), "png": Optional(frozenset)}
+                    )
+                ),
                 "_extra_formats": Optional(Sequence(Choice(ALL_FORMATS))),
                 "_format_handlers": dict,
             }
@@ -146,7 +151,7 @@ def _is_external_program_executable(
     return result
 
 
-def _get_available_programs(config: Configuration) -> set:
+def _get_available_programs(config: Configuration) -> frozenset:
     """Run the external program tester on the required binaries."""
     verbose = config[PROGRAM_NAME]["verbose"].get(int)
     if not isinstance(verbose, int):
@@ -162,34 +167,45 @@ def _get_available_programs(config: Configuration) -> set:
                 programs.add(program)
     if not programs:
         raise ValueError("No optimizers are available or all optimizers are disabled")
-    return programs
+    return frozenset(programs)
 
 
-def _config_list_to_set(config, key) -> set[str]:
-    val_list = config[PROGRAM_NAME][key].get(list)
-    if not isinstance(val_list, (tuple, list, set)):
-        raise ValueError(f"wrong type for convert_to: {type(val_list)} {val_list}")
-    return set(val_list)
+def _config_formats_list_to_set(config, key) -> frozenset[str]:
+    val_list = config[PROGRAM_NAME][key].get()
+    val_set = set()
+    for val in val_list:
+        val_set.add(val.upper())
+    return frozenset(val_set)
 
 
 def _update_formats(config: Configuration) -> dict:
-    formats = _config_list_to_set(config, "formats")
+    formats = _config_formats_list_to_set(config, "formats")
     if "_extra_formats" in config[PROGRAM_NAME]:
-        formats |= _config_list_to_set(config, "_extra_formats")
+        extra_formats = _config_formats_list_to_set(config, "_extra_formats")
+        config[PROGRAM_NAME]["_extra_formats"].set(sorted(extra_formats))
+        formats |= extra_formats
 
-    convert_to = _config_list_to_set(config, "convert_to")
+    convert_to = _config_formats_list_to_set(config, "convert_to")
+    config[PROGRAM_NAME]["convert_to"].set(sorted(convert_to))
     convert_handlers: dict[typing.Type[Handler], set[Format]] = {}
     if Png.OUTPUT_FORMAT in convert_to:
+        convertable_formats = set(PNG_CONVERTABLE_FORMATS)
         formats |= PNG_CONVERTABLE_FORMATS
         format_objs = deepcopy(_PNG_CONVERTABLE_FORMAT_OBJS)
         if TIFF_FORMAT in formats:
             format_objs.add(TIFF_FORMAT_OBJ)
+            convertable_formats.add(TIFF_FORMAT)
         convert_handlers[Png] = format_objs
+        config[PROGRAM_NAME]["_convertable_formats"]["png"] = frozenset(
+            convertable_formats
+        )
     if WebPLossless.OUTPUT_FORMAT in convert_to:
+        convertable_formats = set(WEBP_CONVERTABLE_FORMATS)
         formats |= WEBP_CONVERTABLE_FORMATS
         format_objs = deepcopy(_WEBP_CONVERTABLE_FORMAT_OBJS)
         if TIFF_FORMAT in formats:
             format_objs.add(TIFF_FORMAT_OBJ)
+            convertable_formats.add(TIFF_FORMAT)
         convert_handlers[WebPLossless] = format_objs
 
         convert_handlers[Gif2WebP] = set(
@@ -197,6 +213,9 @@ def _update_formats(config: Configuration) -> dict:
         )
         if TIFF_FORMAT in formats:
             convert_handlers[WebPAnimated] = set([TIFF_ANIMATED_FORMAT_OBJ])
+        config[PROGRAM_NAME]["_convertable_formats"]["webp"] = frozenset(
+            convertable_formats
+        )
     if Zip.OUTPUT_FORMAT in convert_to:
         formats |= set([Zip.INPUT_FORMAT_RAR])
         convert_handlers[Zip] = set([Zip.INPUT_FORMAT_OBJ_RAR])
