@@ -23,7 +23,7 @@ class WebPAnimated(ContainerHandler):
     @classmethod
     def identify_format(cls, _path: Path) -> Optional[Format]:
         """Return the format if this handler can handle this path."""
-        raise NotImplementedError()
+        return cls.OUTPUT_FORMAT_OBJ
 
     def _get_frame_path(self, frame_index: int) -> Path:
         """Return a frame path for an index."""
