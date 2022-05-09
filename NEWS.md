@@ -1,10 +1,15 @@
 # 📰 Picopt News
 
+## v3.1.1
+
+- Fix not skipping older than timestamp files.
+- Add verbose logging skip files reason.
+
 ## v3.1.0
 
 - Change walk algorithm to complete directories and containers before opening new ones.
 - Case insensitive format config.
-- Ignore symlinks when asked to in timestamps. 
+- Ignore symlinks when asked to in timestamps.
 
 ## v3.0.5
 
