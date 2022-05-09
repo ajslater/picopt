@@ -87,19 +87,24 @@ class Walk(Configurable):
     ############
     def _is_skippable(self, path: Path) -> bool:
         """Handle things that are not optimizable files."""
+        skip = False
         # File types
         if not self._config.symlinks and path.is_symlink():
             if self._config.verbose > 1:
                 cprint(f"Skip symlink {path}", "white", attrs=["dark"])
-            return True
+            skip = True
         elif path.name in self.TIMESTAMPS_FILENAMES:
-            return True
+            if self._config.verbose > 1:
+                cprint(f"Skip timestamp {path}", "white", attrs=["dark"])
+            skip = True
         elif not path.exists():
             if self._config.verbose > 1:
                 cprint(f"WARNING: {path} not found.", "yellow")
-            return True
-
-        skip = self.is_path_ignored(path)
+            skip = True
+        elif self.is_path_ignored(path):
+            if self._config.verbose > 1:
+                cprint(f"Skip ignored {path}", "white", attrs=["dark"])
+            skip = True
 
         return skip
 
@@ -238,6 +243,12 @@ class Walk(Configurable):
                 return result
 
             if self._is_older_than_timestamp(path, top_path, container_mtime):
+                if self._config.verbose > 1:
+                    cprint(
+                        f"Skip older than timestamp: {path}",
+                        "white",
+                        attrs=["dark"],
+                    )
                 return result
             # END DECIDE
 
