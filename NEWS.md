@@ -1,5 +1,9 @@
 # 📰 Picopt News
 
+## v3.1.2
+
+- Fix treestamps factory breaking.
+
 ## v3.1.1
 
 - Fix not skipping older than timestamp files.
