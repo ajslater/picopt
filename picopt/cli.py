@@ -178,8 +178,7 @@ def get_arguments(params: Optional[tuple[str, ...]] = None) -> Namespace:
         "-V",
         "--version",
         action="version",
-        version=VERSION,
-        help="Display the version number",
+        version=f"%(prog)s {VERSION}",
     )
     ###########
     # Targets #
