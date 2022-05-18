@@ -140,9 +140,12 @@ class Walk(Configurable):
     def _clean_up_working_files(self, path):
         """Auto-clean old working temp files if encountered."""
         try:
-            shutil.rmtree(path, ignore_errors=True)
+            if path.is_dir():
+                shutil.rmtree(path, ignore_errors=True)
+            else:
+                path.unlink(missing_ok=True)
             if self._config.verbose > 1:
-                print(f"Deleted {path}")
+                cprint(f"Deleted {path}", "yellow")
         except Exception as exc:
             cprint(str(exc), "red")
 
@@ -198,7 +201,7 @@ class Walk(Configurable):
         if self._config.timestamps and not container_mtime:
             # Compact timestamps after every directory completes
             timestamps = self._timestamps[top_path]
-            timestamps.set(path, compact=True)  # type: ignore
+            timestamps.set(path, compact=True)
 
     def _walk_container(self, top_path: Path, handler: ContainerHandler) -> ApplyResult:
         """Optimize a container."""
@@ -231,10 +234,14 @@ class Walk(Configurable):
         try:
             # START DECIDE
             if self._is_skippable(path):
+                if self._config.verbose == 1:
+                    cprint(".", "white", attrs=["dark"], end="")
                 return result
 
             if path.name.rfind(Handler.WORKING_SUFFIX) > -1:
                 self._clean_up_working_files(path)
+                if self._config.verbose == 1:
+                    cprint(".", "yellow", end="")
                 return result
 
             if path.is_dir():
@@ -243,7 +250,9 @@ class Walk(Configurable):
                 return result
 
             if self._is_older_than_timestamp(path, top_path, container_mtime):
-                if self._config.verbose > 1:
+                if self._config.verbose == 1:
+                    cprint(".", "cyan", end="")
+                elif self._config.verbose > 1:
                     cprint(
                         f"Skip older than timestamp: {path}",
                         "white",
@@ -339,6 +348,7 @@ class Walk(Configurable):
         except Exception as exc:
             cprint(str(exc), "red")
             return False
+        print(f"{self._config.verbose}")
 
         # Walk each top file
         top_results = {}
@@ -361,7 +371,7 @@ class Walk(Configurable):
 
         if self._config.timestamps:
             for top_path, timestamps in self._timestamps.items():
-                print(f"Saving timestamps for {top_path}")
+                print(f"\nSaving timestamps for {top_path}")
                 timestamps.dump()
 
         # Finish by reporting totals

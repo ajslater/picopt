@@ -1,5 +1,10 @@
 # 📰 Picopt News
 
+## v3.1.3
+
+- Fix not deleting working files
+- Add progress dots to verbose level 1
+
 ## v3.1.2
 
 - Fix treestamps factory breaking.
