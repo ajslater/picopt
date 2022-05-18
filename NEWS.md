@@ -1,5 +1,9 @@
 # 📰 Picopt News
 
+## v3.1.4
+
+- Remove extraneous debug print statement.
+
 ## v3.1.3
 
 - Fix not deleting working files
