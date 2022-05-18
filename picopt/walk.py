@@ -348,7 +348,6 @@ class Walk(Configurable):
         except Exception as exc:
             cprint(str(exc), "red")
             return False
-        print(f"{self._config.verbose}")
 
         # Walk each top file
         top_results = {}
