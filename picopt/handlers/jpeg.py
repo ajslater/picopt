@@ -26,9 +26,7 @@ class Jpeg(ImageHandler):
         """JPEG suffix does not match format."""
         return "jpg"
 
-    def _jpegtran(
-        self, args: list[Optional[str]], old_path: Path, new_path: Path
-    ) -> Path:
+    def _jpegtran(self, args: list[str], old_path: Path, new_path: Path) -> Path:
         """Run the jpegtran type program."""
         args = copy(args)
         if not bin:
@@ -39,7 +37,7 @@ class Jpeg(ImageHandler):
             args += ["none"]
         args += ["-outfile", str(new_path), str(old_path)]
         args_t = tuple(args)
-        self.run_ext(args_t)  # type: ignore
+        self.run_ext(args_t)
         return new_path
 
     def mozjpeg(self, old_path: Path, new_path: Path) -> Path:
