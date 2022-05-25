@@ -6,7 +6,6 @@ from pathlib import Path
 from typing import Optional, Union
 
 from confuse.templates import AttrDict
-from termcolor import cprint
 
 from picopt.handlers.handler import Format, Handler, Metadata
 from picopt.stats import ReportStats
@@ -92,10 +91,11 @@ class ContainerHandler(Handler, metaclass=ABCMeta):
             self.pack_into(new_path)
 
             bytes_count = self.cleanup_after_optimize(new_path)
-            report_stats = ReportStats(self.final_path, bytes_count=bytes_count)
+            report_stats = ReportStats(
+                self.final_path, bytes_count, self.config.test, self.convert
+            )
             if self.config.verbose:
-                report_stats.report(self.config.test, self.convert)
+                report_stats.report()
             return report_stats
         except Exception as exc:
-            cprint(f"ERROR: repack container: {exc}", "red")
             return self.error(exc)

@@ -2,10 +2,11 @@
 
 ## v3.1.5
 
-- Fixed showing total saved at the end.
-- Suppress all output from programs.
-- Highlight conversions with color output.
-- Lowlight nothing saved images with dark colors.
+- Fixed showing total saved at the end
+- Highlight conversions with color output
+- Lowlight nothing saved results with dark colors
+- Suppress stdout from programs
+- Report errors in more detail
 
 ## v3.1.4
 

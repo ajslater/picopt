@@ -56,18 +56,15 @@ class Handler(ABC):
     @staticmethod
     def run_ext(args: tuple[str, ...]) -> None:
         """Run EXTERNAL program."""
-        try:
-            if not args[0]:
-                raise ValueError(f"{args}")
-            subprocess.run(
-                args, check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
-            )
-        except subprocess.CalledProcessError as exc:
-            cprint(str(exc), "red")
-            cprint(exc.cmd, "red")
-            cprint(f"retcode: {exc.returncode}", "red")
-            cprint(str(exc.output), "red")
-            raise
+        if not args[0]:
+            raise ValueError(f"{args}")
+        subprocess.run(
+            args,
+            check=True,
+            text=True,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.PIPE,
+        )
 
     @classmethod
     def native_input_format_objs(cls) -> set[Format]:
@@ -161,7 +158,6 @@ class Handler(ABC):
 
     def error(self, exc: Exception) -> ReportStats:
         """Return an error result."""
-        report_stats = ReportStats(self.original_path, error=str(exc))
-        if self.config.verbose:
-            report_stats.report(self.config.test, self.convert)
-        return report_stats
+        return ReportStats(
+            self.original_path, None, self.config.test, self.convert, exc=exc
+        )

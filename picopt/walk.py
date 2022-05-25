@@ -161,8 +161,8 @@ class Walk(Configurable):
         """Get the async results and total them."""
         for result in results:
             final_result = result.get()
-            if final_result.error:
-                cprint(final_result.error, "yellow")
+            if final_result.exc:
+                final_result.report()
                 self._totals.errors.append(final_result)
             else:
                 self._totals.bytes_in += final_result.bytes_in
@@ -318,7 +318,7 @@ class Walk(Configurable):
         if self._totals.errors:
             cprint("Errors with the following files:", "red")
             for rs in self._totals.errors:
-                rs.report(self._config.test, False)
+                rs.report()
 
     ################
     # Init and run #
