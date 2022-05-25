@@ -195,6 +195,8 @@ def get_arguments(params: Optional[tuple[str, ...]] = None) -> Namespace:
         params = params[1:]
 
     pns = parser.parse_args(params)
+    if pns.verbose is not None and pns.verbose > 0:
+        pns.verbose += 1
     return Namespace(picopt=pns)
 
 

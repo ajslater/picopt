@@ -7,6 +7,7 @@
 - Lowlight nothing saved results with dark colors
 - Suppress stdout from programs
 - Report errors in more detail
+- Fixed verbosity count for cli
 
 ## v3.1.4
 

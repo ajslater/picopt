@@ -368,7 +368,8 @@ class Walk(Configurable):
 
         if self._config.timestamps:
             for top_path, timestamps in self._timestamps.items():
-                print(f"\nSaving timestamps for {top_path}")
+                if self._config.verbose:
+                    print(f"\nSaving timestamps for {top_path}")
                 timestamps.dump()
 
         # Finish by reporting totals
