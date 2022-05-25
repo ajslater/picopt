@@ -285,6 +285,8 @@ class Walk(Configurable):
     ##########
     def _report_totals(self) -> None:
         """Report the total number and percent of bytes saved."""
+        if self._config.verbose == 1:
+            print()
         if self._totals.bytes_in:
             bytes_saved = self._totals.bytes_in - self._totals.bytes_out
             percent_bytes_saved = bytes_saved / self._totals.bytes_in * 100

@@ -6,7 +6,7 @@ from PIL import Image, ImageSequence
 
 from picopt.handlers.container import ContainerHandler
 from picopt.handlers.handler import Format
-from picopt.handlers.image import TIFF_ANIMATED_FORMAT_OBJ
+from picopt.handlers.image import PNG_ANIMATED_FORMAT_OBJ, TIFF_ANIMATED_FORMAT_OBJ
 from picopt.handlers.webp import WebP
 
 
@@ -16,7 +16,9 @@ class WebPAnimated(ContainerHandler):
     OUTPUT_FORMAT: str = WebP.OUTPUT_FORMAT
     OUTPUT_FORMAT_OBJ = Format(OUTPUT_FORMAT, False, True)
     PROGRAMS = ContainerHandler.init_programs(("webpmux", "img2webp"))
-    _OPEN_WITH_PIL_FORMAT_OBJS = set([TIFF_ANIMATED_FORMAT_OBJ])
+    _OPEN_WITH_PIL_FORMAT_OBJS = set(
+        [PNG_ANIMATED_FORMAT_OBJ, TIFF_ANIMATED_FORMAT_OBJ]
+    )
     _IMG2WEBP_ARGS_PREFIX = (PROGRAMS["img2webp"], "-min_size")
     _WEBPMUX_ARGS_PREFIX = (PROGRAMS["webpmux"], "-get", "frame")
 

@@ -27,6 +27,7 @@ from picopt.handlers.image import (
     BPM_FORMAT_OBJ,
     CONVERTABLE_FORMAT_OBJS,
     CONVERTABLE_FORMATS,
+    PNG_ANIMATED_FORMAT_OBJ,
     PPM_FORMAT_OBJ,
     TIFF_ANIMATED_FORMAT_OBJ,
     TIFF_FORMAT,
@@ -127,6 +128,7 @@ _FORMAT_HANDLERS = {
     EPub.OUTPUT_FORMAT_OBJ: {"native": (EPub,)},
     TIFF_FORMAT_OBJ: {"convert": (WebPLossless, Png)},
     TIFF_ANIMATED_FORMAT_OBJ: {"convert": (WebPAnimated,)},
+    PNG_ANIMATED_FORMAT_OBJ: {"convert": (WebPAnimated,)},
 }
 MODE_EXECUTABLE = stat.S_IXUSR ^ stat.S_IXGRP ^ stat.S_IXOTH
 
@@ -212,7 +214,13 @@ def _update_formats(config: Configuration) -> dict:
             [Gif.OUTPUT_FORMAT_OBJ, AnimatedGif.OUTPUT_FORMAT_OBJ]
         )
         if TIFF_FORMAT in formats:
-            convert_handlers[WebPAnimated] = set([TIFF_ANIMATED_FORMAT_OBJ])
+            if WebPAnimated not in convert_handlers:
+                convert_handlers[WebPAnimated] = set()
+            convert_handlers[WebPAnimated].add(TIFF_ANIMATED_FORMAT_OBJ)
+        if Png.OUTPUT_FORMAT in formats:
+            if WebPAnimated not in convert_handlers:
+                convert_handlers[WebPAnimated] = set()
+            convert_handlers[WebPAnimated].add(PNG_ANIMATED_FORMAT_OBJ)
         config[PROGRAM_NAME]["_convertable_formats"]["webp"] = frozenset(
             convertable_formats
         )
