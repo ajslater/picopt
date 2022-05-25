@@ -1,5 +1,9 @@
 # 📰 Picopt News
 
+## v3.2.1
+
+- Remove debug print statements.
+
 ## v3.2.0
 
 - Animated PNG conversion to WEBP support
