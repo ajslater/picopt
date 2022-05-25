@@ -1,5 +1,12 @@
 # 📰 Picopt News
 
+## v3.1.5
+
+- Fixed showing total saved at the end.
+- Suppress all output from programs.
+- Highlight conversions with color output.
+- Lowlight nothing saved images with dark colors.
+
 ## v3.1.4
 
 - Remove extraneous debug print statement.

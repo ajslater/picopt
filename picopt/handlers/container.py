@@ -94,7 +94,7 @@ class ContainerHandler(Handler, metaclass=ABCMeta):
             bytes_count = self.cleanup_after_optimize(new_path)
             report_stats = ReportStats(self.final_path, bytes_count=bytes_count)
             if self.config.verbose:
-                report_stats.report(self.config.test)
+                report_stats.report(self.config.test, self.convert)
             return report_stats
         except Exception as exc:
             cprint(f"ERROR: repack container: {exc}", "red")

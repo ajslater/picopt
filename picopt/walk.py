@@ -164,11 +164,12 @@ class Walk(Configurable):
             if final_result.error:
                 cprint(final_result.error, "yellow")
                 self._totals.errors.append(final_result)
-            elif self._config.timestamps and not container_mtime:
-                timestamps = self._timestamps[top_path]
-                timestamps.set(final_result.path)
+            else:
                 self._totals.bytes_in += final_result.bytes_in
                 self._totals.bytes_out += final_result.bytes_out
+            if self._config.timestamps and not container_mtime:
+                timestamps = self._timestamps[top_path]
+                timestamps.set(final_result.path)
 
     def walk_dir(
         self,
@@ -250,14 +251,11 @@ class Walk(Configurable):
                 return result
 
             if self._is_older_than_timestamp(path, top_path, container_mtime):
+                color = "green"
                 if self._config.verbose == 1:
-                    cprint(".", "cyan", end="")
+                    cprint(".", color, end="")
                 elif self._config.verbose > 1:
-                    cprint(
-                        f"Skip older than timestamp: {path}",
-                        "white",
-                        attrs=["dark"],
-                    )
+                    cprint(f"Skip older than timestamp: {path}", color)
                 return result
             # END DECIDE
 
@@ -318,9 +316,9 @@ class Walk(Configurable):
                 print("Didn't optimize any files.")
 
         if self._totals.errors:
-            cprint("Errors with the following files:", "yellow")
+            cprint("Errors with the following files:", "red")
             for rs in self._totals.errors:
-                rs.report(self._config.test, "yellow")
+                rs.report(self._config.test, False)
 
     ################
     # Init and run #

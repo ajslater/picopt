@@ -52,7 +52,7 @@ class ImageHandler(Handler, metaclass=ABCMeta):
         try:
             report_stats = self._optimize_with_progs()
             if self.config.verbose:
-                report_stats.report(self.config.test)
+                report_stats.report(self.config.test, self.convert)
         except Exception as exc:
             report_stats = self.error(exc)
         return report_stats

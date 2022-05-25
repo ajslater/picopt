@@ -59,7 +59,9 @@ class Handler(ABC):
         try:
             if not args[0]:
                 raise ValueError(f"{args}")
-            subprocess.run(args, check=True)
+            subprocess.run(
+                args, check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
+            )
         except subprocess.CalledProcessError as exc:
             cprint(str(exc), "red")
             cprint(exc.cmd, "red")
@@ -111,6 +113,7 @@ class Handler(ABC):
         self.final_path: Path = self.original_path.with_suffix(self.output_suffix())
         self.input_format_obj: Format = input_format_obj
         self.metadata = metadata
+        self.convert = input_format_obj != self.OUTPUT_FORMAT_OBJ
 
     def get_working_path(self, identifier: str = "") -> Path:
         """Return a working path with a custom suffix."""
@@ -160,5 +163,5 @@ class Handler(ABC):
         """Return an error result."""
         report_stats = ReportStats(self.original_path, error=str(exc))
         if self.config.verbose:
-            report_stats.report(self.config.test)
+            report_stats.report(self.config.test, self.convert)
         return report_stats

@@ -25,16 +25,15 @@ class ReportStats:
         else:
             self.bytes_in = 0
             self.bytes_out = 0
+        self.saved = self.bytes_in - self.bytes_out
 
     def _new_percent_saved(self) -> str:
         """Spit out how much space the optimization saved."""
-        size_in = self.bytes_in
-        size_out = self.bytes_out
-        if size_in <= 0:
+        if self.bytes_in <= 0:
             ratio = 1.0
         else:
-            ratio = size_out / size_in
-        saved = naturalsize(size_in - size_out)
+            ratio = self.bytes_out / self.bytes_in
+        saved = naturalsize(self.saved)
         percent_saved = (1 - ratio) * 100
 
         result = "{:.{prec}f}% ({})".format(percent_saved, saved, prec=2)
@@ -50,13 +49,23 @@ class ReportStats:
             report += " could be saved."
         return report
 
-    def report(self, test: bool, color="white") -> None:
+    def report(self, test: bool, convert=False) -> None:
         """Record the percent saved & print it."""
+        attrs = []
         if self.error:
             report = f"{self.path} error: {self.error}"
+            color = "red"
         else:
             report = self._report_saved(test)
-        cprint(report, color)
+            if convert:
+                color = "cyan"
+            else:
+                color = "white"
+
+            if self.saved <= 0:
+                attrs = ["dark", "bold"]
+
+        cprint(report, color, attrs=attrs)
 
 
 @dataclass
