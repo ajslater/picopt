@@ -21,7 +21,7 @@ PNG_ANIMATED_FORMAT_OBJ = Format(PngImageFile.format, True, True)
 TIFF_FORMAT = TiffImageFile.format
 TIFF_FORMAT_OBJ = Format(TIFF_FORMAT, True, False)
 TIFF_ANIMATED_FORMAT_OBJ = Format(TIFF_FORMAT, True, True)
-NATIVE_ONLY_FORMATS = set(
+_NATIVE_ONLY_FORMATS = set(
     (PNG_ANIMATED_FORMAT_OBJ, TIFF_ANIMATED_FORMAT_OBJ, TIFF_FORMAT_OBJ)
 )
 
@@ -68,10 +68,8 @@ class ImageHandler(Handler, metaclass=ABCMeta):
 
     def pil2native(self, old_path: Path, new_path: Path) -> Path:
         """Use PIL to save the image."""
-        print(self.input_format_obj)
-        print(NATIVE_ONLY_FORMATS)
         if (
-            self.input_format_obj in NATIVE_ONLY_FORMATS
+            self.input_format_obj in _NATIVE_ONLY_FORMATS
             or self.PREFERRED_PROGRAM not in self.config._available_programs
         ):
             with Image.open(old_path) as image:
