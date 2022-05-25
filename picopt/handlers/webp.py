@@ -39,7 +39,6 @@ class WebP(WebPBase, ABC):
     ARGS_PREFIX = [
         PROGRAMS["cwebp"],
         "-mt",
-        "-quiet",
         "-sharp_yuv",
         "-af",
         "-alpha_filter",

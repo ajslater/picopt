@@ -1,6 +1,4 @@
 """PNG format."""
-import shutil
-
 from copy import copy
 from pathlib import Path
 from typing import Optional
@@ -24,8 +22,8 @@ class Png(ImageHandler):
         ("pil2png", "optipng", "pngout")
     )
     PREFERRED_PROGRAM: str = "optipng"
-    _OPTIPNG_ARGS = [PROGRAMS["optipng"], "-o5", "-fix", "-force", "-quiet"]
-    _PNGOUT_ARGS = [PROGRAMS["pngout"], "-q", "-force", "-y"]
+    _OPTIPNG_ARGS = [PROGRAMS["optipng"], "-o5", "-fix", "-force"]
+    _PNGOUT_ARGS = [PROGRAMS["pngout"], "-force", "-y"]
 
     def pil2png(self, old_path: Path, new_path: Path) -> Path:
         """Pillow png optimization."""
@@ -33,11 +31,10 @@ class Png(ImageHandler):
 
     def optipng(self, old_path: Path, new_path: Path) -> Path:
         """Run the external program optipng on the file."""
-        shutil.copy2(old_path, new_path)
         args = copy(self._OPTIPNG_ARGS)
         if not self.config.keep_metadata:
             args += ["-strip", "all"]
-        args += [str(new_path)]
+        args += ["-out", str(new_path), str(old_path)]
         self.run_ext(tuple(args))
         return new_path
 

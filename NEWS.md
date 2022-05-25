@@ -1,5 +1,16 @@
 # 📰 Picopt News
 
+## v3.2.0
+
+- Animated PNG conversion to WEBP support
+- Fixed showing total saved at the end
+- Highlight conversions with color output
+- Lowlight nothing saved results with dark colors
+- Suppress stdout from programs
+- Report errors in more detail
+- Fixed verbosity count for cli
+- Report on unhandled formats at verbosity > 1.
+
 ## v3.1.4
 
 - Remove extraneous debug print statement.

@@ -106,9 +106,23 @@ def create_handler(
     if handler_cls and format is not None:
         handler = handler_cls(config, path, format, metadata)
     else:
-        if config.verbose > 2 and not config.list_only:
+        if config.verbose > 1 and not config.list_only:
+            if format:
+                fmt = format.format
+                if format.lossless:
+                    fmt += " lossless"
+                else:
+                    fmt += " lossy"
+                if format.animated:
+                    fmt += " animated"
+            else:
+                fmt = "unknown"
             cprint(
-                f"{path} is not an enabled image or container.", "white", attrs=["dark"]
+                f"{path} ({fmt}) is not an enabled image or container.",
+                "white",
+                attrs=["dark"],
             )
+        else:
+            cprint(".", "white", attrs=["dark"], end="")
         handler = None
     return handler
