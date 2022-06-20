@@ -73,7 +73,9 @@ def _get_container_format(path: Path) -> Optional[Format]:
     return format
 
 
-def _get_handler_class(config: AttrDict, key: str, format: Format) -> Type[Handler]:
+def _get_handler_class(
+    config: AttrDict, key: str, format: Format
+) -> Optional[Type[Handler]]:
     handler_classes = config._format_handlers.get(format)
     if handler_classes:
         handler_cls = handler_classes.get(key)
