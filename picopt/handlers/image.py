@@ -43,9 +43,7 @@ class ImageHandler(Handler, metaclass=ABCMeta):
             if path != self.original_path:
                 self.working_paths.add(path)
             new_path = self.get_working_path(func)
-            print(func, new_path)
             path = getattr(self, func)(path, new_path)
-            print(path)
             if self.BEST_ONLY:
                 break
 

@@ -1,5 +1,9 @@
 # 📰 Picopt News
 
+## v3.2.2
+
+- Remove more debug print statements.
+
 ## v3.2.1
 
 - Remove debug print statements.

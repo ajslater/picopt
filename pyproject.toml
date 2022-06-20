@@ -4,7 +4,7 @@ build-backend = ["poetry.core.masonry.api"]
 
 [tool.poetry]
 name = "picopt"
-version = "3.2.1"
+version = "3.2.2"
 description = "A multi format lossless image optimizer that uses external tools"
 license = "GPL-3.0-only"
 authors = ["AJ Slater <aj@slater.net>"]
@@ -46,7 +46,7 @@ flake8-bugbear = "^22.1"
 flake8-docstrings = "^1.5.0"
 monkeytype = "^22.2"
 neovim = "^0.3.1"
-pep8-naming = "^0.12.1"
+pep8-naming = "^0.13.0"
 pip-review = "^1.1.0"
 pynvim = "^0.4"
 pyright = "^1.1.237"
