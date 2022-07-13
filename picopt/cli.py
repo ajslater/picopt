@@ -2,9 +2,11 @@
 """Run pictures through image specific external optimizers."""
 import argparse
 
-from argparse import Action, Namespace
+from argparse import Action, Namespace, RawDescriptionHelpFormatter
 from importlib.metadata import PackageNotFoundError, version
 from typing import Optional
+
+from termcolor import colored
 
 from picopt import PROGRAM_NAME, walk
 from picopt.config import ALL_FORMATS, DEFAULT_HANDLERS, get_config
@@ -42,7 +44,22 @@ def _comma_join(formats: frozenset[str]) -> str:
 def get_arguments(params: Optional[tuple[str, ...]] = None) -> Namespace:
     """Parse the command line."""
     description = "Losslessly optimizes and optionally converts images."
-    parser = argparse.ArgumentParser(description=description)
+    epilog = (
+        "progress colors:",
+        colored("skipped", "white", attrs=["dark"]),
+        colored("skipped by timestamp", "green"),
+        colored("optimization bigger than original", "blue", attrs=["bold"]),
+        "optimized",
+        colored("converted format", "cyan"),
+        colored("warning", "yellow"),
+        colored("error", "red"),
+    )
+    epilog = "\n  ".join(epilog)
+    parser = argparse.ArgumentParser(
+        description=description,
+        epilog=epilog,
+        formatter_class=RawDescriptionHelpFormatter,
+    )
     ###########
     # Options #
     ###########
