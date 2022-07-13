@@ -86,7 +86,8 @@ class ReportStats:
                 color = "white"
 
             if self.saved <= 0:
-                attrs = ["dark", "bold"]
+                color = "blue"
+                attrs = ["bold"]
 
         cprint(report, color, attrs=attrs)
 

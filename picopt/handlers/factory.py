@@ -120,7 +120,7 @@ def create_handler(
             else:
                 fmt = "unknown"
             cprint(
-                f"{path} ({fmt}) is not an enabled image or container.",
+                f"Skipped {path}: ({fmt}) is not an enabled image or container.",
                 "white",
                 attrs=["dark"],
             )

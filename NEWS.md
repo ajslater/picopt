@@ -1,5 +1,9 @@
 # 📰 Picopt News
 
+## v3.2.3
+
+- Color help. Change bigger color to blue.
+
 ## v3.2.2
 
 - Remove more debug print statements.
