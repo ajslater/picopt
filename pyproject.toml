@@ -140,3 +140,11 @@ exclude = [
 useLibraryCodeForTypes = true
 reportMissingImports = true
 reportImportCycles = true
+
+[tool.isort]
+profile = "black"
+lines_after_imports = 2
+lines_between_types = 1
+multi_line_output = 3
+skip = ".git,.mypy_cache,.pytest_cache,.venv,__pycache__,dist,node_modules,test-results,typings"
+color_output = true

@@ -1,8 +1,7 @@
 #!/bin/bash
 # Lint checks
 set -euxo pipefail
-#poetry run isort --check-only --color .
-#poetry run black --check .
+poetry run pytest --ignore=tests .
 poetry run pyright
 poetry run vulture .
 if [ "$(uname)" = "Darwin" ]; then
