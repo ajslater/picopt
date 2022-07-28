@@ -28,7 +28,7 @@ include = ["NEWS.md"]
 
 [tool.poetry.dependencies]
 python = "^3.9"
-confuse = "^1.7.0"
+confuse = "^2.0.0"
 humanize = "^4.0.0"
 python-dateutil = "^2.8"
 rarfile = "^4.0"
@@ -44,6 +44,7 @@ flake8 = "^4.0"
 flake8-black = "^0.3.2"
 flake8-bugbear = "^22.1"
 flake8-docstrings = "^1.5.0"
+flake8-eradicate = "^1.2.1"
 monkeytype = "^22.2"
 neovim = "^0.3.1"
 pep8-naming = "^0.13.0"
