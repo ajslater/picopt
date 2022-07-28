@@ -6,6 +6,7 @@
 .eslintcache
 .mypy_cache
 .picopt_timestamp
+.pypirc
 .ropeproject
 .venv
 MANIFEST
