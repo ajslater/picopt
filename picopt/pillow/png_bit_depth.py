@@ -10,24 +10,25 @@ from typing import Optional
 
 from termcolor import cprint
 
-from picopt.pillow.unpack import compare_header, unpack
+from picopt.pillow.header import ImageHeader, unpack
 
 
-PNG_HEADER = (b"\x89", b"P", b"N", b"G", b"\r", b"\n", b"\x1a", b"\n")
+PNG_HEADER = ImageHeader(0, (b"\x89", b"P", b"N", b"G", b"\r", b"\n", b"\x1a", b"\n"))
+BIT_DEPTH_OFFSET = 24
 
 
 def png_bit_depth(path: Path) -> Optional[int]:
     """If a file is a png, get the bit depth from the standard position."""
-    try:
-        with path.open("rb") as img:
-            compare_header(img, 0, PNG_HEADER)
+    result = None
+    with path.open("rb") as img:
+        if PNG_HEADER.compare(img):
 
-            img.seek(24)  # bit depth offset
+            img.seek(BIT_DEPTH_OFFSET)  # bit depth offset
             depth = unpack("b", 1, img)[0]
-        return int(depth)
-    except ValueError:
-        cprint(f"WARNING: {path} is not a png!", "yellow")
-        return None
+            result = int(depth)
+        else:
+            cprint(f"WARNING: {path} is not a png!", "yellow")
+    return result
 
 
 def main() -> None:

@@ -5,18 +5,9 @@ Determine if a webp is lossless.
 This should be a part of Pillow
 https://developers.google.com/speed/webp/docs/webp_lossless_bitstream_specification
 """
-from dataclasses import dataclass
 from pathlib import Path
 
-from picopt.pillow.unpack import compare_header
-
-
-@dataclass
-class ImageHeader:
-    """The seek location and value of a byte header."""
-
-    offset: int
-    bytes: tuple[bytes, ...]
+from picopt.pillow.header import ImageHeader
 
 
 RIFF_HEADER = ImageHeader(0, (b"R", b"I", b"F", b"F"))
@@ -28,14 +19,14 @@ HEADERS = (RIFF_HEADER, WEBP_HEADER, VP8L_HEADER)
 
 def is_lossless(filename: str) -> bool:
     """Compare header types against lossless types."""
+    result = False
     path = Path(filename)
-    try:
-        with path.open("rb") as img:
-            for header in HEADERS:
-                compare_header(img, header.offset, header.bytes)
-        return True
-    except ValueError:
-        return False
+    with path.open("rb") as img:
+        for header in HEADERS:
+            if header.compare(img):
+                result = True
+                break
+    return result
 
 
 def main() -> None:
