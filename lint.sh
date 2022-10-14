@@ -15,7 +15,7 @@ npm run check
 if [ "$(uname)" = "Darwin" ]; then
     # shellcheck disable=2035
     hadolint *Dockerfile
-    shfmt -d -i 4 ./*.sh ./**/*.sh
+    shellharden ./*.sh ./**/*.sh
     circleci config check .circleci/config.yml
 fi
 shellcheck --external-sources ./*.sh

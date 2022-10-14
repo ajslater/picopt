@@ -4,4 +4,4 @@ poetry run isort --color .
 poetry run black .
 npm run fix
 npx prettier --write --parser ini setup.cfg
-shfmt -s -w -i 4 ./*.sh ./**/*.sh
+shellharden --replace ./*.sh ./**/*.sh
