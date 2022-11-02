@@ -58,7 +58,6 @@ class Handler(ABC):
         """Run EXTERNAL program."""
         if not args[0]:
             raise ValueError(f"{args}")
-        print(" ".join(args))
         subprocess.run(
             args,
             check=True,
