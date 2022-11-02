@@ -9,11 +9,11 @@
     "prettier-plugin-toml": "^0.3.1"
   },
   "devDependencies": {
-    "@fsouza/prettierd": "^0.21",
+    "@fsouza/prettierd": "^0.22.3",
     "eslint-config-prettier": "^8.3.0",
     "eslint-plugin-eslint-comments": "^3.2.0",
     "eslint-plugin-json": "^3.1.0",
-    "eslint-plugin-markdown": "^2.2.1",
+    "eslint-plugin-markdown": "^3.0.0",
     "eslint-plugin-prettier": "^4.0.0",
     "eslint-plugin-yaml": "^0.5.0",
     "eslint_d": "^12.0.0",
@@ -27,7 +27,7 @@
     "remark-preset-lint-consistent": "^5.1.1",
     "remark-preset-lint-markdown-style-guide": "^5.1.2",
     "remark-preset-lint-recommended": "^6.1.2",
-    "remark-preset-prettier": "^1.0.0"
+    "remark-preset-prettier": "^2.0.1"
   },
   "prettier": {
     "trailingComma": "es5",

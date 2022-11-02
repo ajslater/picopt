@@ -8,6 +8,9 @@ jobs:
           command: docker-compose build picopt-build-builder
           name: Install Build Dependencies
       - run:
+          command: docker-compose up --exit-code-from picopt-lint picopt-lint
+          name: Lint
+      - run:
           command: ci/create-output-dirs.sh
           name: Create Output Dirs
       - run:
@@ -17,9 +20,6 @@ jobs:
           path: test-results/pytest
       - store_artifacts:
           path: test-results/coverage
-      - run:
-          command: docker-compose up --exit-code-from picopt-lint picopt-lint
-          name: Lint
       - run:
           command: docker-compose up --exit-code-from picopt-build picopt-build
           name: Build
@@ -32,7 +32,7 @@ jobs:
           root: .
   deploy:
     docker:
-      - image: cimg/python:3.10
+      - image: cimg/python:3.11
     steps:
       - attach_workspace:
           at: .

@@ -10,17 +10,17 @@ from picopt.handlers.image import PNG_ANIMATED_FORMAT_OBJ, TIFF_ANIMATED_FORMAT_
 from picopt.handlers.webp import WebP
 
 
-class WebPAnimated(ContainerHandler):
+class WebPAnimatedBase(ContainerHandler):
     """Animated WebP container."""
 
     OUTPUT_FORMAT: str = WebP.OUTPUT_FORMAT
-    OUTPUT_FORMAT_OBJ = Format(OUTPUT_FORMAT, False, True)
     PROGRAMS = ContainerHandler.init_programs(("webpmux", "img2webp"))
     _OPEN_WITH_PIL_FORMAT_OBJS = set(
         [PNG_ANIMATED_FORMAT_OBJ, TIFF_ANIMATED_FORMAT_OBJ]
     )
     _IMG2WEBP_ARGS_PREFIX = (PROGRAMS["img2webp"], "-min_size")
     _WEBPMUX_ARGS_PREFIX = (PROGRAMS["webpmux"], "-get", "frame")
+    _LOSSLESS = True
 
     @classmethod
     def identify_format(cls, _path: Path) -> Optional[Format]:
@@ -41,7 +41,7 @@ class WebPAnimated(ContainerHandler):
                     frame.save(
                         frame_path,
                         self.OUTPUT_FORMAT,
-                        lossless=True,
+                        lossless=self._LOSSLESS,
                         quality=100,
                         method=0,
                     )
@@ -109,3 +109,17 @@ class WebPAnimated(ContainerHandler):
         self.run_ext(tuple(args))
         if self.config.keep_metadata:
             self._set_metadata(working_path)
+
+
+class WebPAnimatedLossless(WebPAnimatedBase):
+    """Animated Lossless WebP Handler."""
+
+    _LOSSLESS = True
+    OUTPUT_FORMAT_OBJ = Format(WebPAnimatedBase.OUTPUT_FORMAT, _LOSSLESS, True)
+
+
+class WebPAnimatedLossy(WebPAnimatedBase):
+    """Animated Lossy WebP Handler."""
+
+    _LOSSLESS = False
+    OUTPUT_FORMAT_OBJ = Format(WebPAnimatedBase.OUTPUT_FORMAT, _LOSSLESS, True)

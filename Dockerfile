@@ -11,6 +11,7 @@ RUN apt-get update \
         optipng \
         python3-pip \
         unrar \
+        webp \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 

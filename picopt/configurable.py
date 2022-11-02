@@ -1,11 +1,10 @@
 """Abstract class to hold config and match ignores."""
-from abc import ABC
 from pathlib import Path
 
 from confuse import AttrDict
 
 
-class Configurable(ABC):
+class Configurable:
     """Match ignore paths."""
 
     def __init__(self, config: AttrDict) -> None:
