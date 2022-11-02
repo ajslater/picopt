@@ -19,9 +19,8 @@ class ImageHeader:
     offset: int
     bytes: tuple[bytes, ...]
 
-    def compare(self, img: BinaryIO):
+    def compare(self, img: BinaryIO) -> bool:
         """Seek to a spot in a binary file and compare a byte array."""
         img.seek(self.offset)
         compare = unpack("c", len(self.bytes), img)
-        if compare != self.bytes:
-            raise ValueError(f"{compare} != {self.bytes}")
+        return compare == self.bytes

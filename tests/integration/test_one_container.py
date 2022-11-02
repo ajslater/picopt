@@ -14,11 +14,11 @@ SRC_CBZ = CONTAINER_DIR / FN
 
 if system() == "Darwin":
     FNS = {
-        FN: (2974, 1917),
+        FN: (2974, 1871),
     }
 else:
     FNS = {
-        FN: (2974, 1861),
+        FN: (2974, 1917),
     }
 
 

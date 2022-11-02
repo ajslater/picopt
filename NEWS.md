@@ -1,5 +1,10 @@
 # 📰 Picopt News
 
+## v3.2.4
+
+- Fix error reporting
+- Fix WebP Lossless detection
+
 ## v3.2.3
 
 - Color help. Change bigger color to blue.
@@ -144,7 +149,7 @@
 
 ## v1.5.3
 
-- Fix hang on external program error. Likley with 16 bit PNGs and pngout.
+- Fix hang on external program error. Likely with 16 bit PNGs and pngout.
 
 ## v1.5.2
 

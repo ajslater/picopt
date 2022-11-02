@@ -19,12 +19,12 @@ HEADERS = (RIFF_HEADER, WEBP_HEADER, VP8L_HEADER)
 
 def is_lossless(filename: str) -> bool:
     """Compare header types against lossless types."""
-    result = False
+    result = True
     path = Path(filename)
     with path.open("rb") as img:
         for header in HEADERS:
-            if header.compare(img):
-                result = True
+            if not header.compare(img):
+                result = False
                 break
     return result
 

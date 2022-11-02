@@ -277,7 +277,9 @@ class Walk(Configurable):
                 raise ValueError(f"bad handler {handler}")
         except Exception as exc:
             traceback.print_exc()
-            result = self._pool.apply_async(ReportStats, args=(path, None, exc))
+            result = self._pool.apply_async(
+                ReportStats, args=(path, None, self._config.test, convert, exc)
+            )
         return result
 
     ##########

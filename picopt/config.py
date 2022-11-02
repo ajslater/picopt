@@ -36,7 +36,7 @@ from picopt.handlers.image import (
 from picopt.handlers.jpeg import Jpeg
 from picopt.handlers.png import Png
 from picopt.handlers.webp import Gif2WebP, WebPLossless, WebPLossy
-from picopt.handlers.webp_animated import WebPAnimated
+from picopt.handlers.webp_animated import WebPAnimatedLossless, WebPAnimatedLossy
 from picopt.handlers.zip import CBZ, EPub, Zip
 
 
@@ -62,7 +62,17 @@ CONVERT_TO_FORMATS = frozenset(
 )
 CONTAINER_CONVERTABLE_FORMATS = frozenset((Zip.INPUT_FORMAT_RAR, CBZ.INPUT_FORMAT_RAR))
 DEFAULT_HANDLERS = (Gif, AnimatedGif, Jpeg, Png, WebPLossy, WebPLossless)
-HANDLERS = frozenset([*DEFAULT_HANDLERS, Gif2WebP, WebPAnimated, Zip, CBZ, EPub])
+HANDLERS = frozenset(
+    [
+        *DEFAULT_HANDLERS,
+        Gif2WebP,
+        WebPAnimatedLossy,
+        WebPAnimatedLossless,
+        Zip,
+        CBZ,
+        EPub,
+    ]
+)
 ALL_FORMATS: frozenset[str] = (
     frozenset([cls.OUTPUT_FORMAT for cls in HANDLERS])
     | CONVERTABLE_FORMATS
@@ -120,15 +130,16 @@ _FORMAT_HANDLERS = {
     Png.OUTPUT_FORMAT_OBJ: {"convert": (WebPLossless,), "native": (Png,)},
     WebPLossy.OUTPUT_FORMAT_OBJ: {"native": (WebPLossy,)},
     WebPLossless.OUTPUT_FORMAT_OBJ: {"native": (WebPLossless,)},
-    WebPAnimated.OUTPUT_FORMAT_OBJ: {"native": (WebPAnimated,)},
+    WebPAnimatedLossy.OUTPUT_FORMAT_OBJ: {"native": (WebPAnimatedLossy,)},
+    WebPAnimatedLossless.OUTPUT_FORMAT_OBJ: {"native": (WebPAnimatedLossless,)},
     Zip.OUTPUT_FORMAT_OBJ: {"native": (Zip,)},
     CBZ.OUTPUT_FORMAT_OBJ: {"native": (CBZ,)},
     Zip.INPUT_FORMAT_OBJ_RAR: {"convert": (Zip,)},
     CBZ.INPUT_FORMAT_OBJ_RAR: {"convert": (CBZ,)},
     EPub.OUTPUT_FORMAT_OBJ: {"native": (EPub,)},
     TIFF_FORMAT_OBJ: {"convert": (WebPLossless, Png)},
-    TIFF_ANIMATED_FORMAT_OBJ: {"convert": (WebPAnimated,)},
-    PNG_ANIMATED_FORMAT_OBJ: {"convert": (WebPAnimated,)},
+    TIFF_ANIMATED_FORMAT_OBJ: {"convert": (WebPAnimatedLossless,)},
+    PNG_ANIMATED_FORMAT_OBJ: {"convert": (WebPAnimatedLossless,)},
 }
 MODE_EXECUTABLE = stat.S_IXUSR ^ stat.S_IXGRP ^ stat.S_IXOTH
 
@@ -214,13 +225,13 @@ def _update_formats(config: Configuration) -> dict:
             [Gif.OUTPUT_FORMAT_OBJ, AnimatedGif.OUTPUT_FORMAT_OBJ]
         )
         if TIFF_FORMAT in formats:
-            if WebPAnimated not in convert_handlers:
-                convert_handlers[WebPAnimated] = set()
-            convert_handlers[WebPAnimated].add(TIFF_ANIMATED_FORMAT_OBJ)
+            if WebPAnimatedLossless not in convert_handlers:
+                convert_handlers[WebPAnimatedLossless] = set()
+            convert_handlers[WebPAnimatedLossless].add(TIFF_ANIMATED_FORMAT_OBJ)
         if Png.OUTPUT_FORMAT in formats:
-            if WebPAnimated not in convert_handlers:
-                convert_handlers[WebPAnimated] = set()
-            convert_handlers[WebPAnimated].add(PNG_ANIMATED_FORMAT_OBJ)
+            if WebPAnimatedLossless not in convert_handlers:
+                convert_handlers[WebPAnimatedLossless] = set()
+            convert_handlers[WebPAnimatedLossless].add(PNG_ANIMATED_FORMAT_OBJ)
         config[PROGRAM_NAME]["_convertable_formats"]["webp"] = frozenset(
             convertable_formats
         )
