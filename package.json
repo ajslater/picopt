@@ -9,7 +9,7 @@
     "prettier-plugin-toml": "^0.3.1"
   },
   "devDependencies": {
-    "@fsouza/prettierd": "^0.22.3",
+    "@fsouza/prettierd": "^0.23.1",
     "eslint-config-prettier": "^8.3.0",
     "eslint-plugin-eslint-comments": "^3.2.0",
     "eslint-plugin-json": "^3.1.0",

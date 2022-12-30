@@ -102,6 +102,7 @@ class Handler(ABC):
         original_path: Path,
         input_format_obj: Format,
         metadata: Metadata,
+        is_case_sensitive: bool,
     ):
         """Initialize handler."""
         self.config: AttrDict = config
@@ -111,6 +112,7 @@ class Handler(ABC):
         self.input_format_obj: Format = input_format_obj
         self.metadata = metadata
         self.convert = input_format_obj != self.OUTPUT_FORMAT_OBJ
+        self.is_case_sensitive = is_case_sensitive
 
     def get_working_path(self, identifier: str = "") -> Path:
         """Return a working path with a custom suffix."""
@@ -122,7 +124,7 @@ class Handler(ABC):
 
         return self.original_path.with_suffix(suffix)
 
-    def _cleanup_after_optimize_aux(self, last_working_path: Path) -> tuple[int, int]:
+    def cleanup_after_optimize(self, last_working_path: Path) -> tuple[int, int]:
         """Replace old file with better one or discard new wasteful file."""
         bytes_in = 0
         bytes_out = 0
@@ -133,7 +135,15 @@ class Handler(ABC):
                 (bytes_out > 0) and ((bytes_out < bytes_in) or self.config.bigger)
             ):
                 last_working_path.replace(self.final_path)
-                if self.final_path != self.original_path:
+
+                # Add original path to working_paths if the file has
+                # a new name. But be careful of case sensitive fs.
+                compare_final_str = str(self.final_path)
+                compare_original_str = str(self.original_path)
+                if not self.is_case_sensitive:
+                    compare_final_str = compare_final_str.lower()
+                    compare_original_str = compare_original_str.lower()
+                if compare_final_str != compare_original_str:
                     self.working_paths.add(self.original_path)
             else:
                 self.working_paths.add(last_working_path)
@@ -147,14 +157,6 @@ class Handler(ABC):
             raise
 
         return (bytes_in, bytes_out)
-
-    def cleanup_after_optimize(self, last_working_path: Path) -> tuple[int, int]:
-        """
-        Replace old file with better one or discard new wasteful file.
-
-        And report results using the stats module.
-        """
-        return self._cleanup_after_optimize_aux(last_working_path)
 
     def error(self, exc: Exception) -> ReportStats:
         """Return an error result."""

@@ -39,9 +39,10 @@ class ContainerHandler(Handler, metaclass=ABCMeta):
         original_path: Path,
         format: Format,
         metadata: Metadata,
+        is_case_sensitive: bool,
     ):
         """Unpack a container with a subclass's unpacker."""
-        super().__init__(config, original_path, format, metadata)
+        super().__init__(config, original_path, format, metadata, is_case_sensitive)
         self.comment: Optional[bytes] = None
         self.tmp_container_dir: Path = Path(
             str(self.get_working_path()) + self.CONTAINER_DIR_SUFFIX

@@ -1,5 +1,9 @@
 # 📰 Picopt News
 
+## v3.2.5
+
+- Fix occasionally removing both final and originals on case insensitive filesystem.
+
 ## v3.2.4
 
 - Fix error reporting
