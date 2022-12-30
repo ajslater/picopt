@@ -85,7 +85,7 @@ def _get_handler_class(
 
 
 def create_handler(
-    config: AttrDict, path: Path, convert: bool = True
+    config: AttrDict, path: Path, is_case_sensitive: bool, convert: bool = True
 ) -> Optional[Handler]:
     """Get the image format."""
     # This is the consumer of config._format_handlers
@@ -106,7 +106,7 @@ def create_handler(
         cprint("WARNING: getting handler", str(exc), "yellow")
 
     if handler_cls and format is not None:
-        handler = handler_cls(config, path, format, metadata)
+        handler = handler_cls(config, path, format, metadata, is_case_sensitive)
     else:
         if config.verbose > 1 and not config.list_only:
             if format:

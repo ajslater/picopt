@@ -31,6 +31,8 @@ class Walk(Configurable):
     """Walk object for storing state of a walk run."""
 
     TIMESTAMPS_FILENAMES = set(Treestamps.get_filenames(PROGRAM_NAME))
+    LOWERCASE_TESTNAME = ".picopt_case_sensitive_test"
+    UPPERCASE_TESTNAME = LOWERCASE_TESTNAME.upper()
 
     ########
     # Init #
@@ -177,6 +179,7 @@ class Walk(Configurable):
         top_path: Path,
         container_mtime: Optional[float],
         convert: bool,
+        is_case_sensitive: bool,
     ) -> None:
         """Recursively optimize a directory."""
         results = []
@@ -184,12 +187,16 @@ class Walk(Configurable):
         for name in sorted(os.listdir(path)):
             entry_path = path / name
             if entry_path.is_dir():
-                self.walk_file(entry_path, top_path, container_mtime, convert)
+                self.walk_file(
+                    entry_path, top_path, container_mtime, convert, is_case_sensitive
+                )
             else:
                 files.append(entry_path)
 
         for entry_path in files:
-            result = self.walk_file(entry_path, top_path, container_mtime, convert)
+            result = self.walk_file(
+                entry_path, top_path, container_mtime, convert, is_case_sensitive
+            )
             if result:
                 results.append(result)
 
@@ -204,7 +211,9 @@ class Walk(Configurable):
             timestamps = self._timestamps[top_path]
             timestamps.set(path, compact=True)
 
-    def _walk_container(self, top_path: Path, handler: ContainerHandler) -> ApplyResult:
+    def _walk_container(
+        self, top_path: Path, handler: ContainerHandler, is_case_sensitive: bool
+    ) -> ApplyResult:
         """Optimize a container."""
         result: ApplyResult
         try:
@@ -215,6 +224,7 @@ class Walk(Configurable):
                 top_path,
                 container_mtime,
                 handler.CONVERT,
+                is_case_sensitive,
             )
             result = self._pool.apply_async(handler.repack)
         except Exception as exc:
@@ -229,6 +239,7 @@ class Walk(Configurable):
         top_path: Path,
         container_mtime: Optional[float],
         convert: bool,
+        is_case_sensitive: bool,
     ) -> Optional[ApplyResult]:
         """Optimize an individual file."""
         result: Optional[ApplyResult] = None
@@ -247,7 +258,9 @@ class Walk(Configurable):
 
             if path.is_dir():
                 if self._config.recurse or container_mtime is not None:
-                    result = self.walk_dir(path, top_path, container_mtime, convert)
+                    result = self.walk_dir(
+                        path, top_path, container_mtime, convert, is_case_sensitive
+                    )
                 return result
 
             if self._is_older_than_timestamp(path, top_path, container_mtime):
@@ -259,7 +272,7 @@ class Walk(Configurable):
                 return result
             # END DECIDE
 
-            handler = create_handler(self._config, path, convert=convert)
+            handler = create_handler(self._config, path, is_case_sensitive, convert)
 
             if handler is None:
                 return result
@@ -270,7 +283,7 @@ class Walk(Configurable):
 
             if isinstance(handler, ContainerHandler):
                 # Unpack inline, not in the pool, and walk immediately like dirs.
-                result = self._walk_container(top_path, handler)
+                result = self._walk_container(top_path, handler, is_case_sensitive)
             elif isinstance(handler, ImageHandler):
                 result = self._pool.apply_async(handler.optimize_image)
             else:
@@ -343,6 +356,19 @@ class Walk(Configurable):
         else:
             self._pool = Pool()
 
+    @classmethod
+    def _is_case_sensitive(cls, dirpath: Path) -> bool:
+        """Deterimine if a path is on a case sensitive filesystem."""
+        lowercase_path = dirpath / cls.LOWERCASE_TESTNAME
+        result = False
+        try:
+            lowercase_path.touch()
+            uppercase_path = dirpath / cls.UPPERCASE_TESTNAME
+            result = not uppercase_path.exists()
+        finally:
+            lowercase_path.unlink(missing_ok=True)
+        return result
+
     def run(self) -> bool:
         """Optimize all configured files."""
         try:
@@ -355,7 +381,8 @@ class Walk(Configurable):
         top_results = {}
         for top_path in self._top_paths:
             dirpath = Treestamps.dirpath(top_path)
-            result = self.walk_file(top_path, dirpath, None, True)
+            is_case_sensitive = self._is_case_sensitive(dirpath)
+            result = self.walk_file(top_path, dirpath, None, True, is_case_sensitive)
             if not result:
                 continue
             if dirpath not in top_results:
