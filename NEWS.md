@@ -2,7 +2,7 @@
 
 ## v3.2.5
 
-- Fix occasionally removing both final and orignals on case insensitive filesystem.
+- Fix occasionally removing both final and originals on case insensitive filesystem.
 
 ## v3.2.4
 
