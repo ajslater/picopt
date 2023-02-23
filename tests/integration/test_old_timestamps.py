@@ -5,7 +5,6 @@ from picopt import PROGRAM_NAME, cli
 from picopt.old_timestamps import _OLD_TIMESTAMPS_NAME
 from tests import IMAGES_DIR, get_test_dir
 
-
 __all__ = ()
 TMP_ROOT = get_test_dir()
 FN = "test_jpg.jpg"
@@ -27,23 +26,29 @@ DEFAULT_CONFIG = {
 
 
 class TestContainersDir:
+    """Test containers dir."""
+
     @staticmethod
     def _assert_sizes(index, root=TMP_ROOT):
+        """Assert sizes."""
         for name, sizes in FNS.items():
             path = root / name
             assert path.stat().st_size == sizes[index]
 
     def setup_method(self) -> None:
+        """Set up method."""
         self.teardown_method()
         TMP_ROOT.mkdir(exist_ok=True)
         shutil.copy(SRC_JPG, TMP_ROOT)
         self._assert_sizes(0)
 
     def teardown_method(self) -> None:
+        """Tear down method."""
         if TMP_ROOT.exists():
             shutil.rmtree(TMP_ROOT)
 
     def test_old_timestamp_same_dir(self) -> None:
+        """Test old timestamp in same dir."""
         old_ts_path = TMP_ROOT / _OLD_TIMESTAMPS_NAME
         old_ts_path.touch()
         args = (PROGRAM_NAME, "-rtvv", str(TMP_ROOT))
@@ -53,6 +58,7 @@ class TestContainersDir:
         self._assert_sizes(0)
 
     def test_old_timestamp_child(self) -> None:
+        """Test old timestamp child."""
         child_root = TMP_ROOT / "child"
         child_root.mkdir(exist_ok=True)
         shutil.copy(SRC_JPG, child_root)
@@ -65,6 +71,7 @@ class TestContainersDir:
         self._assert_sizes(0)
 
     def test_old_timestamp_parent(self) -> None:
+        """Test old timestamp in parent."""
         child_root = TMP_ROOT / "child"
         child_root.mkdir(exist_ok=True)
         shutil.copy(SRC_JPG, child_root)

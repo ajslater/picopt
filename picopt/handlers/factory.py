@@ -14,8 +14,7 @@ from picopt.handlers.webp import WebPLossless
 from picopt.handlers.zip import CBZ, EPub, Zip
 from picopt.pillow.webp_lossless import is_lossless
 
-
-_ALWAYS_LOSSLESS_FORMATS = WEBP_CONVERTABLE_FORMATS - set([TIFF_FORMAT])
+_ALWAYS_LOSSLESS_FORMATS = WEBP_CONVERTABLE_FORMATS - {TIFF_FORMAT}
 _CONTAINER_HANDLERS: tuple[Type[ContainerHandler], ...] = (CBZ, Zip, EPub)
 
 

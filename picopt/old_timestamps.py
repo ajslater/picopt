@@ -1,6 +1,5 @@
 """import picopt 2.0 timestamps to Treestamps."""
 import os
-
 from pathlib import Path
 
 from confuse.templates import AttrDict
@@ -8,7 +7,6 @@ from treestamps import Treestamps
 
 from picopt import PROGRAM_NAME
 from picopt.configurable import Configurable
-
 
 _OLD_TIMESTAMPS_NAME = f".{PROGRAM_NAME}_timestamp"
 

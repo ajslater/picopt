@@ -1,7 +1,6 @@
 """FileType abstract class for image and container formats."""
 import shutil
 import subprocess
-
 from abc import ABC
 from dataclasses import dataclass
 from pathlib import Path
@@ -69,7 +68,7 @@ class Handler(ABC):
     @classmethod
     def native_input_format_objs(cls) -> set[Format]:
         """Return input formats handled without conversion."""
-        return set([cls.OUTPUT_FORMAT_OBJ])
+        return {cls.OUTPUT_FORMAT_OBJ}
 
     @classmethod
     def _output_suffix(cls) -> str:

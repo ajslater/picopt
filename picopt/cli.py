@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 """Run pictures through image specific external optimizers."""
 import argparse
-
 from argparse import Action, Namespace, RawDescriptionHelpFormatter
 from importlib.metadata import PackageNotFoundError, version
 from typing import Optional
@@ -13,7 +12,6 @@ from picopt.config import ALL_FORMATS, DEFAULT_HANDLERS, get_config
 from picopt.handlers.png import Png
 from picopt.handlers.webp import WebP
 from picopt.handlers.zip import CBZ, Zip
-
 
 DEFAULT_FORMATS = frozenset(
     [handler_cls.OUTPUT_FORMAT for handler_cls in DEFAULT_HANDLERS]

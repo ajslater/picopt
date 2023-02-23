@@ -3,7 +3,6 @@ import pathlib
 import stat
 import time
 import typing
-
 from argparse import Namespace
 from copy import deepcopy
 
@@ -38,7 +37,6 @@ from picopt.handlers.png import Png
 from picopt.handlers.webp import Gif2WebP, WebPLossless, WebPLossy
 from picopt.handlers.webp_animated import WebPAnimatedLossless, WebPAnimatedLossy
 from picopt.handlers.zip import CBZ, EPub, Zip
-
 
 _PNG_CONVERTABLE_FORMAT_OBJS = CONVERTABLE_FORMAT_OBJS | frozenset(
     [Gif.OUTPUT_FORMAT_OBJ]
@@ -109,17 +107,15 @@ TEMPLATE = MappingTemplate(
         )
     }
 )
-TIMESTAMPS_CONFIG_KEYS = set(
-    (
-        "bigger",
-        "convert_to",
-        "formats",
-        "ignore",
-        "keep_metadata",
-        "recurse",
-        "symlinks",
-    )
-)
+TIMESTAMPS_CONFIG_KEYS = {
+    "bigger",
+    "convert_to",
+    "formats",
+    "ignore",
+    "keep_metadata",
+    "recurse",
+    "symlinks",
+}
 # Handlers for formats are listed in priority order
 _FORMAT_HANDLERS = {
     PPM_FORMAT_OBJ: {"convert": (WebPLossless, Png)},
@@ -221,9 +217,10 @@ def _update_formats(config: Configuration) -> dict:
             convertable_formats.add(TIFF_FORMAT)
         convert_handlers[WebPLossless] = format_objs
 
-        convert_handlers[Gif2WebP] = set(
-            [Gif.OUTPUT_FORMAT_OBJ, AnimatedGif.OUTPUT_FORMAT_OBJ]
-        )
+        convert_handlers[Gif2WebP] = {
+            Gif.OUTPUT_FORMAT_OBJ,
+            AnimatedGif.OUTPUT_FORMAT_OBJ,
+        }
         if TIFF_FORMAT in formats:
             if WebPAnimatedLossless not in convert_handlers:
                 convert_handlers[WebPAnimatedLossless] = set()
@@ -236,11 +233,11 @@ def _update_formats(config: Configuration) -> dict:
             convertable_formats
         )
     if Zip.OUTPUT_FORMAT in convert_to:
-        formats |= set([Zip.INPUT_FORMAT_RAR])
-        convert_handlers[Zip] = set([Zip.INPUT_FORMAT_OBJ_RAR])
+        formats |= {Zip.INPUT_FORMAT_RAR}
+        convert_handlers[Zip] = {Zip.INPUT_FORMAT_OBJ_RAR}
     if CBZ.OUTPUT_FORMAT in convert_to:
-        formats |= set([CBZ.INPUT_FORMAT_RAR])
-        convert_handlers[CBZ] = set([CBZ.INPUT_FORMAT_OBJ_RAR])
+        formats |= {CBZ.INPUT_FORMAT_RAR}
+        convert_handlers[CBZ] = {CBZ.INPUT_FORMAT_OBJ_RAR}
 
     config[PROGRAM_NAME]["formats"].set(sorted(formats))
 

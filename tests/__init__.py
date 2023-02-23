@@ -1,14 +1,12 @@
 """Tests init."""
 import inspect
-
 from pathlib import Path
-
 
 TEST_FILES_DIR = Path("tests/test_files")
 IMAGES_DIR = TEST_FILES_DIR / "images"
 INVALID_DIR = TEST_FILES_DIR / "invalid"
 CONTAINER_DIR = TEST_FILES_DIR / "containers"
-TMP_ROOT = "/tmp"
+TMP_ROOT = "/tmp"  # noqa
 
 
 def get_test_dir():

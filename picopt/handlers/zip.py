@@ -1,6 +1,5 @@
 """Handler for zip files."""
 import os
-
 from pathlib import Path
 from typing import Optional, Union
 from zipfile import ZIP_DEFLATED, ZipFile, is_zipfile

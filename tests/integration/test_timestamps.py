@@ -1,14 +1,12 @@
 """Test comic format."""
 import platform
 import shutil
-
 from datetime import datetime
 
 from ruamel.yaml import YAML
 
 from picopt import PROGRAM_NAME, cli
 from tests import IMAGES_DIR, get_test_dir
-
 
 __all__ = ()
 TMP_ROOT = get_test_dir()
@@ -40,14 +38,18 @@ DEFAULT_CONFIG = {
 }
 
 
-class TestContainersDir:
+class TestTimestamps:
+    """Test containers dir."""
+
     @staticmethod
     def _assert_sizes(index, root=TMP_ROOT):
+        """Assert sizes."""
         for name, sizes in FNS.items():
             path = root / name
             assert path.stat().st_size == sizes[index]
 
     def setup_method(self) -> None:
+        """Set up method."""
         if TMP_ROOT.exists():
             shutil.rmtree(TMP_ROOT)
         TMP_ROOT.mkdir(exist_ok=True)
@@ -55,6 +57,7 @@ class TestContainersDir:
         self._assert_sizes(0)
 
     def teardown_method(self) -> None:
+        """Tear down method."""
         print(sorted(TMP_ROOT.iterdir()))
         assert TIMESTAMPS_PATH.exists()
         assert not WAL_PATH.exists()
@@ -63,6 +66,7 @@ class TestContainersDir:
 
     @staticmethod
     def _write_timestamp(path, ts=None, config=None):
+        """Write timestamp."""
         if ts is None:
             ts = datetime.now().timestamp()
         if config is None:
@@ -73,12 +77,14 @@ class TestContainersDir:
         assert not WAL_PATH.exists()
 
     def test_no_timestamp(self) -> None:
+        """Test no timestamp."""
         args = (PROGRAM_NAME, "-rtvv", TMP_FN)
         res = cli.main(args)
         assert res
         self._assert_sizes(1)
 
     def test_timestamp(self):
+        """Test timestamp."""
         self._write_timestamp(FN)
         args = (PROGRAM_NAME, "-rtvv", TMP_FN)
         res = cli.main(args)
@@ -86,6 +92,7 @@ class TestContainersDir:
         self._assert_sizes(0)
 
     def test_different_config(self):
+        """Test different config."""
         self._write_timestamp(FN)
         args = (PROGRAM_NAME, "-brtvv", TMP_FN)
         res = cli.main(args)
@@ -93,6 +100,7 @@ class TestContainersDir:
         self._assert_sizes(1)
 
     def test_timestamp_dir(self):
+        """Test timestamp dir."""
         self._write_timestamp(TMP_ROOT)
         args = (PROGRAM_NAME, "-rtvv", TMP_FN)
         res = cli.main(args)
@@ -100,6 +108,7 @@ class TestContainersDir:
         self._assert_sizes(0)
 
     def _setup_child_dir(self):
+        """Set up child dir."""
         tmp_child_dir = TMP_ROOT / "child"
         tmp_child_dir.mkdir(exist_ok=True)
         shutil.copy(SRC_JPG, tmp_child_dir)
@@ -107,6 +116,7 @@ class TestContainersDir:
         return tmp_child_dir
 
     def test_timestamp_children(self):
+        """Test timestamp children."""
         tmp_child_dir = self._setup_child_dir()
         self._write_timestamp(tmp_child_dir)
         args = (PROGRAM_NAME, "-rtvv", str(TMP_ROOT))
@@ -116,6 +126,7 @@ class TestContainersDir:
         self._assert_sizes(0, tmp_child_dir)
 
     def test_timestamp_parents(self):
+        """Test timestamp parents."""
         tmp_child_dir = self._setup_child_dir()
 
         self._write_timestamp(TMP_ROOT)
@@ -127,6 +138,7 @@ class TestContainersDir:
         assert not (tmp_child_dir / WAL_FN).exists()
 
     def test_journal_cleanup(self) -> None:
+        """Test journal cleanup."""
         args = (PROGRAM_NAME, "-rtvv", TMP_FN)
         res = cli.main(args)
         assert res
@@ -134,6 +146,7 @@ class TestContainersDir:
 
     @staticmethod
     def _write_wal(path, ts=None, config=None):
+        """Write wal."""
         if ts is None:
             ts = datetime.now().timestamp()
         if config is None:
@@ -142,6 +155,7 @@ class TestContainersDir:
         YAML().dump(yaml, WAL_PATH)
 
     def test_timestamp_read_journal(self):
+        """Test timestamp read journal."""
         self._write_wal(TMP_FN)
         args = (PROGRAM_NAME, "-rtvv", TMP_FN)
         res = cli.main(args)

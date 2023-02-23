@@ -12,18 +12,19 @@ from PIL.TiffImagePlugin import TiffImageFile
 from picopt.handlers.handler import Format, Handler
 from picopt.stats import ReportStats
 
-
 PPM_FORMAT_OBJ = Format(PpmImageFile.format, True, False)
 BPM_FORMAT_OBJ = Format(BmpImageFile.format, True, False)
-CONVERTABLE_FORMAT_OBJS = set((BPM_FORMAT_OBJ, PPM_FORMAT_OBJ))
-CONVERTABLE_FORMATS = set([format.format for format in CONVERTABLE_FORMAT_OBJS])
+CONVERTABLE_FORMAT_OBJS = {BPM_FORMAT_OBJ, PPM_FORMAT_OBJ}
+CONVERTABLE_FORMATS = {format.format for format in CONVERTABLE_FORMAT_OBJS}
 PNG_ANIMATED_FORMAT_OBJ = Format(PngImageFile.format, True, True)
 TIFF_FORMAT = TiffImageFile.format
 TIFF_FORMAT_OBJ = Format(TIFF_FORMAT, True, False)
 TIFF_ANIMATED_FORMAT_OBJ = Format(TIFF_FORMAT, True, True)
-_NATIVE_ONLY_FORMATS = set(
-    (PNG_ANIMATED_FORMAT_OBJ, TIFF_ANIMATED_FORMAT_OBJ, TIFF_FORMAT_OBJ)
-)
+_NATIVE_ONLY_FORMATS = {
+    PNG_ANIMATED_FORMAT_OBJ,
+    TIFF_ANIMATED_FORMAT_OBJ,
+    TIFF_FORMAT_OBJ,
+}
 
 
 class ImageHandler(Handler, metaclass=ABCMeta):
@@ -33,8 +34,7 @@ class ImageHandler(Handler, metaclass=ABCMeta):
     PREFERRED_PROGRAM: str = "unimplemented"
 
     def _optimize_with_progs(self) -> ReportStats:
-        """
-        Use the correct optimizing functions in sequence.
+        """Use the correct optimizing functions in sequence.
 
         And report back statistics.
         """

@@ -3,7 +3,6 @@ import os
 import shutil
 import time
 import traceback
-
 from multiprocessing.pool import ApplyResult, Pool
 from pathlib import Path
 from typing import Optional, Type
@@ -229,7 +228,7 @@ class Walk(Configurable):
             result = self._pool.apply_async(handler.repack)
         except Exception as exc:
             traceback.print_exc()
-            args = tuple([exc])
+            args = (exc,)
             result = self._pool.apply_async(handler.error, args=args)
         return result
 

@@ -15,9 +15,7 @@ class WebPAnimatedBase(ContainerHandler):
 
     OUTPUT_FORMAT: str = WebP.OUTPUT_FORMAT
     PROGRAMS = ContainerHandler.init_programs(("webpmux", "img2webp"))
-    _OPEN_WITH_PIL_FORMAT_OBJS = set(
-        [PNG_ANIMATED_FORMAT_OBJ, TIFF_ANIMATED_FORMAT_OBJ]
-    )
+    _OPEN_WITH_PIL_FORMAT_OBJS = {PNG_ANIMATED_FORMAT_OBJ, TIFF_ANIMATED_FORMAT_OBJ}
     _IMG2WEBP_ARGS_PREFIX = (PROGRAMS["img2webp"], "-min_size")
     _WEBPMUX_ARGS_PREFIX = (PROGRAMS["webpmux"], "-get", "frame")
     _LOSSLESS = True

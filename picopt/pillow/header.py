@@ -1,6 +1,5 @@
 """Unpack items from a file descriptor."""
 import struct
-
 from dataclasses import dataclass
 from typing import BinaryIO, Union
 

@@ -72,7 +72,7 @@ class WebPLossless(WebP):
         "-z",
         "9",
     ]
-    _PIL2PNG_FORMATS = CONVERTABLE_FORMAT_OBJS | set([TIFF_FORMAT_OBJ])
+    _PIL2PNG_FORMATS = CONVERTABLE_FORMAT_OBJS | {TIFF_FORMAT_OBJ}
 
     def pil2png(self, old_path: Path, new_path: Path) -> Path:
         """Internally convert unhandled formats to uncompressed png for cwebp."""
@@ -109,8 +109,7 @@ class WebPLossy(WebP):
 
 
 class Gif2WebP(WebPBase):
-    """
-    Animated WebP format class.
+    """Animated WebP format class.
 
     There are no easy animated WebP optimization tools. So this only
     converts animated gifs.
