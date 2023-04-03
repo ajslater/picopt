@@ -146,7 +146,7 @@ class Walk(Configurable):
 
         return bool(mtime <= walk_after)
 
-    def _clean_up_working_files(self, path):
+    def _clean_up_working_files(self, path) -> None:
         """Auto-clean old working temp files if encountered."""
         try:
             if path.is_dir():
@@ -240,7 +240,7 @@ class Walk(Configurable):
             result = self._pool.apply_async(handler.error, args=args)
         return result
 
-    def _skip_older_than_timestamp(self, path):
+    def _skip_older_than_timestamp(self, path) -> None:
         """Report on skipping files older than the timestamp."""
         color = "green"
         if self._config.verbose == 1:
@@ -319,7 +319,7 @@ class Walk(Configurable):
     ##########
     # Finish #
     ##########
-    def _report_totals_bytes_in(self):
+    def _report_totals_bytes_in(self) -> None:
         """Report Totals if there were bytes in."""
         bytes_saved = self._totals.bytes_in - self._totals.bytes_out
         percent_bytes_saved = bytes_saved / self._totals.bytes_in * 100
