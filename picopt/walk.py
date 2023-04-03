@@ -45,6 +45,35 @@ class Walk(Configurable):
         convert_to = convert_handler.OUTPUT_FORMAT
         cprint(f"Converting {convert_from} to {convert_to}", "cyan")
 
+    def _init_run_verbose(self) -> None:
+        """Print verbose init messages."""
+        print("Optimizing formats:", *sorted(self._config.formats))
+        if self._config.convert_to:
+            if WebP.OUTPUT_FORMAT in self._config.convert_to:
+                self._convert_message(self._config._convertable_formats.webp, WebP)
+            elif Png.OUTPUT_FORMAT in self._config.convert_to:
+                self._convert_message(self._config._convertable_formats.png, Png)
+            if Zip.OUTPUT_FORMAT in self._config.convert_to:
+                self._convert_message(frozenset([Zip.INPUT_FORMAT_RAR]), Zip)
+            if CBZ.OUTPUT_FORMAT in self._config.convert_to:
+                self._convert_message(frozenset([CBZ.INPUT_FORMAT_RAR]), CBZ)
+        if self._config.after is not None:
+            print("Optimizing after", time.ctime(self._config.after))
+
+    def _init_run_timestamps(self) -> None:
+        """Init timestamps."""
+        self._timestamps = Treestamps.map_factory(
+            self._top_paths,
+            PROGRAM_NAME,
+            self._config.verbose,
+            self._config.symlinks,
+            self._config.ignore,
+            self._config,
+            TIMESTAMPS_CONFIG_KEYS,
+        )
+        for timestamps in self._timestamps.values():
+            OldTimestamps(self._config, timestamps).import_old_timestamps()
+
     def _init_run(self):
         """Init Run."""
         # Validate top_paths
@@ -56,32 +85,11 @@ class Walk(Configurable):
 
         # Tell the user what we're doing
         if self._config.verbose:
-            print("Optimizing formats:", *sorted(self._config.formats))
-            if self._config.convert_to:
-                if WebP.OUTPUT_FORMAT in self._config.convert_to:
-                    self._convert_message(self._config._convertable_formats.webp, WebP)
-                elif Png.OUTPUT_FORMAT in self._config.convert_to:
-                    self._convert_message(self._config._convertable_formats.png, Png)
-                if Zip.OUTPUT_FORMAT in self._config.convert_to:
-                    self._convert_message(frozenset([Zip.INPUT_FORMAT_RAR]), Zip)
-                if CBZ.OUTPUT_FORMAT in self._config.convert_to:
-                    self._convert_message(frozenset([CBZ.INPUT_FORMAT_RAR]), CBZ)
-            if self._config.after is not None:
-                print("Optimizing after", time.ctime(self._config.after))
+            self._init_run_verbose()
 
         # Init timestamps
         if self._config.timestamps:
-            self._timestamps = Treestamps.map_factory(
-                self._top_paths,
-                PROGRAM_NAME,
-                self._config.verbose,
-                self._config.symlinks,
-                self._config.ignore,
-                self._config,
-                TIMESTAMPS_CONFIG_KEYS,
-            )
-            for timestamps in self._timestamps.values():
-                OldTimestamps(self._config, timestamps).import_old_timestamps()
+            self._init_run_timestamps()
 
     ############
     # Checkers #
@@ -232,6 +240,45 @@ class Walk(Configurable):
             result = self._pool.apply_async(handler.error, args=args)
         return result
 
+    def _skip_older_than_timestamp(self, path):
+        """Report on skipping files older than the timestamp."""
+        color = "green"
+        if self._config.verbose == 1:
+            cprint(".", color, end="")
+        elif self._config.verbose > 1:
+            cprint(f"Skip older than timestamp: {path}", color)
+
+    def _is_walk_file_skip(
+        self,
+        handler: Optional[Handler],
+        path: Path,
+        container_mtime: Optional[float],
+        top_path: Path,
+    ) -> bool:
+        """Decide on skip the file or not."""
+        if handler is None:
+            return True
+
+        if self._is_skippable(path):
+            if self._config.verbose == 1:
+                cprint(".", "white", attrs=["dark"], end="")
+            return True
+
+        if path.name.rfind(Handler.WORKING_SUFFIX) > -1:
+            self._clean_up_working_files(path)
+            if self._config.verbose == 1:
+                cprint(".", "yellow", end="")
+            return True
+
+        if path.is_dir():
+            if self._config.recurse or container_mtime is not None:
+                return True
+        elif self._is_older_than_timestamp(path, top_path, container_mtime):
+            self._skip_older_than_timestamp(path)
+            return True
+
+        return False
+
     def walk_file(
         self,
         path: Path,
@@ -241,44 +288,19 @@ class Walk(Configurable):
         is_case_sensitive: bool,
     ) -> Optional[ApplyResult]:
         """Optimize an individual file."""
-        result: Optional[ApplyResult] = None
         try:
-            # START DECIDE
-            if self._is_skippable(path):
-                if self._config.verbose == 1:
-                    cprint(".", "white", attrs=["dark"], end="")
-                return result
-
-            if path.name.rfind(Handler.WORKING_SUFFIX) > -1:
-                self._clean_up_working_files(path)
-                if self._config.verbose == 1:
-                    cprint(".", "yellow", end="")
-                return result
+            handler = create_handler(self._config, path, is_case_sensitive, convert)
+            if self._is_walk_file_skip(handler, path, container_mtime, top_path):
+                return
 
             if path.is_dir():
-                if self._config.recurse or container_mtime is not None:
-                    result = self.walk_dir(
-                        path, top_path, container_mtime, convert, is_case_sensitive
-                    )
-                return result
-
-            if self._is_older_than_timestamp(path, top_path, container_mtime):
-                color = "green"
-                if self._config.verbose == 1:
-                    cprint(".", color, end="")
-                elif self._config.verbose > 1:
-                    cprint(f"Skip older than timestamp: {path}", color)
-                return result
-            # END DECIDE
-
-            handler = create_handler(self._config, path, is_case_sensitive, convert)
-
-            if handler is None:
-                return result
+                return self.walk_dir(
+                    path, top_path, container_mtime, convert, is_case_sensitive
+                )
 
             if self._config.list_only:
                 print(f"{path}: {handler.__class__.__name__}")
-                return result
+                return
 
             if isinstance(handler, ContainerHandler):
                 # Unpack inline, not in the pool, and walk immediately like dirs.
@@ -297,36 +319,39 @@ class Walk(Configurable):
     ##########
     # Finish #
     ##########
+    def _report_totals_bytes_in(self):
+        """Report Totals if there were bytes in."""
+        bytes_saved = self._totals.bytes_in - self._totals.bytes_out
+        percent_bytes_saved = bytes_saved / self._totals.bytes_in * 100
+        msg = ""
+        if self._config.test:
+            if percent_bytes_saved > 0:
+                msg += "Could save"
+            elif percent_bytes_saved == 0:
+                msg += "Could even out for"
+            else:
+                msg += "Could lose"
+        else:
+            if percent_bytes_saved > 0:
+                msg += "Saved"
+            elif percent_bytes_saved == 0:
+                msg += "Evened out"
+            else:
+                msg = "Lost"
+        msg += " a total of {} or {:.{prec}f}%".format(
+            naturalsize(bytes_saved), percent_bytes_saved, prec=2
+        )
+        if self._config.verbose:
+            print(msg)
+            if self._config.test:
+                print("Test run did not change any files.")
+
     def _report_totals(self) -> None:
         """Report the total number and percent of bytes saved."""
         if self._config.verbose == 1:
             print()
         if self._totals.bytes_in:
-            bytes_saved = self._totals.bytes_in - self._totals.bytes_out
-            percent_bytes_saved = bytes_saved / self._totals.bytes_in * 100
-            msg = ""
-            if self._config.test:
-                if percent_bytes_saved > 0:
-                    msg += "Could save"
-                elif percent_bytes_saved == 0:
-                    msg += "Could even out for"
-                else:
-                    msg += "Could lose"
-            else:
-                if percent_bytes_saved > 0:
-                    msg += "Saved"
-                elif percent_bytes_saved == 0:
-                    msg += "Evened out"
-                else:
-                    msg = "Lost"
-            msg += " a total of {} or {:.{prec}f}%".format(
-                naturalsize(bytes_saved), percent_bytes_saved, prec=2
-            )
-            if self._config.verbose:
-                print(msg)
-                if self._config.test:
-                    print("Test run did not change any files.")
-
+            self._report_totals_bytes_in()
         else:
             if self._config.verbose:
                 print("Didn't optimize any files.")
@@ -357,7 +382,7 @@ class Walk(Configurable):
 
     @classmethod
     def _is_case_sensitive(cls, dirpath: Path) -> bool:
-        """Deterimine if a path is on a case sensitive filesystem."""
+        """Determine if a path is on a case sensitive filesystem."""
         lowercase_path = dirpath / cls.LOWERCASE_TESTNAME
         result = False
         try:

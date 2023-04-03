@@ -187,6 +187,61 @@ def _config_formats_list_to_set(config, key) -> frozenset[str]:
     return frozenset(val_set)
 
 
+def _update_formats_png(formats, convert_handlers, config):
+    """Update formats if converting to png."""
+    convertable_formats = set(PNG_CONVERTABLE_FORMATS)
+    formats |= PNG_CONVERTABLE_FORMATS
+    format_objs = deepcopy(_PNG_CONVERTABLE_FORMAT_OBJS)
+    if TIFF_FORMAT in formats:
+        format_objs.add(TIFF_FORMAT_OBJ)
+        convertable_formats.add(TIFF_FORMAT)
+    convert_handlers[Png] = format_objs
+    config[PROGRAM_NAME]["_convertable_formats"]["png"] = frozenset(convertable_formats)
+    return formats
+
+
+def _update_formats_webp_lossless(formats, convert_handlers, config):
+    """Update formats if converting to webp lossless."""
+    convertable_formats = set(WEBP_CONVERTABLE_FORMATS)
+    formats |= WEBP_CONVERTABLE_FORMATS
+    format_objs = deepcopy(_WEBP_CONVERTABLE_FORMAT_OBJS)
+    if TIFF_FORMAT in formats:
+        format_objs.add(TIFF_FORMAT_OBJ)
+        convertable_formats.add(TIFF_FORMAT)
+    convert_handlers[WebPLossless] = format_objs
+
+    convert_handlers[Gif2WebP] = {
+        Gif.OUTPUT_FORMAT_OBJ,
+        AnimatedGif.OUTPUT_FORMAT_OBJ,
+    }
+    if TIFF_FORMAT in formats:
+        if WebPAnimatedLossless not in convert_handlers:
+            convert_handlers[WebPAnimatedLossless] = set()
+        convert_handlers[WebPAnimatedLossless].add(TIFF_ANIMATED_FORMAT_OBJ)
+    if Png.OUTPUT_FORMAT in formats:
+        if WebPAnimatedLossless not in convert_handlers:
+            convert_handlers[WebPAnimatedLossless] = set()
+        convert_handlers[WebPAnimatedLossless].add(PNG_ANIMATED_FORMAT_OBJ)
+    config[PROGRAM_NAME]["_convertable_formats"]["webp"] = frozenset(
+        convertable_formats
+    )
+    return formats
+
+
+def _update_formats_zip(formats, convert_handlers):
+    """Update formats if converting to zip."""
+    formats |= {Zip.INPUT_FORMAT_RAR}
+    convert_handlers[Zip] = {Zip.INPUT_FORMAT_OBJ_RAR}
+    return formats
+
+
+def _update_formats_cbz(formats, convert_handlers):
+    """Update formats if converting to cbz."""
+    formats |= {CBZ.INPUT_FORMAT_RAR}
+    convert_handlers[CBZ] = {CBZ.INPUT_FORMAT_OBJ_RAR}
+    return formats
+
+
 def _update_formats(config: Configuration) -> dict:
     formats = _config_formats_list_to_set(config, "formats")
     if "_extra_formats" in config[PROGRAM_NAME]:
@@ -198,47 +253,13 @@ def _update_formats(config: Configuration) -> dict:
     config[PROGRAM_NAME]["convert_to"].set(sorted(convert_to))
     convert_handlers: dict[typing.Type[Handler], set[Format]] = {}
     if Png.OUTPUT_FORMAT in convert_to:
-        convertable_formats = set(PNG_CONVERTABLE_FORMATS)
-        formats |= PNG_CONVERTABLE_FORMATS
-        format_objs = deepcopy(_PNG_CONVERTABLE_FORMAT_OBJS)
-        if TIFF_FORMAT in formats:
-            format_objs.add(TIFF_FORMAT_OBJ)
-            convertable_formats.add(TIFF_FORMAT)
-        convert_handlers[Png] = format_objs
-        config[PROGRAM_NAME]["_convertable_formats"]["png"] = frozenset(
-            convertable_formats
-        )
+        formats = _update_formats_png(formats, convert_handlers, config)
     if WebPLossless.OUTPUT_FORMAT in convert_to:
-        convertable_formats = set(WEBP_CONVERTABLE_FORMATS)
-        formats |= WEBP_CONVERTABLE_FORMATS
-        format_objs = deepcopy(_WEBP_CONVERTABLE_FORMAT_OBJS)
-        if TIFF_FORMAT in formats:
-            format_objs.add(TIFF_FORMAT_OBJ)
-            convertable_formats.add(TIFF_FORMAT)
-        convert_handlers[WebPLossless] = format_objs
-
-        convert_handlers[Gif2WebP] = {
-            Gif.OUTPUT_FORMAT_OBJ,
-            AnimatedGif.OUTPUT_FORMAT_OBJ,
-        }
-        if TIFF_FORMAT in formats:
-            if WebPAnimatedLossless not in convert_handlers:
-                convert_handlers[WebPAnimatedLossless] = set()
-            convert_handlers[WebPAnimatedLossless].add(TIFF_ANIMATED_FORMAT_OBJ)
-        if Png.OUTPUT_FORMAT in formats:
-            if WebPAnimatedLossless not in convert_handlers:
-                convert_handlers[WebPAnimatedLossless] = set()
-            convert_handlers[WebPAnimatedLossless].add(PNG_ANIMATED_FORMAT_OBJ)
-        config[PROGRAM_NAME]["_convertable_formats"]["webp"] = frozenset(
-            convertable_formats
-        )
+        formats = _update_formats_webp_lossless(formats, convert_handlers, config)
     if Zip.OUTPUT_FORMAT in convert_to:
-        formats |= {Zip.INPUT_FORMAT_RAR}
-        convert_handlers[Zip] = {Zip.INPUT_FORMAT_OBJ_RAR}
+        formats = _update_formats_zip(formats, convert_handlers)
     if CBZ.OUTPUT_FORMAT in convert_to:
-        formats |= {CBZ.INPUT_FORMAT_RAR}
-        convert_handlers[CBZ] = {CBZ.INPUT_FORMAT_OBJ_RAR}
-
+        formats = _update_formats_cbz(formats, convert_handlers)
     config[PROGRAM_NAME]["formats"].set(sorted(formats))
 
     return convert_handlers

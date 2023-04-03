@@ -83,6 +83,50 @@ def _get_handler_class(
     return handler_cls
 
 
+def _create_handler_get_format(
+    config: AttrDict, path: Path
+) -> tuple[Optional[Format], Metadata]:
+    format, metadata = _get_image_format(path, config.keep_metadata)
+    if not format:
+        format = _get_container_format(path)
+    return format, metadata
+
+
+def _create_handler_get_handler_class(
+    config: AttrDict, convert: bool, format: Optional[Format]
+) -> Optional[Type[Handler]]:
+    handler_cls: Optional[Type[Handler]] = None
+    if not format:
+        return handler_cls
+    if convert:
+        handler_cls = _get_handler_class(config, "convert", format)
+    if not handler_cls:
+        handler_cls = _get_handler_class(config, "native", format)
+    return handler_cls
+
+
+def _create_handler_no_handler_class(config: AttrDict, path: Path) -> None:
+    if config.verbose > 1 and not config.list_only:
+        if format:
+            fmt = format.format
+            if format.lossless:
+                fmt += " lossless"
+            else:
+                fmt += " lossy"
+            if format.animated:
+                fmt += " animated"
+        else:
+            fmt = "unknown"
+        cprint(
+            f"Skipped {path}: ({fmt}) is not an enabled image or container.",
+            "white",
+            attrs=["dark"],
+        )
+    else:
+        cprint(".", "white", attrs=["dark"], end="")
+    return None
+
+
 def create_handler(
     config: AttrDict, path: Path, is_case_sensitive: bool, convert: bool = True
 ) -> Optional[Handler]:
@@ -92,38 +136,13 @@ def create_handler(
     metadata: Metadata = Metadata()
     handler_cls: Optional[Type[Handler]] = None
     try:
-        format, metadata = _get_image_format(path, config.keep_metadata)
-        if not format:
-            format = _get_container_format(path)
-
-        if format:
-            if convert:
-                handler_cls = _get_handler_class(config, "convert", format)
-            if not handler_cls:
-                handler_cls = _get_handler_class(config, "native", format)
+        format, metadata = _create_handler_get_format(config, path)
+        handler_cls = _create_handler_get_handler_class(config, convert, format)
     except OSError as exc:
         cprint("WARNING: getting handler", str(exc), "yellow")
 
     if handler_cls and format is not None:
         handler = handler_cls(config, path, format, metadata, is_case_sensitive)
     else:
-        if config.verbose > 1 and not config.list_only:
-            if format:
-                fmt = format.format
-                if format.lossless:
-                    fmt += " lossless"
-                else:
-                    fmt += " lossy"
-                if format.animated:
-                    fmt += " animated"
-            else:
-                fmt = "unknown"
-            cprint(
-                f"Skipped {path}: ({fmt}) is not an enabled image or container.",
-                "white",
-                attrs=["dark"],
-            )
-        else:
-            cprint(".", "white", attrs=["dark"], end="")
-        handler = None
+        handler = _create_handler_no_handler_class(config, path)
     return handler

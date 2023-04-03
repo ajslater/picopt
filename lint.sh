@@ -10,7 +10,6 @@ if [ "$(uname)" = "Darwin" ]; then
     poetry run radon mi --min B .
 fi
 npm run lint
-npx prettier --check --parser ini setup.cfg
 npm run check
 if [ "$(uname)" = "Darwin" ]; then
     # shellcheck disable=2035
