@@ -58,7 +58,7 @@ class Handler(ABC):
         if not args[0]:
             raise ValueError(f"{args}")
         subprocess.run(
-            args,
+            args,  # noqa S603
             check=True,
             text=True,
             stdout=subprocess.DEVNULL,
