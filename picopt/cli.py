@@ -5,7 +5,7 @@ from argparse import Action, Namespace, RawDescriptionHelpFormatter
 from importlib.metadata import PackageNotFoundError, version
 from typing import Optional
 
-from termcolor import colored
+from termcolor import colored, cprint
 
 from picopt import PROGRAM_NAME, walk
 from picopt.config import ALL_FORMATS, DEFAULT_HANDLERS, get_config
@@ -217,11 +217,15 @@ def get_arguments(params: Optional[tuple[str, ...]] = None) -> Namespace:
 
 def main(args: Optional[tuple[str, ...]] = None) -> bool:
     """Process command line arguments and walk inputs."""
-    arguments = get_arguments(args)
+    try:
+        arguments = get_arguments(args)
 
-    config = get_config(arguments)
-    wob = walk.Walk(config)
-    return wob.run()
+        config = get_config(arguments)
+        wob = walk.Walk(config)
+        return wob.run()
+    except Exception as exc:
+        cprint(f"ERROR: {exc}", "red")
+        exit(1)
 
 
 if __name__ == "__main__":

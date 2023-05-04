@@ -3,6 +3,7 @@
 ## v3.2.6
 
 - Fix cleanup of temp dir when repacking a container or animated images fails.
+- Simple error message instead of stack trace on config failure.
 
 ## v3.2.5
 

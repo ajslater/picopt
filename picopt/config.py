@@ -329,10 +329,7 @@ def get_config(
 ) -> AttrDict:
     """Get the config dict, layering env and args over defaults."""
     config = Configuration(PROGRAM_NAME, modname=modname, read=False)
-    try:
-        config.read()
-    except Exception as exc:
-        cprint(f"WARNING: {exc}")
+    config.read()
     if args and args.picopt and args.picopt.config:
         config.set_file(args.picopt.config)
     config.set_env()
@@ -345,5 +342,5 @@ def get_config(
     _set_timestamps(config)
     ad = config.get(TEMPLATE)
     if not isinstance(ad, AttrDict):
-        raise ValueError()
+        raise ValueError("Not a valid config")
     return ad.picopt
