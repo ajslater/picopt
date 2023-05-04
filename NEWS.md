@@ -1,5 +1,9 @@
 # 📰 Picopt News
 
+## v3.2.6
+
+- Fix cleanup of temp dir when repacking a container or animated images fails.
+
 ## v3.2.5
 
 - Fix occasionally removing both final and originals on case insensitive filesystem.

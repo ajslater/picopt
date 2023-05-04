@@ -83,9 +83,9 @@ class ContainerHandler(Handler, metaclass=ABCMeta):
 
     def repack(self) -> ReportStats:
         """Create a new container and clean up the tmp dir."""
+        new_path = self.get_working_path()
         try:
             # archive into new filename
-            new_path = self.get_working_path()
             if self.config.verbose:
                 print(f"Repacking {self.final_path}", end="")
             self.pack_into(new_path)
@@ -98,4 +98,5 @@ class ContainerHandler(Handler, metaclass=ABCMeta):
                 report_stats.report()
             return report_stats
         except Exception as exc:
+            shutil.rmtree(self.tmp_container_dir, ignore_errors=True)
             return self.error(exc)
