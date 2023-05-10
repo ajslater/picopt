@@ -4,7 +4,7 @@ set -euo pipefail
 
 RELEASE=packages/pngout-20200115-linux-static
 URL=http://static.jonof.id.au/dl/kenutils/$RELEASE.tar.gz
-TARBALL="$(dirname "$0")/$RELEASE.tar.gz"
+TARBALL="$(dirname "$0")/../$RELEASE.tar.gz"
 BIN_NAME=$RELEASE/amd64/pngout-static
 DEST=/usr/local/bin/pngout
 
