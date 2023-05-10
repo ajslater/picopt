@@ -16,7 +16,8 @@ RUN apt-get update \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /
-COPY --chown=circleci:circleci ci ci
+COPY --chown=circleci:circleci in bin
+COPY --chown=circleci:circleci packages packages
 RUN bin/mozjpeg.sh
 # hadolint ignore=DL3059
 RUN bin/pngout.sh

@@ -20,6 +20,7 @@ RUN apt-get update \
 WORKDIR /app
 RUN chown circleci:circleci /app
 COPY --chown=circleci:circleci bin bin
+COPY --chown=circleci:circleci packages packages
 RUN bin/mozjpeg.sh
 # hadolint ignore=DL3059
 RUN bin/pngout.sh
