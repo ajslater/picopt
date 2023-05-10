@@ -156,4 +156,4 @@ class TestTimestamps:
         args = (PROGRAM_NAME, "-rtvvv", TMP_FN)
         res = cli.main(args)
         assert res
-        self._assert_sizes(1)
+        self._assert_sizes(0)
