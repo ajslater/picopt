@@ -147,7 +147,14 @@ class TestTimestamps:
             ts = datetime.now(tz=timezone.utc).timestamp()
         if config is None:
             config = DEFAULT_CONFIG
-        yaml = {"config": config, "wal": [{str(path): ts}]}
+        ts_config = {**TREESTAMPS_CONFIG}
+        for key in TREESTAMPS_CONFIG:
+            ts_config[key] = config[key]
+        yaml = {
+            "config": config,
+            "treestamps_config": ts_config,
+            "wal": [{str(path): ts}],
+        }
         YAML().dump(yaml, WAL_PATH)
 
     def test_timestamp_read_journal(self):
@@ -156,4 +163,4 @@ class TestTimestamps:
         args = (PROGRAM_NAME, "-rtvvv", TMP_FN)
         res = cli.main(args)
         assert res
-        self._assert_sizes(1)
+        self._assert_sizes(0)
