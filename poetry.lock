@@ -915,14 +915,14 @@ files = [
 
 [[package]]
 name = "treestamps"
-version = "0.4.1"
+version = "0.4.2"
 description = "Create timestamp records for recursive operations on directory trees."
 category = "main"
 optional = false
 python-versions = ">=3.9,<4.0"
 files = [
-    {file = "treestamps-0.4.1-py3-none-any.whl", hash = "sha256:4e867167d28f59eeb579fb9acf221b952f27febc051f2029d17a201163bfa2b1"},
-    {file = "treestamps-0.4.1.tar.gz", hash = "sha256:ba06e0569e04358e52231cac486c575f980d5639d4a5ce2a02bc8200a571e5a6"},
+    {file = "treestamps-0.4.2-py3-none-any.whl", hash = "sha256:d195373ea56e4d92d4a127b154ea27d41b0e6246be02d7e8fedc96cc822d3955"},
+    {file = "treestamps-0.4.2.tar.gz", hash = "sha256:806e5b9daeef6c6cfa5cb0c878d8739f07c03cb4b47fa27896613373218d9be8"},
 ]
 
 [package.dependencies]
@@ -971,4 +971,4 @@ toml = "*"
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.9"
-content-hash = "9c10f4aab773b6ae3b74895e445a93cbe2d0ce38f03cbbe1b325c5084a4f7ada"
+content-hash = "ad3eaa40d3f3ccb2169e955d9f7dd6463028f984afd08cdb42f9519f4a731d4b"

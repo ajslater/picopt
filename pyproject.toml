@@ -4,7 +4,7 @@ build-backend = ["poetry.core.masonry.api"]
 
 [tool.poetry]
 name = "picopt"
-version = "3.3.1"
+version = "3.3.2"
 description = "A multi format lossless image optimizer that uses external tools"
 license = "GPL-3.0-only"
 authors = ["AJ Slater <aj@slater.net>"]
@@ -34,7 +34,7 @@ python-dateutil = "^2.8"
 rarfile = "^4.0"
 "ruamel.yaml" = "^0.17.16"
 termcolor = "^2.0.1"
-treestamps = "^0.4.1"
+treestamps = "^0.4.2"
 Pillow = "^9.0"
 
 [tool.poetry.group.dev.dependencies]
