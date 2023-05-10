@@ -17,9 +17,9 @@ RUN apt-get update \
 
 WORKDIR /
 COPY --chown=circleci:circleci ci ci
-RUN ci/mozjpeg.sh
+RUN bin/mozjpeg.sh
 # hadolint ignore=DL3059
-RUN ci/pngout.sh
+RUN bin/pngout.sh
 
 # hadolint ignore=DL3059,DL3013
 RUN pip3 install --no-cache-dir -U picopt
