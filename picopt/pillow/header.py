@@ -16,10 +16,10 @@ class ImageHeader:
     """The seek location and value of a byte header."""
 
     offset: int
-    bytes: tuple[bytes, ...]
+    compare_bytes: tuple[bytes, ...]
 
     def compare(self, img: BinaryIO) -> bool:
         """Seek to a spot in a binary file and compare a byte array."""
         img.seek(self.offset)
-        compare = unpack("c", len(self.bytes), img)
-        return compare == self.bytes
+        compare = unpack("c", len(self.compare_bytes), img)
+        return compare == self.compare_bytes

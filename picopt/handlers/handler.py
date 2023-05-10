@@ -10,14 +10,15 @@ from confuse.templates import AttrDict
 from termcolor import cprint
 
 from picopt import PROGRAM_NAME
+from picopt.data import PathInfo, ReportInfo
 from picopt.stats import ReportStats
 
 
 @dataclass(eq=True, frozen=True)
-class Format:
+class FileFormat:
     """A file format, with image attributes."""
 
-    format: str
+    format_str: str
     lossless: bool = True
     animated: bool = False
 
@@ -35,8 +36,8 @@ class Handler(ABC):
     """FileType superclass for image and container formats."""
 
     BEST_ONLY: bool = True
-    OUTPUT_FORMAT: str = "unimplemented"
-    OUTPUT_FORMAT_OBJ: Format = Format(OUTPUT_FORMAT, False, False)
+    OUTPUT_FORMAT_STR: str = "unimplemented"
+    OUTPUT_FILE_FORMAT: FileFormat = FileFormat(OUTPUT_FORMAT_STR, False, False)
     INTERNAL: str = "python_internal"
     PROGRAMS: dict[str, Optional[str]] = {}
     WORKING_SUFFIX: str = f"{PROGRAM_NAME}__tmp"
@@ -56,7 +57,8 @@ class Handler(ABC):
     def run_ext(args: tuple[str, ...]) -> None:
         """Run EXTERNAL program."""
         if not args[0]:
-            raise ValueError(f"{args}")
+            msg = f"{args}"
+            raise ValueError(msg)
         subprocess.run(
             args,  # noqa S603
             check=True,
@@ -66,14 +68,14 @@ class Handler(ABC):
         )
 
     @classmethod
-    def native_input_format_objs(cls) -> set[Format]:
+    def native_input_file_formats(cls) -> set[FileFormat]:
         """Return input formats handled without conversion."""
-        return {cls.OUTPUT_FORMAT_OBJ}
+        return {cls.OUTPUT_FILE_FORMAT}
 
     @classmethod
     def _output_suffix(cls) -> str:
         """Return the suffix without a leading dot."""
-        return cls.OUTPUT_FORMAT.lower()
+        return cls.OUTPUT_FORMAT_STR.lower()
 
     @classmethod
     def output_suffix(cls) -> str:
@@ -85,33 +87,32 @@ class Handler(ABC):
         cls,
         convert_handlers: dict,
         available_programs: set,
-        format_obj: Format,
+        file_format: FileFormat,
     ):
         """Can this handler run with available programs."""
-        handled_format_objs = cls.native_input_format_objs() | convert_handlers.get(
+        handled_file_formats = cls.native_input_file_formats() | convert_handlers.get(
             cls, set()
         )
-        return format_obj in handled_format_objs and bool(
+        return file_format in handled_file_formats and bool(
             available_programs & set(cls.PROGRAMS.keys())
         )
 
     def __init__(
         self,
         config: AttrDict,
-        original_path: Path,
-        input_format_obj: Format,
+        path_info: PathInfo,
+        input_file_format: FileFormat,
         metadata: Metadata,
-        is_case_sensitive: bool,
     ):
         """Initialize handler."""
         self.config: AttrDict = config
-        self.original_path: Path = original_path
+        self.original_path: Path = path_info.path
         self.working_paths: set[Path] = set()
         self.final_path: Path = self.original_path.with_suffix(self.output_suffix())
-        self.input_format_obj: Format = input_format_obj
+        self.input_file_format: FileFormat = input_file_format
         self.metadata = metadata
-        self.convert = input_format_obj != self.OUTPUT_FORMAT_OBJ
-        self.is_case_sensitive = is_case_sensitive
+        self.convert = input_file_format != self.OUTPUT_FILE_FORMAT
+        self.is_case_sensitive = path_info.is_case_sensitive
 
     def get_working_path(self, identifier: str = "") -> Path:
         """Return a working path with a custom suffix."""
@@ -159,6 +160,5 @@ class Handler(ABC):
 
     def error(self, exc: Exception) -> ReportStats:
         """Return an error result."""
-        return ReportStats(
-            self.original_path, None, self.config.test, self.convert, exc=exc
-        )
+        info = ReportInfo(self.original_path, self.convert, self.config.test, exc=exc)
+        return ReportStats(info)

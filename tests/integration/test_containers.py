@@ -27,6 +27,9 @@ else:
         "igp-twss.epub": (292448, 280700, ("epub", 292448)),
     }
 
+EPUB_FN = "igp-twss.epub"
+BMP_FN = "OPS/test_bmp.bmp"
+
 
 class TestContainersDir:
     """Test containers dirs."""
@@ -50,11 +53,11 @@ class TestContainersDir:
         res = cli.main(args)
         assert res
         for name, sizes in FNS.items():
-            if name == "igp-twss.epub":
+            if name == EPUB_FN:
                 path = TMP_ROOT / name
                 with ZipFile(path, "r") as zf:
                     namelist = zf.namelist()
-                assert "OPS/test_bmp.bmp" in namelist
+                assert BMP_FN in namelist
             path = TMP_ROOT / name
             assert path.stat().st_size == sizes[0]
 
@@ -65,10 +68,10 @@ class TestContainersDir:
         assert res
         for name, sizes in FNS.items():
             path = TMP_ROOT / name
-            if name == "igp-twss.epub":
+            if name == EPUB_FN:
                 with ZipFile(path, "r") as zf:
                     namelist = zf.namelist()
-                assert "OPS/test_bmp.bmp" in namelist
+                assert BMP_FN in namelist
             assert path.stat().st_size == sizes[1]
 
     def test_containers_convert_to_zip(self) -> None:

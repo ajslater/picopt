@@ -6,7 +6,7 @@ from typing import Optional
 from PIL.PngImagePlugin import PngImageFile
 from termcolor import cprint
 
-from picopt.handlers.handler import Format
+from picopt.handlers.handler import FileFormat
 from picopt.handlers.image import ImageHandler
 from picopt.pillow.png_bit_depth import png_bit_depth
 
@@ -15,8 +15,8 @@ class Png(ImageHandler):
     """PNG format class."""
 
     BEST_ONLY: bool = False
-    OUTPUT_FORMAT = PngImageFile.format
-    OUTPUT_FORMAT_OBJ = Format(OUTPUT_FORMAT, True, False)
+    OUTPUT_FORMAT_STR = PngImageFile.format
+    OUTPUT_FILE_FORMAT = FileFormat(OUTPUT_FORMAT_STR, True, False)
     PIL2_ARGS: dict[str, bool] = {"optimize": True}
     PROGRAMS: dict[str, Optional[str]] = ImageHandler.init_programs(
         ("pil2png", "optipng", "pngout")
@@ -49,7 +49,7 @@ class Png(ImageHandler):
             )
             result = old_path
         else:
-            args = tuple(self._PNGOUT_ARGS + [str(old_path), str(new_path)])
+            args = (*self._PNGOUT_ARGS, str(old_path), str(new_path))
             self.run_ext(args)
             result = new_path
         return result

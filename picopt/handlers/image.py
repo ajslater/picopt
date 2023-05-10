@@ -1,4 +1,4 @@
-"""Format Superclass."""
+"""FileFormat Superclass."""
 from abc import ABCMeta
 from pathlib import Path
 from typing import Any
@@ -9,26 +9,29 @@ from PIL.PngImagePlugin import PngImageFile
 from PIL.PpmImagePlugin import PpmImageFile
 from PIL.TiffImagePlugin import TiffImageFile
 
-from picopt.handlers.handler import Format, Handler
+from picopt.data import ReportInfo
+from picopt.handlers.handler import FileFormat, Handler
 from picopt.stats import ReportStats
 
-PPM_FORMAT_OBJ = Format(PpmImageFile.format, True, False)
-BPM_FORMAT_OBJ = Format(BmpImageFile.format, True, False)
-CONVERTABLE_FORMAT_OBJS = {BPM_FORMAT_OBJ, PPM_FORMAT_OBJ}
-CONVERTABLE_FORMATS = {format.format for format in CONVERTABLE_FORMAT_OBJS}
-PNG_ANIMATED_FORMAT_OBJ = Format(PngImageFile.format, True, True)
-TIFF_FORMAT = TiffImageFile.format
-TIFF_FORMAT_OBJ = Format(TIFF_FORMAT, True, False)
-TIFF_ANIMATED_FORMAT_OBJ = Format(TIFF_FORMAT, True, True)
-_NATIVE_ONLY_FORMATS = {
-    PNG_ANIMATED_FORMAT_OBJ,
-    TIFF_ANIMATED_FORMAT_OBJ,
-    TIFF_FORMAT_OBJ,
+PPM_FILE_FORMAT = FileFormat(PpmImageFile.format, True, False)
+BPM_FILE_FORMAT = FileFormat(BmpImageFile.format, True, False)
+CONVERTABLE_FILE_FORMATS = {BPM_FILE_FORMAT, PPM_FILE_FORMAT}
+CONVERTABLE_FORMAT_STRS = {
+    img_format.format_str for img_format in CONVERTABLE_FILE_FORMATS
+}
+PNG_ANIMATED_FILE_FORMAT = FileFormat(PngImageFile.format, True, True)
+TIFF_FORMAT_STR = TiffImageFile.format
+TIFF_FILE_FORMAT = FileFormat(TIFF_FORMAT_STR, True, False)
+TIFF_ANIMATED_FILE_FORMAT = FileFormat(TIFF_FORMAT_STR, True, True)
+_NATIVE_ONLY_FILE_FORMATS = {
+    PNG_ANIMATED_FILE_FORMAT,
+    TIFF_ANIMATED_FILE_FORMAT,
+    TIFF_FILE_FORMAT,
 }
 
 
 class ImageHandler(Handler, metaclass=ABCMeta):
-    """Format superclass."""
+    """Image Handler superclass."""
 
     PIL2_ARGS: dict[str, Any] = {}
     PREFERRED_PROGRAM: str = "unimplemented"
@@ -39,7 +42,7 @@ class ImageHandler(Handler, metaclass=ABCMeta):
         And report back statistics.
         """
         path = self.original_path
-        for func in self.PROGRAMS.keys():
+        for func in self.PROGRAMS:
             if path != self.original_path:
                 self.working_paths.add(path)
             new_path = self.get_working_path(func)
@@ -48,11 +51,14 @@ class ImageHandler(Handler, metaclass=ABCMeta):
                 break
 
         bytes_count = self.cleanup_after_optimize(path)
-        report_stats = ReportStats(
-            self.final_path, bytes_count, self.config.test, self.convert
+        info = ReportInfo(
+            self.final_path,
+            self.convert,
+            self.config.test,
+            bytes_count[0],
+            bytes_count[1],
         )
-
-        return report_stats
+        return ReportStats(info)
 
     def optimize_image(self) -> ReportStats:
         """Optimize a given image from a filename."""
@@ -67,18 +73,17 @@ class ImageHandler(Handler, metaclass=ABCMeta):
     def pil2native(self, old_path: Path, new_path: Path) -> Path:
         """Use PIL to save the image."""
         if (
-            self.input_format_obj in _NATIVE_ONLY_FORMATS
-            or self.PREFERRED_PROGRAM not in self.config._available_programs
+            self.input_file_format not in _NATIVE_ONLY_FILE_FORMATS
+            and self.PREFERRED_PROGRAM in self.config.computed.available_programs
         ):
-            with Image.open(old_path) as image:
-                image.save(
-                    new_path,
-                    self.OUTPUT_FORMAT,
-                    exif=self.metadata.exif,
-                    icc_profile=self.metadata.icc_profile,
-                    **self.PIL2_ARGS,
-                )
-            image.close()  # for animated images
-        else:
-            new_path = old_path
+            return old_path
+        with Image.open(old_path) as image:
+            image.save(
+                new_path,
+                self.OUTPUT_FORMAT_STR,
+                exif=self.metadata.exif,
+                icc_profile=self.metadata.icc_profile,
+                **self.PIL2_ARGS,
+            )
+        image.close()  # for animated images
         return new_path

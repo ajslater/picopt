@@ -755,18 +755,18 @@ files = [
 
 [[package]]
 name = "ruamel-yaml"
-version = "0.17.22"
+version = "0.17.26"
 description = "ruamel.yaml is a YAML parser/emitter that supports roundtrip preservation of comments, seq/map flow style, and map key order"
 category = "main"
 optional = false
 python-versions = ">=3"
 files = [
-    {file = "ruamel.yaml-0.17.22-py3-none-any.whl", hash = "sha256:b4c6e66d103d8af198aa6139580ab735169be4922eb4c515ac121bdabf6f9361"},
-    {file = "ruamel.yaml-0.17.22.tar.gz", hash = "sha256:c22ec58aaca5105f771cb8f7ac45ad631b5e8b00454ebe1822d442fb696e9e62"},
+    {file = "ruamel.yaml-0.17.26-py3-none-any.whl", hash = "sha256:25d0ee82a0a9a6f44683dcf8c282340def4074a4562f3a24f55695bb254c1693"},
+    {file = "ruamel.yaml-0.17.26.tar.gz", hash = "sha256:baa2d0a5aad2034826c439ce61c142c07082b76f4791d54145e131206e998059"},
 ]
 
 [package.dependencies]
-"ruamel.yaml.clib" = {version = ">=0.2.6", markers = "platform_python_implementation == \"CPython\" and python_version < \"3.11\""}
+"ruamel.yaml.clib" = {version = ">=0.2.7", markers = "platform_python_implementation == \"CPython\" and python_version < \"3.12\""}
 
 [package.extras]
 docs = ["ryd"]
@@ -915,14 +915,14 @@ files = [
 
 [[package]]
 name = "treestamps"
-version = "0.3.4"
+version = "0.4.0"
 description = "Create timestamp records for recursive operations on directory trees."
 category = "main"
 optional = false
 python-versions = ">=3.9,<4.0"
 files = [
-    {file = "treestamps-0.3.4-py3-none-any.whl", hash = "sha256:741cf779ebb8bbf4721a7a71f6c5c297e0cd93c1c300bdd54f6cc055464abcaa"},
-    {file = "treestamps-0.3.4.tar.gz", hash = "sha256:800ea9d5dead5c256afc44b39fb3b5689b4b49e7e146e1aa3020960d696b73e5"},
+    {file = "treestamps-0.4.0-py3-none-any.whl", hash = "sha256:b9d035b8fc5e848f6ec33306755421ae5eae31293efa9801355d8a8d16f3ae62"},
+    {file = "treestamps-0.4.0.tar.gz", hash = "sha256:92ccedea41adf3d96d948147dc66c3edf2d4a54b8cad10232b6dfb3903cb0599"},
 ]
 
 [package.dependencies]
@@ -971,4 +971,4 @@ toml = "*"
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.9"
-content-hash = "e9c8ec8355f3481c41a065420546973842f1e4ba9247e482012c18a96327cfb4"
+content-hash = "c46020c1e428e52d8682a0646a28c48637aa7136f69a4b528616d0395f6a9f35"

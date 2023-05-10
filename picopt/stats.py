@@ -1,11 +1,11 @@
 """Statistics for the optimization operations."""
 from dataclasses import dataclass, field
-from pathlib import Path
 from subprocess import CalledProcessError
-from typing import Optional
 
 from humanize import naturalsize
 from termcolor import cprint
+
+from picopt.data import ReportInfo
 
 
 class ReportStats:
@@ -15,36 +15,24 @@ class ReportStats:
 
     def __init__(
         self,
-        path: Path,
-        bytes_count: Optional[tuple[int, int]],
-        test: bool,
-        convert: bool,
-        exc: Optional[Exception] = None,
+        info: ReportInfo,
     ) -> None:
         """Initialize required instance variables."""
-        self.path = path
-        self.test = test
-        self.convert = convert
-        self.exc = exc
-        if bytes_count:
-            self.bytes_in = bytes_count[0]
-            self.bytes_out = bytes_count[1]
-        else:
-            self.bytes_in = 0
-            self.bytes_out = 0
+        self.path = info.path
+        self.test = info.test
+        self.convert = info.convert
+        self.exc = info.exc
+        self.bytes_in = info.bytes_in
+        self.bytes_out = info.bytes_out
         self.saved = self.bytes_in - self.bytes_out
 
     def _new_percent_saved(self) -> str:
         """Spit out how much space the optimization saved."""
-        if self.bytes_in <= 0:
-            ratio = 1.0
-        else:
-            ratio = self.bytes_out / self.bytes_in
+        ratio = 1.0 if self.bytes_in <= 0 else self.bytes_out / self.bytes_in
         saved = naturalsize(self.saved)
         percent_saved = (1 - ratio) * 100
 
-        result = "{:.{prec}f}% ({})".format(percent_saved, saved, prec=2)
-        return result
+        return "{:.{prec}f}% ({})".format(percent_saved, saved, prec=2)
 
     def _report_saved(self) -> str:
         """Return the percent saved."""
@@ -80,10 +68,7 @@ class ReportStats:
             color = "red"
         else:
             report = self._report_saved()
-            if self.convert:
-                color = "cyan"
-            else:
-                color = "white"
+            color = "cyan" if self.convert else "white"
 
             if self.saved <= 0:
                 color = "blue"

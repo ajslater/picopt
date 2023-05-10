@@ -13,7 +13,4 @@ class Configurable:
 
     def is_path_ignored(self, path: Path):
         """Match path against the ignore listg."""
-        for ignore_glob in self._config.ignore:
-            if path.match(ignore_glob):
-                return True
-        return False
+        return any(path.match(ignore_glob) for ignore_glob in self._config.ignore)

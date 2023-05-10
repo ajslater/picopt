@@ -1,5 +1,10 @@
 # 📰 Picopt News
 
+## v3.3.0
+
+- Update deps including treestamps.
+- New option to disable treestamps check of config section for a run.
+
 ## v3.2.6
 
 - Fix cleanup of temp dir when repacking a container or animated images fails.

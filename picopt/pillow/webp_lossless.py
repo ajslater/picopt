@@ -32,7 +32,7 @@ def main() -> None:
     import sys
 
     lossless = is_lossless(sys.argv[1])
-    print(lossless)
+    print(lossless)  # noqa T201
 
 
 if __name__ == "__main__":

@@ -33,7 +33,7 @@ def main() -> None:
     import sys
 
     bit_depth = png_bit_depth(Path(sys.argv[1]))
-    print(bit_depth)
+    print(bit_depth)  # noqa T201
 
 
 if __name__ == "__main__":

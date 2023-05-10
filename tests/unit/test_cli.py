@@ -32,9 +32,12 @@ class TestCLI:
         arguments = cli.get_arguments(args)
         arguments = arguments.picopt
         assert arguments.verbose == 0
-        assert ("PNG", "WEBP") == arguments.convert_to
+        assert arguments.convert_to == ("PNG", "WEBP")
         assert arguments.formats is None
-        assert arguments._extra_formats == (CBZ.OUTPUT_FORMAT, Zip.OUTPUT_FORMAT)
+        assert arguments.computed.extra_formats == (
+            CBZ.OUTPUT_FORMAT_STR,
+            Zip.OUTPUT_FORMAT_STR,
+        )
         assert arguments.symlinks
         assert arguments.bigger
         assert not arguments.timestamps
@@ -58,4 +61,4 @@ class TestCLI:
         try:
             cli.main()
         except SystemExit as exc:
-            assert exc.code == 1
+            assert exc.code == 1  # noqa PT017

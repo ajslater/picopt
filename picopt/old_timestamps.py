@@ -5,10 +5,9 @@ from pathlib import Path
 from confuse.templates import AttrDict
 from treestamps import Treestamps
 
-from picopt import PROGRAM_NAME
 from picopt.configurable import Configurable
 
-_OLD_TIMESTAMPS_NAME = f".{PROGRAM_NAME}_timestamp"
+OLD_TIMESTAMPS_NAME = ".picopt_timestamp"
 
 
 class OldTimestamps(Configurable):
@@ -29,7 +28,7 @@ class OldTimestamps(Configurable):
             not self._config.symlinks and path.is_symlink()
         ):
             return
-        old_timestamp_path = path / _OLD_TIMESTAMPS_NAME
+        old_timestamp_path = path / OLD_TIMESTAMPS_NAME
         self._add_old_timestamp(old_timestamp_path)
         if path.parent != path:
             self._import_old_parent_timestamps(path.parent)
@@ -43,17 +42,18 @@ class OldTimestamps(Configurable):
             return
         for root, dirnames, filenames in os.walk(path):
             root_path = Path(root)
-            if _OLD_TIMESTAMPS_NAME in filenames:
-                old_timestamp_path = root_path / _OLD_TIMESTAMPS_NAME
+            if OLD_TIMESTAMPS_NAME in filenames:
+                old_timestamp_path = root_path / OLD_TIMESTAMPS_NAME
                 self._add_old_timestamp(old_timestamp_path)
-                self._timestamps._consumed_paths.add(old_timestamp_path)
+                # Picopt is the only program that used old treestamps
+                self._timestamps._consumed_paths.add(old_timestamp_path)  # noqa SLF001
             for dirname in dirnames:
                 self._import_old_child_timestamps(root_path / dirname)
 
     def import_old_timestamps(self) -> None:
         """Import all old timestamps."""
-        self._import_old_parent_timestamps(self._timestamps.dir)
-        self._import_old_child_timestamps(self._timestamps.dir)
+        self._import_old_parent_timestamps(self._timestamps.root_dir)
+        self._import_old_child_timestamps(self._timestamps.root_dir)
 
     def __init__(self, config: AttrDict, timestamps: Treestamps):
         """Hold new timestamp object."""

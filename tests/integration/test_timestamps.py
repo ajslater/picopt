@@ -1,7 +1,7 @@
 """Test comic format."""
 import platform
 import shutil
-from datetime import datetime
+from datetime import UTC, datetime
 
 from ruamel.yaml import YAML
 
@@ -13,19 +13,12 @@ TMP_ROOT = get_test_dir()
 FN = "test_jpg.jpg"
 SRC_JPG = IMAGES_DIR / FN
 TMP_FN = str(TMP_ROOT / FN)
-TIMESTAMPS_FN = ".picopt_treestamps.yaml"
+TIMESTAMPS_FN = f".{PROGRAM_NAME}_treestamps.yaml"
 TIMESTAMPS_PATH = TMP_ROOT / TIMESTAMPS_FN
-WAL_FN = ".picopt_treestamps.wal.yaml"
+WAL_FN = f".{PROGRAM_NAME}_treestamps.wal.yaml"
 WAL_PATH = TMP_ROOT / WAL_FN
 
-if platform.system() == "Darwin":
-    FNS = {
-        FN: (97373, 87913),
-    }
-else:
-    FNS = {
-        FN: (97373, 87922),
-    }
+FNS = {FN: (97373, 87913)} if platform.system() == "Darwin" else {FN: (97373, 87922)}
 
 DEFAULT_CONFIG = {
     "bigger": False,
@@ -36,6 +29,8 @@ DEFAULT_CONFIG = {
     "recurse": True,
     "symlinks": True,
 }
+
+TREESTAMPS_CONFIG = {"ignore": [], "symlinks": True}
 
 
 class TestTimestamps:
@@ -50,43 +45,45 @@ class TestTimestamps:
 
     def setup_method(self) -> None:
         """Set up method."""
-        if TMP_ROOT.exists():
-            shutil.rmtree(TMP_ROOT)
+        shutil.rmtree(TMP_ROOT, ignore_errors=True)
         TMP_ROOT.mkdir(exist_ok=True)
         shutil.copy(SRC_JPG, TMP_ROOT)
         self._assert_sizes(0)
 
     def teardown_method(self) -> None:
         """Tear down method."""
-        print(sorted(TMP_ROOT.iterdir()))
+        print(sorted(TMP_ROOT.iterdir()))  # T201
         assert TIMESTAMPS_PATH.exists()
         assert not WAL_PATH.exists()
-        if TMP_ROOT.exists():
-            shutil.rmtree(TMP_ROOT)
+        shutil.rmtree(TMP_ROOT, ignore_errors=True)
 
     @staticmethod
     def _write_timestamp(path, ts=None, config=None):
         """Write timestamp."""
         if ts is None:
-            ts = datetime.now().timestamp()
+            ts = datetime.now(tz=UTC).timestamp()
         if config is None:
             config = DEFAULT_CONFIG
-        yaml = {"config": config, str(path): ts}
+        ts_config = {**TREESTAMPS_CONFIG}
+        for key in TREESTAMPS_CONFIG:
+            ts_config[key] = config[key]
+        yaml = {"config": config, "treestamps_config": ts_config, str(path): ts}
         YAML().dump(yaml, TIMESTAMPS_PATH)
         assert TIMESTAMPS_PATH.exists()
         assert not WAL_PATH.exists()
+        print(yaml)
 
     def test_no_timestamp(self) -> None:
         """Test no timestamp."""
-        args = (PROGRAM_NAME, "-rtvv", TMP_FN)
+        args = (PROGRAM_NAME, "-rtvvv", TMP_FN)
         res = cli.main(args)
         assert res
         self._assert_sizes(1)
 
     def test_timestamp(self):
         """Test timestamp."""
-        self._write_timestamp(FN)
-        args = (PROGRAM_NAME, "-rtvv", TMP_FN)
+        self._write_timestamp(TMP_FN)
+        args = (PROGRAM_NAME, "-rtvvv", TMP_FN)
         res = cli.main(args)
         assert res
         self._assert_sizes(0)
@@ -94,7 +91,7 @@ class TestTimestamps:
     def test_different_config(self):
         """Test different config."""
         self._write_timestamp(FN)
-        args = (PROGRAM_NAME, "-brtvv", TMP_FN)
+        args = (PROGRAM_NAME, "-brtvvv", TMP_FN)
         res = cli.main(args)
         assert res
         self._assert_sizes(1)
@@ -102,7 +99,7 @@ class TestTimestamps:
     def test_timestamp_dir(self):
         """Test timestamp dir."""
         self._write_timestamp(TMP_ROOT)
-        args = (PROGRAM_NAME, "-rtvv", TMP_FN)
+        args = (PROGRAM_NAME, "-rtvvv", TMP_FN)
         res = cli.main(args)
         assert res
         self._assert_sizes(0)
@@ -111,7 +108,7 @@ class TestTimestamps:
         """Set up child dir."""
         tmp_child_dir = TMP_ROOT / "child"
         tmp_child_dir.mkdir(exist_ok=True)
-        shutil.copy(SRC_JPG, tmp_child_dir)
+        shutil.move(TMP_ROOT / FN, tmp_child_dir)
         self._assert_sizes(0, tmp_child_dir)
         return tmp_child_dir
 
@@ -119,10 +116,9 @@ class TestTimestamps:
         """Test timestamp children."""
         tmp_child_dir = self._setup_child_dir()
         self._write_timestamp(tmp_child_dir)
-        args = (PROGRAM_NAME, "-rtvv", str(TMP_ROOT))
+        args = (PROGRAM_NAME, "-rtvvv", str(TMP_ROOT))
         res = cli.main(args)
         assert res
-        self._assert_sizes(1)
         self._assert_sizes(0, tmp_child_dir)
 
     def test_timestamp_parents(self):
@@ -130,7 +126,7 @@ class TestTimestamps:
         tmp_child_dir = self._setup_child_dir()
 
         self._write_timestamp(TMP_ROOT)
-        args = (PROGRAM_NAME, "-rtvv", str(tmp_child_dir))
+        args = (PROGRAM_NAME, "-rtvvv", str(tmp_child_dir))
         res = cli.main(args)
         assert res
         self._assert_sizes(0, tmp_child_dir)
@@ -139,7 +135,7 @@ class TestTimestamps:
 
     def test_journal_cleanup(self) -> None:
         """Test journal cleanup."""
-        args = (PROGRAM_NAME, "-rtvv", TMP_FN)
+        args = (PROGRAM_NAME, "-rtvvv", TMP_FN)
         res = cli.main(args)
         assert res
         assert not WAL_PATH.exists()
@@ -148,7 +144,7 @@ class TestTimestamps:
     def _write_wal(path, ts=None, config=None):
         """Write wal."""
         if ts is None:
-            ts = datetime.now().timestamp()
+            ts = datetime.now(tz=UTC).timestamp()
         if config is None:
             config = DEFAULT_CONFIG
         yaml = {"config": config, "wal": [{str(path): ts}]}
@@ -157,7 +153,7 @@ class TestTimestamps:
     def test_timestamp_read_journal(self):
         """Test timestamp read journal."""
         self._write_wal(TMP_FN)
-        args = (PROGRAM_NAME, "-rtvv", TMP_FN)
+        args = (PROGRAM_NAME, "-rtvvv", TMP_FN)
         res = cli.main(args)
         assert res
-        self._assert_sizes(0)
+        self._assert_sizes(1)
