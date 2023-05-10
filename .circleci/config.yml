@@ -11,7 +11,7 @@ jobs:
           command: docker-compose up --exit-code-from picopt-lint picopt-lint
           name: Lint
       - run:
-          command: ci/create-output-dirs.sh
+          command: bin/create-output-dirs.sh
           name: Create Output Dirs
       - run:
           command: docker-compose up --exit-code-from picopt-test picopt-test
@@ -26,7 +26,7 @@ jobs:
       - persist_to_workspace:
           paths:
             - ./README.md
-            - ./ci
+            - ./bin
             - ./dist
             - ./pyproject.toml
           root: .
@@ -40,7 +40,7 @@ jobs:
           command: pip install poetry
           name: Install poetry
       - run:
-          command: ci/publish-pypi.sh
+          command: bin/publish-pypi.sh
           name: Publish Package to PyPi
 version: 2.1
 workflows:

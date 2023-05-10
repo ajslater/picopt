@@ -1,24 +1,22 @@
-#!/usr/bin/env python3
 """Run pictures through image specific external optimizers."""
 import argparse
-
+import sys
 from argparse import Action, Namespace, RawDescriptionHelpFormatter
 from importlib.metadata import PackageNotFoundError, version
 from typing import Optional
 
-from termcolor import colored
+from termcolor import colored, cprint
 
 from picopt import PROGRAM_NAME, walk
-from picopt.config import ALL_FORMATS, DEFAULT_HANDLERS, get_config
+from picopt.config import ALL_FORMAT_STRS, DEFAULT_HANDLERS, get_config
 from picopt.handlers.png import Png
 from picopt.handlers.webp import WebP
 from picopt.handlers.zip import CBZ, Zip
 
-
-DEFAULT_FORMATS = frozenset(
-    [handler_cls.OUTPUT_FORMAT for handler_cls in DEFAULT_HANDLERS]
+DEFAULT_FORMAT_STRS = frozenset(
+    [handler_cls.OUTPUT_FORMAT_STR for handler_cls in DEFAULT_HANDLERS]
 )
-EXTRA_FORMATS = ALL_FORMATS - DEFAULT_FORMATS
+EXTRA_FORMAT_STRS = ALL_FORMAT_STRS - DEFAULT_FORMAT_STRS
 FORMAT_DELIMETER = ","
 try:
     VERSION = version(PROGRAM_NAME)
@@ -29,7 +27,7 @@ except PackageNotFoundError:
 class SplitArgsAction(Action):
     """Convert csv string from argparse to a list."""
 
-    def __call__(self, parser, namespace, values, _option_string=None):
+    def __call__(self, _parser, namespace, values, _option_string=None):
         """Split values string into list."""
         if isinstance(values, str):
             values = tuple(sorted(values.strip().split(FORMAT_DELIMETER)))
@@ -92,14 +90,14 @@ def get_arguments(params: Optional[tuple[str, ...]] = None) -> Namespace:
         action=SplitArgsAction,
         dest="formats",
         help="Only optimize images of the specified "
-        f"'{FORMAT_DELIMETER}' delimited formats from: {_comma_join(ALL_FORMATS)}. "
-        f"Defaults to {_comma_join(DEFAULT_FORMATS)}",
+        f"'{FORMAT_DELIMETER}' delimited formats from: {_comma_join(ALL_FORMAT_STRS)}. "
+        f"Defaults to {_comma_join(DEFAULT_FORMAT_STRS)}",
     )
     parser.add_argument(
         "-x",
         "--extra-formats",
         action=SplitArgsAction,
-        dest="_extra_formats",
+        dest="extra_formats",
         help="Append additional formats to the default formats.",
     )
     parser.add_argument(
@@ -107,10 +105,11 @@ def get_arguments(params: Optional[tuple[str, ...]] = None) -> Namespace:
         "--convert-to",
         action=SplitArgsAction,
         dest="convert_to",
-        help="A list of formats to convert to. Lossless images may convert to "
-        f"{Png.OUTPUT_FORMAT} or {WebP.OUTPUT_FORMAT}. {Zip.INPUT_FORMAT_RAR} archives "
-        f"may convert to {Zip.OUTPUT_FORMAT} or {CBZ.OUTPUT_FORMAT}. "
-        "By default formats are not converted to other formats.",
+        help="A list of formats to convert to. Lossless images may convert to"
+        f" {Png.OUTPUT_FORMAT_STR} or {WebP.OUTPUT_FORMAT_STR}."
+        f" {Zip.INPUT_FORMAT_STR_RAR} archives"
+        f" may convert to {Zip.OUTPUT_FORMAT_STR} or {CBZ.OUTPUT_FORMAT_STR}."
+        " By default formats are not converted to other formats.",
     )
     parser.add_argument(
         "-S",
@@ -140,6 +139,14 @@ def get_arguments(params: Optional[tuple[str, ...]] = None) -> Namespace:
         dest="timestamps",
         help="Record the optimization time in a timestamps file. "
         "Do not optimize files that are older than their timestamp record.",
+    )
+    parser.add_argument(
+        "-N",
+        "--timestamps-no-check-config",
+        dest="timestamps_check_config",
+        action="store_false",
+        default=True,
+        help="Do not compare program config options with loaded timestamps.",
     )
     parser.add_argument(
         "-A",
@@ -212,19 +219,29 @@ def get_arguments(params: Optional[tuple[str, ...]] = None) -> Namespace:
         params = params[1:]
 
     pns = parser.parse_args(params)
+
+    # Move extra_formats to computed namespace
+    pns.computed = Namespace(extra_formats=pns.extra_formats)
+    delattr(pns, "extra_formats")
+
+    # increment verbose
     if pns.verbose is not None and pns.verbose > 0:
         pns.verbose += 1
+
     return Namespace(picopt=pns)
 
 
 def main(args: Optional[tuple[str, ...]] = None) -> bool:
     """Process command line arguments and walk inputs."""
-    arguments = get_arguments(args)
+    try:
+        arguments = get_arguments(args)
 
-    config = get_config(arguments)
-    wob = walk.Walk(config)
-    return wob.run()
+        config = get_config(arguments)
+        wob = walk.Walk(config)
+        return wob.run()
+    except Exception as exc:
+        cprint(f"ERROR: {exc}", "red")
+        import traceback
 
-
-if __name__ == "__main__":
-    main()
+        traceback.print_exception(exc)
+        sys.exit(1)

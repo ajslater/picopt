@@ -5,15 +5,15 @@ from typing import Optional
 
 from PIL.JpegImagePlugin import JpegImageFile
 
-from picopt.handlers.handler import Format
+from picopt.handlers.handler import FileFormat
 from picopt.handlers.image import ImageHandler
 
 
 class Jpeg(ImageHandler):
     """JPEG format class."""
 
-    OUTPUT_FORMAT = JpegImageFile.format
-    OUTPUT_FORMAT_OBJ = Format(OUTPUT_FORMAT, False, False)
+    OUTPUT_FORMAT_STR = JpegImageFile.format
+    OUTPUT_FILE_FORMAT = FileFormat(OUTPUT_FORMAT_STR, False, False)
     PROGRAMS: dict[str, Optional[str]] = ImageHandler.init_programs(
         ("mozjpeg", "jpegtran")
     )

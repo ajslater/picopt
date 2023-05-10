@@ -1,4 +1,5 @@
 #!/bin/bash
+# Run all tests
 set -euxo pipefail
 export PYTHONPATH=.
 mkdir -p test-results

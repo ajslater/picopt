@@ -1,13 +1,14 @@
 """Optimize comic archives."""
 import shutil
-
 from abc import ABCMeta, abstractmethod
 from pathlib import Path
 from typing import Optional, Union
 
 from confuse.templates import AttrDict
+from termcolor import cprint
 
-from picopt.handlers.handler import Format, Handler, Metadata
+from picopt.data import PathInfo, ReportInfo
+from picopt.handlers.handler import FileFormat, Handler, Metadata
 from picopt.stats import ReportStats
 
 
@@ -19,30 +20,31 @@ class ContainerHandler(Handler, metaclass=ABCMeta):
 
     @classmethod
     @abstractmethod
-    def identify_format(cls, path: Path) -> Optional[Format]:
+    def identify_format(cls, path: Path) -> Optional[FileFormat]:
         """Return the format if this handler can handle this path."""
-        pass
 
     @abstractmethod
     def unpack_into(self) -> None:
         """Unpack a container into a tmp dir to work on it's contents."""
-        pass
 
     @abstractmethod
     def pack_into(self, working_path: Path) -> None:
         """Create a container from a tmp dir's contents."""
-        pass
 
     def __init__(
         self,
         config: AttrDict,
-        original_path: Path,
-        format: Format,
+        path_info: PathInfo,
+        file_format: FileFormat,
         metadata: Metadata,
-        is_case_sensitive: bool,
     ):
         """Unpack a container with a subclass's unpacker."""
-        super().__init__(config, original_path, format, metadata, is_case_sensitive)
+        super().__init__(
+            config,
+            path_info,
+            file_format,
+            metadata,
+        )
         self.comment: Optional[bytes] = None
         self.tmp_container_dir: Path = Path(
             str(self.get_working_path()) + self.CONTAINER_DIR_SUFFIX
@@ -52,7 +54,7 @@ class ContainerHandler(Handler, metaclass=ABCMeta):
         """Create directory and unpack container."""
         try:
             if self.config.verbose:
-                print(f"Unpacking {self.original_path}...", end="")
+                cprint(f"Unpacking {self.original_path}...", end="")
 
             # create a clean tmpdir
             if self.tmp_container_dir.exists():
@@ -63,40 +65,46 @@ class ContainerHandler(Handler, metaclass=ABCMeta):
             self.unpack_into()
 
             if self.config.verbose:
-                print("done")
-            return self
+                cprint("done")
         except Exception as exc:
             return self.error(exc)
+        return self
 
     def cleanup_after_optimize(self, working_path: Path) -> tuple[int, int]:
         """Clean up the temp dir as well as the old container."""
         if self.config.verbose:
-            print(".", end="")
+            cprint(".", end="")
         shutil.rmtree(self.tmp_container_dir)
 
         if self.config.verbose:
-            print(".", end="")
+            cprint(".", end="")
         bytes_count = super().cleanup_after_optimize(working_path)
 
         if self.config.verbose:
-            print("done.")
+            cprint("done.")
         return bytes_count
 
     def repack(self) -> ReportStats:
         """Create a new container and clean up the tmp dir."""
+        new_path = self.get_working_path()
         try:
             # archive into new filename
-            new_path = self.get_working_path()
             if self.config.verbose:
-                print(f"Repacking {self.final_path}", end="")
+                cprint(f"Repacking {self.final_path}", end="")
             self.pack_into(new_path)
 
             bytes_count = self.cleanup_after_optimize(new_path)
-            report_stats = ReportStats(
-                self.final_path, bytes_count, self.config.test, self.convert
+            info = ReportInfo(
+                self.final_path,
+                self.convert,
+                self.config.test,
+                bytes_count[0],
+                bytes_count[1],
             )
+            report_stats = ReportStats(info)
             if self.config.verbose:
                 report_stats.report()
-            return report_stats
         except Exception as exc:
+            shutil.rmtree(self.tmp_container_dir, ignore_errors=True)
             return self.error(exc)
+        return report_stats

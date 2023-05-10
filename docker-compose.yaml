@@ -9,19 +9,19 @@ services:
   picopt-lint:
     image: ajslater/picopt-builder
     container_name: picopt-lint
-    command: ./lint.sh
+    command: make lint
   picopt-test:
     image: ajslater/picopt-builder
     container_name: picopt-test
     volumes:
       - ./test-results:/app/test-results
-    command: ./test.sh
+    command: make test
   picopt-build:
     image: ajslater/picopt-builder
     container_name: picopt-build
     volumes:
       - ./dist:/app/dist
-    command: poetry build
+    command: make build
   picopt:
     build:
       context: .

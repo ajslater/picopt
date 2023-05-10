@@ -5,27 +5,25 @@ from typing import Optional
 from PIL import Image, ImageSequence
 
 from picopt.handlers.container import ContainerHandler
-from picopt.handlers.handler import Format
-from picopt.handlers.image import PNG_ANIMATED_FORMAT_OBJ, TIFF_ANIMATED_FORMAT_OBJ
+from picopt.handlers.handler import FileFormat
+from picopt.handlers.image import PNG_ANIMATED_FILE_FORMAT, TIFF_ANIMATED_FILE_FORMAT
 from picopt.handlers.webp import WebP
 
 
 class WebPAnimatedBase(ContainerHandler):
     """Animated WebP container."""
 
-    OUTPUT_FORMAT: str = WebP.OUTPUT_FORMAT
+    OUTPUT_FORMAT_STR: str = WebP.OUTPUT_FORMAT_STR
     PROGRAMS = ContainerHandler.init_programs(("webpmux", "img2webp"))
-    _OPEN_WITH_PIL_FORMAT_OBJS = set(
-        [PNG_ANIMATED_FORMAT_OBJ, TIFF_ANIMATED_FORMAT_OBJ]
-    )
+    _OPEN_WITH_PIL_FILE_FORMATS = {PNG_ANIMATED_FILE_FORMAT, TIFF_ANIMATED_FILE_FORMAT}
     _IMG2WEBP_ARGS_PREFIX = (PROGRAMS["img2webp"], "-min_size")
     _WEBPMUX_ARGS_PREFIX = (PROGRAMS["webpmux"], "-get", "frame")
     _LOSSLESS = True
 
     @classmethod
-    def identify_format(cls, _path: Path) -> Optional[Format]:
+    def identify_format(cls, _path: Path) -> Optional[FileFormat]:
         """Return the format if this handler can handle this path."""
-        return cls.OUTPUT_FORMAT_OBJ
+        return cls.OUTPUT_FILE_FORMAT
 
     def _get_frame_path(self, frame_index: int) -> Path:
         """Return a frame path for an index."""
@@ -33,14 +31,14 @@ class WebPAnimatedBase(ContainerHandler):
 
     def unpack_into(self) -> None:
         """Unpack webp into temp dir."""
-        if self.input_format_obj in self._OPEN_WITH_PIL_FORMAT_OBJS:
+        if self.input_file_format in self._OPEN_WITH_PIL_FILE_FORMATS:
             with Image.open(self.original_path) as image:
                 frame_index = 0
                 for frame in ImageSequence.Iterator(image):
                     frame_path = self._get_frame_path(frame_index)
                     frame.save(
                         frame_path,
-                        self.OUTPUT_FORMAT,
+                        self.OUTPUT_FORMAT_STR,
                         lossless=self._LOSSLESS,
                         quality=100,
                         method=0,
@@ -115,11 +113,11 @@ class WebPAnimatedLossless(WebPAnimatedBase):
     """Animated Lossless WebP Handler."""
 
     _LOSSLESS = True
-    OUTPUT_FORMAT_OBJ = Format(WebPAnimatedBase.OUTPUT_FORMAT, _LOSSLESS, True)
+    OUTPUT_FILE_FORMAT = FileFormat(WebPAnimatedBase.OUTPUT_FORMAT_STR, _LOSSLESS, True)
 
 
 class WebPAnimatedLossy(WebPAnimatedBase):
     """Animated Lossy WebP Handler."""
 
     _LOSSLESS = False
-    OUTPUT_FORMAT_OBJ = Format(WebPAnimatedBase.OUTPUT_FORMAT, _LOSSLESS, True)
+    OUTPUT_FILE_FORMAT = FileFormat(WebPAnimatedBase.OUTPUT_FORMAT_STR, _LOSSLESS, True)

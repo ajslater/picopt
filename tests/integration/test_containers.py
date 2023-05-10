@@ -1,12 +1,10 @@
 """Test comic format."""
 import shutil
-
 from platform import system
 from zipfile import ZipFile
 
 from picopt import PROGRAM_NAME, cli
 from tests import CONTAINER_DIR, get_test_dir
-
 
 __all__ = ()
 TMP_ROOT = get_test_dir()
@@ -29,9 +27,15 @@ else:
         "igp-twss.epub": (292448, 280700, ("epub", 292448)),
     }
 
+EPUB_FN = "igp-twss.epub"
+BMP_FN = "OPS/test_bmp.bmp"
+
 
 class TestContainersDir:
+    """Test containers dirs."""
+
     def setup_method(self) -> None:
+        """Set up method."""
         self.teardown_method()
         shutil.copytree(CONTAINER_DIR, TMP_ROOT)
         for name, sizes in FNS.items():
@@ -39,35 +43,39 @@ class TestContainersDir:
             assert path.stat().st_size == sizes[0]
 
     def teardown_method(self) -> None:
+        """Tear down method."""
         if TMP_ROOT.exists():
             shutil.rmtree(TMP_ROOT)
 
     def test_containers_noop(self) -> None:
+        """Test containers noop."""
         args = (PROGRAM_NAME, "-r", str(TMP_ROOT))
         res = cli.main(args)
         assert res
         for name, sizes in FNS.items():
-            if name == "igp-twss.epub":
+            if name == EPUB_FN:
                 path = TMP_ROOT / name
                 with ZipFile(path, "r") as zf:
                     namelist = zf.namelist()
-                assert "OPS/test_bmp.bmp" in namelist
+                assert BMP_FN in namelist
             path = TMP_ROOT / name
             assert path.stat().st_size == sizes[0]
 
     def test_containers_no_convert(self) -> None:
+        """Test containers no convert."""
         args = (PROGRAM_NAME, "-rx", "CBZ,ZIP,EPUB", "-c WEBP", str(TMP_ROOT))
         res = cli.main(args)
         assert res
         for name, sizes in FNS.items():
             path = TMP_ROOT / name
-            if name == "igp-twss.epub":
+            if name == EPUB_FN:
                 with ZipFile(path, "r") as zf:
                     namelist = zf.namelist()
-                assert "OPS/test_bmp.bmp" in namelist
+                assert BMP_FN in namelist
             assert path.stat().st_size == sizes[1]
 
     def test_containers_convert_to_zip(self) -> None:
+        """Test containers convert to zip."""
         args = (PROGRAM_NAME, "-rc", "ZIP,CBZ", str(TMP_ROOT))
         res = cli.main(args)
         assert res

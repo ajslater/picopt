@@ -1,37 +1,37 @@
 """Handler for zip files."""
 import os
-
 from pathlib import Path
 from typing import Optional, Union
 from zipfile import ZIP_DEFLATED, ZipFile, is_zipfile
 
 from PIL import Image, UnidentifiedImageError
 from rarfile import RarFile, is_rarfile
+from termcolor import cprint
 
 from picopt.handlers.container import ContainerHandler
-from picopt.handlers.handler import Format
+from picopt.handlers.handler import FileFormat
 
 
 class Zip(ContainerHandler):
     """Ziplike container."""
 
-    OUTPUT_FORMAT: str = "ZIP"
-    OUTPUT_FORMAT_OBJ: Format = Format(OUTPUT_FORMAT)
-    INPUT_FORMAT_RAR: str = "RAR"
-    INPUT_FORMAT_OBJ_RAR: Format = Format(INPUT_FORMAT_RAR)
-    RAR_SUFFIX: str = "." + INPUT_FORMAT_RAR.lower()
+    OUTPUT_FORMAT_STR: str = "ZIP"
+    OUTPUT_FILE_FORMAT: FileFormat = FileFormat(OUTPUT_FORMAT_STR)
+    INPUT_FORMAT_STR_RAR: str = "RAR"
+    INPUT_FILE_FORMAT_RAR: FileFormat = FileFormat(INPUT_FORMAT_STR_RAR)
+    RAR_SUFFIX: str = "." + INPUT_FORMAT_STR_RAR.lower()
     PROGRAMS: dict[str, Optional[str]] = {ContainerHandler.INTERNAL: None}
 
     @classmethod
-    def identify_format(cls, path: Path) -> Optional[Format]:
+    def identify_format(cls, path: Path) -> Optional[FileFormat]:
         """Return the format if this handler can handle this path."""
-        format = None
+        file_format = None
         suffix = path.suffix.lower()
         if is_zipfile(path) and suffix == cls.output_suffix():
-            format = cls.OUTPUT_FORMAT_OBJ
+            file_format = cls.OUTPUT_FILE_FORMAT
         elif is_rarfile(path) and suffix == cls.RAR_SUFFIX:
-            format = cls.INPUT_FORMAT_OBJ_RAR
-        return format
+            file_format = cls.INPUT_FILE_FORMAT_RAR
+        return file_format
 
     def _get_archive(self) -> Union[ZipFile, RarFile]:
         """Use the zipfile builtin for this archive."""
@@ -40,7 +40,8 @@ class Zip(ContainerHandler):
         elif is_rarfile(self.original_path):
             archive = RarFile(self.original_path, "r")
         else:
-            raise ValueError(f"Unknown archive type: {self.original_path}")
+            msg = f"Unknown archive type: {self.original_path}"
+            raise ValueError(msg)
         return archive
 
     def _set_comment(self, comment: Union[str, bytes, None]) -> None:
@@ -78,15 +79,12 @@ class Zip(ContainerHandler):
                 root_path = Path(root)
                 for fname in sorted(filenames):
                     if self.config.verbose:
-                        print(".", end="")
+                        cprint(".", end="")
                     full_path = root_path / fname
-                    if self._is_image(full_path):
-                        # Do not deflate images in zipfile.
-                        # Picopte should have already achieved maximum
-                        # compression over deflate.
-                        compress_type = None
-                    else:
-                        compress_type = ZIP_DEFLATED
+                    # Do not deflate images in zipfile.
+                    # Picopte should have already achieved maximum
+                    # compression over deflate.
+                    compress_type = None if self._is_image(full_path) else ZIP_DEFLATED
                     archive_path = full_path.relative_to(self.tmp_container_dir)
                     new_zf.write(full_path, archive_path, compress_type)
             if self.comment:
@@ -96,16 +94,16 @@ class Zip(ContainerHandler):
 class CBZ(Zip):
     """CBZ Container."""
 
-    OUTPUT_FORMAT: str = "CBZ"
-    OUTPUT_FORMAT_OBJ: Format = Format(OUTPUT_FORMAT)
-    INPUT_FORMAT_RAR: str = "CBR"
-    INPUT_FORMAT_OBJ_RAR: Format = Format(INPUT_FORMAT_RAR)
-    RAR_SUFFIX: str = "." + INPUT_FORMAT_RAR.lower()
+    OUTPUT_FORMAT_STR: str = "CBZ"
+    OUTPUT_FILE_FORMAT: FileFormat = FileFormat(OUTPUT_FORMAT_STR)
+    INPUT_FORMAT_STR_RAR: str = "CBR"
+    INPUT_FILE_FORMAT_RAR: FileFormat = FileFormat(INPUT_FORMAT_STR_RAR)
+    RAR_SUFFIX: str = "." + INPUT_FORMAT_STR_RAR.lower()
 
 
 class EPub(Zip):
     """Epub Container."""
 
-    OUTPUT_FORMAT: str = "EPUB"
-    OUTPUT_FORMAT_OBJ: Format = Format(OUTPUT_FORMAT)
+    OUTPUT_FORMAT_STR: str = "EPUB"
+    OUTPUT_FILE_FORMAT: FileFormat = FileFormat(OUTPUT_FORMAT_STR)
     CONVERT: bool = False

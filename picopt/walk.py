@@ -3,19 +3,19 @@ import os
 import shutil
 import time
 import traceback
-
 from multiprocessing.pool import ApplyResult, Pool
 from pathlib import Path
-from typing import Optional, Type
+from typing import Optional
 
 from confuse.templates import AttrDict
 from humanize import naturalsize
 from termcolor import cprint
-from treestamps import Treestamps
+from treestamps import Grovestamps, GrovestampsConfig, Treestamps
 
 from picopt import PROGRAM_NAME
 from picopt.config import TIMESTAMPS_CONFIG_KEYS
 from picopt.configurable import Configurable
+from picopt.data import PathInfo, ReportInfo
 from picopt.handlers.container import ContainerHandler
 from picopt.handlers.factory import create_handler
 from picopt.handlers.handler import Handler
@@ -23,7 +23,7 @@ from picopt.handlers.image import ImageHandler
 from picopt.handlers.png import Png
 from picopt.handlers.webp import WebP
 from picopt.handlers.zip import CBZ, Zip
-from picopt.old_timestamps import OldTimestamps
+from picopt.old_timestamps import OLD_TIMESTAMPS_NAME, OldTimestamps
 from picopt.stats import ReportStats, Totals
 
 
@@ -38,56 +38,74 @@ class Walk(Configurable):
     # Init #
     ########
     def _convert_message(
-        self, convert_from_formats: frozenset[str], convert_handler: Type[Handler]
+        self, convert_from_formats: frozenset[str], convert_handler: type[Handler]
     ):
         convert_from = ", ".join(
             sorted(convert_from_formats & frozenset(self._config.formats))
         )
-        convert_to = convert_handler.OUTPUT_FORMAT
+        convert_to = convert_handler.OUTPUT_FORMAT_STR
         cprint(f"Converting {convert_from} to {convert_to}", "cyan")
+
+    def _init_run_verbose(self) -> None:
+        """Print verbose init messages."""
+        format_list = ", ".join(sorted(self._config.formats))
+        cprint(f"Optimizing formats: {format_list}")
+        if self._config.convert_to:
+            if WebP.OUTPUT_FORMAT_STR in self._config.convert_to:
+                self._convert_message(
+                    self._config.computed.convertable_formats.webp, WebP
+                )
+            elif Png.OUTPUT_FORMAT_STR in self._config.convert_to:
+                self._convert_message(
+                    self._config.computed.convertable_formats.png, Png
+                )
+            if Zip.OUTPUT_FORMAT_STR in self._config.convert_to:
+                self._convert_message(frozenset([Zip.INPUT_FORMAT_STR_RAR]), Zip)
+            if CBZ.OUTPUT_FORMAT_STR in self._config.convert_to:
+                self._convert_message(frozenset([CBZ.INPUT_FORMAT_STR_RAR]), CBZ)
+        if self._config.after is not None:
+            after = time.ctime(self._config.after)
+            cprint(f"Optimizing after {after}")
+
+    def _init_run_timestamps(self) -> None:
+        """Init timestamps."""
+        config = GrovestampsConfig(
+            paths=self._top_paths,
+            program_name=PROGRAM_NAME,
+            verbose=self._config.verbose,
+            symlinks=self._config.symlinks,
+            ignore=self._config.ignore,
+            check_config=self._config.timestamps_check_config,
+            program_config=self._config,
+            program_config_keys=TIMESTAMPS_CONFIG_KEYS,
+        )
+        self._timestamps = Grovestamps(config)
+        for timestamps in self._timestamps.values():
+            OldTimestamps(self._config, timestamps).import_old_timestamps()
 
     def _init_run(self):
         """Init Run."""
         # Validate top_paths
         if not self._top_paths:
-            raise ValueError("No paths to optimize.")
+            msg = "No paths to optimize."
+            raise ValueError(msg)
         for path in self._top_paths:
             if not path.exists():
-                raise ValueError(f"Path does not exist: {path}")
+                msg = f"Path does not exist: {path}"
+                raise ValueError(msg)
 
         # Tell the user what we're doing
         if self._config.verbose:
-            print("Optimizing formats:", *sorted(self._config.formats))
-            if self._config.convert_to:
-                if WebP.OUTPUT_FORMAT in self._config.convert_to:
-                    self._convert_message(self._config._convertable_formats.webp, WebP)
-                elif Png.OUTPUT_FORMAT in self._config.convert_to:
-                    self._convert_message(self._config._convertable_formats.png, Png)
-                if Zip.OUTPUT_FORMAT in self._config.convert_to:
-                    self._convert_message(frozenset([Zip.INPUT_FORMAT_RAR]), Zip)
-                if CBZ.OUTPUT_FORMAT in self._config.convert_to:
-                    self._convert_message(frozenset([CBZ.INPUT_FORMAT_RAR]), CBZ)
-            if self._config.after is not None:
-                print("Optimizing after", time.ctime(self._config.after))
+            self._init_run_verbose()
 
         # Init timestamps
         if self._config.timestamps:
-            self._timestamps = Treestamps.map_factory(
-                self._top_paths,
-                PROGRAM_NAME,
-                self._config.verbose,
-                self._config.symlinks,
-                self._config.ignore,
-                self._config,
-                TIMESTAMPS_CONFIG_KEYS,
-            )
-            for timestamps in self._timestamps.values():
-                OldTimestamps(self._config, timestamps).import_old_timestamps()
+            self._init_run_timestamps()
 
     ############
     # Checkers #
     ############
-    def _is_skippable(self, path: Path) -> bool:
+    def _is_skippable(self, path: Path) -> bool:  # noqa C901
         """Handle things that are not optimizable files."""
         skip = False
         # File types
@@ -98,6 +116,10 @@ class Walk(Configurable):
         elif path.name in self.TIMESTAMPS_FILENAMES:
             if self._config.verbose > 1:
                 cprint(f"Skip timestamp {path}", "white", attrs=["dark"])
+            skip = True
+        elif path.name in OLD_TIMESTAMPS_NAME:
+            if self._config.verbose > 1:
+                cprint(f"Skip legacy timestamp {path}", "white", attrs=["dark"])
             skip = True
         elif not path.exists():
             if self._config.verbose > 1:
@@ -112,34 +134,34 @@ class Walk(Configurable):
 
     def _is_older_than_timestamp(
         self,
-        path: Path,
-        top_path: Path,
-        container_mtime: Optional[float],
+        info: PathInfo,
     ) -> bool:
         """Is the file older than the timestamp."""
         # If the file is in an container, use the container time.
         # This helps if you have a new container that you
         # collected from someone who put really old files in it that
         # should still be optimised
-        if container_mtime is not None:
-            mtime = container_mtime
-        else:
-            mtime = path.stat().st_mtime
+        mtime = (
+            info.container_mtime
+            if info.container_mtime is not None
+            else info.path.stat().st_mtime
+        )
 
         # The timestamp or configured walk after time for comparison.
-        walk_after = None
         if self._config.after is not None:
             walk_after = self._config.after
-        elif container_mtime is None:
-            timestamps = self._timestamps.get(top_path, {})
-            walk_after = timestamps.get(path)
+        elif info.container_mtime is None and self._config.timestamps:
+            timestamps = self._timestamps.get(info.top_path, {})
+            walk_after = timestamps.get(info.path)
+        else:
+            walk_after = None
 
         if walk_after is None:
             return False
 
         return bool(mtime <= walk_after)
 
-    def _clean_up_working_files(self, path):
+    def _clean_up_working_files(self, path) -> None:
         """Auto-clean old working temp files if encountered."""
         try:
             if path.is_dir():
@@ -173,43 +195,50 @@ class Walk(Configurable):
                 timestamps = self._timestamps[top_path]
                 timestamps.set(final_result.path)
 
-    def walk_dir(
-        self,
-        path: Path,
-        top_path: Path,
-        container_mtime: Optional[float],
-        convert: bool,
-        is_case_sensitive: bool,
-    ) -> None:
+    def walk_dir(self, info: PathInfo) -> None:
         """Recursively optimize a directory."""
+        if not self._config.recurse and info.container_mtime is None:
+            # Skip
+            return
+
         results = []
         files = []
-        for name in sorted(os.listdir(path)):
-            entry_path = path / name
+        for name in sorted(os.listdir(info.path)):
+            entry_path = info.path / name
             if entry_path.is_dir():
-                self.walk_file(
-                    entry_path, top_path, container_mtime, convert, is_case_sensitive
+                path_info = PathInfo(
+                    entry_path,
+                    info.top_path,
+                    info.container_mtime,
+                    info.convert,
+                    info.is_case_sensitive,
                 )
+                self.walk_file(path_info)
             else:
                 files.append(entry_path)
 
         for entry_path in files:
-            result = self.walk_file(
-                entry_path, top_path, container_mtime, convert, is_case_sensitive
+            path_info = PathInfo(
+                entry_path,
+                info.top_path,
+                info.container_mtime,
+                info.convert,
+                info.is_case_sensitive,
             )
+            result = self.walk_file(path_info)
             if result:
                 results.append(result)
 
         self._finish_results(
             results,
-            container_mtime,
-            top_path,
+            info.container_mtime,
+            info.top_path,
         )
 
-        if self._config.timestamps and not container_mtime:
+        if self._config.timestamps and not info.container_mtime:
             # Compact timestamps after every directory completes
-            timestamps = self._timestamps[top_path]
-            timestamps.set(path, compact=True)
+            timestamps = self._timestamps[info.top_path]
+            timestamps.set(info.path, compact=True)
 
     def _walk_container(
         self, top_path: Path, handler: ContainerHandler, is_case_sensitive: bool
@@ -219,118 +248,131 @@ class Walk(Configurable):
         try:
             handler.unpack()
             container_mtime = handler.original_path.stat().st_mtime
-            self.walk_dir(
+            path_info = PathInfo(
                 handler.tmp_container_dir,
                 top_path,
                 container_mtime,
                 handler.CONVERT,
                 is_case_sensitive,
             )
+
+            self.walk_dir(path_info)
             result = self._pool.apply_async(handler.repack)
         except Exception as exc:
             traceback.print_exc()
-            args = tuple([exc])
+            args = (exc,)
             result = self._pool.apply_async(handler.error, args=args)
         return result
 
-    def walk_file(
+    def _skip_older_than_timestamp(self, path) -> None:
+        """Report on skipping files older than the timestamp."""
+        color = "green"
+        if self._config.verbose == 1:
+            cprint(".", color, end="")
+        elif self._config.verbose > 1:
+            cprint(f"Skip older than timestamp: {path}", color)
+
+    def _is_walk_file_skip(
         self,
-        path: Path,
-        top_path: Path,
-        container_mtime: Optional[float],
-        convert: bool,
-        is_case_sensitive: bool,
-    ) -> Optional[ApplyResult]:
+        info: PathInfo,
+    ) -> bool:
+        """Decide on skip the file or not."""
+        if self._is_skippable(info.path):
+            if self._config.verbose == 1:
+                cprint(".", "white", attrs=["dark"], end="")
+            return True
+
+        if info.path.name.rfind(Handler.WORKING_SUFFIX) > -1:
+            self._clean_up_working_files(info.path)
+            if self._config.verbose == 1:
+                cprint(".", "yellow", end="")
+            return True
+
+        if self._is_older_than_timestamp(info):
+            self._skip_older_than_timestamp(info.path)
+            return True
+
+        return False
+
+    def _handle_file(self, handler, top_path, is_case_sensitive):
+        """Call the correct walk or pool apply for the handler."""
+        if isinstance(handler, ContainerHandler):
+            # Unpack inline, not in the pool, and walk immediately like dirs.
+            result = self._walk_container(top_path, handler, is_case_sensitive)
+        elif isinstance(handler, ImageHandler):
+            result = self._pool.apply_async(handler.optimize_image)
+        else:
+            msg = f"bad handler {handler}"
+            raise TypeError(msg)
+        return result
+
+    def walk_file(self, info: PathInfo) -> Optional[ApplyResult]:
         """Optimize an individual file."""
-        result: Optional[ApplyResult] = None
         try:
-            # START DECIDE
-            if self._is_skippable(path):
-                if self._config.verbose == 1:
-                    cprint(".", "white", attrs=["dark"], end="")
-                return result
+            if info.path.is_dir():
+                return self.walk_dir(info)
 
-            if path.name.rfind(Handler.WORKING_SUFFIX) > -1:
-                self._clean_up_working_files(path)
-                if self._config.verbose == 1:
-                    cprint(".", "yellow", end="")
-                return result
+            if self._is_walk_file_skip(info):
+                return None
 
-            if path.is_dir():
-                if self._config.recurse or container_mtime is not None:
-                    result = self.walk_dir(
-                        path, top_path, container_mtime, convert, is_case_sensitive
-                    )
-                return result
-
-            if self._is_older_than_timestamp(path, top_path, container_mtime):
-                color = "green"
-                if self._config.verbose == 1:
-                    cprint(".", color, end="")
-                elif self._config.verbose > 1:
-                    cprint(f"Skip older than timestamp: {path}", color)
-                return result
-            # END DECIDE
-
-            handler = create_handler(self._config, path, is_case_sensitive, convert)
-
+            handler = create_handler(self._config, info)
             if handler is None:
-                return result
+                return None
 
             if self._config.list_only:
-                print(f"{path}: {handler.__class__.__name__}")
-                return result
+                return None
 
-            if isinstance(handler, ContainerHandler):
-                # Unpack inline, not in the pool, and walk immediately like dirs.
-                result = self._walk_container(top_path, handler, is_case_sensitive)
-            elif isinstance(handler, ImageHandler):
-                result = self._pool.apply_async(handler.optimize_image)
-            else:
-                raise ValueError(f"bad handler {handler}")
+            result = self._handle_file(handler, info.top_path, info.is_case_sensitive)
         except Exception as exc:
             traceback.print_exc()
-            result = self._pool.apply_async(
-                ReportStats, args=(path, None, self._config.test, convert, exc)
+            report_info = ReportInfo(
+                path=info.path,
+                convert=info.convert,
+                test=self._config.test,
+                exc=exc,
             )
+            result = self._pool.apply_async(ReportStats, (report_info,))
         return result
 
     ##########
     # Finish #
     ##########
+    def _report_totals_bytes_in(self) -> None:
+        """Report Totals if there were bytes in."""
+        if not self._config.verbose and not self._config.test:
+            return
+        bytes_saved = self._totals.bytes_in - self._totals.bytes_out
+        percent_bytes_saved = bytes_saved / self._totals.bytes_in * 100
+        msg = ""
+        if self._config.test:
+            if percent_bytes_saved > 0:
+                msg += "Could save"
+            elif percent_bytes_saved == 0:
+                msg += "Could even out for"
+            else:
+                msg += "Could lose"
+        else:
+            if percent_bytes_saved > 0:  # noqa: PLR5501
+                msg += "Saved"
+            elif percent_bytes_saved == 0:
+                msg += "Evened out"
+            else:
+                msg = "Lost"
+        msg += " a total of {} or {:.{prec}f}%".format(
+            naturalsize(bytes_saved), percent_bytes_saved, prec=2
+        )
+        cprint(msg)
+        if self._config.test:
+            cprint("Test run did not change any files.")
+
     def _report_totals(self) -> None:
         """Report the total number and percent of bytes saved."""
         if self._config.verbose == 1:
-            print()
+            cprint("")
         if self._totals.bytes_in:
-            bytes_saved = self._totals.bytes_in - self._totals.bytes_out
-            percent_bytes_saved = bytes_saved / self._totals.bytes_in * 100
-            msg = ""
-            if self._config.test:
-                if percent_bytes_saved > 0:
-                    msg += "Could save"
-                elif percent_bytes_saved == 0:
-                    msg += "Could even out for"
-                else:
-                    msg += "Could lose"
-            else:
-                if percent_bytes_saved > 0:
-                    msg += "Saved"
-                elif percent_bytes_saved == 0:
-                    msg += "Evened out"
-                else:
-                    msg = "Lost"
-            msg += " a total of {} or {:.{prec}f}%".format(
-                naturalsize(bytes_saved), percent_bytes_saved, prec=2
-            )
-            if self._config.verbose:
-                print(msg)
-                if self._config.test:
-                    print("Test run did not change any files.")
-
-        else:
-            if self._config.verbose:
-                print("Didn't optimize any files.")
+            self._report_totals_bytes_in()
+        elif self._config.verbose:
+            cprint("Didn't optimize any files.")
 
         if self._totals.errors:
             cprint("Errors with the following files:", "red")
@@ -350,7 +392,6 @@ class Walk(Configurable):
                 continue
             top_paths.append(path)
         self._top_paths: tuple[Path, ...] = tuple(top_paths)
-        self._timestamps: dict[Path, Treestamps] = {}
         if self._config.jobs:
             self._pool = Pool(self._config.jobs)
         else:
@@ -358,7 +399,7 @@ class Walk(Configurable):
 
     @classmethod
     def _is_case_sensitive(cls, dirpath: Path) -> bool:
-        """Deterimine if a path is on a case sensitive filesystem."""
+        """Determine if a path is on a case sensitive filesystem."""
         lowercase_path = dirpath / cls.LOWERCASE_TESTNAME
         result = False
         try:
@@ -380,9 +421,10 @@ class Walk(Configurable):
         # Walk each top file
         top_results = {}
         for top_path in self._top_paths:
-            dirpath = Treestamps.dirpath(top_path)
+            dirpath = Treestamps.get_dir(top_path)
             is_case_sensitive = self._is_case_sensitive(dirpath)
-            result = self.walk_file(top_path, dirpath, None, True, is_case_sensitive)
+            path_info = PathInfo(top_path, dirpath, None, True, is_case_sensitive)
+            result = self.walk_file(path_info)
             if not result:
                 continue
             if dirpath not in top_results:
@@ -398,10 +440,7 @@ class Walk(Configurable):
         self._pool.join()
 
         if self._config.timestamps:
-            for top_path, timestamps in self._timestamps.items():
-                if self._config.verbose:
-                    print(f"\nSaving timestamps for {top_path}")
-                timestamps.dump()
+            self._timestamps.dump()
 
         # Finish by reporting totals
         self._report_totals()

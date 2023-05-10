@@ -5,7 +5,6 @@ import shutil
 from picopt import PROGRAM_NAME, cli
 from tests import IMAGES_DIR, get_test_dir
 
-
 __all__ = ()
 TMP_ROOT = get_test_dir()
 FNS = {
@@ -81,7 +80,10 @@ else:
 
 
 class TestImagesDir:
+    """Test images dir."""
+
     def setup_method(self) -> None:
+        """Set up method."""
         self.teardown_method()
         shutil.copytree(IMAGES_DIR, TMP_ROOT)
         for name, sizes in FNS.items():
@@ -89,10 +91,12 @@ class TestImagesDir:
             assert path.stat().st_size == sizes[0]
 
     def teardown_method(self) -> None:
+        """Tear down method."""
         if TMP_ROOT.exists():
             shutil.rmtree(TMP_ROOT)
 
     def test_no_convert(self) -> None:
+        """Test no convert."""
         args = (PROGRAM_NAME, "-rvv", str(TMP_ROOT))
         res = cli.main(args)
         assert res
@@ -101,6 +105,7 @@ class TestImagesDir:
             assert path.stat().st_size == sizes[1]
 
     def test_convert_to_png(self) -> None:
+        """Test convert to PNG."""
         args = (PROGRAM_NAME, "-rvvx", "TIFF", "-c", "PNG", str(TMP_ROOT))
         res = cli.main(args)
         assert res
@@ -109,6 +114,7 @@ class TestImagesDir:
             assert path.stat().st_size == sizes[2][1]
 
     def test_convert_to_webp(self) -> None:
+        """Test convert to WEBP."""
         args = (PROGRAM_NAME, "-rvvx", "TIFF", "-c", "WEBP", str(TMP_ROOT))
         res = cli.main(args)
         assert res

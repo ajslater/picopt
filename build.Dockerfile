@@ -1,4 +1,4 @@
-FROM cimg/python:3.10-node
+FROM cimg/python:3.11-node
 
 ENV DEBIAN_FRONTEND noninteractive
 
@@ -19,10 +19,11 @@ RUN apt-get update \
 
 WORKDIR /app
 RUN chown circleci:circleci /app
-COPY --chown=circleci:circleci ci ci
-RUN ci/mozjpeg.sh
+COPY --chown=circleci:circleci bin bin
+COPY --chown=circleci:circleci packages packages
+RUN bin/mozjpeg.sh
 # hadolint ignore=DL3059
-RUN ci/pngout.sh
+RUN bin/pngout.sh
 
 USER circleci
 COPY --chown=circleci:circleci pyproject.toml poetry.lock ./
