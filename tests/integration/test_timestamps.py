@@ -1,7 +1,7 @@
 """Test comic format."""
 import platform
 import shutil
-from datetime import UTC, datetime
+from datetime import datetime, timezone
 
 from ruamel.yaml import YAML
 
@@ -61,7 +61,7 @@ class TestTimestamps:
     def _write_timestamp(path, ts=None, config=None):
         """Write timestamp."""
         if ts is None:
-            ts = datetime.now(tz=UTC).timestamp()
+            ts = datetime.now(tz=timezone.utc).timestamp()
         if config is None:
             config = DEFAULT_CONFIG
         ts_config = {**TREESTAMPS_CONFIG}
@@ -144,7 +144,7 @@ class TestTimestamps:
     def _write_wal(path, ts=None, config=None):
         """Write wal."""
         if ts is None:
-            ts = datetime.now(tz=UTC).timestamp()
+            ts = datetime.now(tz=timezone.utc).timestamp()
         if config is None:
             config = DEFAULT_CONFIG
         yaml = {"config": config, "wal": [{str(path): ts}]}
