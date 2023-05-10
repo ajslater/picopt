@@ -1,5 +1,9 @@
 # 📰 Picopt News
 
+## v3.3.3
+
+- Update treestamps fixes bugs.
+
 ## v3.3.2
 
 - Upstream treestamps returns to relative stamp paths for portability.
