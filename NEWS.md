@@ -1,5 +1,9 @@
 # 📰 Picopt News
 
+## v3.3.4
+
+- Keep original path suffix if not converting.
+
 ## v3.3.3
 
 - Update treestamps fixes bugs.
