@@ -27,7 +27,7 @@ class Zip(ContainerHandler):
         """Return the format if this handler can handle this path."""
         file_format = None
         suffix = path.suffix.lower()
-        if is_zipfile(path) and suffix == cls.output_suffix():
+        if is_zipfile(path) and suffix == cls.get_default_suffix():
             file_format = cls.OUTPUT_FILE_FORMAT
         elif is_rarfile(path) and suffix == cls.RAR_SUFFIX:
             file_format = cls.INPUT_FILE_FORMAT_RAR

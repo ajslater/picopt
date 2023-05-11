@@ -22,9 +22,14 @@ class Jpeg(ImageHandler):
     _JPEGTRAN_ARGS_PREFIX = [PROGRAMS["jpegtran"], *_ARGS_PREFIX]
 
     @classmethod
-    def _output_suffix(cls) -> str:
-        """JPEG suffix does not match format."""
-        return "jpg"
+    def get_default_suffix(cls) -> str:
+        """Override default suffix for jpeg."""
+        return ".jpg"
+
+    @classmethod
+    def get_suffixes(cls, default_suffix: str) -> frozenset:
+        """Initialize suffix instance variables."""
+        return frozenset((default_suffix, "." + cls.OUTPUT_FORMAT_STR.lower()))
 
     def _jpegtran(self, args: list[str], old_path: Path, new_path: Path) -> Path:
         """Run the jpegtran type program."""

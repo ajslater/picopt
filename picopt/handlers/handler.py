@@ -73,16 +73,6 @@ class Handler(ABC):
         return {cls.OUTPUT_FILE_FORMAT}
 
     @classmethod
-    def _output_suffix(cls) -> str:
-        """Return the suffix without a leading dot."""
-        return cls.OUTPUT_FORMAT_STR.lower()
-
-    @classmethod
-    def output_suffix(cls) -> str:
-        """Generate the output suffix for the handler."""
-        return "." + cls._output_suffix()
-
-    @classmethod
     def is_handler_available(
         cls,
         convert_handlers: dict,
@@ -97,6 +87,18 @@ class Handler(ABC):
             available_programs & set(cls.PROGRAMS.keys())
         )
 
+    @classmethod
+    def get_default_suffix(cls):
+        """Get the default suffix based on the format."""
+        # overridden in jpeg
+        return "." + cls.OUTPUT_FORMAT_STR.lower()
+
+    @classmethod
+    def get_suffixes(cls, default_suffix: str) -> frozenset:
+        """Initialize suffix instance variables."""
+        # overridden in jpeg
+        return frozenset((default_suffix,))
+
     def __init__(
         self,
         config: AttrDict,
@@ -108,7 +110,15 @@ class Handler(ABC):
         self.config: AttrDict = config
         self.original_path: Path = path_info.path
         self.working_paths: set[Path] = set()
-        self.final_path: Path = self.original_path.with_suffix(self.output_suffix())
+        default_suffix = self.get_default_suffix()
+        self._suffixes = self.get_suffixes(default_suffix)
+        self.output_suffix: str = (
+            self.original_path.suffix
+            if self.original_path
+            and self.original_path.suffix.lower() in self._suffixes
+            else default_suffix
+        )
+        self.final_path: Path = self.original_path.with_suffix(self.output_suffix)
         self.input_file_format: FileFormat = input_file_format
         self.metadata = metadata
         self.convert = input_file_format != self.OUTPUT_FILE_FORMAT
@@ -119,9 +129,8 @@ class Handler(ABC):
         suffixes = [self.original_path.suffix, self.WORKING_SUFFIX]
         if identifier:
             suffixes += [identifier]
-        suffixes += [self._output_suffix()]
         suffix = ".".join(suffixes)
-
+        suffix += self.output_suffix
         return self.original_path.with_suffix(suffix)
 
     def cleanup_after_optimize(self, last_working_path: Path) -> tuple[int, int]:

@@ -80,7 +80,7 @@ class WebPLossless(WebP):
             self.input_file_format in self._PIL2PNG_FILE_FORMATS
             and self.PREFERRED_PROGRAM in self.config.computed.available_programs
         ):
-            new_path = new_path.with_suffix(Png.output_suffix())
+            new_path = new_path.with_suffix(Png.get_default_suffix())
             with Image.open(old_path) as image:
                 image.save(
                     new_path,
