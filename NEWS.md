@@ -1,5 +1,9 @@
 # 📰 Picopt News
 
+## v3.3.5
+
+- Wasn't skipping directories appropriately.
+
 ## v3.3.4
 
 - Keep original path suffix if not converting.

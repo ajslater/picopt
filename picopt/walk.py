@@ -287,11 +287,6 @@ class Walk(Configurable):
             if self._config.verbose == 1:
                 cprint(".", "yellow", end="")
             return True
-
-        if self._is_older_than_timestamp(info):
-            self._skip_older_than_timestamp(info.path)
-            return True
-
         return False
 
     def _handle_file(self, handler, top_path, is_case_sensitive):
@@ -309,10 +304,14 @@ class Walk(Configurable):
     def walk_file(self, info: PathInfo) -> Optional[ApplyResult]:
         """Optimize an individual file."""
         try:
+            if self._is_walk_file_skip(info):
+                return None
+
             if info.path.is_dir():
                 return self.walk_dir(info)
 
-            if self._is_walk_file_skip(info):
+            if self._is_older_than_timestamp(info):
+                self._skip_older_than_timestamp(info.path)
                 return None
 
             handler = create_handler(self._config, info)
