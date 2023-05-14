@@ -12,11 +12,11 @@ from picopt.handlers.container import ContainerHandler
 from picopt.handlers.handler import FileFormat, Handler, Metadata
 from picopt.handlers.image import TIFF_FORMAT_STR
 from picopt.handlers.webp import WebPLossless
-from picopt.handlers.zip import CBZ, EPub, Zip
+from picopt.handlers.zip import CBR, CBZ, EPub, Rar, Zip
 from picopt.pillow.webp_lossless import is_lossless
 
 _ALWAYS_LOSSLESS_FORMAT_STRS = WEBP_CONVERTABLE_FORMAT_STRS - {TIFF_FORMAT_STR}
-_CONTAINER_HANDLERS: tuple[type[ContainerHandler], ...] = (CBZ, Zip, EPub)
+_CONTAINER_HANDLERS: tuple[type[ContainerHandler], ...] = (CBZ, Zip, CBR, Rar, EPub)
 
 
 def _is_lossless(image_format: str, path: Path, info: dict) -> bool:

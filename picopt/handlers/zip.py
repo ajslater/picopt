@@ -1,7 +1,7 @@
 """Handler for zip files."""
 import os
 from pathlib import Path
-from typing import Optional, Union
+from typing import Optional
 
 from PIL import Image, UnidentifiedImageError
 from termcolor import cprint
@@ -21,10 +21,9 @@ class Zip(ContainerHandler):
 
     OUTPUT_FORMAT_STR: str = "ZIP"
     OUTPUT_FILE_FORMAT: FileFormat = FileFormat(OUTPUT_FORMAT_STR)
-    INPUT_FORMAT_STR_RAR: str = "RAR"
-    INPUT_FILE_FORMAT_RAR: FileFormat = FileFormat(INPUT_FORMAT_STR_RAR)
-    RAR_SUFFIX: str = "." + INPUT_FORMAT_STR_RAR.lower()
-    PROGRAMS: dict[str, Optional[str]] = {ContainerHandler.INTERNAL: None}
+    PROGRAMS: dict[str, Optional[str]] = {
+        ContainerHandler.INTERNAL: None,
+    }
 
     @classmethod
     def identify_format(cls, path: Path) -> Optional[FileFormat]:
@@ -33,26 +32,20 @@ class Zip(ContainerHandler):
         suffix = path.suffix.lower()
         if is_zipfile(path) and suffix == cls.get_default_suffix():
             file_format = cls.OUTPUT_FILE_FORMAT
-        elif is_rarfile(path) and suffix == cls.RAR_SUFFIX:
-            file_format = cls.INPUT_FILE_FORMAT_RAR
         return file_format
 
-    def _get_archive(self) -> Union[ZipFile, RarFile]:
+    def _get_archive(self) -> ZipFile:
         """Use the zipfile builtin for this archive."""
         if is_zipfile(self.original_path):
             archive = ZipFile(self.original_path, "r")
-        elif is_rarfile(self.original_path):
-            archive = RarFile(self.original_path, "r")
         else:
             msg = f"Unknown archive type: {self.original_path}"
             raise ValueError(msg)
         return archive
 
-    def _set_comment(self, comment: Union[str, bytes, None]) -> None:
+    def _set_comment(self, comment: Optional[bytes]) -> None:
         """Set the comment from the archive."""
-        if type(comment) is str:
-            self.comment = comment.encode()
-        elif type(comment) is bytes:
+        if comment:
             self.comment = comment
 
     def unpack_into(self) -> None:
@@ -95,14 +88,53 @@ class Zip(ContainerHandler):
                 new_zf.comment = self.comment
 
 
+class Rar(Zip):
+    """RAR Container."""
+
+    INPUT_FORMAT_STR: str = "RAR"
+    INPUT_FILE_FORMAT: FileFormat = FileFormat(INPUT_FORMAT_STR)
+    INPUT_SUFFIX: str = "." + INPUT_FORMAT_STR.lower()
+    PROGRAMS: dict[str, Optional[str]] = Zip.init_programs(("unrar",))
+
+    @classmethod
+    def identify_format(cls, path: Path) -> Optional[FileFormat]:
+        """Return the format if this handler can handle this path."""
+        file_format = None
+        suffix = path.suffix.lower()
+        if is_rarfile(path) and suffix == cls.INPUT_SUFFIX:
+            file_format = cls.INPUT_FILE_FORMAT
+        return file_format
+
+    def _get_archive(self) -> RarFile:
+        """Use the zipfile builtin for this archive."""
+        if is_rarfile(self.original_path):
+            archive = RarFile(self.original_path, "r")
+        else:
+            msg = f"Unknown archive type: {self.original_path}"
+            raise ValueError(msg)
+        return archive
+
+    def _set_comment(self, comment: Optional[str]) -> None:
+        """Set the comment from the archive."""
+        if comment:
+            self.comment = comment.encode()
+
+
 class CBZ(Zip):
     """CBZ Container."""
 
     OUTPUT_FORMAT_STR: str = "CBZ"
     OUTPUT_FILE_FORMAT: FileFormat = FileFormat(OUTPUT_FORMAT_STR)
-    INPUT_FORMAT_STR_RAR: str = "CBR"
-    INPUT_FILE_FORMAT_RAR: FileFormat = FileFormat(INPUT_FORMAT_STR_RAR)
-    RAR_SUFFIX: str = "." + INPUT_FORMAT_STR_RAR.lower()
+
+
+class CBR(Rar):
+    """CBR Container."""
+
+    INPUT_FORMAT_STR: str = "CBR"
+    INPUT_FILE_FORMAT: FileFormat = FileFormat(INPUT_FORMAT_STR)
+    INPUT_SUFFIX: str = "." + INPUT_FORMAT_STR.lower()
+    OUTPUT_FORMAT_STR: str = "CBZ"
+    OUTPUT_FILE_FORMAT: FileFormat = FileFormat(OUTPUT_FORMAT_STR)
 
 
 class EPub(Zip):

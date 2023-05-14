@@ -11,7 +11,7 @@ from picopt import PROGRAM_NAME, walk
 from picopt.config import ALL_FORMAT_STRS, DEFAULT_HANDLERS, get_config
 from picopt.handlers.png import Png
 from picopt.handlers.webp import WebP
-from picopt.handlers.zip import CBZ, Zip
+from picopt.handlers.zip import CBR, Rar
 
 DEFAULT_FORMAT_STRS = frozenset(
     [handler_cls.OUTPUT_FORMAT_STR for handler_cls in DEFAULT_HANDLERS]
@@ -107,8 +107,8 @@ def get_arguments(params: Optional[tuple[str, ...]] = None) -> Namespace:
         dest="convert_to",
         help="A list of formats to convert to. Lossless images may convert to"
         f" {Png.OUTPUT_FORMAT_STR} or {WebP.OUTPUT_FORMAT_STR}."
-        f" {Zip.INPUT_FORMAT_STR_RAR} archives"
-        f" may convert to {Zip.OUTPUT_FORMAT_STR} or {CBZ.OUTPUT_FORMAT_STR}."
+        f" {Rar.INPUT_FORMAT_STR} archives"
+        f" may convert to {Rar.OUTPUT_FORMAT_STR} or {CBR.OUTPUT_FORMAT_STR}."
         " By default formats are not converted to other formats.",
     )
     parser.add_argument(
