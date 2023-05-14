@@ -4,7 +4,6 @@
 
 - If unrar is not available do not convert rar. Was making empty zips.
 - Support zip deflate64
-- Use unrar.cffi if available.
 
 ## v3.3.5
 

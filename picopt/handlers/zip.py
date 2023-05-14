@@ -4,13 +4,9 @@ from pathlib import Path
 from typing import Optional
 
 from PIL import Image, UnidentifiedImageError
+from rarfile import RarFile, is_rarfile
 from termcolor import cprint
 from zipfile_deflate64 import ZIP_DEFLATED, ZipFile, is_zipfile
-
-try:
-    from unrar.cffi.rarfile import RarFile, is_rarfile  # type: ignore
-except ImportError:
-    from rarfile import RarFile, is_rarfile
 
 from picopt.handlers.container import ContainerHandler
 from picopt.handlers.handler import FileFormat
@@ -108,7 +104,7 @@ class Rar(Zip):
     def _get_archive(self) -> RarFile:
         """Use the zipfile builtin for this archive."""
         if is_rarfile(self.original_path):
-            archive = RarFile(self.original_path, "r")
+            archive = RarFile(self.original_path)
         else:
             msg = f"Unknown archive type: {self.original_path}"
             raise ValueError(msg)
