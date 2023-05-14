@@ -2,11 +2,15 @@
 import os
 from pathlib import Path
 from typing import Optional, Union
-from zipfile import ZIP_DEFLATED, ZipFile, is_zipfile
 
 from PIL import Image, UnidentifiedImageError
-from rarfile import RarFile, is_rarfile
 from termcolor import cprint
+from zipfile_deflate64 import ZIP_DEFLATED, ZipFile, is_zipfile
+
+try:
+    from unrar.cffi.rarfile import RarFile, is_rarfile  # type: ignore
+except ImportError:
+    from rarfile import RarFile, is_rarfile
 
 from picopt.handlers.container import ContainerHandler
 from picopt.handlers.handler import FileFormat

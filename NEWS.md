@@ -1,5 +1,10 @@
 # 📰 Picopt News
 
+## v3.3.6
+
+- Support zip deflate64
+- Use unrar.cffi if available.
+
 ## v3.3.5
 
 - Wasn't skipping directories appropriately.
