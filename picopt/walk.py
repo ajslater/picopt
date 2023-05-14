@@ -22,7 +22,7 @@ from picopt.handlers.handler import Handler
 from picopt.handlers.image import ImageHandler
 from picopt.handlers.png import Png
 from picopt.handlers.webp import WebP
-from picopt.handlers.zip import CBZ, Zip
+from picopt.handlers.zip import CBR, Rar
 from picopt.old_timestamps import OLD_TIMESTAMPS_NAME, OldTimestamps
 from picopt.stats import ReportStats, Totals
 
@@ -59,10 +59,10 @@ class Walk(Configurable):
                 self._convert_message(
                     self._config.computed.convertable_formats.png, Png
                 )
-            if Zip.OUTPUT_FORMAT_STR in self._config.convert_to:
-                self._convert_message(frozenset([Zip.INPUT_FORMAT_STR_RAR]), Zip)
-            if CBZ.OUTPUT_FORMAT_STR in self._config.convert_to:
-                self._convert_message(frozenset([CBZ.INPUT_FORMAT_STR_RAR]), CBZ)
+            if Rar.OUTPUT_FORMAT_STR in self._config.convert_to:
+                self._convert_message(frozenset([Rar.INPUT_FORMAT_STR]), Rar)
+            if CBR.OUTPUT_FORMAT_STR in self._config.convert_to:
+                self._convert_message(frozenset([CBR.INPUT_FORMAT_STR]), CBR)
         if self._config.after is not None:
             after = time.ctime(self._config.after)
             cprint(f"Optimizing after {after}")

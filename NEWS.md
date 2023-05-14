@@ -1,5 +1,10 @@
 # 📰 Picopt News
 
+## v3.3.6
+
+- If unrar is not available do not convert rar. Was making empty zips.
+- Support zip deflate64
+
 ## v3.3.5
 
 - Wasn't skipping directories appropriately.

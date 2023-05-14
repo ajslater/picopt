@@ -38,7 +38,7 @@ from picopt.handlers.jpeg import Jpeg
 from picopt.handlers.png import Png
 from picopt.handlers.webp import Gif2WebP, WebPLossless, WebPLossy
 from picopt.handlers.webp_animated import WebPAnimatedLossless, WebPAnimatedLossy
-from picopt.handlers.zip import CBZ, EPub, Zip
+from picopt.handlers.zip import CBR, CBZ, EPub, Rar, Zip
 
 _PNG_CONVERTABLE_FILE_FORMATS = CONVERTABLE_FILE_FORMATS | frozenset(
     [Gif.OUTPUT_FILE_FORMAT]
@@ -61,7 +61,7 @@ CONVERT_TO_FORMAT_STRS = frozenset(
     )
 )
 CONTAINER_CONVERTABLE_FORMAT_STRS = frozenset(
-    (Zip.INPUT_FORMAT_STR_RAR, CBZ.INPUT_FORMAT_STR_RAR)
+    (Rar.INPUT_FORMAT_STR, CBR.INPUT_FORMAT_STR)
 )
 DEFAULT_HANDLERS = (Gif, AnimatedGif, Jpeg, Png, WebPLossy, WebPLossless)
 HANDLERS = frozenset(
@@ -71,7 +71,9 @@ HANDLERS = frozenset(
         WebPAnimatedLossy,
         WebPAnimatedLossless,
         Zip,
+        Rar,
         CBZ,
+        CBR,
         EPub,
     ]
 )
@@ -181,8 +183,8 @@ _FORMAT_HANDLERS = {
     ),
     Zip.OUTPUT_FILE_FORMAT: FileFormatHandlers(native=Zip),
     CBZ.OUTPUT_FILE_FORMAT: FileFormatHandlers(native=CBZ),
-    Zip.INPUT_FILE_FORMAT_RAR: FileFormatHandlers(convert=Zip),
-    CBZ.INPUT_FILE_FORMAT_RAR: FileFormatHandlers(convert=CBZ),
+    Rar.INPUT_FILE_FORMAT: FileFormatHandlers(convert=Rar),
+    CBR.INPUT_FILE_FORMAT: FileFormatHandlers(convert=CBR),
     EPub.OUTPUT_FILE_FORMAT: FileFormatHandlers(native=EPub),
     TIFF_FILE_FORMAT: FileFormatHandlers(convert=(WebPLossless, Png)),
     TIFF_ANIMATED_FILE_FORMAT: FileFormatHandlers(convert=WebPAnimatedLossless),
@@ -288,15 +290,15 @@ def _update_formats_webp_lossless(format_strs, convert_handlers, config):
 
 def _update_formats_zip(format_strs, convert_handlers):
     """Update formats if converting to zip."""
-    format_strs |= {Zip.INPUT_FORMAT_STR_RAR}
-    convert_handlers[Zip] = {Zip.INPUT_FILE_FORMAT_RAR}
+    format_strs |= {Rar.INPUT_FORMAT_STR}
+    convert_handlers[Rar] = {Rar.INPUT_FILE_FORMAT}
     return format_strs
 
 
 def _update_formats_cbz(format_strs, convert_handlers):
     """Update formats if converting to cbz."""
-    format_strs |= {CBZ.INPUT_FORMAT_STR_RAR}
-    convert_handlers[CBZ] = {CBZ.INPUT_FILE_FORMAT_RAR}
+    format_strs |= {CBR.INPUT_FORMAT_STR}
+    convert_handlers[CBR] = {CBR.INPUT_FILE_FORMAT}
     return format_strs
 
 
@@ -316,9 +318,9 @@ def _update_formats(config: Configuration) -> dict:
         formats = _update_formats_png(formats, convert_handlers, config)
     if WebPLossless.OUTPUT_FORMAT_STR in convert_to:
         formats = _update_formats_webp_lossless(formats, convert_handlers, config)
-    if Zip.OUTPUT_FORMAT_STR in convert_to:
+    if Rar.OUTPUT_FORMAT_STR in convert_to:
         formats = _update_formats_zip(formats, convert_handlers)
-    if CBZ.OUTPUT_FORMAT_STR in convert_to:
+    if CBR.OUTPUT_FORMAT_STR in convert_to:
         formats = _update_formats_cbz(formats, convert_handlers)
     config[PROGRAM_NAME]["formats"].set(sorted(formats))
 
