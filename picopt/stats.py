@@ -57,7 +57,7 @@ class ReportStats:
             if self.exc.stderr:
                 report += f"\n{self._TAB}stderr: {self.exc.stderr}"
         else:
-            report += f"\n{self._TAB}{str(self.exc)}"
+            report += f"\n{self._TAB}{self.exc!s}"
         return report
 
     def report(self) -> None:
