@@ -44,7 +44,6 @@ class WebP(WebPBase, ABC):
         PROGRAMS["cwebp"],
         "-mt",
         "-sharp_yuv",
-        "-af",
         "-alpha_filter",
         "best",
     ]
@@ -71,7 +70,7 @@ class WebPLossless(WebP):
         **WebP.PROGRAMS,
         "pil2webp": None,
     }
-    ARGS_PREFIX = [*WebP.ARGS_PREFIX, "-lossless", "-z", "9"]
+    ARGS_PREFIX = [*WebP.ARGS_PREFIX, "-lossless", "-q", "100", "-m", "6"]
     _PIL2PNG_FILE_FORMATS = CONVERTABLE_FILE_FORMATS | {TIFF_FILE_FORMAT}
 
     def pil2png(self, old_path: Path, new_path: Path) -> Path:
@@ -100,7 +99,7 @@ class WebPLossy(WebP):
     """Handle lossy webp images."""
 
     OUTPUT_FILE_FORMAT = FileFormat(WebP.OUTPUT_FORMAT_STR, False, False)
-    ARGS_PREFIX = [*WebP.ARGS_PREFIX, "-m", "6", "-pass", "10"]
+    ARGS_PREFIX = [*WebP.ARGS_PREFIX, "-m", "6", "-pass", "10", "-af"]
 
 
 class Gif2WebP(WebPBase):

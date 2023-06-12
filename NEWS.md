@@ -1,5 +1,9 @@
 # 📰 Picopt News
 
+## v3.3.7
+
+- Improve cwebp compression parameters for smaller files.
+
 ## v3.3.6
 
 - If unrar is not available do not convert rar. Was making empty zips.
