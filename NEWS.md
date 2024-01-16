@@ -4,6 +4,7 @@
 
 - Fix
   - Lossy webp compression to quality = 100
+  - Fix non zero exit code on success.
 
 ## v3.3.7
 

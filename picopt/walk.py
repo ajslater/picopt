@@ -408,13 +408,9 @@ class Walk(Configurable):
             lowercase_path.unlink(missing_ok=True)
         return result
 
-    def run(self) -> bool:
+    def run(self) -> Totals:
         """Optimize all configured files."""
-        try:
-            self._init_run()
-        except Exception as exc:
-            cprint(str(exc), "red")
-            return False
+        self._init_run()
 
         # Walk each top file
         top_results = {}
@@ -442,4 +438,4 @@ class Walk(Configurable):
 
         # Finish by reporting totals
         self._report_totals()
-        return True
+        return self._totals

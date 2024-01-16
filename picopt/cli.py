@@ -245,14 +245,14 @@ def get_arguments(params: Optional[tuple[str, ...]] = None) -> Namespace:
     return Namespace(picopt=pns)
 
 
-def main(args: Optional[tuple[str, ...]] = None) -> bool:
+def main(args: Optional[tuple[str, ...]] = None):
     """Process command line arguments and walk inputs."""
     try:
         arguments = get_arguments(args)
 
         config = get_config(arguments)
         wob = walk.Walk(config)
-        return wob.run()
+        wob.run()
     except Exception as exc:
         cprint(f"ERROR: {exc}", "red")
         import traceback

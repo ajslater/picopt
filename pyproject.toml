@@ -35,7 +35,7 @@ rarfile = "^4.0"
 "ruamel.yaml" = "^0.18.5"
 termcolor = "^2.0.1"
 treestamps = "^0.4.4"
-Pillow = ">=9.0,<11.0"
+Pillow = ">=9.4,<11.0"
 
 [tool.poetry.group.dev.dependencies]
 codespell = "^2.1.0"
