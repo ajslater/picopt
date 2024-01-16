@@ -72,7 +72,7 @@ picopt requires several external system dependencies to run. We must install the
 
 #### macOS
 
-    brew install webp mozjpeg optipng jonof/kenutils/pngout gifsicle
+    brew install gifsicle jonof/kenutils/pngout mozjpeg optipng webp
 
     ln -s $(brew --prefix)/opt/mozjpeg/bin/jpegtran /usr/local/bin/mozjpeg
 
