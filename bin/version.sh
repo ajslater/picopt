@@ -3,7 +3,7 @@
 set -euo pipefail
 VERSION="${1:-}"
 if [ "$VERSION" = "" ]; then
-    poetry version | awk '{print $2};'
+  poetry version | awk '{print $2};'
 else
-    poetry version "$VERSION"
+  poetry version "$VERSION"
 fi

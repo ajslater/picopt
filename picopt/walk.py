@@ -30,7 +30,7 @@ from picopt.stats import ReportStats, Totals
 class Walk(Configurable):
     """Walk object for storing state of a walk run."""
 
-    TIMESTAMPS_FILENAMES = set(Treestamps.get_filenames(PROGRAM_NAME))
+    TIMESTAMPS_FILENAMES = frozenset(Treestamps.get_filenames(PROGRAM_NAME))
     LOWERCASE_TESTNAME = ".picopt_case_sensitive_test"
     UPPERCASE_TESTNAME = LOWERCASE_TESTNAME.upper()
 
@@ -350,16 +350,14 @@ class Walk(Configurable):
                 msg += "Could even out for"
             else:
                 msg += "Could lose"
+        elif percent_bytes_saved > 0:
+            msg += "Saved"
+        elif percent_bytes_saved == 0:
+            msg += "Evened out"
         else:
-            if percent_bytes_saved > 0:  # noqa: PLR5501
-                msg += "Saved"
-            elif percent_bytes_saved == 0:
-                msg += "Evened out"
-            else:
-                msg = "Lost"
-        msg += " a total of {} or {:.{prec}f}%".format(
-            naturalsize(bytes_saved), percent_bytes_saved, prec=2
-        )
+            msg = "Lost"
+        natural_saved = naturalsize(bytes_saved)
+        msg += f" a total of {natural_saved} or {percent_bytes_saved:.2f}%"
         cprint(msg)
         if self._config.test:
             cprint("Test run did not change any files.")
@@ -386,7 +384,8 @@ class Walk(Configurable):
         super().__init__(config)
         self._totals = Totals()
         top_paths = []
-        for path in sorted(frozenset(self._config.paths)):
+        paths: list[Path] = sorted(frozenset(self._config.paths))
+        for path in paths:
             if path.is_symlink() and not self._config.symlinks:
                 continue
             top_paths.append(path)

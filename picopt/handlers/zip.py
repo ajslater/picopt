@@ -1,12 +1,13 @@
 """Handler for zip files."""
 import os
 from pathlib import Path
+from types import MappingProxyType
 from typing import Optional
+from zipfile import ZIP_DEFLATED, ZipFile, is_zipfile
 
 from PIL import Image, UnidentifiedImageError
 from rarfile import RarFile, is_rarfile
 from termcolor import cprint
-from zipfile_deflate64 import ZIP_DEFLATED, ZipFile, is_zipfile
 
 from picopt.handlers.container import ContainerHandler
 from picopt.handlers.handler import FileFormat
@@ -17,9 +18,11 @@ class Zip(ContainerHandler):
 
     OUTPUT_FORMAT_STR: str = "ZIP"
     OUTPUT_FILE_FORMAT: FileFormat = FileFormat(OUTPUT_FORMAT_STR)
-    PROGRAMS: dict[str, Optional[str]] = {
-        ContainerHandler.INTERNAL: None,
-    }
+    PROGRAMS: MappingProxyType[str, Optional[str]] = MappingProxyType(
+        {
+            ContainerHandler.INTERNAL: None,
+        }
+    )
 
     @classmethod
     def identify_format(cls, path: Path) -> Optional[FileFormat]:
@@ -90,7 +93,7 @@ class Rar(Zip):
     INPUT_FORMAT_STR: str = "RAR"
     INPUT_FILE_FORMAT: FileFormat = FileFormat(INPUT_FORMAT_STR)
     INPUT_SUFFIX: str = "." + INPUT_FORMAT_STR.lower()
-    PROGRAMS: dict[str, Optional[str]] = Zip.init_programs(("unrar",))
+    PROGRAMS: MappingProxyType[str, Optional[str]] = Zip.init_programs(("unrar",))
 
     @classmethod
     def identify_format(cls, path: Path) -> Optional[FileFormat]:
@@ -101,7 +104,7 @@ class Rar(Zip):
             file_format = cls.INPUT_FILE_FORMAT
         return file_format
 
-    def _get_archive(self) -> RarFile:
+    def _get_archive(self) -> RarFile:  # type: ignore
         """Use the zipfile builtin for this archive."""
         if is_rarfile(self.original_path):
             archive = RarFile(self.original_path)
@@ -110,7 +113,7 @@ class Rar(Zip):
             raise ValueError(msg)
         return archive
 
-    def _set_comment(self, comment: Optional[str]) -> None:
+    def _set_comment(self, comment: Optional[str]) -> None:  # type: ignore
         """Set the comment from the archive."""
         if comment:
             self.comment = comment.encode()

@@ -1,6 +1,7 @@
 picopt:
   after: null
   bigger: False
+  converge: False
   convert_to: []
   formats: ["GIF", "JPEG", "PNG", "WEBP"]
   ignore: []

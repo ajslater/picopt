@@ -9,7 +9,7 @@ __all__ = ()
 TMP_ROOT = get_test_dir()
 FNS = {
     "07themecamplist.pdf": (93676, 93676, ("pdf", 93676), ("pdf", 93676)),
-    "test_animated_gif.gif": (16383, 16358, ("gif", 16358), ("webp", 11846)),
+    "test_animated_gif.gif": (16383, 16358, ("gif", 16358), ("webp", 11866)),
     "test_animated_png.png": (63435, 63435, ("png", 63435), ("webp", 54324)),
     "test_animated_webp.webp": (13610, 11854, ("webp", 11854), ("webp", 11854)),
     "test_png.png": (7967, 4379, ("png", 4379), ("webp", 3870)),
@@ -33,7 +33,7 @@ if platform.system() == "Darwin":
     FNS.update(
         {
             "test_bmp.bmp": (141430, 141430, ("png", 67215), ("webp", 47524)),
-            "test_gif.gif": (138952, 138944, ("png", 112467), ("webp", 26504)),
+            "test_gif.gif": (138952, 138944, ("png", 112467), ("webp", 107924)),
             "test_jpg.jpg": (97373, 87913, ("jpg", 87913), ("jpg", 87913)),
             "test_png_16rgba.png": (3435, 2870, ("png", 2870), ("webp", 1142)),
             "test_pnm.pnm": (27661, 27661, ("png", 15510), ("webp", 12808)),
@@ -43,7 +43,7 @@ if platform.system() == "Darwin":
                 ("png", 256572),
                 ("webp", 197726),
             ),
-            "test_webp_lossy.webp": (2764, 1714, ("webp", 1714), ("webp", 1714)),
+            "test_webp_lossy.webp": (2764, 2764, ("webp", 2764), ("webp", 2764)),
             "test_webp_lossy_pre-optimized.webp": (
                 1508,
                 1508,

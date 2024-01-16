@@ -1,6 +1,7 @@
 """WebP format."""
 from abc import ABC
 from pathlib import Path
+from types import MappingProxyType
 from typing import Any, Optional
 
 from PIL import Image
@@ -18,8 +19,10 @@ from picopt.handlers.png import Png
 class WebPBase(ImageHandler, ABC):
     """Base for handlers that use WebP utility commands."""
 
-    PIL2WEBP_KWARGS: dict[str, Any] = {"lossless": True, "quality": 100, "method": 6}
-    PIL2_ARGS: dict[str, Any] = PIL2WEBP_KWARGS
+    PIL2WEBP_KWARGS: MappingProxyType[str, Any] = MappingProxyType(
+        {"lossless": True, "quality": 100, "method": 6}
+    )
+    PIL2_ARGS: MappingProxyType[str, Any] = PIL2WEBP_KWARGS
 
     def get_metadata_args(self) -> list[str]:
         """Get webp utility metadata args."""
@@ -39,21 +42,28 @@ class WebP(WebPBase, ABC):
     """WebP format class."""
 
     OUTPUT_FORMAT_STR = WebPImageFile.format
-    PROGRAMS: dict[str, Optional[str]] = WebPBase.init_programs(("cwebp",))
-    ARGS_PREFIX = [
+    PROGRAMS: MappingProxyType[str, Optional[str]] = WebPBase.init_programs(("cwebp",))
+    # https://developers.google.com/speed/webp/docs/cwebp
+    ARGS_PREFIX = (
         PROGRAMS["cwebp"],
+        "-q",
+        "100",
+        "-m",
+        "6",
         "-mt",
+        # advanced
         "-sharp_yuv",
+        # additional
         "-alpha_filter",
         "best",
-    ]
+    )
 
     def cwebp(self, old_path: Path, new_path: Path) -> Path:
         """Optimize using cwebp."""
-        args = tuple(
-            self.ARGS_PREFIX
-            + self.get_metadata_args()
-            + [str(old_path), "-o", str(new_path)]
+        args = (
+            *self.ARGS_PREFIX,
+            *self.get_metadata_args(),
+            *[str(old_path), "-o", str(new_path)],
         )
         self.run_ext(args)
         return new_path
@@ -65,12 +75,15 @@ class WebPLossless(WebP):
     BEST_ONLY: bool = False
     OUTPUT_FILE_FORMAT = FileFormat(WebP.OUTPUT_FORMAT_STR, True, False)
     PREFERRED_PROGRAM: str = "cwebp"
-    PROGRAMS: dict[str, Optional[str]] = {
-        "pil2png": None,
-        **WebP.PROGRAMS,
-        "pil2webp": None,
-    }
-    ARGS_PREFIX = [*WebP.ARGS_PREFIX, "-lossless", "-q", "100", "-m", "6"]
+    PROGRAMS: MappingProxyType[str, Optional[str]] = MappingProxyType(
+        {
+            "pil2png": None,
+            **WebP.PROGRAMS,
+            "pil2webp": None,
+        }
+    )
+    ARGS_PREFIX = (*WebP.ARGS_PREFIX, "-lossless")
+    CONVERGE = True
     _PIL2PNG_FILE_FORMATS = CONVERTABLE_FILE_FORMATS | {TIFF_FILE_FORMAT}
 
     def pil2png(self, old_path: Path, new_path: Path) -> Path:
@@ -99,7 +112,7 @@ class WebPLossy(WebP):
     """Handle lossy webp images."""
 
     OUTPUT_FILE_FORMAT = FileFormat(WebP.OUTPUT_FORMAT_STR, False, False)
-    ARGS_PREFIX = [*WebP.ARGS_PREFIX, "-m", "6", "-pass", "10", "-af"]
+    ARGS_PREFIX = (*WebP.ARGS_PREFIX, "-pass", "10", "-af")
 
 
 class Gif2WebP(WebPBase):
@@ -111,34 +124,38 @@ class Gif2WebP(WebPBase):
 
     OUTPUT_FORMAT_STR = WebP.OUTPUT_FORMAT_STR
     OUTPUT_FILE_FORMAT = FileFormat(WebP.OUTPUT_FORMAT_STR, True, True)
-    PIL2WEBP_KWARGS: dict[str, Any] = {
-        **WebPLossless.PIL2WEBP_KWARGS,
-        "minimize_size": True,
-    }
+    PIL2WEBP_KWARGS: MappingProxyType[str, Any] = MappingProxyType(
+        {
+            **WebPLossless.PIL2WEBP_KWARGS,
+            "minimize_size": True,
+        }
+    )
     PREFERRED_PROGRAM = "gif2webp"
-    PROGRAMS: dict[str, Optional[str]] = WebPBase.init_programs(
+    PROGRAMS: MappingProxyType[str, Optional[str]] = WebPBase.init_programs(
         ("gif2webp", "pil2webp")
     )
-    _ARGS_PREFIX = [
+    _ARGS_PREFIX = (
         PROGRAMS["gif2webp"],
         "-mixed",
         "-min_size",
+        "-q",
+        "100",
         "-m",
         "6",
         "-mt",
-    ]
+    )
 
     @classmethod
     def native_input_file_formats(cls):
         """No native formats."""
-        return set()
+        return frozenset()
 
     def gif2webp(self, old_path: Path, new_path: Path) -> Path:
         """Convert animated gif to animated webp."""
-        args = tuple(
-            self._ARGS_PREFIX
-            + self.get_metadata_args()
-            + [str(old_path), "-o", str(new_path)]
+        args = (
+            *self._ARGS_PREFIX,
+            *self.get_metadata_args(),
+            *[str(old_path), "-o", str(new_path)],
         )
         self.run_ext(args)
         return new_path

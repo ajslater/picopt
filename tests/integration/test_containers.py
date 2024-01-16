@@ -15,7 +15,7 @@ if system() == "Darwin":
         "test_cbz.cbz": (93408, 84493, ("cbz", 93408)),
         "test_cbr.cbr": (93725, 93725, ("cbz", 84506)),
         "test_rar.rar": (93675, 93675, ("zip", 84493)),
-        "test_zip.zip": (2974, 1871, ("zip", 2974)),
+        "test_zip.zip": (2974, 2921, ("zip", 2974)),
         "igp-twss.epub": (292448, 281248, ("epub", 292448)),
     }
 else:

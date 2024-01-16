@@ -89,6 +89,7 @@ TEMPLATE = MappingTemplate(
             {
                 "after": Optional(float),
                 "bigger": bool,
+                "converge": bool,
                 "convert_to": Optional(Sequence(Choice(CONVERT_TO_FORMAT_STRS))),
                 "formats": Sequence(Choice(ALL_FORMAT_STRS)),
                 "ignore": Sequence(str),

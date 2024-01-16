@@ -15,13 +15,15 @@ class WebPAnimatedBase(ContainerHandler):
 
     OUTPUT_FORMAT_STR: str = WebP.OUTPUT_FORMAT_STR
     PROGRAMS = ContainerHandler.init_programs(("webpmux", "img2webp"))
-    _OPEN_WITH_PIL_FILE_FORMATS = {PNG_ANIMATED_FILE_FORMAT, TIFF_ANIMATED_FILE_FORMAT}
+    _OPEN_WITH_PIL_FILE_FORMATS = frozenset(
+        {PNG_ANIMATED_FILE_FORMAT, TIFF_ANIMATED_FILE_FORMAT}
+    )
     _IMG2WEBP_ARGS_PREFIX = (PROGRAMS["img2webp"], "-min_size")
     _WEBPMUX_ARGS_PREFIX = (PROGRAMS["webpmux"], "-get", "frame")
     _LOSSLESS = True
 
     @classmethod
-    def identify_format(cls, _path: Path) -> Optional[FileFormat]:
+    def identify_format(cls, path: Path) -> Optional[FileFormat]:  # noqa: ARG003
         """Return the format if this handler can handle this path."""
         return cls.OUTPUT_FILE_FORMAT
 
@@ -46,7 +48,7 @@ class WebPAnimatedBase(ContainerHandler):
                     frame_index += 1
             image.close()
         else:
-            for frame_index in range(0, self.metadata.n_frames):
+            for frame_index in range(self.metadata.n_frames):
                 frame_path = self._get_frame_path(frame_index)
                 args = [
                     *self._WEBPMUX_ARGS_PREFIX,

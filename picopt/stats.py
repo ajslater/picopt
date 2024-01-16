@@ -1,9 +1,13 @@
 """Statistics for the optimization operations."""
 from dataclasses import dataclass, field
 from subprocess import CalledProcessError
+from typing import TYPE_CHECKING
 
 from humanize import naturalsize
 from termcolor import cprint
+
+if TYPE_CHECKING:
+    from termcolor._types import Attribute, Color
 
 from picopt.data import ReportInfo
 
@@ -32,7 +36,7 @@ class ReportStats:
         saved = naturalsize(self.saved)
         percent_saved = (1 - ratio) * 100
 
-        return "{:.{prec}f}% ({})".format(percent_saved, saved, prec=2)
+        return f"{percent_saved:.2f}% ({saved})"
 
     def _report_saved(self) -> str:
         """Return the percent saved."""
@@ -65,14 +69,14 @@ class ReportStats:
         attrs = []
         if self.exc:
             report = self._report_error()
-            color = "red"
+            color: Color = "red"
         else:
             report = self._report_saved()
-            color = "cyan" if self.convert else "white"
+            color: Color = "cyan" if self.convert else "white"
 
             if self.saved <= 0:
-                color = "blue"
-                attrs = ["bold"]
+                color: Color = "blue"
+                attrs: list[Attribute] = ["bold"]
 
         cprint(report, color, attrs=attrs)
 

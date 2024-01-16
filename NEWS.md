@@ -1,5 +1,10 @@
 # 📰 Picopt News
 
+## v3.3.8
+
+- Fix
+  - Lossy webp compression to quality = 100
+
 ## v3.3.7
 
 - Improve cwebp compression parameters for smaller files.

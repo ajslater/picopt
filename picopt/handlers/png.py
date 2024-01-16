@@ -1,6 +1,6 @@
 """PNG format."""
-from copy import copy
 from pathlib import Path
+from types import MappingProxyType
 from typing import Optional
 
 from PIL.PngImagePlugin import PngImageFile
@@ -17,13 +17,18 @@ class Png(ImageHandler):
     BEST_ONLY: bool = False
     OUTPUT_FORMAT_STR = PngImageFile.format
     OUTPUT_FILE_FORMAT = FileFormat(OUTPUT_FORMAT_STR, True, False)
-    PIL2_ARGS: dict[str, bool] = {"optimize": True}
-    PROGRAMS: dict[str, Optional[str]] = ImageHandler.init_programs(
+    PIL2_ARGS: MappingProxyType[str, bool] = MappingProxyType({"optimize": True})
+    PROGRAMS: MappingProxyType[str, Optional[str]] = ImageHandler.init_programs(
         ("pil2png", "optipng", "pngout")
     )
     PREFERRED_PROGRAM: str = "optipng"
-    _OPTIPNG_ARGS = [PROGRAMS["optipng"], "-o5", "-fix", "-force"]
-    _PNGOUT_ARGS = [PROGRAMS["pngout"], "-force", "-y"]
+    _OPTIPNG_ARGS: tuple[Optional[str], ...] = (
+        PROGRAMS["optipng"],
+        "-o5",
+        "-fix",
+        "-force",
+    )
+    _PNGOUT_ARGS: tuple[Optional[str], ...] = (PROGRAMS["pngout"], "-force", "-y")
 
     def pil2png(self, old_path: Path, new_path: Path) -> Path:
         """Pillow png optimization."""
@@ -31,11 +36,11 @@ class Png(ImageHandler):
 
     def optipng(self, old_path: Path, new_path: Path) -> Path:
         """Run the external program optipng on the file."""
-        args = copy(self._OPTIPNG_ARGS)
+        args_l = list(self._OPTIPNG_ARGS)
         if not self.config.keep_metadata:
-            args += ["-strip", "all"]
-        args += ["-out", str(new_path), str(old_path)]
-        self.run_ext(tuple(args))
+            args_l += ["-strip", "all"]
+        args_l += ["-out", str(new_path), str(old_path)]
+        self.run_ext(tuple(args_l))
         return new_path
 
     def pngout(self, old_path: Path, new_path: Path) -> Path:
