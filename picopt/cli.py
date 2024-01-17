@@ -181,10 +181,10 @@ def get_arguments(params: Optional[tuple[str, ...]] = None) -> Namespace:
 
     parser.add_argument(
         "-M",
-        "--destroy-metadata",
+        "--strip-metadata",
         action="store_false",
         dest="keep_metadata",
-        help="Destroy metadata like EXIF and ICC Profiles",
+        help="Strip metadata like EXIF and ICC Profiles",
     )
     parser.add_argument(
         "-j",
