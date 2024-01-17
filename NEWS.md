@@ -3,7 +3,7 @@
 ## v3.3.8
 
 - Fix
-  - Lossy webp compression to quality = 100
+  - Remove Lossy WebP optimization. Wasn't optimal.
   - Fix non zero exit code on success.
 
 ## v3.3.7
