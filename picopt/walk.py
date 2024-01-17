@@ -8,7 +8,6 @@ from pathlib import Path
 from typing import Optional
 
 from confuse.templates import AttrDict
-from humanize import naturalsize
 from termcolor import cprint
 from treestamps import Grovestamps, GrovestampsConfig, Treestamps
 
@@ -333,56 +332,13 @@ class Walk(Configurable):
             result = self._pool.apply_async(ReportStats, (report_info,))
         return result
 
-    ##########
-    # Finish #
-    ##########
-    def _report_totals_bytes_in(self) -> None:
-        """Report Totals if there were bytes in."""
-        if not self._config.verbose and not self._config.test:
-            return
-        bytes_saved = self._totals.bytes_in - self._totals.bytes_out
-        percent_bytes_saved = bytes_saved / self._totals.bytes_in * 100
-        msg = ""
-        if self._config.test:
-            if percent_bytes_saved > 0:
-                msg += "Could save"
-            elif percent_bytes_saved == 0:
-                msg += "Could even out for"
-            else:
-                msg += "Could lose"
-        elif percent_bytes_saved > 0:
-            msg += "Saved"
-        elif percent_bytes_saved == 0:
-            msg += "Evened out"
-        else:
-            msg = "Lost"
-        natural_saved = naturalsize(bytes_saved)
-        msg += f" a total of {natural_saved} or {percent_bytes_saved:.2f}%"
-        cprint(msg)
-        if self._config.test:
-            cprint("Test run did not change any files.")
-
-    def _report_totals(self) -> None:
-        """Report the total number and percent of bytes saved."""
-        if self._config.verbose == 1:
-            cprint("")
-        if self._totals.bytes_in:
-            self._report_totals_bytes_in()
-        elif self._config.verbose:
-            cprint("Didn't optimize any files.")
-
-        if self._totals.errors:
-            cprint("Errors with the following files:", "red")
-            for rs in self._totals.errors:
-                rs.report()
-
     ################
     # Init and run #
     ################
     def __init__(self, config: AttrDict) -> None:
         """Initialize."""
         super().__init__(config)
-        self._totals = Totals()
+        self._totals = Totals(config)
         top_paths = []
         paths: list[Path] = sorted(frozenset(self._config.paths))
         for path in paths:
@@ -436,6 +392,4 @@ class Walk(Configurable):
         if self._config.timestamps:
             self._timestamps.dump()
 
-        # Finish by reporting totals
-        self._report_totals()
         return self._totals

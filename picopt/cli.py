@@ -252,7 +252,8 @@ def main(args: Optional[tuple[str, ...]] = None):
 
         config = get_config(arguments)
         wob = walk.Walk(config)
-        wob.run()
+        totals = wob.run()
+        totals.report()
     except Exception as exc:
         cprint(f"ERROR: {exc}", "red")
         import traceback

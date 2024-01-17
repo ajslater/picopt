@@ -1,8 +1,8 @@
 """Statistics for the optimization operations."""
-from dataclasses import dataclass, field
 from subprocess import CalledProcessError
 from typing import TYPE_CHECKING
 
+from confuse import AttrDict
 from humanize import naturalsize
 from termcolor import cprint
 
@@ -81,10 +81,55 @@ class ReportStats:
         cprint(report, color, attrs=attrs)
 
 
-@dataclass
 class Totals:
     """Totals for final report."""
 
-    bytes_in: int = 0
-    bytes_out: int = 0
-    errors: list[ReportStats] = field(default_factory=list)
+    def __init__(self, config: AttrDict):
+        """Initialize Totals."""
+        self.bytes_in: int = 0
+        self.bytes_out: int = 0
+        self.errors: list[ReportStats] = []
+        self._config: AttrDict = config
+
+    ##########
+    # Finish #
+    ##########
+    def _report_bytes_in(self) -> None:
+        """Report Totals if there were bytes in."""
+        if not self._config.verbose and not self._config.test:
+            return
+        bytes_saved = self.bytes_in - self.bytes_out
+        percent_bytes_saved = bytes_saved / self.bytes_in * 100
+        msg = ""
+        if self._config.test:
+            if percent_bytes_saved > 0:
+                msg += "Could save"
+            elif percent_bytes_saved == 0:
+                msg += "Could even out for"
+            else:
+                msg += "Could lose"
+        elif percent_bytes_saved > 0:
+            msg += "Saved"
+        elif percent_bytes_saved == 0:
+            msg += "Evened out"
+        else:
+            msg = "Lost"
+        natural_saved = naturalsize(bytes_saved)
+        msg += f" a total of {natural_saved} or {percent_bytes_saved:.2f}%"
+        cprint(msg)
+        if self._config.test:
+            cprint("Test run did not change any files.")
+
+    def report(self) -> None:
+        """Report the total number and percent of bytes saved."""
+        if self._config.verbose == 1:
+            cprint("")
+        if self.bytes_in:
+            self._report_bytes_in()
+        elif self._config.verbose:
+            cprint("Didn't optimize any files.")
+
+        if self.errors:
+            cprint("Errors with the following files:", "red")
+            for rs in self.errors:
+                rs.report()

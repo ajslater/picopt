@@ -6,6 +6,8 @@
   - Remove Lossy WebP optimization. Wasn't optimal.
   - Fix non zero exit code on success.
   - `--destroy-metadata` option becomes `--strip-metadata`
+- Dev
+  - walk.run now returns totals instead of running report on them.
 
 ## v3.3.7
 
