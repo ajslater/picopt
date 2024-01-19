@@ -43,7 +43,7 @@ Because Picopt supports so many lossless image formats, to avoid surprises to co
 e.g.
 
 ```sh
-$ picopt -x BMP -c WEBP bigUgly.bmp
+picopt -x BMP -c WEBP bigUgly.bmp
 ```
 
 ## <a name="programs">External Programs</a>
