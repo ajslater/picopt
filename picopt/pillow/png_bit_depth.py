@@ -5,7 +5,6 @@ https://www.w3.org/TR/PNG-Chunks.html
 This should be a part of Pillow
 """
 from pathlib import Path
-from typing import Optional
 
 from termcolor import cprint
 
@@ -15,7 +14,7 @@ PNG_HEADER = ImageHeader(0, (b"\x89", b"P", b"N", b"G", b"\r", b"\n", b"\x1a", b
 BIT_DEPTH_OFFSET = 24
 
 
-def png_bit_depth(path: Path) -> Optional[int]:
+def png_bit_depth(path: Path) -> int | None:
     """If a file is a png, get the bit depth from the standard position."""
     result = None
     with path.open("rb") as img:

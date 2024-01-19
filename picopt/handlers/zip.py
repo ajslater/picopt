@@ -2,7 +2,6 @@
 import os
 from pathlib import Path
 from types import MappingProxyType
-from typing import Optional
 from zipfile import ZIP_DEFLATED, ZipFile, is_zipfile
 
 from PIL import Image, UnidentifiedImageError
@@ -19,14 +18,14 @@ class Zip(ContainerHandler):
     OUTPUT_FORMAT_STR: str = "ZIP"
     OUTPUT_FILE_FORMAT: FileFormat = FileFormat(OUTPUT_FORMAT_STR)
     INPUT_FILE_FORMATS = frozenset({OUTPUT_FILE_FORMAT})
-    PROGRAMS: MappingProxyType[str, Optional[str]] = MappingProxyType(
+    PROGRAMS: MappingProxyType[str, str | None] = MappingProxyType(
         {
             ContainerHandler.INTERNAL: None,
         }
     )
 
     @classmethod
-    def identify_format(cls, path: Path) -> Optional[FileFormat]:
+    def identify_format(cls, path: Path) -> FileFormat | None:
         """Return the format if this handler can handle this path."""
         file_format = None
         suffix = path.suffix.lower()
@@ -43,7 +42,7 @@ class Zip(ContainerHandler):
             raise ValueError(msg)
         return archive
 
-    def _set_comment(self, comment: Optional[bytes]) -> None:
+    def _set_comment(self, comment: bytes | None) -> None:
         """Set the comment from the archive."""
         if comment:
             self.comment = comment
@@ -95,10 +94,10 @@ class Rar(Zip):
     INPUT_SUFFIX: str = "." + INPUT_FORMAT_STR.lower()
     INPUT_FILE_FORMAT = FileFormat(INPUT_FORMAT_STR)
     INPUT_FILE_FORMATS = frozenset({INPUT_FILE_FORMAT})
-    PROGRAMS: MappingProxyType[str, Optional[str]] = Zip.init_programs(("unrar",))
+    PROGRAMS: MappingProxyType[str, str | None] = Zip.init_programs(("unrar",))
 
     @classmethod
-    def identify_format(cls, path: Path) -> Optional[FileFormat]:
+    def identify_format(cls, path: Path) -> FileFormat | None:
         """Return the format if this handler can handle this path."""
         file_format = None
         suffix = path.suffix.lower()
@@ -115,7 +114,7 @@ class Rar(Zip):
             raise ValueError(msg)
         return archive
 
-    def _set_comment(self, comment: Optional[str]) -> None:  # type: ignore
+    def _set_comment(self, comment: str | None) -> None:  # type: ignore
         """Set the comment from the archive."""
         if comment:
             self.comment = comment.encode()

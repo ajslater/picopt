@@ -2,7 +2,6 @@
 import shutil
 from abc import ABCMeta, abstractmethod
 from pathlib import Path
-from typing import Optional, Union
 
 from confuse.templates import AttrDict
 from termcolor import cprint
@@ -20,7 +19,7 @@ class ContainerHandler(Handler, metaclass=ABCMeta):
 
     @classmethod
     @abstractmethod
-    def identify_format(cls, path: Path) -> Optional[FileFormat]:
+    def identify_format(cls, path: Path) -> FileFormat | None:
         """Return the format if this handler can handle this path."""
 
     @abstractmethod
@@ -45,12 +44,12 @@ class ContainerHandler(Handler, metaclass=ABCMeta):
             file_format,
             metadata,
         )
-        self.comment: Optional[bytes] = None
+        self.comment: bytes | None = None
         self.tmp_container_dir: Path = Path(
             str(self.get_working_path()) + self.CONTAINER_DIR_SUFFIX
         )
 
-    def unpack(self) -> Union[Handler, ReportStats]:
+    def unpack(self) -> Handler | ReportStats:
         """Create directory and unpack container."""
         try:
             if self.config.verbose:

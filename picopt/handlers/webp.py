@@ -2,7 +2,7 @@
 from abc import ABC
 from pathlib import Path
 from types import MappingProxyType
-from typing import Any, Optional
+from typing import Any
 
 from PIL import Image
 from PIL.WebPImagePlugin import WebPImageFile
@@ -40,7 +40,7 @@ class WebP(WebPBase, ABC):
     """WebP format class."""
 
     OUTPUT_FORMAT_STR = WebPImageFile.format
-    PROGRAMS: MappingProxyType[str, Optional[str]] = WebPBase.init_programs(("cwebp",))
+    PROGRAMS: MappingProxyType[str, str | None] = WebPBase.init_programs(("cwebp",))
     # https://developers.google.com/speed/webp/docs/cwebp
     ARGS_PREFIX = (
         PROGRAMS["cwebp"],
@@ -76,7 +76,7 @@ class WebPLossless(WebP):
         {OUTPUT_FILE_FORMAT, Png.OUTPUT_FILE_FORMAT, TIFF_FILE_FORMAT}
     )
     PREFERRED_PROGRAM: str = "cwebp"
-    PROGRAMS: MappingProxyType[str, Optional[str]] = MappingProxyType(
+    PROGRAMS: MappingProxyType[str, str | None] = MappingProxyType(
         {
             "pil2png": None,
             **WebP.PROGRAMS,
@@ -134,7 +134,7 @@ class Gif2WebP(WebPBase):
         }
     )
     PREFERRED_PROGRAM = "gif2webp"
-    PROGRAMS: MappingProxyType[str, Optional[str]] = WebPBase.init_programs(
+    PROGRAMS: MappingProxyType[str, str | None] = WebPBase.init_programs(
         ("gif2webp", "pil2webp")
     )
     _ARGS_PREFIX = (

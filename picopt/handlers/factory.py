@@ -1,6 +1,5 @@
 """Return a handler for a path."""
 from pathlib import Path
-from typing import Optional
 
 from confuse.templates import AttrDict
 from PIL import Image, UnidentifiedImageError
@@ -57,7 +56,7 @@ def _extract_image_info(path, keep_metadata):
 
 def _get_image_format(
     path: Path, keep_metadata: bool
-) -> tuple[Optional[FileFormat], Metadata]:
+) -> tuple[FileFormat | None, Metadata]:
     """Construct the image format with PIL."""
     image_format_str, info, n_frames, animated = _extract_image_info(
         path, keep_metadata
@@ -75,7 +74,7 @@ def _get_image_format(
     return file_format, metadata
 
 
-def _get_container_format(path: Path) -> Optional[FileFormat]:
+def _get_container_format(path: Path) -> FileFormat | None:
     """Get the container format by querying each handler."""
     file_format = None
     for container_handler in _CONTAINER_HANDLERS:
@@ -87,14 +86,14 @@ def _get_container_format(path: Path) -> Optional[FileFormat]:
 
 def _get_handler_class(
     config: AttrDict, file_format: FileFormat, key: str
-) -> Optional[type[Handler]]:
+) -> type[Handler] | None:
     handler_classes = config.computed.format_handlers.get(file_format, {})
     return handler_classes.get(key)
 
 
 def _create_handler_get_format(
     config: AttrDict, path: Path
-) -> tuple[Optional[FileFormat], Metadata]:
+) -> tuple[FileFormat | None, Metadata]:
     file_format, metadata = _get_image_format(path, config.keep_metadata)
     if not file_format:
         file_format = _get_container_format(path)
@@ -102,9 +101,9 @@ def _create_handler_get_format(
 
 
 def _create_handler_get_handler_class(
-    config: AttrDict, convert: bool, file_format: Optional[FileFormat]
-) -> Optional[type[Handler]]:
-    handler_cls: Optional[type[Handler]] = None
+    config: AttrDict, convert: bool, file_format: FileFormat | None
+) -> type[Handler] | None:
+    handler_cls: type[Handler] | None = None
     if file_format and file_format.format_str in config.formats:
         if convert:
             handler_cls = _get_handler_class(config, file_format, "convert")
@@ -114,7 +113,7 @@ def _create_handler_get_handler_class(
 
 
 def _create_handler_no_handler_class(
-    config: AttrDict, path: Path, file_format: Optional[FileFormat]
+    config: AttrDict, path: Path, file_format: FileFormat | None
 ) -> None:
     if config.verbose > 1 and not config.list_only:
         if file_format:
@@ -136,12 +135,12 @@ def _create_handler_no_handler_class(
         cprint(".", "white", attrs=["dark"], end="")
 
 
-def create_handler(config: AttrDict, path_info: PathInfo) -> Optional[Handler]:
+def create_handler(config: AttrDict, path_info: PathInfo) -> Handler | None:
     """Get the image format."""
     # This is the consumer of config._format_handlers
-    file_format: Optional[FileFormat] = None
+    file_format: FileFormat | None = None
     metadata: Metadata = Metadata()
-    handler_cls: Optional[type[Handler]] = None
+    handler_cls: type[Handler] | None = None
     try:
         file_format, metadata = _create_handler_get_format(config, path_info.path)
         handler_cls = _create_handler_get_handler_class(

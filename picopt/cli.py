@@ -3,7 +3,6 @@ import argparse
 import sys
 from argparse import Action, Namespace, RawDescriptionHelpFormatter
 from importlib.metadata import PackageNotFoundError, version
-from typing import Optional
 
 from termcolor import colored, cprint
 
@@ -39,7 +38,7 @@ def _comma_join(formats: frozenset[str]) -> str:
     return ", ".join(sorted(formats))
 
 
-def get_arguments(params: Optional[tuple[str, ...]] = None) -> Namespace:
+def get_arguments(params: tuple[str, ...] | None = None) -> Namespace:
     """Parse the command line."""
     description = "Losslessly optimizes and optionally converts images."
     epilog = (
@@ -231,7 +230,7 @@ def get_arguments(params: Optional[tuple[str, ...]] = None) -> Namespace:
     return Namespace(picopt=pns)
 
 
-def main(args: Optional[tuple[str, ...]] = None):
+def main(args: tuple[str, ...] | None = None):
     """Process command line arguments and walk inputs."""
     try:
         arguments = get_arguments(args)

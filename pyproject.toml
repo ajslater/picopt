@@ -1,3 +1,7 @@
+[project]
+name = "picopt"
+requires-python = ">=3.10"
+
 [build-system]
 requires = ["poetry-core>=1.0.0"]
 build-backend = "poetry.core.masonry.api"
@@ -27,14 +31,14 @@ packages = [{ include = "picopt" }, { include = "tests", format = "sdist" }]
 include = ["NEWS.md"]
 
 [tool.poetry.dependencies]
-python = "^3.9"
+python = "^3.10"
 confuse = "^2.0.0"
 humanize = "^4.0.0"
 python-dateutil = "^2.8"
 rarfile = "^4.0"
 "ruamel.yaml" = "^0.18.5"
 termcolor = "^2.0.1"
-treestamps = "^0.4.4"
+treestamps = "^1.0.0"
 Pillow = ">=9.5,<11.0"
 
 [tool.poetry.group.dev.dependencies]
@@ -121,9 +125,11 @@ exclude = [
   "typings",
   "vulture_whitelist.py"
 ]
-useLibraryCodeForTypes = true
-reportMissingImports = true
+pythonVersion = "3.10"
+pythonPlatform = "All"
 reportImportCycles = true
+reportMisingImports = true
+useLibraryCodeForTypes = true
 
 [tool.radon]
 exclude = "*~,.git/*,.mypy_cache/*,.pytest_cache/*,.ruff_cache/*,.venv/*,__pycache__/*,dist/*,node_modules/*,test-results/*,typings/*"
@@ -144,7 +150,7 @@ extend-select = ["A", "ARG", "B", "B9", "C", "C4", "C90", "D", "DJ",
 external = ["V101"]
 # format = "grouped"
 # show-source = true
-target-version = "py39"
+target-version = "py310"
 task-tags = ["TODO", "FIXME", "XXX", "http", "HACK"]
 
 [tool.ruff.per-file-ignores]

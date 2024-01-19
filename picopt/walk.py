@@ -5,7 +5,6 @@ import time
 import traceback
 from multiprocessing.pool import ApplyResult, Pool
 from pathlib import Path
-from typing import Optional
 
 from confuse.templates import AttrDict
 from termcolor import cprint
@@ -181,7 +180,7 @@ class Walk(Configurable):
     def _finish_results(
         self,
         results: list[ApplyResult],
-        container_mtime: Optional[float],
+        container_mtime: float | None,
         top_path: Path,
     ) -> None:
         """Get the async results and total them."""
@@ -303,7 +302,7 @@ class Walk(Configurable):
             raise TypeError(msg)
         return result
 
-    def walk_file(self, info: PathInfo) -> Optional[ApplyResult]:
+    def walk_file(self, info: PathInfo) -> ApplyResult | None:
         """Optimize an individual file."""
         try:
             if self._is_walk_file_skip(info):

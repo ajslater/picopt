@@ -5,7 +5,6 @@ from abc import ABC
 from dataclasses import dataclass
 from pathlib import Path
 from types import MappingProxyType
-from typing import Optional
 
 from confuse.templates import AttrDict
 from termcolor import cprint
@@ -41,13 +40,13 @@ class Handler(ABC):
     OUTPUT_FILE_FORMAT: FileFormat = FileFormat(OUTPUT_FORMAT_STR, False, False)
     INPUT_FILE_FORMATS = frozenset({OUTPUT_FILE_FORMAT})
     INTERNAL: str = "python_internal"
-    PROGRAMS: MappingProxyType[str, Optional[str]] = MappingProxyType({})
+    PROGRAMS: MappingProxyType[str, str | None] = MappingProxyType({})
     WORKING_SUFFIX: str = f"{PROGRAM_NAME}__tmp"
 
     @classmethod
     def init_programs(
         cls, programs: tuple[str, ...]
-    ) -> MappingProxyType[str, Optional[str]]:
+    ) -> MappingProxyType[str, str | None]:
         """Initialize the PROGRAM map."""
         program_dict = {}
         for program in programs:
@@ -61,7 +60,7 @@ class Handler(ABC):
         return MappingProxyType(program_dict)
 
     @staticmethod
-    def run_ext(args: tuple[Optional[str], ...]) -> None:
+    def run_ext(args: tuple[str | None, ...]) -> None:
         """Run EXTERNAL program."""
         for arg in args:
             # Guarantee tuple[str]

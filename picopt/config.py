@@ -2,7 +2,6 @@
 import pathlib
 import stat
 import time
-import typing
 from argparse import Namespace
 from collections.abc import ItemsView
 from dataclasses import dataclass, fields
@@ -182,7 +181,7 @@ MODE_EXECUTABLE = stat.S_IXUSR ^ stat.S_IXGRP ^ stat.S_IXOTH
 
 
 def _is_external_program_executable(
-    program: str, bin_path: typing.Optional[str], verbose: int
+    program: str, bin_path: str | None, verbose: int
 ) -> bool:
     """Test to see if the external programs can be run."""
     try:
@@ -410,9 +409,7 @@ def _set_timestamps(config) -> None:
     config[PROGRAM_NAME]["timestamps"].set(timestamps)
 
 
-def get_config(
-    args: typing.Optional[Namespace] = None, modname=PROGRAM_NAME
-) -> AttrDict:
+def get_config(args: Namespace | None = None, modname=PROGRAM_NAME) -> AttrDict:
     """Get the config dict, layering env and args over defaults."""
     config = Configuration(PROGRAM_NAME, modname=modname, read=False)
     config.read()

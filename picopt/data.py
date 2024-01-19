@@ -1,7 +1,6 @@
 """Data classes."""
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Optional
 
 
 @dataclass
@@ -10,7 +9,7 @@ class PathInfo:
 
     path: Path
     top_path: Path
-    container_mtime: Optional[float]
+    container_mtime: float | None
     convert: bool
     is_case_sensitive: bool
 
@@ -24,4 +23,4 @@ class ReportInfo:
     test: bool
     bytes_in: int = 0
     bytes_out: int = 0
-    exc: Optional[Exception] = None
+    exc: Exception | None = None

@@ -1,12 +1,12 @@
 """Unpack items from a file descriptor."""
 import struct
 from dataclasses import dataclass
-from typing import BinaryIO, Union
+from typing import BinaryIO
 
 
 def unpack(
     fmt_type: str, length: int, file_desc: BinaryIO
-) -> Union[tuple[bytes, ...], tuple[int]]:
+) -> tuple[bytes, ...] | tuple[int]:
     """Unpack information from a file according to format string & length."""
     return struct.unpack(fmt_type * length, file_desc.read(length))
 

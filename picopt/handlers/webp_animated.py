@@ -1,6 +1,5 @@
 """WebP Animated images are treated like containers."""
 from pathlib import Path
-from typing import Optional
 
 from PIL import Image, ImageSequence
 
@@ -20,7 +19,7 @@ class WebPAnimatedBase(ContainerHandler):
     _LOSSLESS = True
 
     @classmethod
-    def identify_format(cls, path: Path) -> Optional[FileFormat]:  # noqa: ARG003
+    def identify_format(cls, path: Path) -> FileFormat | None:  # noqa: ARG003
         """Return the format if this handler can handle this path."""
         return cls.OUTPUT_FILE_FORMAT
 
@@ -56,7 +55,7 @@ class WebPAnimatedBase(ContainerHandler):
                 ]
                 self.run_ext(tuple(args))
 
-    def _prepare_metadata(self, data: Optional[bytes], working_path: Path, md_arg: str):
+    def _prepare_metadata(self, data: bytes | None, working_path: Path, md_arg: str):
         """Prepare a metadata file and args for webpmux."""
         if not data:
             return []

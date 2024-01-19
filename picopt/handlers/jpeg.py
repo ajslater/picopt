@@ -1,7 +1,6 @@
 """JPEG format."""
 from pathlib import Path
 from types import MappingProxyType
-from typing import Optional
 
 from PIL.JpegImagePlugin import JpegImageFile
 
@@ -15,15 +14,15 @@ class Jpeg(ImageHandler):
     OUTPUT_FORMAT_STR = JpegImageFile.format
     OUTPUT_FILE_FORMAT = FileFormat(OUTPUT_FORMAT_STR, False, False)
     INPUT_FILE_FORMATS = frozenset({OUTPUT_FILE_FORMAT})
-    PROGRAMS: MappingProxyType[str, Optional[str]] = ImageHandler.init_programs(
+    PROGRAMS: MappingProxyType[str, str | None] = ImageHandler.init_programs(
         ("mozjpeg", "jpegtran")
     )
     _ARGS_PREFIX = ("-optimize", "-progressive", "-copy")
-    _MOZJPEG_ARGS_PREFIX: tuple[Optional[str], ...] = (
+    _MOZJPEG_ARGS_PREFIX: tuple[str | None, ...] = (
         PROGRAMS["mozjpeg"],
         *_ARGS_PREFIX,
     )
-    _JPEGTRAN_ARGS_PREFIX: tuple[Optional[str], ...] = (
+    _JPEGTRAN_ARGS_PREFIX: tuple[str | None, ...] = (
         PROGRAMS["jpegtran"],
         *_ARGS_PREFIX,
     )
@@ -39,7 +38,7 @@ class Jpeg(ImageHandler):
         return frozenset((default_suffix, "." + cls.OUTPUT_FORMAT_STR.lower()))
 
     def _jpegtran(
-        self, args: tuple[Optional[str], ...], old_path: Path, new_path: Path
+        self, args: tuple[str | None, ...], old_path: Path, new_path: Path
     ) -> Path:
         """Run the jpegtran type program."""
         args_l = list(args)

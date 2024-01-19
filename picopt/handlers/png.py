@@ -1,7 +1,6 @@
 """PNG format."""
 from pathlib import Path
 from types import MappingProxyType
-from typing import Optional
 
 from PIL.PngImagePlugin import PngImageFile
 from termcolor import cprint
@@ -19,11 +18,11 @@ class Png(ImageHandler):
     OUTPUT_FILE_FORMAT = FileFormat(OUTPUT_FORMAT_STR, True, False)
     INPUT_FILE_FORMATS = frozenset({OUTPUT_FILE_FORMAT})
     PIL2_ARGS: MappingProxyType[str, bool] = MappingProxyType({"optimize": True})
-    PROGRAMS: MappingProxyType[str, Optional[str]] = ImageHandler.init_programs(
+    PROGRAMS: MappingProxyType[str, str | None] = ImageHandler.init_programs(
         ("pil2png", "oxipng", "pngout")
     )
     PREFERRED_PROGRAM: str = "oxipng"
-    _OXIPNG_ARGS: tuple[Optional[str], ...] = (
+    _OXIPNG_ARGS: tuple[str | None, ...] = (
         PROGRAMS["oxipng"],
         "--opt",
         "5",
@@ -32,7 +31,7 @@ class Png(ImageHandler):
         "--force",
         "--zopfli",
     )
-    _PNGOUT_ARGS: tuple[Optional[str], ...] = (PROGRAMS["pngout"], "-force", "-y")
+    _PNGOUT_ARGS: tuple[str | None, ...] = (PROGRAMS["pngout"], "-force", "-y")
 
     def pil2png(self, old_path: Path, new_path: Path) -> Path:
         """Pillow png optimization."""
