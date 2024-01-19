@@ -12,19 +12,19 @@ SRC_CBZ = CONTAINER_DIR / "test_cbz.cbz"
 
 if system() == "Darwin":
     FNS = {
-        "test_cbz.cbz": (93408, 84493, ("cbz", 93408)),
+        "test_cbz.cbz": (93408, 84493, ("cbz", 84493)),
         "test_cbr.cbr": (93725, 93725, ("cbz", 84506)),
         "test_rar.rar": (93675, 93675, ("zip", 84493)),
-        "test_zip.zip": (2974, 2921, ("zip", 2974)),
-        "igp-twss.epub": (292448, 281248, ("epub", 292448)),
+        "test_zip.zip": (7783, 6918, ("zip", 6918)),
+        "igp-twss.epub": (292448, 281248, ("epub", 281248)),
     }
 else:
     FNS = {
-        "test_cbz.cbz": (93408, 84481, ("cbz", 93408)),
+        "test_cbz.cbz": (93408, 84481, ("cbz", 84481)),
         "test_cbr.cbr": (93725, 93725, ("cbz", 84494)),
         "test_rar.rar": (93675, 93675, ("zip", 84481)),
-        "test_zip.zip": (2974, 1917, ("zip", 2974)),
-        "igp-twss.epub": (292448, 280700, ("epub", 292448)),
+        "test_zip.zip": (7783, 6918, ("zip", 6918)),
+        "igp-twss.epub": (292448, 280700, ("epub", 280700)),
     }
 
 EPUB_FN = "igp-twss.epub"
@@ -62,7 +62,7 @@ class TestContainersDir:
 
     def test_containers_no_convert(self) -> None:
         """Test containers no convert."""
-        args = (PROGRAM_NAME, "-rx", "CBZ,ZIP,EPUB", "-c WEBP", str(TMP_ROOT))
+        args = (PROGRAM_NAME, "-rx", "GIF,CBZ,ZIP,EPUB", "-c WEBP", str(TMP_ROOT))
         cli.main(args)
         for name, sizes in FNS.items():
             path = TMP_ROOT / name
@@ -74,7 +74,14 @@ class TestContainersDir:
 
     def test_containers_convert_to_zip(self) -> None:
         """Test containers convert to zip."""
-        args = (PROGRAM_NAME, "-rc", "ZIP,CBZ", str(TMP_ROOT))
+        args = (
+            PROGRAM_NAME,
+            "-rx",
+            "ZIP,CBZ,RAR,CBR,EPUB",
+            "-c",
+            "ZIP,CBZ",
+            str(TMP_ROOT),
+        )
         cli.main(args)
         for name, sizes in FNS.items():
             path = (TMP_ROOT / name).with_suffix("." + sizes[2][0])

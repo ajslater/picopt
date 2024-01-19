@@ -12,7 +12,7 @@ FNS = {
     "test_animated_gif.gif": (16383, 16358, ("gif", 16358), ("webp", 11866)),
     "test_animated_png.png": (63435, 63435, ("png", 63435), ("webp", 54324)),
     "test_animated_webp.webp": (13610, 13610, ("webp", 13610), ("webp", 13610)),
-    "test_png.png": (7967, 4379, ("png", 4379), ("webp", 3870)),
+    "test_png.png": (7967, 4149, ("png", 4149), ("webp", 3870)),
     "test_pre-optimized_jpg.jpg": (
         22664,
         22664,
@@ -33,9 +33,9 @@ if platform.system() == "Darwin":
     FNS.update(
         {
             "test_bmp.bmp": (141430, 141430, ("png", 67215), ("webp", 47524)),
-            "test_gif.gif": (138952, 138944, ("png", 112467), ("webp", 107924)),
+            "test_gif.gif": (138952, 138944, ("png", 112137), ("webp", 107924)),
             "test_jpg.jpg": (97373, 87913, ("jpg", 87913), ("jpg", 87913)),
-            "test_png_16rgba.png": (3435, 2870, ("png", 2870), ("webp", 1142)),
+            "test_png_16rgba.png": (3435, 2090, ("png", 2090), ("webp", 1142)),
             "test_pnm.pnm": (27661, 27661, ("png", 15510), ("webp", 12808)),
             "test_pre-optimized_png.png": (
                 256572,
@@ -44,12 +44,6 @@ if platform.system() == "Darwin":
                 ("webp", 197726),
             ),
             "test_webp_lossy.webp": (2764, 2764, ("webp", 2764), ("webp", 2764)),
-            "test_webp_lossy_pre-optimized.webp": (
-                1508,
-                1508,
-                ("webp", 1508),
-                ("webp", 1508),
-            ),
             "eight.tif": (59640, 59640, ("png", 30564), ("webp", 24974)),
         }
     )
@@ -57,7 +51,7 @@ else:
     FNS.update(
         {
             "test_bmp.bmp": (141430, 141430, ("png", 67215), ("webp", 47524)),
-            "test_gif.gif": (138952, 138944, ("png", 112467), ("webp", 26504)),
+            "test_gif.gif": (138952, 138944, ("png", 112137), ("webp", 26504)),
             "test_jpg.jpg": (97373, 87922, ("jpg", 87922), ("jpg", 87922)),
             "test_png_16rgba.png": (3435, 2870, ("png", 2870), ("webp", 1142)),
             "test_pnm.pnm": (27661, 27661, ("png", 15510), ("webp", 12808)),
@@ -68,12 +62,6 @@ else:
                 ("webp", 197680),
             ),
             "test_webp_lossy.webp": (2764, 1760, ("webp", 1760), ("webp", 1760)),
-            "test_webp_lossy_pre-optimized.webp": (  # XXX SHOULD NOT CONVERT MORE?
-                1508,
-                1506,
-                ("webp", 1506),
-                ("webp", 1506),
-            ),
             "eight.tif": (59640, 59640, ("png", 30564), ("webp", 24982)),
         }
     )
@@ -105,7 +93,7 @@ class TestImagesDir:
 
     def test_convert_to_png(self) -> None:
         """Test convert to PNG."""
-        args = (PROGRAM_NAME, "-rvvx", "TIFF", "-c", "PNG", str(TMP_ROOT))
+        args = (PROGRAM_NAME, "-rvvx", "BMP,GIF,PPM,TIFF", "-c", "PNG", str(TMP_ROOT))
         cli.main(args)
         for name, sizes in FNS.items():
             path = (TMP_ROOT / name).with_suffix("." + sizes[2][0])
@@ -113,7 +101,14 @@ class TestImagesDir:
 
     def test_convert_to_webp(self) -> None:
         """Test convert to WEBP."""
-        args = (PROGRAM_NAME, "-rvvx", "TIFF", "-c", "WEBP", str(TMP_ROOT))
+        args = (
+            PROGRAM_NAME,
+            "-rvvx",
+            "BMP,GIF,PNG,PPM,TIFF",
+            "-c",
+            "WEBP",
+            str(TMP_ROOT),
+        )
         cli.main(args)
         for name, sizes in FNS.items():
             path = (TMP_ROOT / name).with_suffix("." + sizes[3][0])

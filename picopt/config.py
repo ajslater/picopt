@@ -4,9 +4,9 @@ import stat
 import time
 import typing
 from argparse import Namespace
-from copy import deepcopy
+from collections.abc import ItemsView
 from dataclasses import dataclass, fields
-from typing import Any
+from types import MappingProxyType
 
 from confuse import Configuration
 from confuse.templates import (
@@ -22,36 +22,25 @@ from dateutil.parser import parse
 from termcolor import cprint
 
 from picopt import PROGRAM_NAME
-from picopt.handlers.gif import AnimatedGif, Gif
-from picopt.handlers.handler import FileFormat, Handler
-from picopt.handlers.image import (
-    BPM_FILE_FORMAT,
+from picopt.handlers.convertible import (
+    APNG_FILE_FORMAT,
+    CONVERTABLE_ANIMATED_FILE_FORMATS,
+    CONVERTABLE_ANIMATED_FORMAT_STRS,
     CONVERTABLE_FILE_FORMATS,
     CONVERTABLE_FORMAT_STRS,
-    PNG_ANIMATED_FILE_FORMAT,
-    PPM_FILE_FORMAT,
-    TIFF_ANIMATED_FILE_FORMAT,
-    TIFF_FILE_FORMAT,
+    GIF_FORMAT_STR,
+    PNG_FORMAT_STR,
     TIFF_FORMAT_STR,
 )
+from picopt.handlers.gif import Gif, GifAnimated
+from picopt.handlers.handler import FileFormat, Handler
 from picopt.handlers.jpeg import Jpeg
 from picopt.handlers.png import Png
 from picopt.handlers.webp import Gif2WebP, WebPLossless
 from picopt.handlers.webp_animated import WebPAnimatedLossless
 from picopt.handlers.zip import CBR, CBZ, EPub, Rar, Zip
 
-_PNG_CONVERTABLE_FILE_FORMATS = CONVERTABLE_FILE_FORMATS | frozenset(
-    [Gif.OUTPUT_FILE_FORMAT]
-)
-_WEBP_CONVERTABLE_FILE_FORMATS = _PNG_CONVERTABLE_FILE_FORMATS | frozenset(
-    [Png.OUTPUT_FILE_FORMAT]
-)
-PNG_CONVERTABLE_FORMAT_STRS = frozenset(
-    [img_format.format_str for img_format in _PNG_CONVERTABLE_FILE_FORMATS]
-)
-WEBP_CONVERTABLE_FORMAT_STRS = frozenset(
-    [img_format.format_str for img_format in _WEBP_CONVERTABLE_FILE_FORMATS]
-)
+# TODO move CONVERTIBLE FORMAT STRS into convertible wherever it ends up
 CONVERT_TO_FORMAT_STRS = frozenset(
     (
         Png.OUTPUT_FORMAT_STR,
@@ -63,7 +52,7 @@ CONVERT_TO_FORMAT_STRS = frozenset(
 CONTAINER_CONVERTABLE_FORMAT_STRS = frozenset(
     (Rar.INPUT_FORMAT_STR, CBR.INPUT_FORMAT_STR)
 )
-DEFAULT_HANDLERS = (Gif, AnimatedGif, Jpeg, Png, WebPLossless)
+DEFAULT_HANDLERS = (Gif, GifAnimated, Jpeg, Png, WebPLossless)
 HANDLERS = frozenset(
     [
         *DEFAULT_HANDLERS,
@@ -140,54 +129,55 @@ TIMESTAMPS_CONFIG_KEYS = {
 class FileFormatHandlers:
     """FileFormat handlers for a File FileFormat."""
 
-    # Pyright can't enforce a list of subclasses
-    # https://github.com/microsoft/pyright/issues/130
-    # https://peps.python.org/pep-0483/#covariance-and-contravariance
-    convert: Any = None
-    native: Any = None
+    convert: tuple[type[Handler], ...] = ()
+    native: tuple[type[Handler], ...] = ()
 
-    def _field_to_tuple(self, field):
-        """Convert a handler to a tuple of handlers."""
-        val = getattr(self, field.name)
-        if val is None:
-            setattr(self, field.name, ())
-        elif not isinstance(val, tuple):
-            val = (val,)
-            setattr(self, field.name, val)
-
-    def __post_init__(self):
-        """Convert raw handlers into tuples."""
-        for field in fields(self):
-            self._field_to_tuple(field)
-
-    def items(self):
+    def items(self) -> ItemsView[str, tuple[type[Handler], ...]]:
         """Return both fields."""
-        return {"convert": self.convert, "native": self.native}.items()
+        return MappingProxyType(
+            {field.name: tuple(getattr(self, field.name)) for field in fields(self)}
+        ).items()
 
 
 # Handlers for formats are listed in priority order
-_FORMAT_HANDLERS = {
-    PPM_FILE_FORMAT: FileFormatHandlers(convert=(WebPLossless, Png)),
-    BPM_FILE_FORMAT: FileFormatHandlers(convert=(WebPLossless, Png)),
-    Gif.OUTPUT_FILE_FORMAT: FileFormatHandlers(convert=(Gif2WebP, Png), native=Gif),
-    AnimatedGif.OUTPUT_FILE_FORMAT: FileFormatHandlers(
-        convert=Gif2WebP, native=AnimatedGif
-    ),
-    Jpeg.OUTPUT_FILE_FORMAT: FileFormatHandlers(native=Jpeg),
-    Png.OUTPUT_FILE_FORMAT: FileFormatHandlers(convert=WebPLossless, native=Png),
-    WebPLossless.OUTPUT_FILE_FORMAT: FileFormatHandlers(native=WebPLossless),
-    WebPAnimatedLossless.OUTPUT_FILE_FORMAT: FileFormatHandlers(
-        native=WebPAnimatedLossless
-    ),
-    Zip.OUTPUT_FILE_FORMAT: FileFormatHandlers(native=Zip),
-    CBZ.OUTPUT_FILE_FORMAT: FileFormatHandlers(native=CBZ),
-    Rar.INPUT_FILE_FORMAT: FileFormatHandlers(convert=Rar),
-    CBR.INPUT_FILE_FORMAT: FileFormatHandlers(convert=CBR),
-    EPub.OUTPUT_FILE_FORMAT: FileFormatHandlers(native=EPub),
-    TIFF_FILE_FORMAT: FileFormatHandlers(convert=(WebPLossless, Png)),
-    TIFF_ANIMATED_FILE_FORMAT: FileFormatHandlers(convert=WebPAnimatedLossless),
-    PNG_ANIMATED_FILE_FORMAT: FileFormatHandlers(convert=WebPAnimatedLossless),
-}
+_LOSSLESS_CONVERTABLE_FORMAT_HANDLERS = MappingProxyType(
+    {
+        ffmt: FileFormatHandlers(convert=(WebPLossless, Png))
+        for ffmt in CONVERTABLE_FILE_FORMATS
+    }
+)
+_LOSSLESS_CONVERTABLE_ANIMATED_FORMAT_HANDLERS = MappingProxyType(
+    {
+        ffmt: FileFormatHandlers(convert=(WebPAnimatedLossless,))
+        for ffmt in CONVERTABLE_ANIMATED_FILE_FORMATS
+    }
+)
+_FORMAT_HANDLERS = MappingProxyType(
+    {
+        **_LOSSLESS_CONVERTABLE_FORMAT_HANDLERS,
+        **_LOSSLESS_CONVERTABLE_ANIMATED_FORMAT_HANDLERS,
+        Gif.OUTPUT_FILE_FORMAT: FileFormatHandlers(
+            convert=(Gif2WebP, Png), native=(Gif,)
+        ),
+        GifAnimated.OUTPUT_FILE_FORMAT: FileFormatHandlers(
+            convert=(Gif2WebP,), native=(GifAnimated,)
+        ),
+        Jpeg.OUTPUT_FILE_FORMAT: FileFormatHandlers(native=(Jpeg,)),
+        Png.OUTPUT_FILE_FORMAT: FileFormatHandlers(
+            convert=(WebPLossless,), native=(Png,)
+        ),
+        APNG_FILE_FORMAT: FileFormatHandlers(convert=(WebPAnimatedLossless,)),
+        WebPLossless.OUTPUT_FILE_FORMAT: FileFormatHandlers(native=(WebPLossless,)),
+        WebPAnimatedLossless.OUTPUT_FILE_FORMAT: FileFormatHandlers(
+            native=(WebPAnimatedLossless,)
+        ),
+        Zip.OUTPUT_FILE_FORMAT: FileFormatHandlers(native=(Zip,)),
+        CBZ.OUTPUT_FILE_FORMAT: FileFormatHandlers(native=(CBZ,)),
+        Rar.INPUT_FILE_FORMAT: FileFormatHandlers(convert=(Rar,)),
+        CBR.INPUT_FILE_FORMAT: FileFormatHandlers(convert=(CBR,)),
+        EPub.OUTPUT_FILE_FORMAT: FileFormatHandlers(native=(EPub,)),
+    }
+)
 MODE_EXECUTABLE = stat.S_IXUSR ^ stat.S_IXGRP ^ stat.S_IXOTH
 
 
@@ -243,100 +233,130 @@ def _config_formats_list_to_set(config, key, computed=False) -> frozenset[str]:
     return frozenset(val_set)
 
 
-def _update_formats_png(format_strs, convert_handlers, config):
-    """Update formats if converting to png."""
-    convertable_formats = set(PNG_CONVERTABLE_FORMAT_STRS)
-    format_strs |= PNG_CONVERTABLE_FORMAT_STRS
-    file_formats = deepcopy(_PNG_CONVERTABLE_FILE_FORMATS)
-    if TIFF_FORMAT_STR in format_strs:
-        file_formats.add(TIFF_FILE_FORMAT)
-        convertable_formats.add(TIFF_FORMAT_STR)
-    convert_handlers[Png] = file_formats
-    config[PROGRAM_NAME]["computed"]["convertable_formats"]["png"] = frozenset(
-        convertable_formats
-    )
-    return format_strs
-
-
-def _update_formats_webp_lossless(format_strs, convert_handlers, config):
-    """Update formats if converting to webp lossless."""
-    convertable_format_strs = set(WEBP_CONVERTABLE_FORMAT_STRS)
-    format_strs |= WEBP_CONVERTABLE_FORMAT_STRS
-    file_formats = deepcopy(_WEBP_CONVERTABLE_FILE_FORMATS)
-    if TIFF_FORMAT_STR in format_strs:
-        file_formats.add(TIFF_FILE_FORMAT)
-        convertable_format_strs.add(TIFF_FORMAT_STR)
-    convert_handlers[WebPLossless] = file_formats
-
-    convert_handlers[Gif2WebP] = {
-        Gif.OUTPUT_FILE_FORMAT,
-        AnimatedGif.OUTPUT_FILE_FORMAT,
-    }
-    if TIFF_FORMAT_STR in format_strs:
-        if WebPAnimatedLossless not in convert_handlers:
-            convert_handlers[WebPAnimatedLossless] = set()
-        convert_handlers[WebPAnimatedLossless].add(TIFF_ANIMATED_FILE_FORMAT)
-    if Png.OUTPUT_FORMAT_STR in format_strs:
-        if WebPAnimatedLossless not in convert_handlers:
-            convert_handlers[WebPAnimatedLossless] = set()
-        convert_handlers[WebPAnimatedLossless].add(PNG_ANIMATED_FILE_FORMAT)
-    config[PROGRAM_NAME]["computed"]["convertable_formats"]["webp"] = frozenset(
-        convertable_format_strs
-    )
-    return format_strs
-
-
-def _update_formats_zip(format_strs, convert_handlers):
-    """Update formats if converting to zip."""
-    format_strs |= {Rar.INPUT_FORMAT_STR}
-    convert_handlers[Rar] = {Rar.INPUT_FILE_FORMAT}
-    return format_strs
-
-
-def _update_formats_cbz(format_strs, convert_handlers):
-    """Update formats if converting to cbz."""
-    format_strs |= {CBR.INPUT_FORMAT_STR}
-    convert_handlers[CBR] = {CBR.INPUT_FILE_FORMAT}
-    return format_strs
-
-
-def _update_formats(config: Configuration) -> dict:
-    formats = _config_formats_list_to_set(config, "formats")
+def _set_all_format_strs(config) -> frozenset[str]:
+    all_format_strs = _config_formats_list_to_set(config, "formats")
     if "extra_formats" in config[PROGRAM_NAME]["computed"]:
-        extra_formats = _config_formats_list_to_set(
+        extra_format_strs = _config_formats_list_to_set(
             config, "extra_formats", computed=True
         )
-        config[PROGRAM_NAME]["computed"]["extra_formats"].set(sorted(extra_formats))
-        formats |= extra_formats
+        config[PROGRAM_NAME]["computed"]["extra_formats"].set(sorted(extra_format_strs))
+        all_format_strs |= extra_format_strs
 
+    config[PROGRAM_NAME]["formats"].set(sorted(all_format_strs))
+    return frozenset(all_format_strs)
+
+
+def _set_convert_handlers_png(convert_to, all_format_strs, convert_handlers, config):
+    if Png.OUTPUT_FORMAT_STR not in convert_to:
+        return
+    convert_handlers_png_lossless = set()
+    for fmt in frozenset(CONVERTABLE_FILE_FORMATS | {Gif.OUTPUT_FILE_FORMAT}):
+        if fmt.format_str in all_format_strs:
+            convert_handlers_png_lossless.add(fmt)
+
+    convert_handlers[Png] = frozenset(convert_handlers_png_lossless)
+
+    config[PROGRAM_NAME]["computed"]["convertable_formats"]["png"] = frozenset(
+        frozenset(CONVERTABLE_FORMAT_STRS | {GIF_FORMAT_STR}) & all_format_strs
+    )
+
+
+def _set_convert_handlers_webp(convert_to, all_format_strs, convert_handlers, config):
+    if WebPLossless.OUTPUT_FORMAT_STR not in convert_to:
+        return
+
+    if Gif.OUTPUT_FORMAT_STR in all_format_strs:
+        convert_handlers[Gif2WebP] = frozenset(
+            {
+                Gif.OUTPUT_FILE_FORMAT,
+                GifAnimated.OUTPUT_FILE_FORMAT,
+            }
+        )
+
+    convert_handlers_webp_lossless = set()
+    convert_handlers_webp_animated_lossless = set()
+    if Png.OUTPUT_FORMAT_STR in all_format_strs:
+        convert_handlers_webp_lossless.add(Png.OUTPUT_FILE_FORMAT)
+        convert_handlers_webp_animated_lossless.add(APNG_FILE_FORMAT)
+
+    for fmt in CONVERTABLE_FILE_FORMATS:
+        if fmt.format_str in all_format_strs:
+            convert_handlers_webp_lossless.add(fmt)
+
+    for fmt in CONVERTABLE_ANIMATED_FILE_FORMATS:
+        if fmt.format_str in all_format_strs:
+            convert_handlers_webp_animated_lossless.add(fmt)
+
+    convert_handlers[WebPLossless] = frozenset(convert_handlers_webp_lossless)
+    convert_handlers[WebPAnimatedLossless] = frozenset(
+        convert_handlers_webp_animated_lossless
+    )
+
+    config[PROGRAM_NAME]["computed"]["convertable_formats"]["webp"] = frozenset(
+        frozenset(
+            CONVERTABLE_FORMAT_STRS
+            | CONVERTABLE_ANIMATED_FORMAT_STRS
+            | {GIF_FORMAT_STR, PNG_FORMAT_STR}
+        )
+        & all_format_strs
+    )
+
+
+def _set_convert_handlers_rar(convert_to, all_format_strs, convert_handlers, config):
+    if (
+        Zip.OUTPUT_FORMAT_STR not in convert_to
+        or Rar.INPUT_FORMAT_STR not in all_format_strs
+    ):
+        return
+    convert_handlers[Rar] = frozenset({Rar.INPUT_FILE_FORMAT})
+    config[PROGRAM_NAME]["computed"]["convertable_formats"]["zip"] = frozenset(
+        {Rar.INPUT_FORMAT_STR}
+    )
+
+
+def _set_convert_handlers_cbr(convert_to, all_format_strs, convert_handlers, config):
+    if (
+        CBZ.OUTPUT_FORMAT_STR not in convert_to
+        or CBR.INPUT_FORMAT_STR not in all_format_strs
+    ):
+        return
+    convert_handlers[CBR] = frozenset({CBR.INPUT_FILE_FORMAT})
+    config[PROGRAM_NAME]["computed"]["convertable_formats"]["cbz"] = frozenset(
+        {CBR.INPUT_FORMAT_STR}
+    )
+
+
+def _set_convert_formats(
+    config: Configuration, all_format_strs: frozenset, convert_to: frozenset
+) -> MappingProxyType:
+    """Set formats in config and return convert handlers."""
+    convert_handlers: dict[type[Handler], frozenset[FileFormat]] = {}
+
+    _set_convert_handlers_png(convert_to, all_format_strs, convert_handlers, config)
+    _set_convert_handlers_webp(convert_to, all_format_strs, convert_handlers, config)
+    # TODO TAR CONVERSION
+    _set_convert_handlers_rar(convert_to, all_format_strs, convert_handlers, config)
+    _set_convert_handlers_cbr(convert_to, all_format_strs, convert_handlers, config)
+
+    return MappingProxyType(convert_handlers)
+
+
+def _create_format_handler_map(
+    config: Configuration,
+) -> None:
+    """Create a format to handler map from config."""
+    all_format_strs = _set_all_format_strs(config)
     convert_to = _config_formats_list_to_set(config, "convert_to")
     config[PROGRAM_NAME]["convert_to"].set(sorted(convert_to))
-    convert_handlers: dict[type[Handler], set[FileFormat]] = {}
-    if Png.OUTPUT_FORMAT_STR in convert_to:
-        formats = _update_formats_png(formats, convert_handlers, config)
-    if WebPLossless.OUTPUT_FORMAT_STR in convert_to:
-        formats = _update_formats_webp_lossless(formats, convert_handlers, config)
-    if Rar.OUTPUT_FORMAT_STR in convert_to:
-        formats = _update_formats_zip(formats, convert_handlers)
-    if CBR.OUTPUT_FORMAT_STR in convert_to:
-        formats = _update_formats_cbz(formats, convert_handlers)
-    config[PROGRAM_NAME]["formats"].set(sorted(formats))
 
-    return convert_handlers
+    convert_handlers = _set_convert_formats(config, all_format_strs, convert_to)
 
-
-def _create_format_handler_map(config: Configuration, convert_handlers: dict) -> None:
-    """Create a format to handler map from config."""
     available_programs = _get_available_programs(config)
-    format_handlers = {}
-    format_strs = config[PROGRAM_NAME]["formats"].get(list)
-    if not isinstance(format_strs, list):
-        msg = f"wrong type for formats: {type(format_strs)}{format_strs}"
-        raise TypeError(msg)
-    format_strs = set(format_strs)
+    config[PROGRAM_NAME]["computed"]["available_programs"].set(available_programs)
 
+    format_handlers = {}
     for file_format, possible_file_handlers in _FORMAT_HANDLERS.items():
-        if file_format.format_str not in format_strs:
+        if file_format.format_str not in all_format_strs:
             continue
         for (
             handler_type,
@@ -346,13 +366,18 @@ def _create_format_handler_map(config: Configuration, convert_handlers: dict) ->
                 available = handler_class.is_handler_available(
                     convert_handlers, available_programs, file_format
                 )
-                if available:
-                    if file_format not in format_handlers:
-                        format_handlers[file_format] = {}
-                    format_handlers[file_format][handler_type] = handler_class
-                    break
+                if not available:
+                    continue
+                if (
+                    handler_type == "convert"
+                    and handler_class.OUTPUT_FILE_FORMAT.format_str not in convert_to
+                ):
+                    continue
+                if file_format not in format_handlers:
+                    format_handlers[file_format] = {}
+                format_handlers[file_format][handler_type] = handler_class
+                break
     config[PROGRAM_NAME]["computed"]["format_handlers"].set(format_handlers)
-    config[PROGRAM_NAME]["computed"]["available_programs"].set(available_programs)
 
 
 def _set_after(config) -> None:
@@ -397,8 +422,7 @@ def get_config(
     if args:
         config.set_args(args)
     _set_after(config)
-    convert_handlers = _update_formats(config)
-    _create_format_handler_map(config, convert_handlers)
+    _create_format_handler_map(config)
     _set_ignore(config)
     _set_timestamps(config)
     ad = config.get(TEMPLATE)

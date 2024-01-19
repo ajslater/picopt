@@ -5,30 +5,17 @@ from types import MappingProxyType
 from typing import Any
 
 from PIL import Image
-from PIL.BmpImagePlugin import BmpImageFile
-from PIL.PngImagePlugin import PngImageFile
-from PIL.PpmImagePlugin import PpmImageFile
-from PIL.TiffImagePlugin import TiffImageFile
 
 from picopt.data import ReportInfo
-from picopt.handlers.handler import FileFormat, Handler
+from picopt.handlers.handler import Handler
 from picopt.stats import ReportStats
 
-PPM_FILE_FORMAT = FileFormat(PpmImageFile.format, True, False)
-BPM_FILE_FORMAT = FileFormat(BmpImageFile.format, True, False)
-CONVERTABLE_FILE_FORMATS = {BPM_FILE_FORMAT, PPM_FILE_FORMAT}
-CONVERTABLE_FORMAT_STRS = {
-    img_format.format_str for img_format in CONVERTABLE_FILE_FORMATS
-}
-PNG_ANIMATED_FILE_FORMAT = FileFormat(PngImageFile.format, True, True)
-TIFF_FORMAT_STR = TiffImageFile.format
-TIFF_FILE_FORMAT = FileFormat(TIFF_FORMAT_STR, True, False)
-TIFF_ANIMATED_FILE_FORMAT = FileFormat(TIFF_FORMAT_STR, True, True)
-_NATIVE_ONLY_FILE_FORMATS = {
-    PNG_ANIMATED_FILE_FORMAT,
-    TIFF_ANIMATED_FILE_FORMAT,
-    TIFF_FILE_FORMAT,
-}
+# TODO remove
+# _NATIVE_ONLY_FILE_FORMATS = {
+#    PNG_ANIMATED_FILE_FORMAT,
+#    TIFF_ANIMATED_FILE_FORMAT,
+#    TIFF_FILE_FORMAT,
+# }
 
 
 class ImageHandler(Handler, metaclass=ABCMeta):
@@ -74,7 +61,10 @@ class ImageHandler(Handler, metaclass=ABCMeta):
     def pil2native(self, old_path: Path, new_path: Path) -> Path:
         """Use PIL to save the image."""
         if (
-            self.input_file_format not in _NATIVE_ONLY_FILE_FORMATS
+            # TODO refactor for:
+            #    bmp input into oxipng
+            #    preferred programs (each may have different input reqs?)
+            self.input_file_format in self.INPUT_FILE_FORMATS
             and self.PREFERRED_PROGRAM in self.config.computed.available_programs
         ):
             return old_path

@@ -16,6 +16,7 @@ class Gif(ImageHandler):
 
     OUTPUT_FORMAT_STR = GifImageFile.format
     OUTPUT_FILE_FORMAT = FileFormat(OUTPUT_FORMAT_STR, True, False)
+    INPUT_FILE_FORMATS = frozenset({OUTPUT_FILE_FORMAT})
     PROGRAMS: MappingProxyType[str, Optional[str]] = ImageHandler.init_programs(
         ("gifsicle", "pil2gif")
     )
@@ -43,7 +44,8 @@ class Gif(ImageHandler):
         return new_path
 
 
-class AnimatedGif(Gif):
+class GifAnimated(Gif):
     """Animated GIF handler."""
 
     OUTPUT_FILE_FORMAT = FileFormat(Gif.OUTPUT_FORMAT_STR, True, True)
+    INPUT_FILE_FORMATS = frozenset({OUTPUT_FILE_FORMAT})

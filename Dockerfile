@@ -8,7 +8,7 @@ RUN apt-get update \
   && apt-get install -y --no-install-recommends \
     gifsicle \
     libjpeg-progs \
-    optipng \
+    oxipng \
     python3-pip \
     unrar \
     webp \

@@ -37,11 +37,14 @@ class Walk(Configurable):
     # Init #
     ########
     def _convert_message(
-        self, convert_from_formats: frozenset[str], convert_handler: type[Handler]
+        self, convert_from_format_strs: frozenset[str], convert_handler: type[Handler]
     ):
-        convert_from = ", ".join(
-            sorted(convert_from_formats & frozenset(self._config.formats))
+        convert_from_list = sorted(
+            convert_from_format_strs & frozenset(self._config.formats)
         )
+        if not convert_from_list:
+            return
+        convert_from = ", ".join(convert_from_list)
         convert_to = convert_handler.OUTPUT_FORMAT_STR
         cprint(f"Converting {convert_from} to {convert_to}", "cyan")
 

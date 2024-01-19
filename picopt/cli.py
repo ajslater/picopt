@@ -8,20 +8,13 @@ from typing import Optional
 from termcolor import colored, cprint
 
 from picopt import PROGRAM_NAME, walk
-from picopt.config import ALL_FORMAT_STRS, DEFAULT_HANDLERS, HANDLERS, get_config
+from picopt.config import ALL_FORMAT_STRS, DEFAULT_HANDLERS, get_config
 from picopt.handlers.png import Png
 from picopt.handlers.webp import WebP
 from picopt.handlers.zip import CBR, Rar
 
 DEFAULT_FORMAT_STRS = frozenset(
     [handler_cls.OUTPUT_FORMAT_STR for handler_cls in DEFAULT_HANDLERS]
-)
-CONVERGE_FORMAT_STRS = filter(
-    None,
-    (
-        handler_cls.OUTPUT_FORMAT_STR if handler_cls.CONVERGE else None
-        for handler_cls in HANDLERS
-    ),
 )
 EXTRA_FORMAT_STRS = ALL_FORMAT_STRS - DEFAULT_FORMAT_STRS
 FORMAT_DELIMETER = ","
@@ -201,13 +194,6 @@ def get_arguments(params: Optional[tuple[str, ...]] = None) -> Namespace:
         type=str,
         action="store",
         help="Path to a config file",
-    )
-    parser.add_argument(
-        "-g",
-        "--converge",
-        action="store_true",
-        help="Exhaustively rerun the recompressor until it can't get "
-        f"the image any smaller. Slow. {''.join(CONVERGE_FORMAT_STRS)} formats only.",
     )
     ###########
     # Actions #

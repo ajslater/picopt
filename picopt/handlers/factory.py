@@ -6,29 +6,29 @@ from confuse.templates import AttrDict
 from PIL import Image, UnidentifiedImageError
 from termcolor import cprint
 
-from picopt.config import WEBP_CONVERTABLE_FORMAT_STRS
 from picopt.data import PathInfo
 from picopt.handlers.container import ContainerHandler
+from picopt.handlers.convertible import (
+    LOSSLESS_FORMAT_STRS,
+    TIFF_FORMAT_STR,
+    TIFF_LOSSLESS_COMPRESSION,
+)
 from picopt.handlers.handler import FileFormat, Handler, Metadata
-from picopt.handlers.image import TIFF_FORMAT_STR
 from picopt.handlers.webp import WebPLossless
 from picopt.handlers.zip import CBR, CBZ, EPub, Rar, Zip
 from picopt.pillow.webp_lossless import is_lossless
 
-_ALWAYS_LOSSLESS_FORMAT_STRS = WEBP_CONVERTABLE_FORMAT_STRS - {TIFF_FORMAT_STR}
 _CONTAINER_HANDLERS: tuple[type[ContainerHandler], ...] = (CBZ, Zip, CBR, Rar, EPub)
 
 
-def _is_lossless(image_format: str, path: Path, info: dict) -> bool:
+def _is_lossless(image_format_str: str, path: Path, info: dict) -> bool:
     """Determine if image format is lossless."""
-    if image_format in _ALWAYS_LOSSLESS_FORMAT_STRS:
-        lossless = True
-    elif image_format == WebPLossless.OUTPUT_FORMAT_STR:
+    if image_format_str == WebPLossless.OUTPUT_FORMAT_STR:
         lossless = is_lossless(str(path))
-    elif image_format == TIFF_FORMAT_STR:
-        lossless = info.get("compression") != "jpeg"
+    elif image_format_str == TIFF_FORMAT_STR:
+        lossless = info.get("compression") in TIFF_LOSSLESS_COMPRESSION
     else:
-        lossless = False
+        lossless = image_format_str in LOSSLESS_FORMAT_STRS
     return lossless
 
 
@@ -86,10 +86,10 @@ def _get_container_format(path: Path) -> Optional[FileFormat]:
 
 
 def _get_handler_class(
-    config: AttrDict, key: str, file_format: FileFormat
+    config: AttrDict, file_format: FileFormat, key: str
 ) -> Optional[type[Handler]]:
-    handler_classes = config.computed.format_handlers.get(file_format)
-    return handler_classes.get(key) if handler_classes else None
+    handler_classes = config.computed.format_handlers.get(file_format, {})
+    return handler_classes.get(key)
 
 
 def _create_handler_get_format(
@@ -105,12 +105,11 @@ def _create_handler_get_handler_class(
     config: AttrDict, convert: bool, file_format: Optional[FileFormat]
 ) -> Optional[type[Handler]]:
     handler_cls: Optional[type[Handler]] = None
-    if not file_format:
-        return handler_cls
-    if convert:
-        handler_cls = _get_handler_class(config, "convert", file_format)
-    if not handler_cls:
-        handler_cls = _get_handler_class(config, "native", file_format)
+    if file_format and file_format.format_str in config.formats:
+        if convert:
+            handler_cls = _get_handler_class(config, file_format, "convert")
+        if not handler_cls:
+            handler_cls = _get_handler_class(config, file_format, "native")
     return handler_cls
 
 

@@ -39,10 +39,10 @@ class Handler(ABC):
     BEST_ONLY: bool = True
     OUTPUT_FORMAT_STR: str = "unimplemented"
     OUTPUT_FILE_FORMAT: FileFormat = FileFormat(OUTPUT_FORMAT_STR, False, False)
+    INPUT_FILE_FORMATS = frozenset({OUTPUT_FILE_FORMAT})
     INTERNAL: str = "python_internal"
     PROGRAMS: MappingProxyType[str, Optional[str]] = MappingProxyType({})
     WORKING_SUFFIX: str = f"{PROGRAM_NAME}__tmp"
-    CONVERGE = False
 
     @classmethod
     def init_programs(
@@ -78,20 +78,15 @@ class Handler(ABC):
         )
 
     @classmethod
-    def native_input_file_formats(cls) -> frozenset[FileFormat]:
-        """Return input formats handled without conversion."""
-        return frozenset({cls.OUTPUT_FILE_FORMAT})
-
-    @classmethod
     def is_handler_available(
         cls,
-        convert_handlers: dict,
-        available_programs: set,
+        convert_handlers: MappingProxyType,
+        available_programs: frozenset,
         file_format: FileFormat,
     ):
         """Can this handler run with available programs."""
-        handled_file_formats = cls.native_input_file_formats() | convert_handlers.get(
-            cls, set()
+        handled_file_formats = cls.INPUT_FILE_FORMATS | convert_handlers.get(
+            cls, frozenset()
         )
         return file_format in handled_file_formats and bool(
             available_programs & set(cls.PROGRAMS.keys())

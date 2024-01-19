@@ -18,6 +18,7 @@ class Zip(ContainerHandler):
 
     OUTPUT_FORMAT_STR: str = "ZIP"
     OUTPUT_FILE_FORMAT: FileFormat = FileFormat(OUTPUT_FORMAT_STR)
+    INPUT_FILE_FORMATS = frozenset({OUTPUT_FILE_FORMAT})
     PROGRAMS: MappingProxyType[str, Optional[str]] = MappingProxyType(
         {
             ContainerHandler.INTERNAL: None,
@@ -91,8 +92,9 @@ class Rar(Zip):
     """RAR Container."""
 
     INPUT_FORMAT_STR: str = "RAR"
-    INPUT_FILE_FORMAT: FileFormat = FileFormat(INPUT_FORMAT_STR)
     INPUT_SUFFIX: str = "." + INPUT_FORMAT_STR.lower()
+    INPUT_FILE_FORMAT = FileFormat(INPUT_FORMAT_STR)
+    INPUT_FILE_FORMATS = frozenset({INPUT_FILE_FORMAT})
     PROGRAMS: MappingProxyType[str, Optional[str]] = Zip.init_programs(("unrar",))
 
     @classmethod
@@ -124,14 +126,16 @@ class CBZ(Zip):
 
     OUTPUT_FORMAT_STR: str = "CBZ"
     OUTPUT_FILE_FORMAT: FileFormat = FileFormat(OUTPUT_FORMAT_STR)
+    INPUT_FILE_FORMATS = frozenset({OUTPUT_FILE_FORMAT})
 
 
 class CBR(Rar):
     """CBR Container."""
 
     INPUT_FORMAT_STR: str = "CBR"
-    INPUT_FILE_FORMAT: FileFormat = FileFormat(INPUT_FORMAT_STR)
     INPUT_SUFFIX: str = "." + INPUT_FORMAT_STR.lower()
+    INPUT_FILE_FORMAT = FileFormat(INPUT_FORMAT_STR)
+    INPUT_FILE_FORMATS = frozenset({INPUT_FILE_FORMAT})
     OUTPUT_FORMAT_STR: str = "CBZ"
     OUTPUT_FILE_FORMAT: FileFormat = FileFormat(OUTPUT_FORMAT_STR)
 
@@ -139,6 +143,8 @@ class CBR(Rar):
 class EPub(Zip):
     """Epub Container."""
 
+    # never convert inside epubs, breaks src links.
+    CONVERT: bool = False
     OUTPUT_FORMAT_STR: str = "EPUB"
     OUTPUT_FILE_FORMAT: FileFormat = FileFormat(OUTPUT_FORMAT_STR)
-    CONVERT: bool = False
+    INPUT_FILE_FORMATS = frozenset({OUTPUT_FILE_FORMAT})

@@ -14,6 +14,7 @@ class Jpeg(ImageHandler):
 
     OUTPUT_FORMAT_STR = JpegImageFile.format
     OUTPUT_FILE_FORMAT = FileFormat(OUTPUT_FORMAT_STR, False, False)
+    INPUT_FILE_FORMATS = frozenset({OUTPUT_FILE_FORMAT})
     PROGRAMS: MappingProxyType[str, Optional[str]] = ImageHandler.init_programs(
         ("mozjpeg", "jpegtran")
     )

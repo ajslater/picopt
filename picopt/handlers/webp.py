@@ -7,12 +7,10 @@ from typing import Any, Optional
 from PIL import Image
 from PIL.WebPImagePlugin import WebPImageFile
 
+from picopt.handlers.convertible import CONVERTABLE_FILE_FORMATS, TIFF_FILE_FORMAT
+from picopt.handlers.gif import Gif, GifAnimated
 from picopt.handlers.handler import FileFormat
-from picopt.handlers.image import (
-    CONVERTABLE_FILE_FORMATS,
-    TIFF_FILE_FORMAT,
-    ImageHandler,
-)
+from picopt.handlers.image import ImageHandler
 from picopt.handlers.png import Png
 
 
@@ -74,6 +72,9 @@ class WebPLossless(WebP):
 
     BEST_ONLY: bool = False
     OUTPUT_FILE_FORMAT = FileFormat(WebP.OUTPUT_FORMAT_STR, True, False)
+    INPUT_FILE_FORMATS = frozenset(
+        {OUTPUT_FILE_FORMAT, Png.OUTPUT_FILE_FORMAT, TIFF_FILE_FORMAT}
+    )
     PREFERRED_PROGRAM: str = "cwebp"
     PROGRAMS: MappingProxyType[str, Optional[str]] = MappingProxyType(
         {
@@ -83,13 +84,11 @@ class WebPLossless(WebP):
         }
     )
     ARGS_PREFIX = (*WebP.ARGS_PREFIX, "-lossless")
-    CONVERGE = True
-    _PIL2PNG_FILE_FORMATS = CONVERTABLE_FILE_FORMATS | {TIFF_FILE_FORMAT}
 
     def pil2png(self, old_path: Path, new_path: Path) -> Path:
         """Internally convert unhandled formats to uncompressed png for cwebp."""
         if (
-            self.input_file_format in self._PIL2PNG_FILE_FORMATS
+            self.input_file_format in CONVERTABLE_FILE_FORMATS
             and self.PREFERRED_PROGRAM in self.config.computed.available_programs
         ):
             new_path = new_path.with_suffix(Png.get_default_suffix())
@@ -112,6 +111,7 @@ class WebPLossless(WebP):
 #    """Handle lossy webp images."""
 #
 #    OUTPUT_FILE_FORMAT = FileFormat(WebP.OUTPUT_FORMAT_STR, False, False)
+#    INPUT_FILE_FORMATS = frozenset({OUTPUT_FILE_FORMAT, JPEG.OUTPUT_FILE_FORMAT, TIFF_FILE_FORMAT})
 #    ARGS_PREFIX = (*WebP.ARGS_PREFIX, "-pass", "10", "-af")
 
 
@@ -124,6 +124,9 @@ class Gif2WebP(WebPBase):
 
     OUTPUT_FORMAT_STR = WebP.OUTPUT_FORMAT_STR
     OUTPUT_FILE_FORMAT = FileFormat(WebP.OUTPUT_FORMAT_STR, True, True)
+    INPUT_FILE_FORMATS = frozenset(
+        {Gif.OUTPUT_FILE_FORMAT, GifAnimated.OUTPUT_FILE_FORMAT}
+    )
     PIL2WEBP_KWARGS: MappingProxyType[str, Any] = MappingProxyType(
         {
             **WebPLossless.PIL2WEBP_KWARGS,

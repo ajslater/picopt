@@ -6,7 +6,6 @@ from PIL import Image, ImageSequence
 
 from picopt.handlers.container import ContainerHandler
 from picopt.handlers.handler import FileFormat
-from picopt.handlers.image import PNG_ANIMATED_FILE_FORMAT, TIFF_ANIMATED_FILE_FORMAT
 from picopt.handlers.webp import WebP
 
 
@@ -15,9 +14,7 @@ class WebPAnimatedBase(ContainerHandler):
 
     OUTPUT_FORMAT_STR: str = WebP.OUTPUT_FORMAT_STR
     PROGRAMS = ContainerHandler.init_programs(("webpmux", "img2webp"))
-    _OPEN_WITH_PIL_FILE_FORMATS = frozenset(
-        {PNG_ANIMATED_FILE_FORMAT, TIFF_ANIMATED_FILE_FORMAT}
-    )
+    INPUT_FILE_FORMATS = frozenset()
     _IMG2WEBP_ARGS_PREFIX = (PROGRAMS["img2webp"], "-min_size")
     _WEBPMUX_ARGS_PREFIX = (PROGRAMS["webpmux"], "-get", "frame")
     _LOSSLESS = True
@@ -33,7 +30,7 @@ class WebPAnimatedBase(ContainerHandler):
 
     def unpack_into(self) -> None:
         """Unpack webp into temp dir."""
-        if self.input_file_format in self._OPEN_WITH_PIL_FILE_FORMATS:
+        if self.input_file_format not in self.INPUT_FILE_FORMATS:
             with Image.open(self.original_path) as image:
                 frame_index = 0
                 for frame in ImageSequence.Iterator(image):
@@ -114,12 +111,12 @@ class WebPAnimatedBase(ContainerHandler):
 class WebPAnimatedLossless(WebPAnimatedBase):
     """Animated Lossless WebP Handler."""
 
-    _LOSSLESS = True
-    OUTPUT_FILE_FORMAT = FileFormat(WebPAnimatedBase.OUTPUT_FORMAT_STR, _LOSSLESS, True)
+    OUTPUT_FILE_FORMAT = FileFormat(WebPAnimatedBase.OUTPUT_FORMAT_STR, True, True)
+    INPUT_FILE_FORMATS = frozenset({OUTPUT_FILE_FORMAT})
 
 
 # class WebPAnimatedLossy(WebPAnimatedBase):
 #    """Animated Lossy WebP Handler."""
 #
-#    _LOSSLESS = False
-#    OUTPUT_FILE_FORMAT = FileFormat(WebPAnimatedBase.OUTPUT_FORMAT_STR, _LOSSLESS, True)
+#    OUTPUT_FILE_FORMAT = FileFormat(WebPAnimatedBase.OUTPUT_FORMAT_STR, False, True)
+#    INPUT_FILE_FORMATS = frozenset({OUTPUT_FILE_FORMAT})

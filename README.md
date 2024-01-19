@@ -12,16 +12,19 @@ The actual image optimization is best accomplished by external programs.
 
 ### Lossy Images
 
-JPEG images are likely the best and most practical lossy image formats. Converting lossy images rarely makes sense and so picopt only optimizes them in their current format.
-WEBP Lossy images are not optimized. There is no current way to preserve information without running it through a lossy process again.
+Converting lossy images rarely makes sense and so picopt only optimizes them in their current format.
+
+- JPEG images are optimized with MozJpeg's jpegtran.
+- WEBP Lossy images are not optimized. There is no current way to preserve information without running it through a lossy process again.
 
 ### Lossless Images
 
 Lossless WebP images are smaller than PNG, much smaller than GIF and, of course, a great deal smaller thein uncompressed bitmaps like BMP. As such the best practice is probably to convert all lossless images to WebP Lossless as now all major browsers support it. The only downside is that decoding WebP Lossless takes on average 50% more CPU than PNG.
+All major desktop and mobile browsers support WEBP. WEBP is the lossless format of choice. Until perhaps JPEG XL support arrives for browsers.
 
 ### Sequenced Images
 
-Sequenced Images, like animated GIFs and WebP, most of the time, should be converted to a compressed video format like HEVC or VP9. There are several situations where this is impractical and so Animated WebP is now a good substitute.
+Sequenced Images, like animated GIFs and WebP, most of the time, should be converted to a compressed video format like HEVC, VVC, VP9 or VP10. There are several situations where this is impractical and so Animated WebP is now a good substitute.
 
 ### Conversion
 
@@ -31,10 +34,17 @@ By default picopt does not convert images between formats. You must turn on conv
 
 - By default picopt will optimize GIF, JPEG, PNG and WEBP images.
 - Picopt can optionally optimize ZIP, ePub, and CBZ containers.
-- Picopt can be told to convert lossless images such as BPM, PPM, GIF, TIFF into PNG, and all of the mentioned lossless formats into WebP.
+- Picopt can be told to convert many lossless images formats such as BMP, PPM, GIF, TIFF into PNG or WebP.
 - Picopt can convert Animated GIFs into Animated WebP files.
 - Picopt can convert Animated PNGs (APNG) into Animated WebP files, but does not optimize APNG as APNG.
 - Picopt can convert RAR files into Zipfiles and CBR files into CBZ files.
+
+Because Picopt supports so many lossless image formats, to avoid surprises to convert a BMP file to WEBP you must specify that you want to read the BMP format _and_ that you want to convert it to WEBP:
+e.g.
+
+```sh
+$ picopt -x BMP -c WEBP bigUgly.bmp
+```
 
 ## <a name="programs">External Programs</a>
 
@@ -46,7 +56,7 @@ To optimize JPEG images. Picopt needs one of [mozjpeg](https://github.com/mozill
 
 ### PNG
 
-To optimize PNG images or convert other lossless formats to PNG picopt requires either [optipng](http://optipng.sourceforge.net/) or [pngout](http://advsys.net/ken/utils.htm) be on the path. Optipng provides the most advantage, but best results will be had by using pngout as well.
+To optimize PNG images or convert other lossless formats to PNG picopt requires either [oxipng](http://oxipng.sourceforge.net/) or [pngout](http://advsys.net/ken/utils.htm) be on the path. oxipng provides the most advantage, but best results will be had by using pngout as well.
 
 ### Animated GIF
 
@@ -73,7 +83,7 @@ picopt requires several external system dependencies to run. We must install the
 
 #### macOS
 
-    brew install gifsicle jonof/kenutils/pngout mozjpeg optipng webp
+    brew install gifsicle jonof/kenutils/pngout mozjpeg oxipng webp
 
     ln -s $(brew --prefix)/opt/mozjpeg/bin/jpegtran /usr/local/bin/mozjpeg
 
@@ -82,7 +92,7 @@ You may manually download it and put it in your path at [Google's WebP developer
 
 #### Debian / Ubuntu
 
-    apt-get install optipng gifsicle python-imaging webp
+    apt-get install gifsicle oxipng python-imaging webp
 
 if you don't want to install mozjpeg using the instructions below then use jpegtran:
 
@@ -90,7 +100,7 @@ if you don't want to install mozjpeg using the instructions below then use jpegt
 
 #### Redhat / Fedora
 
-    yum install optipng gifsicle python-imaging libwebp-tools
+    yum install gifsicle oxipng python-imaging libwebp-tools
 
 if you don't want to install mozjpeg using the instructions below then use jpegtran:
 
@@ -107,7 +117,7 @@ Most Linux distributions still require a more manual install as elucidated here 
 
 #### pngout
 
-pngout is a useful compression to use after optipng. It is not packaged for linux, but you may find the latest binary version [on JonoF's site](http://www.jonof.id.au/kenutils). Picopt looks for the binary to be called `pngout`
+pngout is a useful compression to use after oxipng. It is not packaged for linux, but you may find the latest binary version [on JonoF's site](http://www.jonof.id.au/kenutils). Picopt looks for the binary to be called `pngout`
 
 ### Picopt python package
 

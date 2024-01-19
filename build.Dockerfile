@@ -1,4 +1,4 @@
-FROM cimg/python:3.11-node
+FROM cimg/python:3.12-node
 
 ENV DEBIAN_FRONTEND noninteractive
 
@@ -10,7 +10,7 @@ RUN apt-get update \
     gifsicle \
     git \
     libjpeg-progs \
-    optipng \
+    oxipng \
     shellcheck \
     unrar \
     webp \

@@ -49,7 +49,7 @@
     "markdown-eslint-parser": "^1.2.1",
     "prettier": "^3.0.0",
     "prettier-plugin-packagejson": "^2.4.4",
-    "prettier-plugin-sh": "^0.13.0",
+    "prettier-plugin-sh": "^0.14.0",
     "remark": "^15.0.1",
     "remark-cli": "^12.0.0",
     "remark-gfm": "^4.0.0",

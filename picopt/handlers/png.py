@@ -17,16 +17,20 @@ class Png(ImageHandler):
     BEST_ONLY: bool = False
     OUTPUT_FORMAT_STR = PngImageFile.format
     OUTPUT_FILE_FORMAT = FileFormat(OUTPUT_FORMAT_STR, True, False)
+    INPUT_FILE_FORMATS = frozenset({OUTPUT_FILE_FORMAT})
     PIL2_ARGS: MappingProxyType[str, bool] = MappingProxyType({"optimize": True})
     PROGRAMS: MappingProxyType[str, Optional[str]] = ImageHandler.init_programs(
-        ("pil2png", "optipng", "pngout")
+        ("pil2png", "oxipng", "pngout")
     )
-    PREFERRED_PROGRAM: str = "optipng"
-    _OPTIPNG_ARGS: tuple[Optional[str], ...] = (
-        PROGRAMS["optipng"],
-        "-o5",
-        "-fix",
-        "-force",
+    PREFERRED_PROGRAM: str = "oxipng"
+    _OXIPNG_ARGS: tuple[Optional[str], ...] = (
+        PROGRAMS["oxipng"],
+        "--opt",
+        "5",
+        "--alpha",
+        "--fix",
+        "--force",
+        "--zopfli",
     )
     _PNGOUT_ARGS: tuple[Optional[str], ...] = (PROGRAMS["pngout"], "-force", "-y")
 
@@ -34,12 +38,12 @@ class Png(ImageHandler):
         """Pillow png optimization."""
         return self.pil2native(old_path, new_path)
 
-    def optipng(self, old_path: Path, new_path: Path) -> Path:
-        """Run the external program optipng on the file."""
-        args_l = list(self._OPTIPNG_ARGS)
+    def oxipng(self, old_path: Path, new_path: Path) -> Path:
+        """Run the external program oxipng on the file."""
+        args_l = list(self._OXIPNG_ARGS)
         if not self.config.keep_metadata:
-            args_l += ["-strip", "all"]
-        args_l += ["-out", str(new_path), str(old_path)]
+            args_l += ["--strip", "safe"]
+        args_l += ["--out", str(new_path), str(old_path)]
         self.run_ext(tuple(args_l))
         return new_path
 
