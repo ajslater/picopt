@@ -45,7 +45,8 @@ class WebP(WebPBase, ABC):
     # https://developers.google.com/speed/webp/docs/cwebp
     ARGS_PREFIX = (
         PROGRAMS["cwebp"],
-        "-near_lossless", "0",
+        "-near_lossless",
+        "0",
         "-q",
         "100",
         "-m",
