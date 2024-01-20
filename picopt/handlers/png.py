@@ -18,9 +18,9 @@ class Png(ImageHandler):
     OUTPUT_FILE_FORMAT = FileFormat(OUTPUT_FORMAT_STR, True, False)
     INPUT_FILE_FORMATS = frozenset({OUTPUT_FILE_FORMAT})
     PIL2_ARGS: MappingProxyType[str, bool] = MappingProxyType({"optimize": True})
-    PROGRAMS: MappingProxyType[str, str | None] = ImageHandler.init_programs(
-        ("pil2png", "oxipng", "pngout")
-    )
+    PROGRAMS: MappingProxyType[
+        str, str | tuple[str, ...] | None
+    ] = ImageHandler.init_programs(("pil2png", "oxipng", "pngout"))
     PREFERRED_PROGRAM: str = "oxipng"
     _OXIPNG_ARGS: tuple[str | None, ...] = (
         PROGRAMS["oxipng"],

@@ -183,13 +183,14 @@ MODE_EXECUTABLE = stat.S_IXUSR ^ stat.S_IXGRP ^ stat.S_IXOTH
 
 
 def _is_external_program_executable(
-    program: str, bin_path: str | None, verbose: int
+    program: str, bin_path: str | tuple[str, ...] | None, verbose: int
 ) -> bool:
     """Test to see if the external programs can be run."""
     try:
         if not bin_path:
             return False
-        path = pathlib.Path(bin_path)
+        test_path = bin_path[0] if isinstance(bin_path, tuple) else bin_path
+        path = pathlib.Path(test_path)
         mode = path.stat().st_mode
         result = bool(mode & MODE_EXECUTABLE)
     except Exception:
@@ -347,13 +348,15 @@ def _create_format_handler_map(
 ) -> None:
     """Create a format to handler map from config."""
     all_format_strs = _set_all_format_strs(config)
+
+    available_programs = _get_available_programs(config)
+    config[PROGRAM_NAME]["computed"]["available_programs"].set(available_programs)
+    # TODO if no way to convert_to, abort
+
     convert_to = _config_formats_list_to_set(config, "convert_to")
     config[PROGRAM_NAME]["convert_to"].set(sorted(convert_to))
 
     convert_handlers = _set_convert_formats(config, all_format_strs, convert_to)
-
-    available_programs = _get_available_programs(config)
-    config[PROGRAM_NAME]["computed"]["available_programs"].set(available_programs)
 
     format_handlers = {}
     for file_format, possible_file_handlers in _FORMAT_HANDLERS.items():
@@ -378,6 +381,8 @@ def _create_format_handler_map(
                     format_handlers[file_format] = {}
                 format_handlers[file_format][handler_type] = handler_class
                 break
+
+    # TODO if no format handler adjust config.formats
     config[PROGRAM_NAME]["computed"]["format_handlers"].set(format_handlers)
 
 

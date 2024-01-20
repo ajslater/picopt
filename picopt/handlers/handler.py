@@ -40,9 +40,10 @@ class Handler(ABC):
     OUTPUT_FILE_FORMAT: FileFormat = FileFormat(OUTPUT_FORMAT_STR, False, False)
     INPUT_FILE_FORMATS = frozenset({OUTPUT_FILE_FORMAT})
     INTERNAL: str = "python_internal"
-    PROGRAMS: MappingProxyType[str, str | None] = MappingProxyType({})
+    PROGRAMS: MappingProxyType[str, str | tuple[str, ...] | None] = MappingProxyType({})
     WORKING_SUFFIX: str = f"{PROGRAM_NAME}__tmp"
 
+    # TODO move into config?
     @classmethod
     def init_programs(
         cls, programs: tuple[str, ...]
@@ -52,6 +53,15 @@ class Handler(ABC):
         for program in programs:
             if program.startswith("pil2") or program == cls.INTERNAL:
                 bin_path = None
+            elif program.startswith("npx_"):
+                bin_path = shutil.which("npx")
+                if not bin_path:
+                    continue
+                bin_path = (bin_path, *program.split("_")[1:])
+                try:
+                    subprocess.run(bin_path, check=True)  # noqa: S603
+                except (subprocess.CalledProcessError, FileNotFoundError, OSError):
+                    continue
             else:
                 bin_path = shutil.which(program)
                 if not bin_path:

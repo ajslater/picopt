@@ -14,9 +14,9 @@ class Jpeg(ImageHandler):
     OUTPUT_FORMAT_STR = JpegImageFile.format
     OUTPUT_FILE_FORMAT = FileFormat(OUTPUT_FORMAT_STR, False, False)
     INPUT_FILE_FORMATS = frozenset({OUTPUT_FILE_FORMAT})
-    PROGRAMS: MappingProxyType[str, str | None] = ImageHandler.init_programs(
-        ("mozjpeg", "jpegtran")
-    )
+    PROGRAMS: MappingProxyType[
+        str, str | tuple[str, ...] | None
+    ] = ImageHandler.init_programs(("mozjpeg", "jpegtran"))
     _ARGS_PREFIX = ("-optimize", "-progressive", "-copy")
     _MOZJPEG_ARGS_PREFIX: tuple[str | None, ...] = (
         PROGRAMS["mozjpeg"],

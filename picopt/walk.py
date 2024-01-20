@@ -38,9 +38,8 @@ class Walk(Configurable):
     def _convert_message(
         self, convert_from_format_strs: frozenset[str], convert_handler: type[Handler]
     ):
-        convert_from_list = sorted(
-            convert_from_format_strs & frozenset(self._config.formats)
-        )
+        convert_from_list = sorted(convert_from_format_strs)
+        # & frozenset(self._config.formats)
         if not convert_from_list:
             return
         convert_from = ", ".join(convert_from_list)

@@ -40,7 +40,9 @@ class WebP(WebPBase, ABC):
     """WebP format class."""
 
     OUTPUT_FORMAT_STR = WebPImageFile.format
-    PROGRAMS: MappingProxyType[str, str | None] = WebPBase.init_programs(("cwebp",))
+    PROGRAMS: MappingProxyType[
+        str, str | tuple[str, ...] | None
+    ] = WebPBase.init_programs(("cwebp",))
     # https://developers.google.com/speed/webp/docs/cwebp
     ARGS_PREFIX = (
         PROGRAMS["cwebp"],
@@ -76,7 +78,7 @@ class WebPLossless(WebP):
         {OUTPUT_FILE_FORMAT, Png.OUTPUT_FILE_FORMAT, TIFF_FILE_FORMAT}
     )
     PREFERRED_PROGRAM: str = "cwebp"
-    PROGRAMS: MappingProxyType[str, str | None] = MappingProxyType(
+    PROGRAMS: MappingProxyType[str, str | tuple[str, ...] | None] = MappingProxyType(
         {
             "pil2png": None,
             **WebP.PROGRAMS,
@@ -134,9 +136,9 @@ class Gif2WebP(WebPBase):
         }
     )
     PREFERRED_PROGRAM = "gif2webp"
-    PROGRAMS: MappingProxyType[str, str | None] = WebPBase.init_programs(
-        ("gif2webp", "pil2webp")
-    )
+    PROGRAMS: MappingProxyType[
+        str, str | tuple[str, ...] | None
+    ] = WebPBase.init_programs(("gif2webp", "pil2webp"))
     _ARGS_PREFIX = (
         PROGRAMS["gif2webp"],
         "-mixed",

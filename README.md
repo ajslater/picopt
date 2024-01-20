@@ -133,6 +133,12 @@ To install svgo on Linux you can use the snap tool:
 snap install svgo
 ```
 
+Or you can install svgo with npm:
+
+```sh
+npm install -G svgo
+```
+
 #### pngout
 
 pngout is a useful compression to use after oxipng. It is not packaged for linux, but you may find the latest binary version [on JonoF's site](http://www.jonof.id.au/kenutils). Picopt looks for the binary to be called `pngout`
