@@ -4,6 +4,10 @@ from pathlib import Path
 from PIL import Image, ImageSequence
 
 from picopt.handlers.container import ContainerHandler
+from picopt.handlers.convertible import (
+    CONVERTABLE_ANIMATED_FORMAT_STRS,
+    PNG_FORMAT_STR,
+)
 from picopt.handlers.handler import FileFormat
 from picopt.handlers.webp import WebP
 
@@ -13,7 +17,6 @@ class WebPAnimatedBase(ContainerHandler):
 
     OUTPUT_FORMAT_STR: str = WebP.OUTPUT_FORMAT_STR
     PROGRAMS = ContainerHandler.init_programs(("webpmux", "img2webp"))
-    INPUT_FILE_FORMATS = frozenset()
     _IMG2WEBP_ARGS_PREFIX = (PROGRAMS["img2webp"], "-min_size")
     _WEBPMUX_ARGS_PREFIX = (PROGRAMS["webpmux"], "-get", "frame")
     _LOSSLESS = True
@@ -29,7 +32,18 @@ class WebPAnimatedBase(ContainerHandler):
 
     def unpack_into(self) -> None:
         """Unpack webp into temp dir."""
-        if self.input_file_format not in self.INPUT_FILE_FORMATS:
+        if self.input_file_format in self.INPUT_FILE_FORMATS:
+            for frame_index in range(self.metadata.n_frames):
+                frame_path = self._get_frame_path(frame_index)
+                args = [
+                    *self._WEBPMUX_ARGS_PREFIX,
+                    str(frame_index),
+                    str(self.original_path),
+                    "-o",
+                    str(frame_path),
+                ]
+                self.run_ext(tuple(args))
+        else:
             with Image.open(self.original_path) as image:
                 frame_index = 0
                 for frame in ImageSequence.Iterator(image):
@@ -42,18 +56,7 @@ class WebPAnimatedBase(ContainerHandler):
                         method=0,
                     )
                     frame_index += 1
-            image.close()
-        else:
-            for frame_index in range(self.metadata.n_frames):
-                frame_path = self._get_frame_path(frame_index)
-                args = [
-                    *self._WEBPMUX_ARGS_PREFIX,
-                    str(frame_index),
-                    str(self.original_path),
-                    "-o",
-                    str(frame_path),
-                ]
-                self.run_ext(tuple(args))
+            image.close()  # for animated
 
     def _prepare_metadata(self, data: bytes | None, working_path: Path, md_arg: str):
         """Prepare a metadata file and args for webpmux."""
@@ -112,6 +115,9 @@ class WebPAnimatedLossless(WebPAnimatedBase):
 
     OUTPUT_FILE_FORMAT = FileFormat(WebPAnimatedBase.OUTPUT_FORMAT_STR, True, True)
     INPUT_FILE_FORMATS = frozenset({OUTPUT_FILE_FORMAT})
+    CONVERT_FROM_FORMAT_STRS = frozenset(
+        CONVERTABLE_ANIMATED_FORMAT_STRS | {PNG_FORMAT_STR}
+    )
 
 
 # class WebPAnimatedLossy(WebPAnimatedBase):

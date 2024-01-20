@@ -7,6 +7,7 @@
   - Fix non zero exit code on success.
   - `--destroy-metadata` option becomes `--strip-metadata`
 - Features
+  - Better WebP Lossless compression.
   - Support optimizing SVG with svgo.
   - Support converting more lossless formats to PNG & WEBP: CUR, DIB, FITS, IMT, PCX, PIXAR, PSD, QOI, SGI, SPIDER, SUN, TGA, XBM, XPM.
 - Dev

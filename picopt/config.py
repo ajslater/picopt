@@ -244,7 +244,6 @@ def _set_all_format_strs(config) -> frozenset[str]:
         config[PROGRAM_NAME]["computed"]["extra_formats"].set(sorted(extra_format_strs))
         all_format_strs |= extra_format_strs
 
-    config[PROGRAM_NAME]["formats"].set(sorted(all_format_strs))
     return frozenset(all_format_strs)
 
 
@@ -349,16 +348,16 @@ def _create_format_handler_map(
     """Create a format to handler map from config."""
     all_format_strs = _set_all_format_strs(config)
 
-    available_programs = _get_available_programs(config)
-    config[PROGRAM_NAME]["computed"]["available_programs"].set(available_programs)
-    # TODO if no way to convert_to, abort
-
     convert_to = _config_formats_list_to_set(config, "convert_to")
     config[PROGRAM_NAME]["convert_to"].set(sorted(convert_to))
 
     convert_handlers = _set_convert_formats(config, all_format_strs, convert_to)
 
+    available_programs = _get_available_programs(config)
+    config[PROGRAM_NAME]["computed"]["available_programs"].set(available_programs)
+
     format_handlers = {}
+    handled_format_strs = set()
     for file_format, possible_file_handlers in _FORMAT_HANDLERS.items():
         if file_format.format_str not in all_format_strs:
             continue
@@ -370,9 +369,7 @@ def _create_format_handler_map(
                 available = handler_class.is_handler_available(
                     convert_handlers, available_programs, file_format
                 )
-                if not available:
-                    continue
-                if (
+                if not available or (
                     handler_type == "convert"
                     and handler_class.OUTPUT_FILE_FORMAT.format_str not in convert_to
                 ):
@@ -380,9 +377,15 @@ def _create_format_handler_map(
                 if file_format not in format_handlers:
                     format_handlers[file_format] = {}
                 format_handlers[file_format][handler_type] = handler_class
+                for fmt in handler_class.INPUT_FILE_FORMATS:
+                    handled_format_strs.add(fmt.format_str)
+                if handler_class.OUTPUT_FILE_FORMAT.format_str in convert_to:
+                    handled_format_strs |= handler_class.CONVERT_FROM_FORMAT_STRS
                 break
 
-    # TODO if no format handler adjust config.formats
+    all_format_strs &= handled_format_strs
+    config[PROGRAM_NAME]["formats"].set(sorted(all_format_strs))
+
     config[PROGRAM_NAME]["computed"]["format_handlers"].set(format_handlers)
 
 

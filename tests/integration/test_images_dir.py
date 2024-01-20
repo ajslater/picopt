@@ -10,9 +10,9 @@ TMP_ROOT = get_test_dir()
 FNS = {
     "07themecamplist.pdf": (93676, 93676, ("pdf", 93676), ("pdf", 93676)),
     "test_animated_gif.gif": (16383, 16358, ("gif", 16358), ("webp", 11866)),
-    "test_animated_png.png": (63435, 63435, ("png", 63435), ("webp", 54324)),
+    "test_animated_png.png": (63435, 63435, ("png", 63435), ("webp", 46652)),
     "test_animated_webp.webp": (13610, 13610, ("webp", 13610), ("webp", 13610)),
-    "test_png.png": (7967, 4149, ("png", 4149), ("webp", 3870)),
+    "test_png.png": (7967, 4149, ("png", 4149), ("webp", 2044)),
     "test_pre-optimized_jpg.jpg": (
         22664,
         22664,
@@ -21,48 +21,48 @@ FNS = {
     ),
     "test_svg.svg": (5393, 4871, ("svg", 4871), ("svg", 4871)),
     "test_txt.txt": (6, 6, ("txt", 6), ("txt", 6)),
-    "test_webp_lossless.webp": (5334, 3870, ("webp", 3870), ("webp", 3870)),
+    "test_webp_lossless.webp": (5334, 2044, ("webp", 2044), ("webp", 2044)),
     "test_webp_lossless_pre-optimized.webp": (
-        8914,
-        8914,
-        ("webp", 8914),
-        ("webp", 8914),
+        3798,
+        3798,
+        ("webp", 3798),
+        ("webp", 3798),
     ),
-    "mri.tif": (230578, 230578, ("tif", 230578), ("webp", 128416)),
+    "mri.tif": (230578, 230578, ("tif", 230578), ("webp", 130202)),
 }
 if platform.system() == "Darwin":
     FNS.update(
         {
-            "test_bmp.bmp": (141430, 141430, ("png", 67215), ("webp", 47524)),
+            "test_bmp.bmp": (141430, 141430, ("png", 67215), ("webp", 30208)),
             "test_gif.gif": (138952, 138944, ("png", 112137), ("webp", 107924)),
             "test_jpg.jpg": (97373, 87913, ("jpg", 87913), ("jpg", 87913)),
-            "test_png_16rgba.png": (3435, 2090, ("png", 2090), ("webp", 1142)),
-            "test_pnm.pnm": (27661, 27661, ("png", 15510), ("webp", 12808)),
+            "test_png_16rgba.png": (3435, 2090, ("png", 2090), ("webp", 728)),
+            "test_pnm.pnm": (27661, 27661, ("png", 15510), ("webp", 6448)),
             "test_pre-optimized_png.png": (
                 256572,
                 256572,
                 ("png", 256572),
-                ("webp", 197726),
+                ("webp", 107674),
             ),
             "test_webp_lossy.webp": (2764, 2764, ("webp", 2764), ("webp", 2764)),
-            "eight.tif": (59640, 59640, ("png", 30564), ("webp", 24974)),
+            "eight.tif": (59640, 59640, ("png", 30564), ("webp", 18786)),
         }
     )
 else:
     FNS.update(
         {
-            "test_bmp.bmp": (141430, 141430, ("png", 67215), ("webp", 47524)),
+            "test_bmp.bmp": (141430, 141430, ("png", 67215), ("webp", 30208)),
             "test_gif.gif": (138952, 138944, ("png", 112137), ("webp", 26504)),
             "test_jpg.jpg": (97373, 87922, ("jpg", 87922), ("jpg", 87922)),
-            "test_png_16rgba.png": (3435, 2870, ("png", 2870), ("webp", 1142)),
-            "test_pnm.pnm": (27661, 27661, ("png", 15510), ("webp", 12808)),
+            "test_png_16rgba.png": (3435, 2870, ("png", 2870), ("webp", 728)),
+            "test_pnm.pnm": (27661, 27661, ("png", 15510), ("webp", 6448)),
             "test_pre-optimized_png.png": (
                 256572,
                 256572,
                 ("png", 256572),
                 ("webp", 197680),
             ),
-            "test_webp_lossy.webp": (2764, 1760, ("webp", 1760), ("webp", 1760)),
+            "test_webp_lossy.webp": (2764, 2764, ("webp", 2764), ("webp", 2764)),
             "eight.tif": (59640, 59640, ("png", 30564), ("webp", 24982)),
         }
     )

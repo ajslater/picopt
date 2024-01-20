@@ -61,9 +61,6 @@ class ImageHandler(Handler, metaclass=ABCMeta):
     def pil2native(self, old_path: Path, new_path: Path) -> Path:
         """Use PIL to save the image."""
         if (
-            # TODO refactor for:
-            #    bmp input into oxipng
-            #    preferred programs (each may have different input reqs?)
             self.input_file_format in self.INPUT_FILE_FORMATS
             and self.PREFERRED_PROGRAM in self.config.computed.available_programs
         ):
@@ -77,4 +74,5 @@ class ImageHandler(Handler, metaclass=ABCMeta):
                 **self.PIL2_ARGS,
             )
         image.close()  # for animated images
+        self.input_file_format = self.OUTPUT_FILE_FORMAT
         return new_path

@@ -38,7 +38,8 @@ class Handler(ABC):
     BEST_ONLY: bool = True
     OUTPUT_FORMAT_STR: str = "unimplemented"
     OUTPUT_FILE_FORMAT: FileFormat = FileFormat(OUTPUT_FORMAT_STR, False, False)
-    INPUT_FILE_FORMATS = frozenset({OUTPUT_FILE_FORMAT})
+    INPUT_FILE_FORMATS: frozenset[FileFormat] = frozenset({OUTPUT_FILE_FORMAT})
+    CONVERT_FROM_FORMAT_STRS: frozenset[str] = frozenset()
     INTERNAL: str = "python_internal"
     PROGRAMS: MappingProxyType[str, str | tuple[str, ...] | None] = MappingProxyType({})
     WORKING_SUFFIX: str = f"{PROGRAM_NAME}__tmp"
@@ -57,9 +58,14 @@ class Handler(ABC):
                 bin_path = shutil.which("npx")
                 if not bin_path:
                     continue
-                bin_path = (bin_path, *program.split("_")[1:])
+                bin_path = (bin_path, "--no", *program.split("_")[1:])
                 try:
-                    subprocess.run(bin_path, check=True)  # noqa: S603
+                    subprocess.run(
+                        bin_path,  # noqa: S603
+                        check=True,
+                        stdout=subprocess.DEVNULL,
+                        stderr=subprocess.DEVNULL,
+                    )
                 except (subprocess.CalledProcessError, FileNotFoundError, OSError):
                     continue
             else:

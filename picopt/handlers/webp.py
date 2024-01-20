@@ -4,10 +4,9 @@ from pathlib import Path
 from types import MappingProxyType
 from typing import Any
 
-from PIL import Image
 from PIL.WebPImagePlugin import WebPImageFile
 
-from picopt.handlers.convertible import CONVERTABLE_FILE_FORMATS, TIFF_FILE_FORMAT
+from picopt.handlers.convertible import TIFF_FILE_FORMAT
 from picopt.handlers.gif import Gif, GifAnimated
 from picopt.handlers.handler import FileFormat
 from picopt.handlers.image import ImageHandler
@@ -46,6 +45,7 @@ class WebP(WebPBase, ABC):
     # https://developers.google.com/speed/webp/docs/cwebp
     ARGS_PREFIX = (
         PROGRAMS["cwebp"],
+        "-near_lossless", "0",
         "-q",
         "100",
         "-m",
@@ -77,6 +77,9 @@ class WebPLossless(WebP):
     INPUT_FILE_FORMATS = frozenset(
         {OUTPUT_FILE_FORMAT, Png.OUTPUT_FILE_FORMAT, TIFF_FILE_FORMAT}
     )
+    CONVERT_FROM_FORMAT_STRS = frozenset(
+        Png.CONVERT_FROM_FORMAT_STRS | {Png.OUTPUT_FORMAT_STR}
+    )
     PREFERRED_PROGRAM: str = "cwebp"
     PROGRAMS: MappingProxyType[str, str | tuple[str, ...] | None] = MappingProxyType(
         {
@@ -86,27 +89,31 @@ class WebPLossless(WebP):
         }
     )
     ARGS_PREFIX = (*WebP.ARGS_PREFIX, "-lossless")
+    PIL2_ARGS = MappingProxyType({"compress_level": 0})
 
     def pil2png(self, old_path: Path, new_path: Path) -> Path:
         """Internally convert unhandled formats to uncompressed png for cwebp."""
-        if (
-            self.input_file_format in CONVERTABLE_FILE_FORMATS
-            and self.PREFERRED_PROGRAM in self.config.computed.available_programs
-        ):
-            new_path = new_path.with_suffix(Png.get_default_suffix())
-            with Image.open(old_path) as image:
-                image.save(
-                    new_path,
-                    Png.OUTPUT_FORMAT_STR,
-                    compress_level=0,
-                    exif=self.metadata.exif,
-                    icc_profile=self.metadata.icc_profile,
-                )
-            image.close()
-            self.input_file_format = Png.OUTPUT_FILE_FORMAT
-        else:
-            new_path = old_path
-        return new_path
+        return self.pil2native(old_path, new_path)
+
+    # TODO remove
+    #    if (
+    #        self.input_file_format in CONVERTABLE_FILE_FORMATS
+    #        and self.PREFERRED_PROGRAM in self.config.computed.available_programs
+    #    ):
+    #        new_path = new_path.with_suffix(Png.get_default_suffix())
+    #        with Image.open(old_path) as image:
+    #            image.save(
+    #                new_path,
+    #                Png.OUTPUT_FORMAT_STR,
+    #                compress_level=0,
+    #                exif=self.metadata.exif,
+    #                icc_profile=self.metadata.icc_profile,
+    #            )
+    #        image.close()
+    #        self.input_file_format = Png.OUTPUT_FILE_FORMAT
+    #    else:
+    #        new_path = old_path
+    #    return new_path
 
 
 # class WebPLossy(WebP):
@@ -129,6 +136,7 @@ class Gif2WebP(WebPBase):
     INPUT_FILE_FORMATS = frozenset(
         {Gif.OUTPUT_FILE_FORMAT, GifAnimated.OUTPUT_FILE_FORMAT}
     )
+    CONVERT_FROM_FORMAT_STRS = frozenset({Gif.OUTPUT_FORMAT_STR})
     PIL2WEBP_KWARGS: MappingProxyType[str, Any] = MappingProxyType(
         {
             **WebPLossless.PIL2WEBP_KWARGS,
@@ -153,6 +161,7 @@ class Gif2WebP(WebPBase):
     @classmethod
     def native_input_file_formats(cls):
         """No native formats."""
+        # TODO does this really need to be a method?
         return frozenset()
 
     def gif2webp(self, old_path: Path, new_path: Path) -> Path:
