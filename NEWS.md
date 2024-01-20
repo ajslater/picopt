@@ -6,6 +6,9 @@
   - Remove Lossy WebP optimization. Wasn't optimal.
   - Fix non zero exit code on success.
   - `--destroy-metadata` option becomes `--strip-metadata`
+- Features
+  - Support optimizing SVG with svgo.
+  - Support converting more lossless formats to PNG & WEBP: CUR, DIB, FITS, IMT, PCX, PIXAR, PSD, QOI, SGI, SPIDER, SUN, TGA, XBM, XPM.
 - Dev
   - walk.run now returns totals instead of running report on them.
 

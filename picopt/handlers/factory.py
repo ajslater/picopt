@@ -13,6 +13,7 @@ from picopt.handlers.convertible import (
     TIFF_LOSSLESS_COMPRESSION,
 )
 from picopt.handlers.handler import FileFormat, Handler, Metadata
+from picopt.handlers.svg import SVG
 from picopt.handlers.webp import WebPLossless
 from picopt.handlers.zip import CBR, CBZ, EPub, Rar, Zip
 from picopt.pillow.webp_lossless import is_lossless
@@ -38,17 +39,21 @@ def _extract_image_info(path, keep_metadata):
     n_frames = 1
     animated = False
     try:
-        with Image.open(path, mode="r") as image:
-            image.verify()
-        image.close()  # for animated images
-        with Image.open(path, mode="r") as image:
-            image_format_str = image.format
-            if image_format_str:
-                animated = getattr(image, "is_animated", False)
-                info = image.info
-                if keep_metadata and animated:
-                    n_frames = getattr(image, "n_frames", 1)
-        image.close()  # for animated images
+        lower_suffix = path.suffix.lower()
+        if lower_suffix == SVG.INPUT_FORMAT_SUFFIX:
+            image_format_str = SVG.OUTPUT_FORMAT_STR
+        else:
+            with Image.open(path, mode="r") as image:
+                image.verify()
+            image.close()  # for animated images
+            with Image.open(path, mode="r") as image:
+                image_format_str = image.format
+                if image_format_str:
+                    animated = getattr(image, "is_animated", False)
+                    info = image.info
+                    if keep_metadata and animated:
+                        n_frames = getattr(image, "n_frames", 1)
+            image.close()  # for animated images
     except UnidentifiedImageError:
         pass
     return image_format_str, info, n_frames, animated

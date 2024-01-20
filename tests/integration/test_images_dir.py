@@ -19,6 +19,7 @@ FNS = {
         ("jpg", 22664),
         ("jpg", 22664),
     ),
+    "test_svg.svg": (5393, 4871, ("svg", 4871), ("svg", 4871)),
     "test_txt.txt": (6, 6, ("txt", 6), ("txt", 6)),
     "test_webp_lossless.webp": (5334, 3870, ("webp", 3870), ("webp", 3870)),
     "test_webp_lossless_pre-optimized.webp": (

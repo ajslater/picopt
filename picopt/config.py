@@ -35,6 +35,7 @@ from picopt.handlers.gif import Gif, GifAnimated
 from picopt.handlers.handler import FileFormat, Handler
 from picopt.handlers.jpeg import Jpeg
 from picopt.handlers.png import Png
+from picopt.handlers.svg import SVG
 from picopt.handlers.webp import Gif2WebP, WebPLossless
 from picopt.handlers.webp_animated import WebPAnimatedLossless
 from picopt.handlers.zip import CBR, CBZ, EPub, Rar, Zip
@@ -51,10 +52,10 @@ CONVERT_TO_FORMAT_STRS = frozenset(
 CONTAINER_CONVERTABLE_FORMAT_STRS = frozenset(
     (Rar.INPUT_FORMAT_STR, CBR.INPUT_FORMAT_STR)
 )
-DEFAULT_HANDLERS = (Gif, GifAnimated, Jpeg, Png, WebPLossless)
+DEFAULT_HANDLERS = frozenset({Gif, GifAnimated, Jpeg, Png, SVG, WebPLossless})
 HANDLERS = frozenset(
-    [
-        *DEFAULT_HANDLERS,
+    DEFAULT_HANDLERS
+    | {
         Gif2WebP,
         WebPAnimatedLossless,
         Zip,
@@ -62,7 +63,7 @@ HANDLERS = frozenset(
         CBZ,
         CBR,
         EPub,
-    ]
+    }
 )
 ALL_FORMAT_STRS: frozenset[str] = (
     frozenset([cls.OUTPUT_FORMAT_STR for cls in HANDLERS])
@@ -175,6 +176,7 @@ _FORMAT_HANDLERS = MappingProxyType(
         Rar.INPUT_FILE_FORMAT: FileFormatHandlers(convert=(Rar,)),
         CBR.INPUT_FILE_FORMAT: FileFormatHandlers(convert=(CBR,)),
         EPub.OUTPUT_FILE_FORMAT: FileFormatHandlers(native=(EPub,)),
+        SVG.OUTPUT_FILE_FORMAT: FileFormatHandlers(native=(SVG,)),
     }
 )
 MODE_EXECUTABLE = stat.S_IXUSR ^ stat.S_IXGRP ^ stat.S_IXOTH
