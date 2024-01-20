@@ -10,18 +10,22 @@ RUN apt-get update \
     gifsicle \
     git \
     libjpeg-progs \
-    oxipng \
     shellcheck \
     unrar \
     webp \
   && apt-get clean \
   && rm -rf /var/lib/apt/lists/*
 
+# hadolint ignore=DL3016
+RUN npm install --global svgo
+
 WORKDIR /app
 RUN chown circleci:circleci /app
 COPY --chown=circleci:circleci bin bin
 COPY --chown=circleci:circleci packages packages
 RUN bin/mozjpeg.sh
+# hadolint ignore=DL3059
+RUN bin/oxipng.sh
 # hadolint ignore=DL3059
 RUN bin/pngout.sh
 

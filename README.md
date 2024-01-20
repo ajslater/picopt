@@ -95,7 +95,7 @@ You may manually download it and put it in your path at [Google's WebP developer
 #### Debian / Ubuntu
 
 ```sh
-apt-get install gifsicle oxipng python-imaging webp
+apt-get install gifsicle python-imaging webp
 ```
 
 if you don't want to install mozjpeg using the instructions below then use jpegtran:
@@ -103,6 +103,8 @@ if you don't want to install mozjpeg using the instructions below then use jpegt
 ```sh
 apt-get install libjpeg-progs
 ```
+
+See mozjepg, oxipng, pngout & svgo install instructions below
 
 #### Redhat / Fedora
 
@@ -116,6 +118,8 @@ if you don't want to install mozjpeg using the instructions below then use jpegt
 yum install libjpeg-progs
 ```
 
+See mozjepg, pngout & svgo install instructions below
+
 #### MozJPEG
 
 mozjpeg offers better compression than libjpeg-progs jpegtran. It may or
@@ -124,6 +128,14 @@ may not be packaged for your \*nix, but even when it is, picopt requires that it
 Instructions for installing on macOS are given above.
 Some near recent binaries for Windows and Debian x86 [can be found here](https://mozjpeg.codelove.de/binaries.html).
 Most Linux distributions still require a more manual install as elucidated here on [Casey Hoffer's blog](https://www.caseyhofford.com/2019/05/01/improved-image-compression-install-mozjpeg-on-ubuntu-server/)
+
+#### oxipng
+
+oxipng is a newer, maintained fork of optipng. Unfortunately it isn't packaged for many Linuxes, but it has easily downloaded binary installs at the [Github Oxipng Release Page](https://github.com/shssoichiro/oxipng/releases)
+
+#### pngout
+
+pngout is a useful compression to use by itself or for a little gains after oxipng. It is not packaged for linux, but you may find the latest binary version [on JonoF's site](http://www.jonof.id.au/kenutils). Picopt looks for the binary to be called `pngout`
 
 #### svgo on Linux
 
@@ -138,10 +150,6 @@ Or you can install svgo with npm:
 ```sh
 npm install -G svgo
 ```
-
-#### pngout
-
-pngout is a useful compression to use after oxipng. It is not packaged for linux, but you may find the latest binary version [on JonoF's site](http://www.jonof.id.au/kenutils). Picopt looks for the binary to be called `pngout`
 
 ### Picopt python package
 
