@@ -96,27 +96,6 @@ class WebPLossless(WebP):
         """Internally convert unhandled formats to uncompressed png for cwebp."""
         return self.pil2native(old_path, new_path)
 
-    # TODO remove
-    #    if (
-    #        self.input_file_format in CONVERTABLE_FILE_FORMATS
-    #        and self.PREFERRED_PROGRAM in self.config.computed.available_programs
-    #    ):
-    #        new_path = new_path.with_suffix(Png.get_default_suffix())
-    #        with Image.open(old_path) as image:
-    #            image.save(
-    #                new_path,
-    #                Png.OUTPUT_FORMAT_STR,
-    #                compress_level=0,
-    #                exif=self.metadata.exif,
-    #                icc_profile=self.metadata.icc_profile,
-    #            )
-    #        image.close()
-    #        self.input_file_format = Png.OUTPUT_FILE_FORMAT
-    #    else:
-    #        new_path = old_path
-    #    return new_path
-
-
 # class WebPLossy(WebP):
 #    """Handle lossy webp images."""
 #
