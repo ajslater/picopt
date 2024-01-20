@@ -1,6 +1,6 @@
 # 📰 Picopt News
 
-## v3.4.0
+## v4.0.0
 
 - Fix
   - Remove Lossy WebP optimization. Wasn't optimal.
@@ -10,6 +10,7 @@
   - Better WebP Lossless compression.
   - Support optimizing SVG with svgo.
   - Support converting more lossless formats to PNG & WEBP: CUR, DIB, FITS, IMT, PCX, PIXAR, PSD, QOI, SGI, SPIDER, SUN, TGA, XBM, XPM.
+  - Oxipng replaces optipng for png compression.
 - Dev
   - walk.run now returns totals instead of running report on them.
 
