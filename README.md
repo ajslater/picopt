@@ -43,7 +43,7 @@ Because Picopt supports so many lossless image formats, to avoid surprises to co
 e.g.
 
 ```sh
-picopt -x BMP -c WEBP bigUgly.bmp
+picopt -x BMP -c WEBP big_old.bmp
 ```
 
 ## <a name="programs">External Programs</a>
@@ -83,28 +83,38 @@ picopt requires several external system dependencies to run. We must install the
 
 #### macOS
 
-    brew install gifsicle jonof/kenutils/pngout mozjpeg oxipng webp
+```sh
+brew install gifsicle jonof/kenutils/pngout mozjpeg oxipng svgo webp
 
-    ln -s $(brew --prefix)/opt/mozjpeg/bin/jpegtran /usr/local/bin/mozjpeg
+ln -s $(brew --prefix)/opt/mozjpeg/bin/jpegtran /usr/local/bin/mozjpeg
+```
 
 Unfortunately hombrew's `webp` formula does not yet install the gif2webp tool that picopt uses for converting animated gifs to animated webps.
 You may manually download it and put it in your path at [Google's WebP developer website](https://developers.google.com/speed/webp/download)
 
 #### Debian / Ubuntu
 
-    apt-get install gifsicle oxipng python-imaging webp
+```sh
+apt-get install gifsicle oxipng python-imaging webp
+```
 
 if you don't want to install mozjpeg using the instructions below then use jpegtran:
 
-    apt-get install libjpeg-progs
+```sh
+apt-get install libjpeg-progs
+```
 
 #### Redhat / Fedora
 
-    yum install gifsicle oxipng python-imaging libwebp-tools
+```sh
+yum install gifsicle oxipng python-imaging libwebp-tools
+```
 
 if you don't want to install mozjpeg using the instructions below then use jpegtran:
 
-    yum install libjpeg-progs
+```sh
+yum install libjpeg-progs
+```
 
 #### MozJPEG
 
@@ -115,55 +125,85 @@ Instructions for installing on macOS are given above.
 Some near recent binaries for Windows and Debian x86 [can be found here](https://mozjpeg.codelove.de/binaries.html).
 Most Linux distributions still require a more manual install as elucidated here on [Casey Hoffer's blog](https://www.caseyhofford.com/2019/05/01/improved-image-compression-install-mozjpeg-on-ubuntu-server/)
 
+#### svgo on Linux
+
+To install svgo on Linux you can use the snap tool:
+
+```sh
+snap install svgo
+```
+
 #### pngout
 
 pngout is a useful compression to use after oxipng. It is not packaged for linux, but you may find the latest binary version [on JonoF's site](http://www.jonof.id.au/kenutils). Picopt looks for the binary to be called `pngout`
 
 ### Picopt python package
 
-    pip install picopt
+```sh
+pip install picopt
+```
 
 ## <a name="usage">Usage Examples</a>
 
 Optimize all JPEG files in a directory:
 
-    picopt *.jpg
+```sh
+picopt *.jpg
+```
 
 Optimize all files and recurse directories:
 
-    picopt -r *
+```sh
+picopt -r *
+```
 
 Optimize files, recurse directories, also optimize ePub & CBZ containers, convert lossless images into WEBP, convert CBR into CBZ.
 
-    picopt -rx EPUB,CBR,CBZ -c WEBP,CBZ *
+```sh
+picopt -rx EPUB,CBR,CBZ -c WEBP,CBZ *
+```
 
 Optimize files and recurse directories AND optimize comic book archives:
 
-    picopt -rx CBZ *
+```sh
+picopt -rx CBZ *
+```
 
 Optimize comic directory recursively. Convert CBRs to CBZ. Convert lossless images, including TIFF, to lossless WEBP. Do not follow symlinks. Set timestamps.
 
-    picopt -rStc CBZ,WEBP -x TIFF,CBR,CBZ /Volumes/Media/Comics
+```sh
+picopt -rStc CBZ,WEBP -x TIFF,CBR,CBZ /Volumes/Media/Comics
+```
 
 Optimize all files, but only JPEG format files:
 
-    picopt -f JPEG *
+```sh
+picopt -f JPEG *
+```
 
 Optimize files and containers, but not JPEGS:
 
-    picopt -f GIF,PNG,WEBP,ZIP,CBZ,EPUB *
+```sh
+picopt -f GIF,PNG,WEBP,ZIP,CBZ,EPUB *
+```
 
 Optimize files, but not animated gifs:
 
-    picopt -f PNG,WEBP,ZIP,CBZ,EPUB *
+```sh
+picopt -f PNG,WEBP,ZIP,CBZ,EPUB *
+```
 
 Just list files picopt.py would try to optimize:
 
-    picopt -L *
+```sh
+picopt -L *
+```
 
 Optimize pictures in my iPhoto library, but only after the last time I did this, skipping symlinks to avoid duplicate work. Also drop a timestamp file so I don't have to remember the last time I did this:
 
-    picopt -rSt -D '2013 June 1 14:00' 'Pictures/iPhoto Library'
+```sh
+picopt -rSt -D '2013 June 1 14:00' 'Pictures/iPhoto Library'
+```
 
 ## <a name="package">Packages</a>
 
