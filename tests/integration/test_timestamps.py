@@ -23,7 +23,7 @@ FNS = {FN: (97373, 87913)} if platform.system() == "Darwin" else {FN: (97373, 87
 DEFAULT_CONFIG = {
     "bigger": False,
     "convert_to": [],
-    "formats": ["GIF", "PNG", "JPEG", "WEBP"],
+    "formats": ["GIF", "JPEG", "PNG", "SVG", "WEBP"],
     "keep_metadata": True,
     "ignore": [],
     "recurse": True,
