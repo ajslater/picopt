@@ -1,6 +1,8 @@
 """Test comic format."""
 import platform
 import shutil
+from collections.abc import Mapping
+from types import MappingProxyType
 
 from picopt import PROGRAM_NAME, cli
 from tests import IMAGES_DIR, get_test_dir
@@ -29,6 +31,7 @@ FNS = {
         ("webp", 3798),
     ),
     "mri.tif": (230578, 230578, ("tif", 230578), ("webp", 130202)),
+    "test_webp_lossy.webp": (2764, 2764, ("webp", 2764), ("webp", 2764)),
 }
 if platform.system() == "Darwin":
     FNS.update(
@@ -44,7 +47,6 @@ if platform.system() == "Darwin":
                 ("png", 256572),
                 ("webp", 107674),
             ),
-            "test_webp_lossy.webp": (2764, 2764, ("webp", 2764), ("webp", 2764)),
             "eight.tif": (59640, 59640, ("png", 30564), ("webp", 18786)),
         }
     )
@@ -52,7 +54,7 @@ else:
     FNS.update(
         {
             "test_bmp.bmp": (141430, 141430, ("png", 67215), ("webp", 30530)),
-            "test_gif.gif": (138952, 138944, ("png", 112137), ("webp", 26504)),
+            "test_gif.gif": (138952, 138944, ("png", 112137), ("webp", 107924)),
             "test_jpg.jpg": (97373, 87922, ("jpg", 87922), ("jpg", 87922)),
             "test_png_16rgba.png": (3435, 2870, ("png", 2870), ("webp", 728)),
             "test_pnm.pnm": (27661, 27661, ("png", 15510), ("webp", 6458)),
@@ -62,20 +64,34 @@ else:
                 ("png", 256572),
                 ("webp", 197680),
             ),
-            "test_webp_lossy.webp": (2764, 2764, ("webp", 2764), ("webp", 2764)),
             "eight.tif": (59640, 59640, ("png", 30564), ("webp", 24982)),
         }
     )
 
+EXHAUSTIVE_FNS = MappingProxyType(
+    {
+        "test_png_16rgba.png": (3435, 2870, ("png", 2870), ("webp", 738)),
+        "test_webp_lossless.webp": (5334, 2044, ("webp", 2044), ("webp", 1946)),
+        "test_webp_lossless_pre-optimized.webp": (
+            3798,
+            3798,
+            ("webp", 3798),
+            ("webp", 3798),
+        ),
+    }
+)
 
-class TestImagesDir:
+
+class BaseTestImagesDir:
     """Test images dir."""
+
+    FNS: Mapping = MappingProxyType({})
 
     def setup_method(self) -> None:
         """Set up method."""
         self.teardown_method()
         shutil.copytree(IMAGES_DIR, TMP_ROOT)
-        for name, sizes in FNS.items():
+        for name, sizes in self.FNS.items():
             path = TMP_ROOT / name
             assert path.stat().st_size == sizes[0]
 
@@ -84,11 +100,17 @@ class TestImagesDir:
         if TMP_ROOT.exists():
             shutil.rmtree(TMP_ROOT)
 
+
+class TestImagesDir(BaseTestImagesDir):
+    """Test images dir."""
+
+    FNS = FNS
+
     def test_no_convert(self) -> None:
         """Test no convert."""
         args = (PROGRAM_NAME, "-rvv", str(TMP_ROOT))
         cli.main(args)
-        for name, sizes in FNS.items():
+        for name, sizes in self.FNS.items():
             path = TMP_ROOT / name
             assert path.stat().st_size == sizes[1]
 
@@ -96,7 +118,7 @@ class TestImagesDir:
         """Test convert to PNG."""
         args = (PROGRAM_NAME, "-rvvx", "BMP,GIF,PPM,TIFF", "-c", "PNG", str(TMP_ROOT))
         cli.main(args)
-        for name, sizes in FNS.items():
+        for name, sizes in self.FNS.items():
             path = (TMP_ROOT / name).with_suffix("." + sizes[2][0])
             assert path.stat().st_size == sizes[2][1]
 
@@ -111,6 +133,25 @@ class TestImagesDir:
             str(TMP_ROOT),
         )
         cli.main(args)
-        for name, sizes in FNS.items():
+        for name, sizes in self.FNS.items():
+            path = (TMP_ROOT / name).with_suffix("." + sizes[3][0])
+            assert path.stat().st_size == sizes[3][1]
+
+
+class TestExhaustiveImageDir(BaseTestImagesDir):
+    FNS = EXHAUSTIVE_FNS
+
+    def test_convert_to_webp_exhaustive(self) -> None:
+        """Test convert to WEBP."""
+        args = (
+            PROGRAM_NAME,
+            "-rvvx",
+            "PNG",
+            "-ec",
+            "WEBP",
+            str(TMP_ROOT),
+        )
+        cli.main(args)
+        for name, sizes in self.FNS.items():
             path = (TMP_ROOT / name).with_suffix("." + sizes[3][0])
             assert path.stat().st_size == sizes[3][1]
