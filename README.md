@@ -89,9 +89,6 @@ brew install gifsicle jonof/kenutils/pngout mozjpeg oxipng svgo webp
 ln -s $(brew --prefix)/opt/mozjpeg/bin/jpegtran /usr/local/bin/mozjpeg
 ```
 
-Unfortunately hombrew's `webp` formula does not yet install the gif2webp tool that picopt uses for converting animated gifs to animated webps.
-You may manually download it and put it in your path at [Google's WebP developer website](https://developers.google.com/speed/webp/download)
-
 #### Debian / Ubuntu
 
 ```sh

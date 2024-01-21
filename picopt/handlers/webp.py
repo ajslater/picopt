@@ -6,7 +6,7 @@ from typing import Any
 
 from PIL.WebPImagePlugin import WebPImageFile
 
-from picopt.handlers.convertible import TIFF_FILE_FORMAT
+from picopt.handlers.convertible import PNG_FORMAT_STR, TIFF_FILE_FORMAT
 from picopt.handlers.gif import Gif, GifAnimated
 from picopt.handlers.handler import FileFormat
 from picopt.handlers.image import ImageHandler
@@ -91,10 +91,13 @@ class WebPLossless(WebP):
     )
     ARGS_PREFIX = (*WebP.ARGS_PREFIX, "-lossless")
     PIL2_ARGS = MappingProxyType({"compress_level": 0})
+    CONVERGEABLE = True
 
     def pil2png(self, old_path: Path, new_path: Path) -> Path:
         """Internally convert unhandled formats to uncompressed png for cwebp."""
-        return self.pil2native(old_path, new_path)
+        # It's faster to create a undercompressed png than anything else
+        return self.pil2native(old_path, new_path, format_str=PNG_FORMAT_STR)
+
 
 # class WebPLossy(WebP):
 #    """Handle lossy webp images."""
@@ -104,6 +107,7 @@ class WebPLossless(WebP):
 #    ARGS_PREFIX = (*WebP.ARGS_PREFIX, "-pass", "10", "-af")
 
 
+# TODO remove
 class Gif2WebP(WebPBase):
     """Animated WebP format class.
 
@@ -129,7 +133,6 @@ class Gif2WebP(WebPBase):
     ] = WebPBase.init_programs(("gif2webp", "pil2webp"))
     _ARGS_PREFIX = (
         PROGRAMS["gif2webp"],
-        "-mixed",
         "-min_size",
         "-q",
         "100",

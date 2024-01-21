@@ -24,3 +24,4 @@ class ReportInfo:
     bytes_in: int = 0
     bytes_out: int = 0
     exc: Exception | None = None
+    iterations: int = 0

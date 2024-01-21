@@ -111,6 +111,13 @@ def get_arguments(params: tuple[str, ...] | None = None) -> Namespace:
         " By default formats are not converted to other formats.",
     )
     parser.add_argument(
+        "-e",
+        "--exhaustive",
+        action="store_true",
+        dest="exhaustive",
+        help="Run WEBP optimization exhaustively until it stops optimizing the file further (slow)",
+    )
+    parser.add_argument(
         "-S",
         "--no-symlinks",
         action="store_false",

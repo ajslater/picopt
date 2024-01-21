@@ -29,6 +29,7 @@ class ReportStats:
         self.bytes_in = info.bytes_in
         self.bytes_out = info.bytes_out
         self.saved = self.bytes_in - self.bytes_out
+        self.iterations = info.iterations
 
     def _new_percent_saved(self) -> str:
         """Spit out how much space the optimization saved."""
@@ -46,6 +47,8 @@ class ReportStats:
         report += self._new_percent_saved()
         if self.test:
             report += " could be saved."
+        if self.iterations > 1:
+            report += f" ({self.iterations} iterations)"
         return report
 
     def _report_error(self) -> str:

@@ -77,8 +77,8 @@ TEMPLATE = MappingTemplate(
             {
                 "after": Optional(float),
                 "bigger": bool,
-                "converge": bool,
                 "convert_to": Optional(Sequence(Choice(CONVERT_TO_FORMAT_STRS))),
+                "exhaustive": bool,
                 "formats": Sequence(Choice(ALL_FORMAT_STRS)),
                 "ignore": Sequence(str),
                 "jobs": Integer(),
@@ -157,10 +157,14 @@ _FORMAT_HANDLERS = MappingProxyType(
         **_LOSSLESS_CONVERTABLE_FORMAT_HANDLERS,
         **_LOSSLESS_CONVERTABLE_ANIMATED_FORMAT_HANDLERS,
         Gif.OUTPUT_FILE_FORMAT: FileFormatHandlers(
-            convert=(Gif2WebP, Png), native=(Gif,)
+            # convert=(Gif2WebP, Png),
+            convert=(WebPLossless, Png),
+            native=(Gif,),
         ),
         GifAnimated.OUTPUT_FILE_FORMAT: FileFormatHandlers(
-            convert=(Gif2WebP,), native=(GifAnimated,)
+            # convert=(Gif2WebP,),
+            convert=(WebPAnimatedLossless,),
+            native=(GifAnimated,),
         ),
         Jpeg.OUTPUT_FILE_FORMAT: FileFormatHandlers(native=(Jpeg,)),
         Png.OUTPUT_FILE_FORMAT: FileFormatHandlers(
@@ -265,17 +269,21 @@ def _set_convert_handlers_png(convert_to, all_format_strs, convert_handlers, con
 def _set_convert_handlers_webp(convert_to, all_format_strs, convert_handlers, config):
     if WebPLossless.OUTPUT_FORMAT_STR not in convert_to:
         return
-
-    if Gif.OUTPUT_FORMAT_STR in all_format_strs:
-        convert_handlers[Gif2WebP] = frozenset(
-            {
-                Gif.OUTPUT_FILE_FORMAT,
-                GifAnimated.OUTPUT_FILE_FORMAT,
-            }
-        )
-
     convert_handlers_webp_lossless = set()
     convert_handlers_webp_animated_lossless = set()
+
+    if Gif.OUTPUT_FORMAT_STR in all_format_strs:
+        convert_handlers_webp_lossless.add(Gif.OUTPUT_FILE_FORMAT)
+        convert_handlers_webp_animated_lossless.add(GifAnimated.OUTPUT_FILE_FORMAT)
+
+    # TODO remove
+    #    convert_handlers[Gif2WebP] = frozenset(
+    #        {
+    #            Gif.OUTPUT_FILE_FORMAT,
+    #            GifAnimated.OUTPUT_FILE_FORMAT,
+    #        }
+    #    )
+
     if Png.OUTPUT_FORMAT_STR in all_format_strs:
         convert_handlers_webp_lossless.add(Png.OUTPUT_FILE_FORMAT)
         convert_handlers_webp_animated_lossless.add(APNG_FILE_FORMAT)
@@ -364,7 +372,7 @@ def _create_format_handler_map(
         for (
             handler_type,
             possible_handler_classes,
-        ) in possible_file_handlers.items():
+        ) in sorted(possible_file_handlers.items()):
             for handler_class in possible_handler_classes:
                 available = handler_class.is_handler_available(
                     convert_handlers, available_programs, file_format

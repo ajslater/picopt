@@ -1,8 +1,8 @@
 picopt:
   after: null
   bigger: False
-  converge: False
   convert_to: []
+  exhaustive: False
   formats: ["GIF", "JPEG", "PNG", "SVG", "WEBP"]
   ignore: []
   jobs: 0
