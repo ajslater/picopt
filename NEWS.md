@@ -1,16 +1,12 @@
 # 📰 Picopt News
 
-## v3.3.8
+## v3.3.7
 
 - Fix
   - Remove Lossy WebP optimization. Wasn't optimal.
   - Fix non zero exit code on success.
 - Features
   - Improve webp optimization.
-
-## v3.3.7
-
-- Improve cwebp compression parameters for smaller files.
 
 ## v3.3.6
 
