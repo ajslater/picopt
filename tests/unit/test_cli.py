@@ -34,7 +34,7 @@ class TestCLI:
         assert arguments.verbose == 0
         assert arguments.convert_to == ("PNG", "WEBP")
         assert arguments.formats is None
-        assert arguments.computed.extra_formats == (
+        assert arguments.extra_formats == (
             CBZ.OUTPUT_FORMAT_STR,
             Zip.OUTPUT_FORMAT_STR,
         )

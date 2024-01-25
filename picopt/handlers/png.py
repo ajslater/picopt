@@ -19,13 +19,17 @@ class Png(ImageHandler):
     OUTPUT_FILE_FORMAT = FileFormat(OUTPUT_FORMAT_STR, True, False)
     INPUT_FILE_FORMATS = frozenset({OUTPUT_FILE_FORMAT})
     CONVERT_FROM_FORMAT_STRS = frozenset(CONVERTABLE_FORMAT_STRS | {GIF_FORMAT_STR})
-    PIL2_ARGS: MappingProxyType[str, bool] = MappingProxyType({"optimize": True})
-    PROGRAMS: MappingProxyType[
-        str, str | tuple[str, ...] | None
-    ] = ImageHandler.init_programs(("pil2png", "oxipng", "pngout"))
-    PREFERRED_PROGRAM: str = "oxipng"
-    _OXIPNG_ARGS: tuple[str | None, ...] = (
-        PROGRAMS["oxipng"],
+    PIL2_ARGS_OPTIMIZE = MappingProxyType(
+        {
+            "optimize": True,
+        }
+    )
+    PROGRAMS = (
+        ("pil2native",),
+        ("oxipng", "optipng", "pil2png"),
+        ("pngout",),
+    )
+    _OXIPNG_ARGS: tuple[str, ...] = (
         "--opt",
         "5",
         "--alpha",
@@ -33,22 +37,41 @@ class Png(ImageHandler):
         "--force",
         "--zopfli",
     )
-    _PNGOUT_ARGS: tuple[str | None, ...] = (PROGRAMS["pngout"], "-force", "-y")
+    _OPTIPNG_ARGS: tuple[str, ...] = ("-o5", "-fix", "-force")
+    _PNGOUT_ARGS: tuple[str, ...] = ("-force", "-y")
 
-    def pil2png(self, old_path: Path, new_path: Path) -> Path:
-        """Pillow png optimization."""
-        return self.pil2native(old_path, new_path)
-
-    def oxipng(self, old_path: Path, new_path: Path) -> Path:
+    def oxipng(
+        self, exec_args: tuple[str, ...], old_path: Path, new_path: Path
+    ) -> Path:
         """Run the external program oxipng on the file."""
-        args_l = list(self._OXIPNG_ARGS)
+        args_l = [*exec_args, *self._OXIPNG_ARGS]
         if not self.config.keep_metadata:
             args_l += ["--strip", "safe"]
         args_l += ["--out", str(new_path), str(old_path)]
         self.run_ext(tuple(args_l))
         return new_path
 
-    def pngout(self, old_path: Path, new_path: Path) -> Path:
+    def optipng(
+        self, exec_args: tuple[str, ...], old_path: Path, new_path: Path
+    ) -> Path:
+        """Run the external program optipng on the file."""
+        args = [*exec_args, *self._OPTIPNG_ARGS]
+        if not self.config.keep_metadata:
+            args += ["-strip", "all"]
+        args += ["-out", str(new_path), str(old_path)]
+        self.run_ext(tuple(args))
+        return new_path
+
+    def pil2png(self, _exec_args, old_path: Path, new_path: Path) -> Path:
+        """Pil2png optimized."""
+        # TODO PRESERVE pnginfo in opts
+        return self.pil2native(
+            self.EMPTY_EXEC_ARGS, old_path, new_path, opts=self.PIL2_ARGS_OPTIMIZE
+        )
+
+    def pngout(
+        self, exec_args: tuple[str, ...], old_path: Path, new_path: Path
+    ) -> Path:
         """Run the external program pngout on the file."""
         depth = png_bit_depth(old_path)
         if depth in (16, None):
@@ -59,7 +82,7 @@ class Png(ImageHandler):
             )
             result = old_path
         else:
-            args = (*self._PNGOUT_ARGS, str(old_path), str(new_path))
+            args = (*exec_args, *self._PNGOUT_ARGS, str(old_path), str(new_path))
             self.run_ext(args)
             result = new_path
         return result

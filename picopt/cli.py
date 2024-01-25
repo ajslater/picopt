@@ -9,7 +9,7 @@ from termcolor import colored, cprint
 from picopt import PROGRAM_NAME, walk
 from picopt.config import ALL_FORMAT_STRS, DEFAULT_HANDLERS, get_config
 from picopt.handlers.png import Png
-from picopt.handlers.webp import WebP
+from picopt.handlers.webp import WebPLossless
 from picopt.handlers.zip import CBR, Rar
 
 DEFAULT_FORMAT_STRS = frozenset(
@@ -105,7 +105,7 @@ def get_arguments(params: tuple[str, ...] | None = None) -> Namespace:
         action=SplitArgsAction,
         dest="convert_to",
         help="A list of formats to convert to. Lossless images may convert to"
-        f" {Png.OUTPUT_FORMAT_STR} or {WebP.OUTPUT_FORMAT_STR}."
+        f" {Png.OUTPUT_FORMAT_STR} or {WebPLossless.OUTPUT_FORMAT_STR}."
         f" {Rar.INPUT_FORMAT_STR} archives"
         f" may convert to {Rar.OUTPUT_FORMAT_STR} or {CBR.OUTPUT_FORMAT_STR}."
         " By default formats are not converted to other formats.",
@@ -177,7 +177,6 @@ def get_arguments(params: tuple[str, ...] | None = None) -> Namespace:
         dest="list_only",
         help="Only list files that would be optimized",
     )
-
     parser.add_argument(
         "-M",
         "--strip-metadata",
@@ -225,10 +224,6 @@ def get_arguments(params: tuple[str, ...] | None = None) -> Namespace:
         params = params[1:]
 
     pns = parser.parse_args(params)
-
-    # Move extra_formats to computed namespace
-    pns.computed = Namespace(extra_formats=pns.extra_formats)
-    delattr(pns, "extra_formats")
 
     # increment verbose
     if pns.verbose is not None and pns.verbose > 0:

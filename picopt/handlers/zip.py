@@ -1,7 +1,6 @@
 """Handler for zip files."""
 import os
 from pathlib import Path
-from types import MappingProxyType
 from zipfile import ZIP_DEFLATED, ZipFile, is_zipfile
 
 from PIL import Image, UnidentifiedImageError
@@ -18,11 +17,7 @@ class Zip(ContainerHandler):
     OUTPUT_FORMAT_STR: str = "ZIP"
     OUTPUT_FILE_FORMAT: FileFormat = FileFormat(OUTPUT_FORMAT_STR)
     INPUT_FILE_FORMATS = frozenset({OUTPUT_FILE_FORMAT})
-    PROGRAMS: MappingProxyType[str, str | tuple[str, ...] | None] = MappingProxyType(
-        {
-            ContainerHandler.INTERNAL: None,
-        }
-    )
+    PROGRAMS = ((ContainerHandler.INTERNAL,),)
 
     @classmethod
     def identify_format(cls, path: Path) -> FileFormat | None:
@@ -94,9 +89,7 @@ class Rar(Zip):
     INPUT_SUFFIX: str = "." + INPUT_FORMAT_STR.lower()
     INPUT_FILE_FORMAT = FileFormat(INPUT_FORMAT_STR)
     INPUT_FILE_FORMATS = frozenset({INPUT_FILE_FORMAT})
-    PROGRAMS: MappingProxyType[str, str | tuple[str, ...] | None] = Zip.init_programs(
-        ("unrar",)
-    )
+    PROGRAMS = (("unrar",),)
 
     @classmethod
     def identify_format(cls, path: Path) -> FileFormat | None:

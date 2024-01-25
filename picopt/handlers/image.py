@@ -1,22 +1,48 @@
 """FileFormat Superclass."""
 from abc import ABCMeta
+from collections.abc import Mapping
 from pathlib import Path
 from types import MappingProxyType
 from typing import Any
 
 from PIL import Image
+from PIL.WebPImagePlugin import WebPImageFile
+from termcolor import cprint
 
 from picopt.data import ReportInfo
 from picopt.handlers.handler import Handler
 from picopt.stats import ReportStats
 
+SAVE_INFO_KEYS: frozenset[str] = frozenset(
+    {"n_frames", "loop", "duration", "background", "transparency"}
+)
+
+
+def _palette_index_to_rgb(
+    palette_index: int, transparency: int
+) -> tuple[int, int, int, int]:
+    """Convert an 8-bit color palette index to an RGB tuple."""
+    # Extract the individual color components from the palette index.
+    red = (palette_index >> 5) & 0x7
+    green = (palette_index >> 2) & 0x7
+    blue = palette_index & 0x3
+
+    # Scale the color components to the range 0-255.
+    red = red * 36
+    green = green * 36
+    blue = blue * 36
+    alpha = bool(transparency) * 255 * 0
+
+    return (red, green, blue, alpha)
+
 
 class ImageHandler(Handler, metaclass=ABCMeta):
     """Image Handler superclass."""
 
+    # TODO PIL2_KWARGS
     PIL2_ARGS: MappingProxyType[str, Any] = MappingProxyType({})
-    PREFERRED_PROGRAM: str = "unimplemented"
-    CONVERGEABLE = False
+    CONVERGEABLE = frozenset()
+    EMPTY_EXEC_ARGS: tuple[str, tuple[str, ...]] = ("", ())
 
     def _optimize_with_progs(self) -> ReportStats:
         """Use the correct optimizing functions in sequence.
@@ -25,11 +51,12 @@ class ImageHandler(Handler, metaclass=ABCMeta):
         """
         path = self.original_path
         max_iterations = 0
-        for func in self.PROGRAMS:
+        stages = self.config.computed.handler_stages.get(self.__class__, {})
+        for func, exec_args in stages.items():
             if path != self.original_path:
                 self.working_paths.add(path)
 
-            converge = self.CONVERGEABLE and self.config.exhaustive
+            converge = self.config.exhaustive and func in self.CONVERGEABLE
             loop = True
             bytes_in = 0
             bytes_out = 0
@@ -38,7 +65,7 @@ class ImageHandler(Handler, metaclass=ABCMeta):
                 if converge:
                     bytes_in = path.stat().st_size
                 new_path = self.get_working_path(func)
-                path = getattr(self, func)(path, new_path)
+                path = getattr(self, func)(exec_args, path, new_path)
                 if converge:
                     bytes_out = path.stat().st_size
                 loop = (
@@ -49,6 +76,11 @@ class ImageHandler(Handler, metaclass=ABCMeta):
 
             if self.BEST_ONLY:
                 break
+        else:
+            cprint(
+                f"Tried to execute handler {self.__class__.__name__} with no available stages.",
+                "yellow",
+            )
 
         bytes_count = self.cleanup_after_optimize(path)
         info = ReportInfo(
@@ -68,27 +100,54 @@ class ImageHandler(Handler, metaclass=ABCMeta):
             if self.config.verbose:
                 report_stats.report()
         except Exception as exc:
+            import traceback
+
+            traceback.print_exc()
             report_stats = self.error(exc)
         return report_stats
 
-    def pil2native(
-        self, old_path: Path, new_path: Path, format_str: None | str = None
+    def pil2native(  # noqa: PLR0913
+        self,
+        exec_args: tuple[str, tuple[str, ...]],  # noqa: ARG002
+        old_path: Path,
+        new_path: Path,
+        format_str: None | str = None,
+        opts: None | Mapping[str, Any] = None,
     ) -> Path:
         """Use PIL to save the image."""
         if (
+            # TODO this is only for the ones that come first, not for optimizing.
             self.input_file_format in self.INPUT_FILE_FORMATS
-            and self.PREFERRED_PROGRAM in self.config.computed.available_programs
+            # TODO REMOVE
+            # and self.PREFERRED_PROGRAM in self.config.computed.available_programs
         ):
             return old_path
         if format_str is None:
             format_str = self.OUTPUT_FORMAT_STR
+        if opts is None:
+            opts = self.PIL2_ARGS
+        if format_str == WebPImageFile.format:
+            self.info.pop("background", None)
+            background = self.info.get("background")
+            if isinstance(background, int):
+                # GIF background is an int.
+                alpha = self.info.pop("transparency", 0)
+                self.info["background"] = _palette_index_to_rgb(background, alpha)
+        if self.config.keep_metadata:
+            info = self.info
+        else:
+            info = {}
+            for key, val in self.info:
+                if key in SAVE_INFO_KEYS:
+                    info[key] = val
+
         with Image.open(old_path) as image:
             image.save(
                 new_path,
                 format_str,
-                exif=self.metadata.exif,
-                icc_profile=self.metadata.icc_profile,
-                **self.PIL2_ARGS,
+                save_all=True,
+                **opts,
+                **self.info,  # TODO possibly filter only for valid keys firs)t
             )
         image.close()  # for animated images
         self.input_file_format = self.OUTPUT_FILE_FORMAT

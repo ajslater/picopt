@@ -1,114 +1,25 @@
 """WebP Animated images are treated like containers."""
-from pathlib import Path
+from types import MappingProxyType
 
-from PIL import Image, ImageSequence
-
-from picopt.handlers.container import ContainerHandler
 from picopt.handlers.convertible import (
     CONVERTABLE_ANIMATED_FORMAT_STRS,
     GIF_FORMAT_STR,
     PNG_FORMAT_STR,
 )
 from picopt.handlers.handler import FileFormat
-from picopt.handlers.webp import WebP
+from picopt.handlers.image import ImageHandler
+from picopt.handlers.webp import WebPBase
 
 
-class WebPAnimatedBase(ContainerHandler):
+# TODO move into webp.py
+class WebPAnimatedBase(ImageHandler):
     """Animated WebP container."""
 
-    OUTPUT_FORMAT_STR: str = WebP.OUTPUT_FORMAT_STR
-    PROGRAMS = ContainerHandler.init_programs(("webpmux", "img2webp"))
-    _IMG2WEBP_ARGS_PREFIX = (PROGRAMS["img2webp"], "-min_size")
-    _WEBPMUX_ARGS_PREFIX = (PROGRAMS["webpmux"], "-get", "frame")
-    _LOSSLESS = True
-
-    @classmethod
-    def identify_format(cls, path: Path) -> FileFormat | None:  # noqa: ARG003
-        """Return the format if this handler can handle this path."""
-        return cls.OUTPUT_FILE_FORMAT
-
-    def _get_frame_path(self, frame_index: int) -> Path:
-        """Return a frame path for an index."""
-        return self.tmp_container_dir / f"frame-{frame_index:08d}.webp"
-
-    def unpack_into(self) -> None:
-        """Unpack webp into temp dir."""
-        if self.input_file_format in self.INPUT_FILE_FORMATS:
-            for frame_index in range(self.metadata.n_frames):
-                frame_path = self._get_frame_path(frame_index)
-                args = [
-                    *self._WEBPMUX_ARGS_PREFIX,
-                    str(frame_index),
-                    str(self.original_path),
-                    "-o",
-                    str(frame_path),
-                ]
-                self.run_ext(tuple(args))
-        else:
-            with Image.open(self.original_path) as image:
-                frame_index = 0
-                for frame in ImageSequence.Iterator(image):
-                    frame_path = self._get_frame_path(frame_index)
-                    frame.save(
-                        frame_path,
-                        self.OUTPUT_FORMAT_STR,
-                        lossless=self._LOSSLESS,
-                        quality=100,
-                        method=0,
-                    )
-                    frame_index += 1
-            image.close()  # for animated
-
-    def _prepare_metadata(self, data: bytes | None, working_path: Path, md_arg: str):
-        """Prepare a metadata file and args for webpmux."""
-        if not data:
-            return []
-        md_path = working_path.with_suffix("." + md_arg)
-        with md_path.open("wb") as md_file:
-            md_file.write(data)
-        self.working_paths.add(md_path)
-        return ["-set", md_arg, str(md_path)]
-
-    def _set_metadata(self, working_path):
-        """Set the exif data on the rebuilt image."""
-        if not self.metadata.exif or self.metadata.icc_profile:
-            return
-
-        args = ["webpmux"]
-        # dump exif
-        if self.metadata.exif:
-            args += self._prepare_metadata(self.metadata.exif, working_path, "exif")
-
-        if self.metadata.icc_profile:
-            args += self._prepare_metadata(
-                self.metadata.icc_profile.encode(), working_path, "icc"
-            )
-
-        # move working file
-        container_exif_working_path = self.get_working_path("exif")
-        working_path.replace(container_exif_working_path)
-        self.working_paths.add(container_exif_working_path)
-
-        # run exif set
-        args += [
-            str(container_exif_working_path),
-            "-o",
-            str(working_path),
-        ]
-        self.run_ext(tuple(args))
-
-    def pack_into(self, working_path: Path) -> None:
-        """Remux the optimized frames into an animated webp."""
-        frames = sorted([str(path) for path in self.tmp_container_dir.iterdir()])
-        args = [
-            *self._IMG2WEBP_ARGS_PREFIX,
-            *frames,
-            "-o",
-            str(working_path),
-        ]
-        self.run_ext(tuple(args))
-        if self.config.keep_metadata:
-            self._set_metadata(working_path)
+    OUTPUT_FORMAT_STR: str = WebPBase.OUTPUT_FORMAT_STR
+    PROGRAMS = (("pil2native",),)
+    PIL2_ARGS = MappingProxyType({"quality": 100, "method": 6, "minimize_size": True})
+    # TODO REMOVE too much trouble to keep metadata
+    # _IMG2WEBP_ARGS_PREFIX = ("-min_size", "-lossless", "-q", "100", "-m", "6")
 
 
 class WebPAnimatedLossless(WebPAnimatedBase):
@@ -120,10 +31,4 @@ class WebPAnimatedLossless(WebPAnimatedBase):
         CONVERTABLE_ANIMATED_FORMAT_STRS | {PNG_FORMAT_STR, GIF_FORMAT_STR}
     )
     CONVERGABLE = True
-
-
-# class WebPAnimatedLossy(WebPAnimatedBase):
-#    """Animated Lossy WebP Handler."""
-#
-#    OUTPUT_FILE_FORMAT = FileFormat(WebPAnimatedBase.OUTPUT_FORMAT_STR, False, True)
-#    INPUT_FILE_FORMATS = frozenset({OUTPUT_FILE_FORMAT})
+    PIL2_ARGS = MappingProxyType({**WebPAnimatedBase.PIL2_ARGS, "lossless": True})

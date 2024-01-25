@@ -1,6 +1,5 @@
 """WebP format."""
 from pathlib import Path
-from types import MappingProxyType
 
 from picopt.handlers.handler import FileFormat
 from picopt.handlers.image import ImageHandler
@@ -13,17 +12,14 @@ class SVG(ImageHandler):
     OUTPUT_FILE_FORMAT = FileFormat(OUTPUT_FORMAT_STR, True)
     INPUT_FORMAT_SUFFIX = "." + OUTPUT_FORMAT_STR.lower()
     INPUT_FILE_FORMATS = frozenset({OUTPUT_FILE_FORMAT})
-    PROGRAMS: MappingProxyType[
-        str, str | tuple[str, ...] | None
-    ] = ImageHandler.init_programs(("svgo", "npx_svgo"))
-    PREFERRED_PROGRAM = "svgo"
-    _ARGS = ("--multipass",)
+    PROGRAMS = (("svgo", "npx_svgo"),)
+    _SVGO_ARGS = ("--multipass",)
 
-    def _svgo(self, old_path: Path, new_path: Path, program: tuple[str, ...]) -> Path:
+    def _svgo(self, exec_args: tuple[str, ...], old_path: Path, new_path: Path) -> Path:
         """Optimize using svgo."""
         args = (
-            *program,
-            *self._ARGS,
+            *exec_args,
+            *self._SVGO_ARGS,
             "--input",
             str(old_path),
             "--output",
@@ -32,12 +28,12 @@ class SVG(ImageHandler):
         self.run_ext(args)
         return new_path
 
-    def svgo(self, old_path: Path, new_path: Path) -> Path:
+    def svgo(self, exec_args: tuple[str, ...], old_path: Path, new_path: Path) -> Path:
         """Svgo executable."""
-        program: tuple[str, ...] = (self.PROGRAMS["svgo"],)  # type: ignore
-        return self._svgo(old_path, new_path, program)
+        return self._svgo(exec_args, old_path, new_path)
 
-    def npx_svgo(self, old_path: Path, new_path: Path) -> Path:
+    def npx_svgo(
+        self, exec_args: tuple[str, ...], old_path: Path, new_path: Path
+    ) -> Path:
         """Npx installed svgo."""
-        program: tuple[str, ...] = self.PROGRAMS["npx_svgo"]  # type: ignore
-        return self._svgo(old_path, new_path, program)
+        return self._svgo(exec_args, old_path, new_path)

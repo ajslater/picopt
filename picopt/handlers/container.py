@@ -1,13 +1,14 @@
 """Optimize comic archives."""
 import shutil
 from abc import ABCMeta, abstractmethod
+from collections.abc import Mapping
 from pathlib import Path
 
 from confuse.templates import AttrDict
 from termcolor import cprint
 
 from picopt.data import PathInfo, ReportInfo
-from picopt.handlers.handler import FileFormat, Handler, Metadata
+from picopt.handlers.handler import FileFormat, Handler
 from picopt.stats import ReportStats
 
 
@@ -35,14 +36,14 @@ class ContainerHandler(Handler, metaclass=ABCMeta):
         config: AttrDict,
         path_info: PathInfo,
         file_format: FileFormat,
-        metadata: Metadata,
+        info: Mapping,
     ):
         """Unpack a container with a subclass's unpacker."""
         super().__init__(
             config,
             path_info,
             file_format,
-            metadata,
+            info,
         )
         self.comment: bytes | None = None
         self.tmp_container_dir: Path = Path(

@@ -3,7 +3,6 @@ import shutil
 from pathlib import Path
 from types import MappingProxyType
 
-from PIL import Image
 from PIL.GifImagePlugin import GifImageFile
 
 from picopt.handlers.handler import FileFormat
@@ -16,30 +15,23 @@ class Gif(ImageHandler):
     OUTPUT_FORMAT_STR = GifImageFile.format
     OUTPUT_FILE_FORMAT = FileFormat(OUTPUT_FORMAT_STR, True, False)
     INPUT_FILE_FORMATS = frozenset({OUTPUT_FILE_FORMAT})
-    PROGRAMS: MappingProxyType[
-        str, str | tuple[str, ...] | None
-    ] = ImageHandler.init_programs(("gifsicle", "pil2gif"))
-    _ARGS_PREFIX: tuple[str | None, ...] = (
-        PROGRAMS.get("gifsicle", ""),
+    PROGRAMS = (("gifsicle", "pil2native"),)
+    _GIFSICLE_ARGS_PREFIX: tuple[str | None, ...] = (
         "--optimize=3",
         "--batch",
     )
+    PIL2_ARGS = MappingProxyType({"optimize": True, "save_all": True})
 
-    def gifsicle(self, old_path: Path, new_path: Path) -> Path:
+    def gifsicle(
+        self, exec_args: tuple[str, ...], old_path: Path, new_path: Path
+    ) -> Path:
         """Return gifsicle args."""
-        if not self._ARGS_PREFIX[0]:
+        if not self._GIFSICLE_ARGS_PREFIX[0]:
             return old_path
 
         shutil.copy2(old_path, new_path)
-        args = (*self._ARGS_PREFIX, str(new_path))
+        args = (*exec_args, *self._GIFSICLE_ARGS_PREFIX, str(new_path))
         self.run_ext(args)
-        return new_path
-
-    def pil2gif(self, old_path: Path, new_path: Path) -> Path:
-        """Pillow gif optimization."""
-        with Image.open(old_path) as image:
-            image.save(new_path, self.OUTPUT_FORMAT_STR, optimize=True, save_all=True)
-        image.close()  # for animated images
         return new_path
 
 

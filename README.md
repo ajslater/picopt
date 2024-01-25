@@ -56,7 +56,7 @@ To optimize JPEG images. Picopt needs one of [mozjpeg](https://github.com/mozill
 
 ### PNG
 
-To optimize PNG images or convert other lossless formats to PNG picopt requires either [oxipng](http://oxipng.sourceforge.net/) or [pngout](http://advsys.net/ken/utils.htm) be on the path. oxipng provides the most advantage, but best results will be had by using pngout as well.
+To optimize PNG images or convert other lossless formats to PNG picopt requires either [oxipng](https://github.com/shssoichiro/oxipng), [optipng](https://optipng.sourceforge.net/), or [pngout](http://advsys.net/ken/utils.htm) be on the path. oxipng provides the most advantage, but best results will be had by using pngout as well.
 
 ### Animated GIF
 
@@ -130,9 +130,13 @@ Most Linux distributions still require a more manual install as elucidated here 
 
 oxipng is a newer, maintained fork of optipng. Unfortunately it isn't packaged for many Linuxes, but it has easily downloaded binary installs at the [Github Oxipng Release Page](https://github.com/shssoichiro/oxipng/releases)
 
+### optipng
+
+optipng is frequently packaged and you may install it with homebrew, apt-get or yum. oxipng tends to give better results.
+
 #### pngout
 
-pngout is a useful compression to use by itself or for a little gains after oxipng. It is not packaged for linux, but you may find the latest binary version [on JonoF's site](http://www.jonof.id.au/kenutils). Picopt looks for the binary to be called `pngout`
+pngout is a useful compression to use by itself or for a little gains after oxipng or optipng. It is not packaged for linux, but you may find the latest binary version [on JonoF's site](http://www.jonof.id.au/kenutils). Picopt looks for the binary to be called `pngout`
 
 #### svgo on Linux
 

@@ -1,7 +1,6 @@
 """Walk the directory trees and files and call the optimizers."""
 import os
 import shutil
-import time
 import traceback
 from multiprocessing.pool import ApplyResult, Pool
 from pathlib import Path
@@ -18,9 +17,6 @@ from picopt.handlers.container import ContainerHandler
 from picopt.handlers.factory import create_handler
 from picopt.handlers.handler import Handler
 from picopt.handlers.image import ImageHandler
-from picopt.handlers.png import Png
-from picopt.handlers.webp import WebP
-from picopt.handlers.zip import CBR, Rar
 from picopt.old_timestamps import OLD_TIMESTAMPS_NAME, OldTimestamps
 from picopt.stats import ReportStats, Totals
 
@@ -35,37 +31,6 @@ class Walk(Configurable):
     ########
     # Init #
     ########
-    def _convert_message(
-        self, convert_from_format_strs: frozenset[str], convert_handler: type[Handler]
-    ):
-        convert_from_list = sorted(convert_from_format_strs)
-        # & frozenset(self._config.formats)
-        if not convert_from_list:
-            return
-        convert_from = ", ".join(convert_from_list)
-        convert_to = convert_handler.OUTPUT_FORMAT_STR
-        cprint(f"Converting {convert_from} to {convert_to}", "cyan")
-
-    def _init_run_verbose(self) -> None:
-        """Print verbose init messages."""
-        format_list = ", ".join(sorted(self._config.formats))
-        cprint(f"Optimizing formats: {format_list}")
-        if self._config.convert_to:
-            if WebP.OUTPUT_FORMAT_STR in self._config.convert_to:
-                self._convert_message(
-                    self._config.computed.convertable_formats.webp, WebP
-                )
-            elif Png.OUTPUT_FORMAT_STR in self._config.convert_to:
-                self._convert_message(
-                    self._config.computed.convertable_formats.png, Png
-                )
-            if Rar.OUTPUT_FORMAT_STR in self._config.convert_to:
-                self._convert_message(frozenset([Rar.INPUT_FORMAT_STR]), Rar)
-            if CBR.OUTPUT_FORMAT_STR in self._config.convert_to:
-                self._convert_message(frozenset([CBR.INPUT_FORMAT_STR]), CBR)
-        if self._config.after is not None:
-            after = time.ctime(self._config.after)
-            cprint(f"Optimizing after {after}")
 
     def _init_run_timestamps(self) -> None:
         """Init timestamps."""
@@ -93,10 +58,6 @@ class Walk(Configurable):
             if not path.exists():
                 msg = f"Path does not exist: {path}"
                 raise ValueError(msg)
-
-        # Tell the user what we're doing
-        if self._config.verbose:
-            self._init_run_verbose()
 
         # Init timestamps
         if self._config.timestamps:

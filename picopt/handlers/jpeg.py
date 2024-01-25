@@ -1,6 +1,5 @@
 """JPEG format."""
 from pathlib import Path
-from types import MappingProxyType
 
 from PIL.JpegImagePlugin import JpegImageFile
 
@@ -14,18 +13,9 @@ class Jpeg(ImageHandler):
     OUTPUT_FORMAT_STR = JpegImageFile.format
     OUTPUT_FILE_FORMAT = FileFormat(OUTPUT_FORMAT_STR, False, False)
     INPUT_FILE_FORMATS = frozenset({OUTPUT_FILE_FORMAT})
-    PROGRAMS: MappingProxyType[
-        str, str | tuple[str, ...] | None
-    ] = ImageHandler.init_programs(("mozjpeg", "jpegtran"))
-    _ARGS_PREFIX = ("-optimize", "-progressive", "-copy")
-    _MOZJPEG_ARGS_PREFIX: tuple[str | None, ...] = (
-        PROGRAMS["mozjpeg"],
-        *_ARGS_PREFIX,
-    )
-    _JPEGTRAN_ARGS_PREFIX: tuple[str | None, ...] = (
-        PROGRAMS["jpegtran"],
-        *_ARGS_PREFIX,
-    )
+    PROGRAMS = (("mozjpeg", "jpegtran"),)
+    _JPEGTRAN_ARGS_PREFIX = ("-optimize", "-progressive", "-copy")
+    # PIL Cannot save jpegs losslessly
 
     @classmethod
     def get_default_suffix(cls) -> str:
@@ -38,10 +28,10 @@ class Jpeg(ImageHandler):
         return frozenset((default_suffix, "." + cls.OUTPUT_FORMAT_STR.lower()))
 
     def _jpegtran(
-        self, args: tuple[str | None, ...], old_path: Path, new_path: Path
+        self, exec_args: tuple[str, ...], old_path: Path, new_path: Path
     ) -> Path:
         """Run the jpegtran type program."""
-        args_l = list(args)
+        args_l = [*exec_args, *self._JPEGTRAN_ARGS_PREFIX]
         if not bin:
             return old_path
         if self.config.keep_metadata:
@@ -53,10 +43,14 @@ class Jpeg(ImageHandler):
         self.run_ext(args_t)
         return new_path
 
-    def mozjpeg(self, old_path: Path, new_path: Path) -> Path:
+    def mozjpeg(
+        self, exec_args: tuple[str, ...], old_path: Path, new_path: Path
+    ) -> Path:
         """Create argument list for mozjpeg."""
-        return self._jpegtran(self._MOZJPEG_ARGS_PREFIX, old_path, new_path)
+        return self._jpegtran(exec_args, old_path, new_path)
 
-    def jpegtran(self, old_path: Path, new_path: Path) -> Path:
+    def jpegtran(
+        self, exec_args: tuple[str, ...], old_path: Path, new_path: Path
+    ) -> Path:
         """Create argument list for jpegtran."""
-        return self._jpegtran(self._JPEGTRAN_ARGS_PREFIX, old_path, new_path)
+        return self._jpegtran(exec_args, old_path, new_path)

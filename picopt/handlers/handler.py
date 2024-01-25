@@ -1,10 +1,10 @@
 """FileType abstract class for image and container formats."""
-import shutil
 import subprocess
 from abc import ABC
+from collections.abc import Mapping
 from dataclasses import dataclass
 from pathlib import Path
-from types import MappingProxyType
+from typing import Any
 
 from confuse.templates import AttrDict
 from termcolor import cprint
@@ -23,15 +23,6 @@ class FileFormat:
     animated: bool = False
 
 
-@dataclass(eq=True, frozen=True)
-class Metadata:
-    """Image metadata class."""
-
-    exif: bytes = b""
-    icc_profile: str = ""
-    n_frames: int = 1
-
-
 class Handler(ABC):
     """FileType superclass for image and container formats."""
 
@@ -41,39 +32,8 @@ class Handler(ABC):
     INPUT_FILE_FORMATS: frozenset[FileFormat] = frozenset({OUTPUT_FILE_FORMAT})
     CONVERT_FROM_FORMAT_STRS: frozenset[str] = frozenset()
     INTERNAL: str = "python_internal"
-    PROGRAMS: MappingProxyType[str, str | tuple[str, ...] | None] = MappingProxyType({})
+    PROGRAMS: tuple[tuple[str, ...], ...] = ()
     WORKING_SUFFIX: str = f"{PROGRAM_NAME}__tmp"
-
-    # TODO move into config?
-    @classmethod
-    def init_programs(
-        cls, programs: tuple[str, ...]
-    ) -> MappingProxyType[str, str | None]:
-        """Initialize the PROGRAM map."""
-        program_dict = {}
-        for program in programs:
-            if program.startswith("pil2") or program == cls.INTERNAL:
-                bin_path = None
-            elif program.startswith("npx_"):
-                bin_path = shutil.which("npx")
-                if not bin_path:
-                    continue
-                bin_path = (bin_path, "--no", *program.split("_")[1:])
-                try:
-                    subprocess.run(
-                        bin_path,  # noqa: S603
-                        check=True,
-                        stdout=subprocess.DEVNULL,
-                        stderr=subprocess.DEVNULL,
-                    )
-                except (subprocess.CalledProcessError, FileNotFoundError, OSError):
-                    continue
-            else:
-                bin_path = shutil.which(program)
-                if not bin_path:
-                    continue
-            program_dict[program] = bin_path
-        return MappingProxyType(program_dict)
 
     @staticmethod
     def run_ext(args: tuple[str | None, ...]) -> None:
@@ -93,21 +53,6 @@ class Handler(ABC):
         )
 
     @classmethod
-    def is_handler_available(
-        cls,
-        convert_handlers: MappingProxyType,
-        available_programs: frozenset,
-        file_format: FileFormat,
-    ):
-        """Can this handler run with available programs."""
-        handled_file_formats = cls.INPUT_FILE_FORMATS | convert_handlers.get(
-            cls, frozenset()
-        )
-        return file_format in handled_file_formats and bool(
-            available_programs & set(cls.PROGRAMS.keys())
-        )
-
-    @classmethod
     def get_default_suffix(cls):
         """Get the default suffix based on the format."""
         # overridden in jpeg
@@ -124,7 +69,7 @@ class Handler(ABC):
         config: AttrDict,
         path_info: PathInfo,
         input_file_format: FileFormat,
-        metadata: Metadata,
+        info: Mapping[str, Any],
     ):
         """Initialize handler."""
         self.config: AttrDict = config
@@ -140,7 +85,7 @@ class Handler(ABC):
         )
         self.final_path: Path = self.original_path.with_suffix(self.output_suffix)
         self.input_file_format: FileFormat = input_file_format
-        self.metadata = metadata
+        self.info: dict[str, Any] = dict(info)
         self.convert = input_file_format != self.OUTPUT_FILE_FORMAT
         self.is_case_sensitive = path_info.is_case_sensitive
 

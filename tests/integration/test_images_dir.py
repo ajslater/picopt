@@ -11,8 +11,8 @@ __all__ = ()
 TMP_ROOT = get_test_dir()
 FNS = {
     "07themecamplist.pdf": (93676, 93676, ("pdf", 93676), ("pdf", 93676)),
-    "test_animated_gif.gif": (16383, 16358, ("gif", 16358), ("webp", 11846)),
-    "test_animated_png.png": (63435, 63435, ("png", 63435), ("webp", 46652)),
+    "test_animated_gif.gif": (16383, 16358, ("gif", 16358), ("webp", 12494)),
+    "test_animated_png.png": (63435, 63435, ("png", 63435), ("webp", 52988)),
     "test_animated_webp.webp": (13610, 13610, ("webp", 13610), ("webp", 13610)),
     "test_png.png": (7967, 4149, ("png", 4149), ("webp", 2044)),
     "test_pre-optimized_jpg.jpg": (
@@ -30,7 +30,7 @@ FNS = {
         ("webp", 3798),
         ("webp", 3798),
     ),
-    "mri.tif": (230578, 230578, ("tif", 230578), ("webp", 130202)),
+    "mri.tif": (230578, 230578, ("tif", 230578), ("webp", 114740)),
     "test_webp_lossy.webp": (2764, 2764, ("webp", 2764), ("webp", 2764)),
 }
 if platform.system() == "Darwin":
