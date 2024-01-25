@@ -10,7 +10,7 @@ TMP_ROOT = get_test_dir()
 FN = "test_zip.zip"
 SRC_CBZ = CONTAINER_DIR / FN
 
-FNS = {FN: (2974, 2921)} if system() == "Darwin" else {FN: (2974, 1917)}
+FNS = {FN: (2974, 2921)} if system() == "Darwin" else {FN: (2974, 2921)}
 
 
 class TestContainersDir:

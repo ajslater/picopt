@@ -28,6 +28,13 @@ FNS = {
         ("webp", 4036),
     ),
     "mri.tif": (230578, 230578, ("tif", 230578), ("webp", 83822)),
+    "test_webp_lossy.webp": (2764, 2764, ("webp", 2764), ("webp", 2764)),
+    "test_webp_lossy_pre-optimized.webp": (
+        1508,
+        1508,
+        ("webp", 1508),
+        ("webp", 1508),
+    ),
 }
 if platform.system() == "Darwin":
     FNS.update(
@@ -43,13 +50,6 @@ if platform.system() == "Darwin":
                 ("png", 256572),
                 ("webp", 107984),
             ),
-            "test_webp_lossy.webp": (2764, 2764, ("webp", 2764), ("webp", 2764)),
-            "test_webp_lossy_pre-optimized.webp": (
-                1508,
-                1508,
-                ("webp", 1508),
-                ("webp", 1508),
-            ),
             "eight.tif": (59640, 59640, ("png", 30564), ("webp", 19436)),
         }
     )
@@ -57,7 +57,7 @@ else:
     FNS.update(
         {
             "test_bmp.bmp": (141430, 141430, ("png", 67215), ("webp", 30774)),
-            "test_gif.gif": (138952, 138944, ("png", 112467), ("webp", 26504)),
+            "test_gif.gif": (138952, 138944, ("png", 112467), ("webp", 107952)),
             "test_jpg.jpg": (97373, 87913, ("jpg", 87913), ("jpg", 87913)),
             "test_png_16rgba.png": (3435, 2870, ("png", 2870), ("webp", 1142)),
             "test_pnm.pnm": (27661, 27661, ("png", 15510), ("webp", 12808)),
@@ -66,13 +66,6 @@ else:
                 256572,
                 ("png", 256572),
                 ("webp", 197680),
-            ),
-            "test_webp_lossy.webp": (2764, 1760, ("webp", 1760), ("webp", 1760)),
-            "test_webp_lossy_pre-optimized.webp": (  # XXX SHOULD NOT CONVERT MORE?
-                1508,
-                1506,
-                ("webp", 1506),
-                ("webp", 1506),
             ),
             "eight.tif": (59640, 59640, ("png", 30564), ("webp", 24982)),
         }

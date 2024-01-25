@@ -22,9 +22,9 @@ else:
     FNS = {
         "test_cbz.cbz": (93408, 84493, ("cbz", 93408)),
         "test_cbr.cbr": (93725, 93725, ("cbz", 84506)),
-        "test_rar.rar": (93675, 93675, ("zip", 84481)),
+        "test_rar.rar": (93675, 93675, ("zip", 84493)),
         "test_zip.zip": (2974, 2921, ("zip", 2974)),
-        "igp-twss.epub": (292448, 280700, ("epub", 292448)),
+        "igp-twss.epub": (292448, 281248, ("epub", 292448)),
     }
 
 EPUB_FN = "igp-twss.epub"
