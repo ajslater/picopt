@@ -107,14 +107,6 @@ class WebPLossless(WebP):
             new_path = old_path
         return new_path
 
-
-# class WebPLossy(WebP):
-#    """Handle lossy webp images."""
-#
-#    OUTPUT_FILE_FORMAT = FileFormat(WebP.OUTPUT_FORMAT_STR, False, False)
-#    ARGS_PREFIX = (*WebP.ARGS_PREFIX, "-pass", "10", "-af")
-
-
 class Gif2WebP(WebPBase):
     """Animated WebP format class.
 

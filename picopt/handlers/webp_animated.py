@@ -116,10 +116,3 @@ class WebPAnimatedLossless(WebPAnimatedBase):
 
     _LOSSLESS = True
     OUTPUT_FILE_FORMAT = FileFormat(WebPAnimatedBase.OUTPUT_FORMAT_STR, _LOSSLESS, True)
-
-
-# class WebPAnimatedLossy(WebPAnimatedBase):
-#    """Animated Lossy WebP Handler."""
-#
-#    _LOSSLESS = False
-#    OUTPUT_FILE_FORMAT = FileFormat(WebPAnimatedBase.OUTPUT_FORMAT_STR, _LOSSLESS, True)
