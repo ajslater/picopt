@@ -42,7 +42,6 @@ class Handler(ABC):
     INTERNAL: str = "python_internal"
     PROGRAMS: MappingProxyType[str, Optional[str]] = MappingProxyType({})
     WORKING_SUFFIX: str = f"{PROGRAM_NAME}__tmp"
-    CONVERGE = False
 
     @classmethod
     def init_programs(

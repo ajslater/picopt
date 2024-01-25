@@ -46,7 +46,8 @@ class WebP(WebPBase, ABC):
     # https://developers.google.com/speed/webp/docs/cwebp
     ARGS_PREFIX = (
         PROGRAMS["cwebp"],
-        "-q",
+        "-near_lossless",
+        "0" "-q",
         "100",
         "-m",
         "6",
@@ -83,7 +84,6 @@ class WebPLossless(WebP):
         }
     )
     ARGS_PREFIX = (*WebP.ARGS_PREFIX, "-lossless")
-    CONVERGE = True
     _PIL2PNG_FILE_FORMATS = CONVERTABLE_FILE_FORMATS | {TIFF_FILE_FORMAT}
 
     def pil2png(self, old_path: Path, new_path: Path) -> Path:

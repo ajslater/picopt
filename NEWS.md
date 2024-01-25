@@ -5,6 +5,8 @@
 - Fix
   - Remove Lossy WebP optimization. Wasn't optimal.
   - Fix non zero exit code on success.
+- Features
+  - Improve webp optimization.
 
 ## v3.3.7
 
