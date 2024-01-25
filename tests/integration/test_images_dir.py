@@ -30,7 +30,7 @@ FNS = {
         ("webp", 3798),
         ("webp", 3798),
     ),
-    "mri.tif": (230578, 230578, ("tif", 230578), ("webp", 73242)),
+    "mri.tif": (230578, 230578, ("png", 131923), ("webp", 73242)),
     "test_webp_lossy.webp": (2764, 2764, ("webp", 2764), ("webp", 2764)),
 }
 if platform.system() == "Darwin":

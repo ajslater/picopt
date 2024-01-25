@@ -36,7 +36,6 @@ class ImageHandler(Handler, metaclass=ABCMeta):
             )
             raise ValueError
 
-
         for func, exec_args in stages.items():
             if path != self.original_path:
                 self.working_paths.add(path)

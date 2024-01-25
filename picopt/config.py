@@ -23,7 +23,6 @@ from termcolor import cprint
 
 from picopt import PROGRAM_NAME
 from picopt.handlers.convertible import (
-    APNG_FILE_FORMAT,
     CONVERTABLE_ANIMATED_FILE_FORMATS,
     CONVERTABLE_FILE_FORMATS,
     CONVERTABLE_FORMAT_STRS,
@@ -33,6 +32,7 @@ from picopt.handlers.gif import Gif, GifAnimated
 from picopt.handlers.handler import FileFormat, Handler
 from picopt.handlers.jpeg import Jpeg
 from picopt.handlers.png import Png
+from picopt.handlers.png_animated import PngAnimated
 from picopt.handlers.svg import SVG
 from picopt.handlers.webp import WebPLossless
 from picopt.handlers.webp_animated import WebPAnimatedLossless
@@ -137,7 +137,7 @@ _LOSSLESS_CONVERTABLE_FORMAT_HANDLERS = MappingProxyType(
 )
 _LOSSLESS_CONVERTABLE_ANIMATED_FORMAT_HANDLERS = MappingProxyType(
     {
-        ffmt: FileFormatHandlers(convert=(WebPAnimatedLossless,))
+        ffmt: FileFormatHandlers(convert=(WebPAnimatedLossless, PngAnimated))
         for ffmt in CONVERTABLE_ANIMATED_FILE_FORMATS
     }
 )
@@ -146,12 +146,10 @@ _FORMAT_HANDLERS = MappingProxyType(
         **_LOSSLESS_CONVERTABLE_FORMAT_HANDLERS,
         **_LOSSLESS_CONVERTABLE_ANIMATED_FORMAT_HANDLERS,
         Gif.OUTPUT_FILE_FORMAT: FileFormatHandlers(
-            # convert=(Gif2WebP, Png),
             convert=(WebPLossless, Png),
             native=(Gif,),
         ),
         GifAnimated.OUTPUT_FILE_FORMAT: FileFormatHandlers(
-            # convert=(Gif2WebP,),
             convert=(WebPAnimatedLossless,),
             native=(GifAnimated,),
         ),
@@ -159,17 +157,19 @@ _FORMAT_HANDLERS = MappingProxyType(
         Png.OUTPUT_FILE_FORMAT: FileFormatHandlers(
             convert=(WebPLossless,), native=(Png,)
         ),
-        APNG_FILE_FORMAT: FileFormatHandlers(convert=(WebPAnimatedLossless,)),
+        PngAnimated.OUTPUT_FILE_FORMAT: FileFormatHandlers(
+            convert=(WebPAnimatedLossless,), native=(PngAnimated,)
+        ),
         WebPLossless.OUTPUT_FILE_FORMAT: FileFormatHandlers(native=(WebPLossless,)),
         WebPAnimatedLossless.OUTPUT_FILE_FORMAT: FileFormatHandlers(
             native=(WebPAnimatedLossless,)
         ),
+        SVG.OUTPUT_FILE_FORMAT: FileFormatHandlers(native=(SVG,)),
         Zip.OUTPUT_FILE_FORMAT: FileFormatHandlers(native=(Zip,)),
         CBZ.OUTPUT_FILE_FORMAT: FileFormatHandlers(native=(CBZ,)),
         Rar.INPUT_FILE_FORMAT: FileFormatHandlers(convert=(Rar,)),
         CBR.INPUT_FILE_FORMAT: FileFormatHandlers(convert=(CBR,)),
         EPub.OUTPUT_FILE_FORMAT: FileFormatHandlers(native=(EPub,)),
-        SVG.OUTPUT_FILE_FORMAT: FileFormatHandlers(native=(SVG,)),
     }
 )
 MODE_EXECUTABLE = stat.S_IXUSR ^ stat.S_IXGRP ^ stat.S_IXOTH

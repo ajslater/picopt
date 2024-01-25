@@ -48,7 +48,6 @@ TIFF_FORMAT_STR = TiffImageFile.format
 TIFF_FILE_FORMAT = FileFormat(TIFF_FORMAT_STR, True, False)
 GIF_FORMAT_STR = GifImageFile.format
 PNG_FORMAT_STR = PngImageFile.format
-APNG_FILE_FORMAT = FileFormat(PNG_FORMAT_STR, True, True)
 # TODO duplicates from handlers/svg.py
 SVG_FORMAT_STR = "SVG"
 
