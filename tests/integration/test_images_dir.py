@@ -59,7 +59,7 @@ else:
             "test_bmp.bmp": (141430, 141430, ("png", 67215), ("webp", 30774)),
             "test_gif.gif": (138952, 138944, ("png", 112467), ("webp", 107952)),
             "test_jpg.jpg": (97373, 87913, ("jpg", 87913), ("jpg", 87913)),
-            "test_png_16rgba.png": (3435, 2870, ("png", 2870), ("webp", 1142)),
+            "test_png_16rgba.png": (3435, 2870, ("png", 2870), ("webp", 728)),
             "test_pnm.pnm": (27661, 27661, ("png", 15510), ("webp", 12808)),
             "test_pre-optimized_png.png": (
                 256572,
