@@ -2,21 +2,22 @@
 
 ## v4.0.0
 
-- Fix
-  - Remove Lossy WebP optimization. Wasn't optimal.
-  - Fix non zero exit code on success.
-  - `--destroy-metadata` option becomes `--strip-metadata`
 - Features
-  - Better WebP Lossless compression.
   - Support optimizing SVG with svgo.
   - Support converting more lossless formats to PNG & WEBP: CUR, DIB, FITS, IMT, PCX, PIXAR, PSD, QOI, SGI, SPIDER, SUN, TGA, XBM, XPM.
-  - Oxipng replaces optipng for png compression.
+  - Support converting animated formats to animated PNG.
+  - Oxipng supersedes optipng for png compression.
+  - `--destroy-metadata` option becomes `--strip-metadata`
 - Dev
   - walk.run now returns totals instead of running report on them.
 
 ## v3.3.7
 
-- Improve cwebp compression parameters for smaller files.
+- Fix
+  - Remove Lossy WebP optimization. Wasn't optimal.
+  - Fix non zero exit code on success.
+- Features
+  - Improve WebP optimization.
 
 ## v3.3.6
 
