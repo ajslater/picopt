@@ -30,6 +30,8 @@ class WebPBase(ImageHandler, ABC):
         "-mt",
         # advanced
         "-sharp_yuv",
+        # logging,
+        "-quiet",
         # additional
         "-alpha_filter",
         "best",
@@ -59,7 +61,6 @@ class WebPBase(ImageHandler, ABC):
 class WebPLossless(WebPBase):
     """Handle lossless webp images and images that convert to lossless webp."""
 
-    BEST_ONLY: bool = False
     OUTPUT_FILE_FORMAT = FileFormat(WebPBase.OUTPUT_FORMAT_STR, True, False)
     INPUT_FILE_FORMATS = frozenset(
         {OUTPUT_FILE_FORMAT, Png.OUTPUT_FILE_FORMAT, TIFF_FILE_FORMAT}

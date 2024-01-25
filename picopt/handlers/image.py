@@ -6,34 +6,11 @@ from types import MappingProxyType
 from typing import Any
 
 from PIL import Image
-from PIL.WebPImagePlugin import WebPImageFile
 from termcolor import cprint
 
 from picopt.data import ReportInfo
 from picopt.handlers.handler import Handler
 from picopt.stats import ReportStats
-
-SAVE_INFO_KEYS: frozenset[str] = frozenset(
-    {"n_frames", "loop", "duration", "background", "transparency"}
-)
-
-
-def _palette_index_to_rgb(
-    palette_index: int, transparency: int
-) -> tuple[int, int, int, int]:
-    """Convert an 8-bit color palette index to an RGB tuple."""
-    # Extract the individual color components from the palette index.
-    red = (palette_index >> 5) & 0x7
-    green = (palette_index >> 2) & 0x7
-    blue = palette_index & 0x3
-
-    # Scale the color components to the range 0-255.
-    red = red * 36
-    green = green * 36
-    blue = blue * 36
-    alpha = bool(transparency) * 255 * 0
-
-    return (red, green, blue, alpha)
 
 
 class ImageHandler(Handler, metaclass=ABCMeta):
@@ -52,6 +29,14 @@ class ImageHandler(Handler, metaclass=ABCMeta):
         path = self.original_path
         max_iterations = 0
         stages = self.config.computed.handler_stages.get(self.__class__, {})
+        if not stages:
+            cprint(
+                f"Tried to execute handler {self.__class__.__name__} with no available stages.",
+                "yellow",
+            )
+            raise ValueError
+
+
         for func, exec_args in stages.items():
             if path != self.original_path:
                 self.working_paths.add(path)
@@ -73,14 +58,6 @@ class ImageHandler(Handler, metaclass=ABCMeta):
                 )
                 iterations += 1
             max_iterations = max(max_iterations, iterations)
-
-            if self.BEST_ONLY:
-                break
-        else:
-            cprint(
-                f"Tried to execute handler {self.__class__.__name__} with no available stages.",
-                "yellow",
-            )
 
         bytes_count = self.cleanup_after_optimize(path)
         info = ReportInfo(
@@ -126,20 +103,7 @@ class ImageHandler(Handler, metaclass=ABCMeta):
             format_str = self.OUTPUT_FORMAT_STR
         if opts is None:
             opts = self.PIL2_ARGS
-        if format_str == WebPImageFile.format:
-            self.info.pop("background", None)
-            background = self.info.get("background")
-            if isinstance(background, int):
-                # GIF background is an int.
-                alpha = self.info.pop("transparency", 0)
-                self.info["background"] = _palette_index_to_rgb(background, alpha)
-        if self.config.keep_metadata:
-            info = self.info
-        else:
-            info = {}
-            for key, val in self.info:
-                if key in SAVE_INFO_KEYS:
-                    info[key] = val
+        info = self.prepare_info(format_str)
 
         with Image.open(old_path) as image:
             image.save(
@@ -147,7 +111,7 @@ class ImageHandler(Handler, metaclass=ABCMeta):
                 format_str,
                 save_all=True,
                 **opts,
-                **self.info,  # TODO possibly filter only for valid keys firs)t
+                **info,  # TODO possibly filter only for valid keys firs)t
             )
         image.close()  # for animated images
         self.input_file_format = self.OUTPUT_FILE_FORMAT

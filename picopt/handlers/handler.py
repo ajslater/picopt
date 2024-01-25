@@ -4,9 +4,11 @@ from abc import ABC
 from collections.abc import Mapping
 from dataclasses import dataclass
 from pathlib import Path
+from types import MappingProxyType
 from typing import Any
 
 from confuse.templates import AttrDict
+from PIL.WebPImagePlugin import WebPImageFile
 from termcolor import cprint
 
 from picopt import PROGRAM_NAME
@@ -23,10 +25,32 @@ class FileFormat:
     animated: bool = False
 
 
+SAVE_INFO_KEYS: frozenset[str] = frozenset(
+    {"n_frames", "loop", "duration", "background", "transparency"}
+)
+
+
+def _palette_index_to_rgb(
+    palette_index: int, transparency: int
+) -> tuple[int, int, int, int]:
+    """Convert an 8-bit color palette index to an RGB tuple."""
+    # Extract the individual color components from the palette index.
+    red = (palette_index >> 5) & 0x7
+    green = (palette_index >> 2) & 0x7
+    blue = palette_index & 0x3
+
+    # Scale the color components to the range 0-255.
+    red = red * 36
+    green = green * 36
+    blue = blue * 36
+    alpha = bool(transparency) * 255 * 0
+
+    return (red, green, blue, alpha)
+
+
 class Handler(ABC):
     """FileType superclass for image and container formats."""
 
-    BEST_ONLY: bool = True
     OUTPUT_FORMAT_STR: str = "unimplemented"
     OUTPUT_FILE_FORMAT: FileFormat = FileFormat(OUTPUT_FORMAT_STR, False, False)
     INPUT_FILE_FORMATS: frozenset[FileFormat] = frozenset({OUTPUT_FILE_FORMAT})
@@ -136,3 +160,21 @@ class Handler(ABC):
         """Return an error result."""
         info = ReportInfo(self.original_path, self.convert, self.config.test, exc=exc)
         return ReportStats(info)
+
+    def prepare_info(self, format_str: str) -> MappingProxyType[str, Any]:
+        """Prepare an info dict for saving."""
+        if format_str == WebPImageFile.format:
+            self.info.pop("background", None)
+            background = self.info.get("background")
+            if isinstance(background, int):
+                # GIF background is an int.
+                alpha = self.info.pop("transparency", 0)
+                self.info["background"] = _palette_index_to_rgb(background, alpha)
+        if self.config.keep_metadata:
+            info = self.info
+        else:
+            info = {}
+            for key, val in self.info:
+                if key in SAVE_INFO_KEYS:
+                    info[key] = val
+        return MappingProxyType(info)

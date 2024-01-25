@@ -14,7 +14,6 @@ from picopt.pillow.png_bit_depth import png_bit_depth
 class Png(ImageHandler):
     """PNG format class."""
 
-    BEST_ONLY: bool = False
     OUTPUT_FORMAT_STR = PngImageFile.format
     OUTPUT_FILE_FORMAT = FileFormat(OUTPUT_FORMAT_STR, True, False)
     INPUT_FILE_FORMATS = frozenset({OUTPUT_FILE_FORMAT})
