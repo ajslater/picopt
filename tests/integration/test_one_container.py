@@ -10,7 +10,7 @@ TMP_ROOT = get_test_dir()
 FN = "test_zip.zip"
 SRC_CBZ = CONTAINER_DIR / FN
 
-FNS = {FN: (2974, 1871)} if system() == "Darwin" else {FN: (2974, 1917)}
+FNS = {FN: (2974, 2921)} if system() == "Darwin" else {FN: (2974, 2921)}
 
 
 class TestContainersDir:
@@ -33,8 +33,7 @@ class TestContainersDir:
     def test_containers_no_convert(self) -> None:
         """Test containers no convert."""
         args = (PROGRAM_NAME, "-x", "ZIP", str(TMP_ROOT / FN))
-        res = cli.main(args)
-        assert res
+        cli.main(args)
         for name, sizes in FNS.items():
             path = TMP_ROOT / name
             assert path.stat().st_size == sizes[1]

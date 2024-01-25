@@ -12,7 +12,8 @@ The actual image optimization is best accomplished by external programs.
 
 ### Lossy Images
 
-JPEG & Lossy WebP images are likely the best and most practical lossy image formats. Converting lossy images rarely makes sense and so picopt only optimizes them in their current format.
+JPEG images are likely the best and most practical lossy image formats. Converting lossy images rarely makes sense and so picopt only optimizes them in their current format.
+WEBP Lossy images are not optimized. There is no current way to preserve information without running it through a lossy process again.
 
 ### Lossless Images
 
@@ -53,7 +54,7 @@ Animated GIFs are optimized with [gifsicle](http://www.lcdf.org/gifsicle/) if it
 
 ### WebP
 
-WebP lossless & lossy formats are optimized with [cwebp](https://developers.google.com/speed/webp/docs/cwebp).
+WebP lossless formats are optimized with [cwebp](https://developers.google.com/speed/webp/docs/cwebp).
 
 ### EPub
 
@@ -72,7 +73,7 @@ picopt requires several external system dependencies to run. We must install the
 
 #### macOS
 
-    brew install webp mozjpeg optipng jonof/kenutils/pngout gifsicle
+    brew install gifsicle jonof/kenutils/pngout mozjpeg optipng webp
 
     ln -s $(brew --prefix)/opt/mozjpeg/bin/jpegtran /usr/local/bin/mozjpeg
 

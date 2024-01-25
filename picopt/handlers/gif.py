@@ -1,6 +1,7 @@
 """Gif format."""
 import shutil
 from pathlib import Path
+from types import MappingProxyType
 from typing import Optional
 
 from PIL import Image
@@ -15,14 +16,14 @@ class Gif(ImageHandler):
 
     OUTPUT_FORMAT_STR = GifImageFile.format
     OUTPUT_FILE_FORMAT = FileFormat(OUTPUT_FORMAT_STR, True, False)
-    PROGRAMS: dict[str, Optional[str]] = ImageHandler.init_programs(
+    PROGRAMS: MappingProxyType[str, Optional[str]] = ImageHandler.init_programs(
         ("gifsicle", "pil2gif")
     )
-    _ARGS_PREFIX = [
-        PROGRAMS["gifsicle"],
+    _ARGS_PREFIX: tuple[Optional[str], ...] = (
+        PROGRAMS.get("gifsicle", ""),
         "--optimize=3",
         "--batch",
-    ]
+    )
 
     def gifsicle(self, old_path: Path, new_path: Path) -> Path:
         """Return gifsicle args."""

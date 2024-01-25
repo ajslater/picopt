@@ -18,7 +18,7 @@ TIMESTAMPS_PATH = TMP_ROOT / TIMESTAMPS_FN
 WAL_FN = f".{PROGRAM_NAME}_treestamps.wal.yaml"
 WAL_PATH = TMP_ROOT / WAL_FN
 
-FNS = {FN: (97373, 87913)} if platform.system() == "Darwin" else {FN: (97373, 87922)}
+FNS = {FN: (97373, 87913)} if platform.system() == "Darwin" else {FN: (97373, 87913)}
 
 DEFAULT_CONFIG = {
     "bigger": False,
@@ -76,32 +76,28 @@ class TestTimestamps:
     def test_no_timestamp(self) -> None:
         """Test no timestamp."""
         args = (PROGRAM_NAME, "-rtvvv", TMP_FN)
-        res = cli.main(args)
-        assert res
+        cli.main(args)
         self._assert_sizes(1)
 
     def test_timestamp(self):
         """Test timestamp."""
         self._write_timestamp(TMP_FN)
         args = (PROGRAM_NAME, "-rtvvv", TMP_FN)
-        res = cli.main(args)
-        assert res
+        cli.main(args)
         self._assert_sizes(0)
 
     def test_different_config(self):
         """Test different config."""
         self._write_timestamp(FN)
         args = (PROGRAM_NAME, "-brtvvv", TMP_FN)
-        res = cli.main(args)
-        assert res
+        cli.main(args)
         self._assert_sizes(1)
 
     def test_timestamp_dir(self):
         """Test timestamp dir."""
         self._write_timestamp(TMP_ROOT)
         args = (PROGRAM_NAME, "-rtvvv", TMP_FN)
-        res = cli.main(args)
-        assert res
+        cli.main(args)
         self._assert_sizes(0)
 
     def _setup_child_dir(self):
@@ -117,8 +113,7 @@ class TestTimestamps:
         tmp_child_dir = self._setup_child_dir()
         self._write_timestamp(tmp_child_dir)
         args = (PROGRAM_NAME, "-rtvvv", str(TMP_ROOT))
-        res = cli.main(args)
-        assert res
+        cli.main(args)
         self._assert_sizes(0, tmp_child_dir)
 
     def test_timestamp_parents(self):
@@ -127,8 +122,7 @@ class TestTimestamps:
 
         self._write_timestamp(TMP_ROOT)
         args = (PROGRAM_NAME, "-rtvvv", str(tmp_child_dir))
-        res = cli.main(args)
-        assert res
+        cli.main(args)
         self._assert_sizes(0, tmp_child_dir)
         assert (tmp_child_dir / TIMESTAMPS_FN).exists()
         assert not (tmp_child_dir / WAL_FN).exists()
@@ -136,8 +130,7 @@ class TestTimestamps:
     def test_journal_cleanup(self) -> None:
         """Test journal cleanup."""
         args = (PROGRAM_NAME, "-rtvvv", TMP_FN)
-        res = cli.main(args)
-        assert res
+        cli.main(args)
         assert not WAL_PATH.exists()
 
     @staticmethod
@@ -161,6 +154,5 @@ class TestTimestamps:
         """Test timestamp read journal."""
         self._write_wal(TMP_FN)
         args = (PROGRAM_NAME, "-rtvvv", TMP_FN)
-        res = cli.main(args)
-        assert res
+        cli.main(args)
         self._assert_sizes(0)

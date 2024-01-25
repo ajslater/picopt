@@ -70,7 +70,7 @@ class ContainerHandler(Handler, metaclass=ABCMeta):
             return self.error(exc)
         return self
 
-    def cleanup_after_optimize(self, working_path: Path) -> tuple[int, int]:
+    def cleanup_after_optimize(self, last_working_path: Path) -> tuple[int, int]:
         """Clean up the temp dir as well as the old container."""
         if self.config.verbose:
             cprint(".", end="")
@@ -78,7 +78,7 @@ class ContainerHandler(Handler, metaclass=ABCMeta):
 
         if self.config.verbose:
             cprint(".", end="")
-        bytes_count = super().cleanup_after_optimize(working_path)
+        bytes_count = super().cleanup_after_optimize(last_working_path)
 
         if self.config.verbose:
             cprint("done.")

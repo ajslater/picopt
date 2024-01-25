@@ -1,6 +1,7 @@
 """FileFormat Superclass."""
 from abc import ABCMeta
 from pathlib import Path
+from types import MappingProxyType
 from typing import Any
 
 from PIL import Image
@@ -33,7 +34,7 @@ _NATIVE_ONLY_FILE_FORMATS = {
 class ImageHandler(Handler, metaclass=ABCMeta):
     """Image Handler superclass."""
 
-    PIL2_ARGS: dict[str, Any] = {}
+    PIL2_ARGS: MappingProxyType[str, Any] = MappingProxyType({})
     PREFERRED_PROGRAM: str = "unimplemented"
 
     def _optimize_with_progs(self) -> ReportStats:

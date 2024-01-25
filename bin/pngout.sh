@@ -9,10 +9,10 @@ BIN_NAME=$RELEASE/amd64/pngout-static
 DEST=/usr/local/bin/pngout
 
 if [ -f "$TARBALL" ]; then
-    echo "$TARBALL > $DEST"
-    tar xzOf "$TARBALL" "$BIN_NAME" >"$DEST"
+  echo "$TARBALL > $DEST"
+  tar xzOf "$TARBALL" "$BIN_NAME" > "$DEST"
 else
-    echo "$URL > $DEST"
-    curl "$URL" | tar xzOf - "$BIN_NAME" >"$DEST"
+  echo "$URL > $DEST"
+  curl "$URL" | tar xzOf - "$BIN_NAME" > "$DEST"
 fi
 chmod 755 "$DEST"

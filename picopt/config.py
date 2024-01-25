@@ -36,8 +36,8 @@ from picopt.handlers.image import (
 )
 from picopt.handlers.jpeg import Jpeg
 from picopt.handlers.png import Png
-from picopt.handlers.webp import Gif2WebP, WebPLossless, WebPLossy
-from picopt.handlers.webp_animated import WebPAnimatedLossless, WebPAnimatedLossy
+from picopt.handlers.webp import Gif2WebP, WebPLossless
+from picopt.handlers.webp_animated import WebPAnimatedLossless
 from picopt.handlers.zip import CBR, CBZ, EPub, Rar, Zip
 
 _PNG_CONVERTABLE_FILE_FORMATS = CONVERTABLE_FILE_FORMATS | frozenset(
@@ -63,12 +63,11 @@ CONVERT_TO_FORMAT_STRS = frozenset(
 CONTAINER_CONVERTABLE_FORMAT_STRS = frozenset(
     (Rar.INPUT_FORMAT_STR, CBR.INPUT_FORMAT_STR)
 )
-DEFAULT_HANDLERS = (Gif, AnimatedGif, Jpeg, Png, WebPLossy, WebPLossless)
+DEFAULT_HANDLERS = (Gif, AnimatedGif, Jpeg, Png, WebPLossless)
 HANDLERS = frozenset(
     [
         *DEFAULT_HANDLERS,
         Gif2WebP,
-        WebPAnimatedLossy,
         WebPAnimatedLossless,
         Zip,
         Rar,
@@ -175,9 +174,7 @@ _FORMAT_HANDLERS = {
     ),
     Jpeg.OUTPUT_FILE_FORMAT: FileFormatHandlers(native=Jpeg),
     Png.OUTPUT_FILE_FORMAT: FileFormatHandlers(convert=WebPLossless, native=Png),
-    WebPLossy.OUTPUT_FILE_FORMAT: FileFormatHandlers(native=WebPLossy),
     WebPLossless.OUTPUT_FILE_FORMAT: FileFormatHandlers(native=WebPLossless),
-    WebPAnimatedLossy.OUTPUT_FILE_FORMAT: FileFormatHandlers(native=WebPAnimatedLossy),
     WebPAnimatedLossless.OUTPUT_FILE_FORMAT: FileFormatHandlers(
         native=WebPAnimatedLossless
     ),

@@ -5,17 +5,17 @@ ENV DEBIAN_FRONTEND noninteractive
 USER root
 # hadolint ignore=DL3008
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends \
-        curl \
-        gifsicle \
-        git \
-        libjpeg-progs \
-        optipng \
-        shellcheck \
-        unrar \
-        webp \
-    && apt-get clean \
-    && rm -rf /var/lib/apt/lists/*
+  && apt-get install -y --no-install-recommends \
+    curl \
+    gifsicle \
+    git \
+    libjpeg-progs \
+    optipng \
+    shellcheck \
+    unrar \
+    webp \
+  && apt-get clean \
+  && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
 RUN chown circleci:circleci /app

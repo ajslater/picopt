@@ -4,6 +4,7 @@ import subprocess
 from abc import ABC
 from dataclasses import dataclass
 from pathlib import Path
+from types import MappingProxyType
 from typing import Optional
 
 from confuse.templates import AttrDict
@@ -39,28 +40,36 @@ class Handler(ABC):
     OUTPUT_FORMAT_STR: str = "unimplemented"
     OUTPUT_FILE_FORMAT: FileFormat = FileFormat(OUTPUT_FORMAT_STR, False, False)
     INTERNAL: str = "python_internal"
-    PROGRAMS: dict[str, Optional[str]] = {}
+    PROGRAMS: MappingProxyType[str, Optional[str]] = MappingProxyType({})
     WORKING_SUFFIX: str = f"{PROGRAM_NAME}__tmp"
 
     @classmethod
-    def init_programs(cls, programs: tuple[str, ...]) -> dict[str, Optional[str]]:
+    def init_programs(
+        cls, programs: tuple[str, ...]
+    ) -> MappingProxyType[str, Optional[str]]:
         """Initialize the PROGRAM map."""
         program_dict = {}
         for program in programs:
-            bin_path = None
-            if not program.startswith("pil2") and program != cls.INTERNAL:
+            if program.startswith("pil2") or program == cls.INTERNAL:
+                bin_path = None
+            else:
                 bin_path = shutil.which(program)
+                if not bin_path:
+                    continue
             program_dict[program] = bin_path
-        return program_dict
+        return MappingProxyType(program_dict)
 
     @staticmethod
-    def run_ext(args: tuple[str, ...]) -> None:
+    def run_ext(args: tuple[Optional[str], ...]) -> None:
         """Run EXTERNAL program."""
-        if not args[0]:
-            msg = f"{args}"
-            raise ValueError(msg)
+        for arg in args:
+            # Guarantee tuple[str]
+            if arg in (None, ""):
+                reason = f"{args}"
+                raise ValueError(reason)
+
         subprocess.run(
-            args,  # noqa S603
+            args,  # noqa S603 # type: ignore
             check=True,
             text=True,
             stdout=subprocess.DEVNULL,
@@ -68,9 +77,9 @@ class Handler(ABC):
         )
 
     @classmethod
-    def native_input_file_formats(cls) -> set[FileFormat]:
+    def native_input_file_formats(cls) -> frozenset[FileFormat]:
         """Return input formats handled without conversion."""
-        return {cls.OUTPUT_FILE_FORMAT}
+        return frozenset({cls.OUTPUT_FILE_FORMAT})
 
     @classmethod
     def is_handler_available(

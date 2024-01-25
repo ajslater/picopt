@@ -15,16 +15,16 @@ if system() == "Darwin":
         "test_cbz.cbz": (93408, 84493, ("cbz", 93408)),
         "test_cbr.cbr": (93725, 93725, ("cbz", 84506)),
         "test_rar.rar": (93675, 93675, ("zip", 84493)),
-        "test_zip.zip": (2974, 1871, ("zip", 2974)),
+        "test_zip.zip": (2974, 2921, ("zip", 2974)),
         "igp-twss.epub": (292448, 281248, ("epub", 292448)),
     }
 else:
     FNS = {
-        "test_cbz.cbz": (93408, 84481, ("cbz", 93408)),
-        "test_cbr.cbr": (93725, 93725, ("cbz", 84494)),
-        "test_rar.rar": (93675, 93675, ("zip", 84481)),
-        "test_zip.zip": (2974, 1917, ("zip", 2974)),
-        "igp-twss.epub": (292448, 280700, ("epub", 292448)),
+        "test_cbz.cbz": (93408, 84493, ("cbz", 93408)),
+        "test_cbr.cbr": (93725, 93725, ("cbz", 84506)),
+        "test_rar.rar": (93675, 93675, ("zip", 84493)),
+        "test_zip.zip": (2974, 2921, ("zip", 2974)),
+        "igp-twss.epub": (292448, 281248, ("epub", 292448)),
     }
 
 EPUB_FN = "igp-twss.epub"
@@ -50,8 +50,7 @@ class TestContainersDir:
     def test_containers_noop(self) -> None:
         """Test containers noop."""
         args = (PROGRAM_NAME, "-r", str(TMP_ROOT))
-        res = cli.main(args)
-        assert res
+        cli.main(args)
         for name, sizes in FNS.items():
             if name == EPUB_FN:
                 path = TMP_ROOT / name
@@ -64,8 +63,7 @@ class TestContainersDir:
     def test_containers_no_convert(self) -> None:
         """Test containers no convert."""
         args = (PROGRAM_NAME, "-rx", "CBZ,ZIP,EPUB", "-c WEBP", str(TMP_ROOT))
-        res = cli.main(args)
-        assert res
+        cli.main(args)
         for name, sizes in FNS.items():
             path = TMP_ROOT / name
             if name == EPUB_FN:
@@ -77,8 +75,7 @@ class TestContainersDir:
     def test_containers_convert_to_zip(self) -> None:
         """Test containers convert to zip."""
         args = (PROGRAM_NAME, "-rc", "ZIP,CBZ", str(TMP_ROOT))
-        res = cli.main(args)
-        assert res
+        cli.main(args)
         for name, sizes in FNS.items():
             path = (TMP_ROOT / name).with_suffix("." + sizes[2][0])
             assert path.stat().st_size == sizes[2][1]

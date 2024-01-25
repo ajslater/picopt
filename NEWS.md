@@ -1,5 +1,13 @@
 # 📰 Picopt News
 
+## v3.3.7
+
+- Fix
+  - Remove Lossy WebP optimization. Wasn't optimal.
+  - Fix non zero exit code on success.
+- Features
+  - Improve webp optimization.
+
 ## v3.3.6
 
 - If unrar is not available do not convert rar. Was making empty zips.
