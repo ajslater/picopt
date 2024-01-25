@@ -107,6 +107,7 @@ class WebPLossless(WebP):
             new_path = old_path
         return new_path
 
+
 class Gif2WebP(WebPBase):
     """Animated WebP format class.
 
