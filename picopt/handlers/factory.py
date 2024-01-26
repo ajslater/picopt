@@ -98,13 +98,6 @@ def _get_container_format(path: Path) -> FileFormat | None:
     return file_format
 
 
-def _get_handler_class(
-    config: AttrDict, file_format: FileFormat, key: str
-) -> type[Handler] | None:
-    format_handlers = config.computed.get(key)
-    return format_handlers.get(file_format)
-
-
 def _create_handler_get_format(
     config: AttrDict, path: Path
 ) -> tuple[FileFormat | None, Mapping[str, Any]]:
@@ -112,6 +105,13 @@ def _create_handler_get_format(
     if not file_format:
         file_format = _get_container_format(path)
     return file_format, info
+
+
+def _get_handler_class(
+    config: AttrDict, file_format: FileFormat, key: str
+) -> type[Handler] | None:
+    format_handlers = config.computed.get(key)
+    return format_handlers.get(file_format)
 
 
 def _create_handler_get_handler_class(
