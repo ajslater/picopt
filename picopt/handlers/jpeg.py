@@ -3,7 +3,7 @@ from pathlib import Path
 
 from PIL.JpegImagePlugin import JpegImageFile
 
-from picopt.handlers.handler import FileFormat
+from picopt.formats import FileFormat
 from picopt.handlers.image import ImageHandler
 
 

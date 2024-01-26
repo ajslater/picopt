@@ -24,10 +24,11 @@ from picopt import PROGRAM_NAME
 from picopt.formats import (
     CONVERTIBLE_ANIMATED_FILE_FORMATS,
     CONVERTIBLE_FILE_FORMATS,
-    CONVERTIBLE_FORMAT_STRS,
+    LOSSLESS_FORMAT_STRS,
+    FileFormat,
 )
 from picopt.handlers.gif import Gif, GifAnimated
-from picopt.handlers.handler import FileFormat, Handler
+from picopt.handlers.handler import Handler
 from picopt.handlers.jpeg import Jpeg
 from picopt.handlers.png import Png
 from picopt.handlers.png_animated import PngAnimated
@@ -69,7 +70,7 @@ _EXTRA_HANDLERS = frozenset(
 _ALL_HANDLERS = frozenset(DEFAULT_HANDLERS | _EXTRA_HANDLERS)
 ALL_FORMAT_STRS: frozenset[str] = (
     frozenset([cls.OUTPUT_FORMAT_STR for cls in _ALL_HANDLERS])
-    | CONVERTIBLE_FORMAT_STRS
+    | LOSSLESS_FORMAT_STRS
     | _CONTAINER_CONVERTIBLE_FORMAT_STRS
 )
 TEMPLATE = MappingTemplate(

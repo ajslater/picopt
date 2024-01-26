@@ -7,7 +7,8 @@ from pathlib import Path
 from confuse.templates import AttrDict
 from termcolor import cprint
 
-from picopt.handlers.handler import FileFormat, Handler
+from picopt.formats import FileFormat
+from picopt.handlers.handler import Handler
 from picopt.path import PathInfo
 from picopt.stats import ReportInfo, ReportStats
 

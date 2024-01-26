@@ -4,7 +4,7 @@ from types import MappingProxyType
 
 from PIL.GifImagePlugin import GifImageFile
 
-from picopt.handlers.handler import FileFormat
+from picopt.formats import FileFormat
 from picopt.handlers.image import ImageHandler
 
 

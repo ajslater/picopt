@@ -7,8 +7,8 @@ from typing import Any
 from PIL import Image, ImageSequence
 from PIL.PngImagePlugin import PngImageFile
 
+from picopt.formats import FileFormat
 from picopt.handlers.container import ContainerHandler
-from picopt.handlers.handler import FileFormat
 
 
 class ImageAnimated(ContainerHandler, ABC):

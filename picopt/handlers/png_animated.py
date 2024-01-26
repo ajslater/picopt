@@ -2,9 +2,9 @@
 from picopt.formats import (
     CONVERTIBLE_ANIMATED_FILE_FORMATS,
     CONVERTIBLE_ANIMATED_FORMAT_STRS,
+    FileFormat,
 )
 from picopt.handlers.gif import Gif, GifAnimated
-from picopt.handlers.handler import FileFormat
 from picopt.handlers.image_animated import ImageAnimated
 from picopt.handlers.png import Png
 

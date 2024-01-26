@@ -5,8 +5,7 @@ from types import MappingProxyType
 
 from PIL.WebPImagePlugin import WebPImageFile
 
-from picopt.formats import TIFF_FILE_FORMAT
-from picopt.handlers.handler import FileFormat
+from picopt.formats import TIFF_FILE_FORMAT, FileFormat
 from picopt.handlers.image import ImageHandler
 from picopt.handlers.png import Png
 

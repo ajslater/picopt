@@ -1,11 +1,11 @@
 """Convertible format definitions."""
-# TODO move up out of handlers into file formats module
+from dataclasses import dataclass
+
 from PIL.BmpImagePlugin import BmpImageFile, DibImageFile
 from PIL.CurImagePlugin import CurImageFile
 from PIL.FitsImagePlugin import FitsImageFile
 from PIL.FliImagePlugin import FliImageFile
 from PIL.GifImagePlugin import GifImageFile
-from PIL.ImageFile import ImageFile
 from PIL.ImtImagePlugin import ImtImageFile
 from PIL.PcxImagePlugin import PcxImageFile
 from PIL.PixarImagePlugin import PixarImageFile
@@ -21,11 +21,18 @@ from PIL.TiffImagePlugin import TiffImageFile
 from PIL.XbmImagePlugin import XbmImageFile
 from PIL.XpmImagePlugin import XpmImageFile
 
-from picopt.handlers.handler import FileFormat
 
-# TIFF_LOSSY_COMPRESSION = frozenset({
-#    "jpeg", "webp"
-# })
+@dataclass(eq=True, frozen=True)
+class FileFormat:
+    """A file format, with image attributes."""
+
+    format_str: str
+    lossless: bool = True
+    animated: bool = False
+
+
+SVG_FORMAT_STR = "SVG"
+TIFF_FILE_FORMAT = FileFormat(TiffImageFile.format, True, False)
 TIFF_LOSSLESS_COMPRESSION = frozenset(
     {
         None,
@@ -43,64 +50,62 @@ TIFF_LOSSLESS_COMPRESSION = frozenset(
         "zstd",
     }
 )
-TIFF_FILE_FORMAT = FileFormat(TiffImageFile.format, True, False)
-SVG_FORMAT_STR = "SVG"
+# TIFF_LOSSY_COMPRESSION = frozenset({
+#    "jpeg", "webp"
+# })
 
 
-def _create_file_format(
-    image_file: type[ImageFile], animated: bool = False
-) -> FileFormat:
-    fmt: str = image_file.format  # type: ignore
-    return FileFormat(fmt, True, animated)
-
-
-# TODO should these be dicts?
-CONVERTIBLE_FILE_FORMATS = frozenset(
-    {
-        _create_file_format(image_file)
-        for image_file in (
-            # PIL Read/Write lossless formats
-            BmpImageFile,
-            DibImageFile,
-            # GifImageFile,
-            PcxImageFile,
-            PpmImageFile,
-            # PngImageFile,
-            SgiImageFile,
-            SpiderImageFile,
-            TgaImageFile,
-            TiffImageFile,
-            XbmImageFile,
-            ##################################
-            # PIL Read only lossless formats #
-            ##################################
-            CurImageFile,
-            FitsImageFile,
-            ImtImageFile,
-            PixarImageFile,
-            PsdImageFile,
-            SunImageFile,
-            XpmImageFile,
-            QoiImageFile,
-        )
-    }
+_CONVERTABLE_PIL_IMAGE_FILES = (
+    ###################################
+    # PIL Read/Write lossless formats #
+    ###################################
+    BmpImageFile,
+    DibImageFile,
+    # GifImageFile,
+    PcxImageFile,
+    PpmImageFile,
+    # PngImageFile,
+    SgiImageFile,
+    SpiderImageFile,
+    TgaImageFile,
+    TiffImageFile,
+    XbmImageFile,
+    ##################################
+    # PIL Read only lossless formats #
+    ##################################
+    CurImageFile,
+    FitsImageFile,
+    ImtImageFile,
+    PixarImageFile,
+    PsdImageFile,
+    SunImageFile,
+    XpmImageFile,
+    QoiImageFile,
 )
 CONVERTIBLE_FORMAT_STRS = frozenset(
-    {img_format.format_str for img_format in CONVERTIBLE_FILE_FORMATS}
+    {img_file.format for img_file in _CONVERTABLE_PIL_IMAGE_FILES}
+)
+
+CONVERTIBLE_FILE_FORMATS = frozenset(
+    {FileFormat(format_str, True, False) for format_str in CONVERTIBLE_FORMAT_STRS}
+)
+_CONVERTABLE_PIL_ANIMATED_IMAGE_FILES = (
+    #################################
+    # PIL lossless animated formats #
+    #################################
+    FliImageFile,
+    # GifImageFile,
+    # PngImageFile,
+    TiffImageFile,
+)
+CONVERTIBLE_ANIMATED_FORMAT_STRS = frozenset(
+    {img_file.format for img_file in _CONVERTABLE_PIL_ANIMATED_IMAGE_FILES}
 )
 CONVERTIBLE_ANIMATED_FILE_FORMATS = frozenset(
     {
-        _create_file_format(image_file, True)
-        for image_file in (
-            FliImageFile,
-            # GifImageFile,
-            # PngImageFile,
-            TiffImageFile,
-        )
+        FileFormat(format_str, True, True)
+        for format_str in CONVERTIBLE_ANIMATED_FORMAT_STRS
     }
-)
-CONVERTIBLE_ANIMATED_FORMAT_STRS = frozenset(
-    {img_format.format_str for img_format in CONVERTIBLE_ANIMATED_FILE_FORMATS}
 )
 
 LOSSLESS_FORMAT_STRS = frozenset(

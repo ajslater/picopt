@@ -2,7 +2,6 @@
 import subprocess
 from abc import ABC
 from collections.abc import Mapping
-from dataclasses import dataclass
 from pathlib import Path
 from types import MappingProxyType
 from typing import Any
@@ -12,18 +11,9 @@ from PIL.WebPImagePlugin import WebPImageFile
 from termcolor import cprint
 
 from picopt import PROGRAM_NAME
+from picopt.formats import FileFormat
 from picopt.path import PathInfo
 from picopt.stats import ReportInfo, ReportStats
-
-
-@dataclass(eq=True, frozen=True)
-class FileFormat:
-    """A file format, with image attributes."""
-
-    format_str: str
-    lossless: bool = True
-    animated: bool = False
-
 
 SAVE_INFO_KEYS: frozenset[str] = frozenset(
     {"n_frames", "loop", "duration", "background", "transparency"}

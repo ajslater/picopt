@@ -1,8 +1,7 @@
 """WebP format."""
 from pathlib import Path
 
-from picopt.formats import SVG_FORMAT_STR
-from picopt.handlers.handler import FileFormat
+from picopt.formats import SVG_FORMAT_STR, FileFormat
 from picopt.handlers.image import ImageHandler
 
 

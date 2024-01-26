@@ -7,8 +7,8 @@ from PIL import Image, UnidentifiedImageError
 from rarfile import RarFile, is_rarfile
 from termcolor import cprint
 
+from picopt.formats import FileFormat
 from picopt.handlers.container import ContainerHandler
-from picopt.handlers.handler import FileFormat
 
 
 class Zip(ContainerHandler):
