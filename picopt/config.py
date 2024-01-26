@@ -3,11 +3,11 @@ import shutil
 import subprocess
 import time
 from argparse import Namespace
-from collections.abc import ItemsView
+from collections.abc import ItemsView, Iterable
 from dataclasses import dataclass, fields
 from types import MappingProxyType
 
-from confuse import Configuration
+from confuse import Configuration, Subview
 from confuse.templates import (
     AttrDict,
     Choice,
@@ -189,22 +189,21 @@ def _print_formats_config(handled_format_strs, convert_format_strs) -> None:
         cprint(f"Converting {convert_from} to {convert_to_format_str}", "cyan")
 
 
-def _config_formats_list_to_set(config: Configuration, key: str) -> frozenset[str]:
-    source = config[PROGRAM_NAME]
-    val_list: list = source[key].get(list) if key in source else []  # type: ignore
+def _config_formats_list_to_set(config: Subview, key: str) -> frozenset[str]:
+    val_list: Iterable = config[key].get(list) if key in config else []  # type: ignore
     val_set = set()
     for val in val_list:
         val_set.add(val.upper())
     return frozenset(val_set)
 
 
-def _set_all_format_strs(config: Configuration) -> frozenset[str]:
+def _set_all_format_strs(config: Subview) -> frozenset[str]:
     all_format_strs = _config_formats_list_to_set(config, "formats")
     extra_format_strs = _config_formats_list_to_set(config, "extra_formats")
 
     all_format_strs |= extra_format_strs
 
-    config[PROGRAM_NAME]["formats"] = tuple(sorted(all_format_strs))
+    config["formats"] = tuple(sorted(all_format_strs))
 
     return frozenset(all_format_strs)
 
@@ -245,7 +244,7 @@ def _get_handler_stages(
 
 
 def _set_format_handler_map(
-    config: Configuration,
+    config: Subview,
 ) -> None:
     """Create a format to handler map from config."""
     all_format_strs = _set_all_format_strs(config)
@@ -272,7 +271,7 @@ def _set_format_handler_map(
                 ):
                     continue
 
-                # TODO could move this caching into _get_handler_stages
+                # Get handler stages by class with caching
                 if handler_class not in handler_stages:
                     handler_stages[handler_class] = _get_handler_stages(handler_class)
                 stages = handler_stages.get(handler_class)
@@ -294,54 +293,62 @@ def _set_format_handler_map(
 
     convert_handlers = native_handlers | convert_handlers
 
-    # TODO move set part up and out to main function
-    config[PROGRAM_NAME]["computed"]["native_handlers"].set(native_handlers)
-    config[PROGRAM_NAME]["computed"]["convert_handlers"].set(convert_handlers)
-    config[PROGRAM_NAME]["computed"]["handler_stages"].set(handler_stages)
+    config["computed"]["native_handlers"].set(native_handlers)
+    config["computed"]["convert_handlers"].set(convert_handlers)
+    config["computed"]["handler_stages"].set(handler_stages)
     _print_formats_config(handled_format_strs, convert_format_strs)
 
 
 #########################
 # Other Computed Config #
 #########################
-def _set_after(config) -> None:
-    after = config[PROGRAM_NAME]["after"].get()
+def _set_after(config: Subview) -> None:
+    after = config["after"].get()
     if after is None:
         return
 
     try:
-        timestamp = float(after)
+        timestamp = float(after)  # type: ignore
     except ValueError:
-        after_dt = parse(after)
+        after_dt = parse(after)  # type: ignore
         timestamp = time.mktime(after_dt.timetuple())
 
-    config[PROGRAM_NAME]["after"].set(timestamp)
+    config["after"].set(timestamp)
     if timestamp is not None:
         after = time.ctime(timestamp)
         cprint(f"Optimizing after {after}")
 
 
-def _set_ignore(config) -> None:
+def _set_ignore(config: Subview) -> None:
     """Remove duplicates from the ignore list."""
-    ignore = config[PROGRAM_NAME]["ignore"].get(list)
+    ignore: Iterable = config["ignore"].get(list)  # type: ignore
     ignore = tuple(sorted(ignore))
-    config[PROGRAM_NAME]["ignore"].set(ignore)
-    if ignore and config[PROGRAM_NAME]["verbose"].get(int) > 1:
-        ignore_list = ",".join(ignore)
-        cprint(f"Ignoring: {ignore_list}", "cyan")
+    config["ignore"].set(ignore)
+    if ignore:
+        verbose: int = config["verbose"].get(int)  # type: ignore
+        if verbose > 1:
+            ignore_list = ",".join(ignore)
+            cprint(f"Ignoring: {ignore_list}", "cyan")
 
 
-def _set_timestamps(config) -> None:
+def _set_timestamps(config: Subview) -> None:
     """Set the timestamps attribute."""
     timestamps = (
-        config[PROGRAM_NAME]["timestamps"].get(bool)
-        and not config[PROGRAM_NAME]["test"].get(bool)
-        and not config[PROGRAM_NAME]["list_only"].get(bool)
+        config["timestamps"].get(bool)
+        and not config["test"].get(bool)
+        and not config["list_only"].get(bool)
     )
-    config[PROGRAM_NAME]["timestamps"].set(timestamps)
-    if config[PROGRAM_NAME]["verbose"].get(int) > 1:
+    config["timestamps"].set(timestamps)
+    verbose: int = config["verbose"].get(int)  # type: ignore
+    if verbose > 1:
         if timestamps:
             ts_str = "Setting a timestamp file at the top of each directory tree."
+            roots = {}
+            for path in config["paths"].get(list):
+                if path.is_dir():
+                    roots.add(path)
+                else:
+                    roots.add(path.parent)
             # TODO name each directory tree
         else:
             ts_str = "Not setting a timestamp."
@@ -357,10 +364,11 @@ def get_config(args: Namespace | None = None, modname=PROGRAM_NAME) -> AttrDict:
     config.set_env()
     if args:
         config.set_args(args)
-    _set_format_handler_map(config)
-    _set_after(config)
-    _set_ignore(config)
-    _set_timestamps(config)
+    config_program = config[PROGRAM_NAME]
+    _set_format_handler_map(config_program)
+    _set_after(config_program)
+    _set_ignore(config_program)
+    _set_timestamps(config_program)
     ad = config.get(TEMPLATE)
     if not isinstance(ad, AttrDict):
         msg = "Not a valid config"
