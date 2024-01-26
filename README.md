@@ -136,7 +136,7 @@ optipng is frequently packaged and you may install it with homebrew, apt-get or 
 
 #### pngout
 
-pngout is a compression to use by itself or for a little extra gains after running oxipng or optipng. 
+pngout is a compression tool to use by itself or for a little extra gains after running oxipng or optipng.
 
 It can be installed on macOS with:
 
