@@ -33,6 +33,6 @@ class WebPAnimatedLossless(WebPAnimatedBase):
     )
     CONVERT_FROM_FORMAT_STRS = frozenset(
         CONVERTABLE_ANIMATED_FORMAT_STRS
-        | {PngAnimated.OUTPUT_FORMAT_STR, Gif.OUTPUT_FORMAT_STR}
+        | {Gif.OUTPUT_FORMAT_STR, PngAnimated.OUTPUT_FORMAT_STR}
     )
     PIL2_ARGS = MappingProxyType({**WebPAnimatedBase.PIL2_ARGS, "lossless": True})
