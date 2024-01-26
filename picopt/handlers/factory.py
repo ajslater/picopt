@@ -32,6 +32,7 @@ _CONTAINER_HANDLERS: tuple[type[ContainerHandler], ...] = (
     WebPAnimatedLossless,
 )
 
+
 def _extract_image_info(
     path: Path, keep_metadata: bool
 ) -> tuple[str | None, dict[str, Any]]:

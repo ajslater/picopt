@@ -105,7 +105,7 @@ class ImageHandler(Handler, metaclass=ABCMeta):
                 format_str,
                 save_all=True,
                 **opts,
-                **info,  # TODO possibly filter only for valid keys firs)t
+                **info,
             )
         image.close()  # for animated images
         self.input_file_format = self.OUTPUT_FILE_FORMAT
