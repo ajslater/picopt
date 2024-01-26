@@ -1,4 +1,6 @@
 """Statistics for the optimization operations."""
+from dataclasses import dataclass
+from pathlib import Path
 from subprocess import CalledProcessError
 from typing import TYPE_CHECKING
 
@@ -9,7 +11,18 @@ from termcolor import cprint
 if TYPE_CHECKING:
     from termcolor._types import Attribute, Color
 
-from picopt.data import ReportInfo
+
+@dataclass
+class ReportInfo:
+    """Info for Reports."""
+
+    path: Path
+    convert: bool
+    test: bool
+    bytes_in: int = 0
+    bytes_out: int = 0
+    exc: Exception | None = None
+    iterations: int = 0
 
 
 class ReportStats:

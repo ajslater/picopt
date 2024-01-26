@@ -2,6 +2,8 @@
 from dataclasses import dataclass
 from pathlib import Path
 
+from confuse import AttrDict
+
 
 @dataclass
 class PathInfo:
@@ -14,14 +16,6 @@ class PathInfo:
     is_case_sensitive: bool
 
 
-@dataclass
-class ReportInfo:
-    """Info for Reports."""
-
-    path: Path
-    convert: bool
-    test: bool
-    bytes_in: int = 0
-    bytes_out: int = 0
-    exc: Exception | None = None
-    iterations: int = 0
+def is_path_ignored(config: AttrDict, path: Path):
+    """Match path against the ignore list."""
+    return any(path.match(ignore_glob) for ignore_glob in config.ignore)

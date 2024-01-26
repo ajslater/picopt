@@ -5,7 +5,6 @@ import time
 from argparse import Namespace
 from collections.abc import ItemsView
 from dataclasses import dataclass, fields
-from pathlib import Path
 from types import MappingProxyType
 
 from confuse import Configuration
@@ -360,8 +359,3 @@ def get_config(args: Namespace | None = None, modname=PROGRAM_NAME) -> AttrDict:
         msg = "Not a valid config"
         raise TypeError(msg)
     return ad.picopt
-
-
-def is_path_ignored(config: AttrDict, path: Path):
-    """Match path against the ignore list."""
-    return any(path.match(ignore_glob) for ignore_glob in config.ignore)

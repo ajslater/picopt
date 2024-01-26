@@ -12,8 +12,8 @@ from PIL.WebPImagePlugin import WebPImageFile
 from termcolor import cprint
 
 from picopt import PROGRAM_NAME
-from picopt.data import PathInfo, ReportInfo
-from picopt.stats import ReportStats
+from picopt.path import PathInfo
+from picopt.stats import ReportInfo, ReportStats
 
 
 @dataclass(eq=True, frozen=True)

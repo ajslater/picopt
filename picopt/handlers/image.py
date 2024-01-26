@@ -9,9 +9,8 @@ from PIL import Image
 from PIL.PngImagePlugin import PngImageFile
 from termcolor import cprint
 
-from picopt.data import ReportInfo
 from picopt.handlers.handler import Handler
-from picopt.stats import ReportStats
+from picopt.stats import ReportInfo, ReportStats
 
 
 class ImageHandler(Handler, metaclass=ABCMeta):

@@ -2,8 +2,8 @@
 import os
 from pathlib import Path
 
-from config import is_path_ignored
 from confuse.templates import AttrDict
+from path import is_path_ignored
 from treestamps import Treestamps
 
 OLD_TIMESTAMPS_NAME = ".picopt_timestamp"

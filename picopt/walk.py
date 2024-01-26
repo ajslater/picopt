@@ -10,14 +10,14 @@ from termcolor import cprint
 from treestamps import Grovestamps, GrovestampsConfig, Treestamps
 
 from picopt import PROGRAM_NAME
-from picopt.config import TIMESTAMPS_CONFIG_KEYS, is_path_ignored
-from picopt.data import PathInfo, ReportInfo
+from picopt.config import TIMESTAMPS_CONFIG_KEYS
 from picopt.handlers.container import ContainerHandler
 from picopt.handlers.factory import create_handler
 from picopt.handlers.handler import Handler
 from picopt.handlers.image import ImageHandler
 from picopt.old_timestamps import OLD_TIMESTAMPS_NAME, OldTimestamps
-from picopt.stats import ReportStats, Totals
+from picopt.path import PathInfo, is_path_ignored
+from picopt.stats import ReportInfo, ReportStats, Totals
 
 
 class Walk:

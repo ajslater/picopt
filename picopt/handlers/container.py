@@ -7,9 +7,9 @@ from pathlib import Path
 from confuse.templates import AttrDict
 from termcolor import cprint
 
-from picopt.data import PathInfo, ReportInfo
 from picopt.handlers.handler import FileFormat, Handler
-from picopt.stats import ReportStats
+from picopt.path import PathInfo
+from picopt.stats import ReportInfo, ReportStats
 
 
 class ContainerHandler(Handler, metaclass=ABCMeta):

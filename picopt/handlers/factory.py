@@ -8,7 +8,6 @@ from PIL import Image, UnidentifiedImageError
 from PIL.TiffImagePlugin import TiffImageFile
 from termcolor import cprint
 
-from picopt.data import PathInfo
 from picopt.handlers.container import ContainerHandler
 from picopt.handlers.convertible import (
     LOSSLESS_FORMAT_STRS,
@@ -20,6 +19,7 @@ from picopt.handlers.svg import Svg
 from picopt.handlers.webp import WebPLossless
 from picopt.handlers.webp_animated import WebPAnimatedLossless
 from picopt.handlers.zip import Cbr, Cbz, EPub, Rar, Zip
+from picopt.path import PathInfo
 from picopt.pillow.webp_lossless import is_lossless
 
 _CONTAINER_HANDLERS: tuple[type[ContainerHandler], ...] = (
