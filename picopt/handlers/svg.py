@@ -5,7 +5,7 @@ from picopt.handlers.handler import FileFormat
 from picopt.handlers.image import ImageHandler
 
 
-class SVG(ImageHandler):
+class Svg(ImageHandler):
     """SVG format class."""
 
     OUTPUT_FORMAT_STR = "SVG"

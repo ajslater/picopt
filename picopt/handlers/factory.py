@@ -15,12 +15,22 @@ from picopt.handlers.convertible import (
     TIFF_LOSSLESS_COMPRESSION,
 )
 from picopt.handlers.handler import FileFormat, Handler
-from picopt.handlers.svg import SVG
+from picopt.handlers.png_animated import PngAnimated
+from picopt.handlers.svg import Svg
 from picopt.handlers.webp import WebPLossless
-from picopt.handlers.zip import CBR, CBZ, EPub, Rar, Zip
+from picopt.handlers.webp_animated import WebPAnimatedLossless
+from picopt.handlers.zip import Cbr, Cbz, EPub, Rar, Zip
 from picopt.pillow.webp_lossless import is_lossless
 
-_CONTAINER_HANDLERS: tuple[type[ContainerHandler], ...] = (CBZ, Zip, CBR, Rar, EPub)
+_CONTAINER_HANDLERS: tuple[type[ContainerHandler], ...] = (
+    Cbz,
+    Zip,
+    Cbr,
+    Rar,
+    EPub,
+    PngAnimated,
+    WebPAnimatedLossless,
+)
 
 
 def _extract_image_info(
@@ -33,8 +43,8 @@ def _extract_image_info(
     animated = False
     try:
         lower_suffix = path.suffix.lower()
-        if lower_suffix == SVG.INPUT_FORMAT_SUFFIX:
-            image_format_str = SVG.OUTPUT_FORMAT_STR
+        if lower_suffix == Svg.INPUT_FORMAT_SUFFIX:
+            image_format_str = Svg.OUTPUT_FORMAT_STR
         else:
             with Image.open(path, mode="r") as image:
                 image.verify()

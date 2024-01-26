@@ -33,10 +33,10 @@ from picopt.handlers.handler import FileFormat, Handler
 from picopt.handlers.jpeg import Jpeg
 from picopt.handlers.png import Png
 from picopt.handlers.png_animated import PngAnimated
-from picopt.handlers.svg import SVG
+from picopt.handlers.svg import Svg
 from picopt.handlers.webp import WebPLossless
 from picopt.handlers.webp_animated import WebPAnimatedLossless
-from picopt.handlers.zip import CBR, CBZ, EPub, Rar, Zip
+from picopt.handlers.zip import Cbr, Cbz, EPub, Rar, Zip
 
 # TODO move CONVERTIBLE FORMAT STRS into convertible wherever it ends up
 CONVERT_TO_FORMAT_STRS = frozenset(
@@ -44,22 +44,22 @@ CONVERT_TO_FORMAT_STRS = frozenset(
         Png.OUTPUT_FORMAT_STR,
         WebPLossless.OUTPUT_FORMAT_STR,
         Zip.OUTPUT_FORMAT_STR,
-        CBZ.OUTPUT_FORMAT_STR,
+        Cbz.OUTPUT_FORMAT_STR,
     )
 )
 CONTAINER_CONVERTABLE_FORMAT_STRS = frozenset(
-    (Rar.INPUT_FORMAT_STR, CBR.INPUT_FORMAT_STR)
+    (Rar.INPUT_FORMAT_STR, Cbr.INPUT_FORMAT_STR)
 )
-DEFAULT_HANDLERS = frozenset({Gif, GifAnimated, Jpeg, Png, SVG, WebPLossless})
+DEFAULT_HANDLERS = frozenset({Gif, GifAnimated, Jpeg, Png, Svg, WebPLossless})
 _HANDLERS = frozenset(
     DEFAULT_HANDLERS
     | {
         WebPAnimatedLossless,
         Zip,
         Rar,
-        SVG,
-        CBZ,
-        CBR,
+        Svg,
+        Cbz,
+        Cbr,
         EPub,
     }
 )
@@ -164,11 +164,11 @@ _FORMAT_HANDLERS = MappingProxyType(
         WebPAnimatedLossless.OUTPUT_FILE_FORMAT: FileFormatHandlers(
             native=(WebPAnimatedLossless,)
         ),
-        SVG.OUTPUT_FILE_FORMAT: FileFormatHandlers(native=(SVG,)),
+        Svg.OUTPUT_FILE_FORMAT: FileFormatHandlers(native=(Svg,)),
         Zip.OUTPUT_FILE_FORMAT: FileFormatHandlers(native=(Zip,)),
-        CBZ.OUTPUT_FILE_FORMAT: FileFormatHandlers(native=(CBZ,)),
+        Cbz.OUTPUT_FILE_FORMAT: FileFormatHandlers(native=(Cbz,)),
         Rar.INPUT_FILE_FORMAT: FileFormatHandlers(convert=(Rar,)),
-        CBR.INPUT_FILE_FORMAT: FileFormatHandlers(convert=(CBR,)),
+        Cbr.INPUT_FILE_FORMAT: FileFormatHandlers(convert=(Cbr,)),
         EPub.OUTPUT_FILE_FORMAT: FileFormatHandlers(native=(EPub,)),
     }
 )

@@ -3,7 +3,7 @@ import shutil
 import sys
 
 from picopt import cli
-from picopt.handlers.zip import CBZ, Zip
+from picopt.handlers.zip import Cbz, Zip
 from tests import IMAGES_DIR, get_test_dir
 
 __all__ = ()  # hides module from pydocstring
@@ -35,7 +35,7 @@ class TestCLI:
         assert arguments.convert_to == ("PNG", "WEBP")
         assert arguments.formats is None
         assert arguments.extra_formats == (
-            CBZ.OUTPUT_FORMAT_STR,
+            Cbz.OUTPUT_FORMAT_STR,
             Zip.OUTPUT_FORMAT_STR,
         )
         assert arguments.symlinks

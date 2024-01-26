@@ -115,7 +115,7 @@ class Rar(Zip):
             self.comment = comment.encode()
 
 
-class CBZ(Zip):
+class Cbz(Zip):
     """CBZ Container."""
 
     OUTPUT_FORMAT_STR: str = "CBZ"
@@ -123,7 +123,7 @@ class CBZ(Zip):
     INPUT_FILE_FORMATS = frozenset({OUTPUT_FILE_FORMAT})
 
 
-class CBR(Rar):
+class Cbr(Rar):
     """CBR Container."""
 
     INPUT_FORMAT_STR: str = "CBR"
