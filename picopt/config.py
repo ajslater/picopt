@@ -41,17 +41,13 @@ from picopt.handlers.zip import Cbr, Cbz, EPub, Rar, Zip
 # Confuse Config Template #
 ###########################
 _CONVERT_TO_FORMAT_STRS = frozenset(
-    (
-        Png.OUTPUT_FORMAT_STR,
-        PngAnimated.OUTPUT_FORMAT_STR,
-        WebPLossless.OUTPUT_FORMAT_STR,
-        WebPAnimatedLossless.OUTPUT_FORMAT_STR,
-        Zip.OUTPUT_FORMAT_STR,
-        Cbz.OUTPUT_FORMAT_STR,
-    )
+    {
+        cls.OUTPUT_FORMAT_STR
+        for cls in (Png, PngAnimated, WebPLossless, WebPAnimatedLossless, Zip, Cbz)
+    }
 )
 _CONTAINER_CONVERTIBLE_FORMAT_STRS = frozenset(
-    [cls.INPUT_FORMAT_STR for cls in (Rar, Cbr)]
+    {cls.INPUT_FORMAT_STR for cls in (Rar, Cbr)}
 )
 
 DEFAULT_HANDLERS = frozenset(
