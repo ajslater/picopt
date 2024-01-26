@@ -44,10 +44,7 @@ TIFF_LOSSLESS_COMPRESSION = frozenset(
         "zstd",
     }
 )
-TIFF_FORMAT_STR = TiffImageFile.format
-TIFF_FILE_FORMAT = FileFormat(TIFF_FORMAT_STR, True, False)
-GIF_FORMAT_STR = GifImageFile.format
-PNG_FORMAT_STR = PngImageFile.format
+TIFF_FILE_FORMAT = FileFormat(TiffImageFile.format, True, False)
 # TODO duplicates from handlers/svg.py
 SVG_FORMAT_STR = "SVG"
 
@@ -115,5 +112,5 @@ CONVERTABLE_ANIMATED_FORMAT_STRS = frozenset(
 LOSSLESS_FORMAT_STRS = frozenset(
     CONVERTABLE_FORMAT_STRS
     | CONVERTABLE_ANIMATED_FORMAT_STRS
-    | {GIF_FORMAT_STR, PNG_FORMAT_STR, SVG_FORMAT_STR}
+    | {GifImageFile.format, PngImageFile.format, SVG_FORMAT_STR}
 )

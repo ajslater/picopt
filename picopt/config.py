@@ -19,6 +19,7 @@ from confuse.templates import (
     Sequence,
 )
 from dateutil.parser import parse
+from PIL.TiffImagePlugin import TiffImageFile
 from termcolor import cprint
 
 from picopt import PROGRAM_NAME
@@ -26,7 +27,6 @@ from picopt.handlers.convertible import (
     CONVERTABLE_ANIMATED_FILE_FORMATS,
     CONVERTABLE_FILE_FORMATS,
     CONVERTABLE_FORMAT_STRS,
-    TIFF_FORMAT_STR,
 )
 from picopt.handlers.gif import Gif, GifAnimated
 from picopt.handlers.handler import FileFormat, Handler
@@ -66,7 +66,7 @@ _HANDLERS = frozenset(
 ALL_FORMAT_STRS: frozenset[str] = (
     frozenset([cls.OUTPUT_FORMAT_STR for cls in _HANDLERS])
     | CONVERTABLE_FORMAT_STRS
-    | frozenset([TIFF_FORMAT_STR])
+    | frozenset({TiffImageFile.format})
     | CONTAINER_CONVERTABLE_FORMAT_STRS
 )
 TEMPLATE = MappingTemplate(

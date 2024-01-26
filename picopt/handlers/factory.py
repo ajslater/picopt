@@ -5,13 +5,13 @@ from typing import Any
 
 from confuse.templates import AttrDict
 from PIL import Image, UnidentifiedImageError
+from PIL.TiffImagePlugin import TiffImageFile
 from termcolor import cprint
 
 from picopt.data import PathInfo
 from picopt.handlers.container import ContainerHandler
 from picopt.handlers.convertible import (
     LOSSLESS_FORMAT_STRS,
-    TIFF_FORMAT_STR,
     TIFF_LOSSLESS_COMPRESSION,
 )
 from picopt.handlers.handler import FileFormat, Handler
@@ -69,7 +69,7 @@ def _is_lossless(image_format_str: str, path: Path, info: Mapping[str, Any]) -> 
     """Determine if image format is lossless."""
     if image_format_str == WebPLossless.OUTPUT_FORMAT_STR:
         lossless = is_lossless(str(path))
-    elif image_format_str == TIFF_FORMAT_STR:
+    elif image_format_str == TiffImageFile.format:
         lossless = info.get("compression") in TIFF_LOSSLESS_COMPRESSION
     else:
         lossless = image_format_str in LOSSLESS_FORMAT_STRS

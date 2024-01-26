@@ -2,10 +2,11 @@
 from pathlib import Path
 from types import MappingProxyType
 
+from PIL.GifImagePlugin import GifImageFile
 from PIL.PngImagePlugin import PngImageFile
 from termcolor import cprint
 
-from picopt.handlers.convertible import CONVERTABLE_FORMAT_STRS, GIF_FORMAT_STR
+from picopt.handlers.convertible import CONVERTABLE_FORMAT_STRS
 from picopt.handlers.handler import FileFormat
 from picopt.handlers.image import ImageHandler
 from picopt.pillow.png_bit_depth import png_bit_depth
@@ -17,7 +18,9 @@ class Png(ImageHandler):
     OUTPUT_FORMAT_STR = PngImageFile.format
     OUTPUT_FILE_FORMAT = FileFormat(OUTPUT_FORMAT_STR, True, False)
     INPUT_FILE_FORMATS = frozenset({OUTPUT_FILE_FORMAT})
-    CONVERT_FROM_FORMAT_STRS = frozenset(CONVERTABLE_FORMAT_STRS | {GIF_FORMAT_STR})
+    CONVERT_FROM_FORMAT_STRS = frozenset(
+        CONVERTABLE_FORMAT_STRS | {GifImageFile.format}
+    )
     PIL2_KWARGS = MappingProxyType({"optimize": True})
     PROGRAMS = (
         ("pil2png",),
