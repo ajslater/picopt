@@ -20,9 +20,6 @@ class WebPBase(ImageHandler, ABC):
     PROGRAMS = (("cwebp", "pil2native"),)
     # https://developers.google.com/speed/webp/docs/cwebp
     CWEBP_ARGS_PREFIX = (
-        "-near_lossless",
-        "0",
-        # TODO try "-z", "9""
         "-q",
         "100",
         "-m",
@@ -68,7 +65,12 @@ class WebPLossless(WebPBase):
     CONVERT_FROM_FORMAT_STRS = frozenset(
         Png.CONVERT_FROM_FORMAT_STRS | {Png.OUTPUT_FORMAT_STR}
     )
-    CWEBP_ARGS_PREFIX = (*WebPBase.CWEBP_ARGS_PREFIX, "-lossless")
+    CWEBP_ARGS_PREFIX = (
+        # https://groups.google.com/a/webmproject.org/g/webp-discuss/c/0GmxDmlexek
+        "-near_lossless",
+        "0",
+        *WebPBase.CWEBP_ARGS_PREFIX,
+    )
     PIL2PNG_ARGS = MappingProxyType({"compress_level": 0})
     PIL2_ARGS = MappingProxyType({**WebPBase.PIL2_ARGS, "lossless": True})
     CONVERGEABLE = frozenset({"cwebp", "pil2webp"})
