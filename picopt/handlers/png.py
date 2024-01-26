@@ -39,11 +39,11 @@ class Png(ImageHandler):
         self, exec_args: tuple[str, ...], old_path: Path, new_path: Path
     ) -> Path:
         """Run the external program oxipng on the file."""
-        args_l = [*exec_args, *self._OXIPNG_ARGS]
+        args = [*exec_args, *self._OXIPNG_ARGS]
         if not self.config.keep_metadata:
-            args_l += ["--strip", "safe"]
-        args_l += ["--out", str(new_path), str(old_path)]
-        self.run_ext(tuple(args_l))
+            args += ["--strip", "safe"]
+        args += ["--out", str(new_path), str(old_path)]
+        self.run_ext(tuple(args))
         return new_path
 
     def optipng(

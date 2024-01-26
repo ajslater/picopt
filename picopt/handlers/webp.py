@@ -19,11 +19,11 @@ class WebPBase(ImageHandler, ABC):
     PROGRAMS = (("cwebp", "pil2native"),)
     # https://developers.google.com/speed/webp/docs/cwebp
     CWEBP_ARGS_PREFIX = (
+        "-mt",
         "-q",
         "100",
         "-m",
         "6",
-        "-mt",
         # advanced
         "-sharp_yuv",
         # logging,
@@ -33,24 +33,16 @@ class WebPBase(ImageHandler, ABC):
         "best",
     )
 
-    def get_metadata_args(self) -> list[str]:
-        """Get webp utility metadata args."""
-        args = ["-metadata"]
+    def cwebp(self, exec_args: tuple[str, ...], old_path: Path, new_path: Path) -> Path:
+        """Optimize using cwebp."""
+        args = [*exec_args, *self.CWEBP_ARGS_PREFIX]
+        args += ["-metadata"]
         if self.config.keep_metadata:
             args += ["all"]
         else:
             args += ["none"]
-        return args
-
-    def cwebp(self, exec_args: tuple[str, ...], old_path: Path, new_path: Path) -> Path:
-        """Optimize using cwebp."""
-        args = (
-            *exec_args,
-            *self.CWEBP_ARGS_PREFIX,
-            *self.get_metadata_args(),
-            *[str(old_path), "-o", str(new_path)],
-        )
-        self.run_ext(args)
+        args += [str(old_path), "-o", str(new_path)]
+        self.run_ext(tuple(args))
         return new_path
 
 

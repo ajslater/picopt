@@ -1,5 +1,4 @@
 """Gif format."""
-import shutil
 from pathlib import Path
 from types import MappingProxyType
 
@@ -16,21 +15,15 @@ class Gif(ImageHandler):
     OUTPUT_FILE_FORMAT = FileFormat(OUTPUT_FORMAT_STR, True, False)
     INPUT_FILE_FORMATS = frozenset({OUTPUT_FILE_FORMAT})
     PROGRAMS = (("gifsicle", "pil2native"),)
-    _GIFSICLE_ARGS_PREFIX: tuple[str | None, ...] = (
-        "--optimize=3",
-        "--batch",
-    )
     PIL2_KWARGS = MappingProxyType({"optimize": True, "save_all": True})
+    _GIFSICLE_ARGS_PREFIX: tuple[str, ...] = ("--optimize=3", "--threads")
 
     def gifsicle(
         self, exec_args: tuple[str, ...], old_path: Path, new_path: Path
     ) -> Path:
         """Return gifsicle args."""
-        if not self._GIFSICLE_ARGS_PREFIX[0]:
-            return old_path
-
-        shutil.copy2(old_path, new_path)
-        args = (*exec_args, *self._GIFSICLE_ARGS_PREFIX, str(new_path))
+        opt_args = (*self._GIFSICLE_ARGS_PREFIX, "--output", str(new_path))
+        args = (*exec_args, *opt_args, str(old_path))
         self.run_ext(args)
         return new_path
 

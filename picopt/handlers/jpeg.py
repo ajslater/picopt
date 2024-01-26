@@ -14,7 +14,7 @@ class Jpeg(ImageHandler):
     OUTPUT_FILE_FORMAT = FileFormat(OUTPUT_FORMAT_STR, False, False)
     INPUT_FILE_FORMATS = frozenset({OUTPUT_FILE_FORMAT})
     PROGRAMS = (("mozjpeg", "jpegtran"),)
-    _JPEGTRAN_ARGS_PREFIX = ("-optimize", "-progressive", "-copy")
+    _JPEGTRAN_ARGS_PREFIX = ("-optimize", "-progressive")
     # PIL Cannot save jpegs losslessly
 
     @classmethod
@@ -31,16 +31,14 @@ class Jpeg(ImageHandler):
         self, exec_args: tuple[str, ...], old_path: Path, new_path: Path
     ) -> Path:
         """Run the jpegtran type program."""
-        args_l = [*exec_args, *self._JPEGTRAN_ARGS_PREFIX]
-        if not bin:
-            return old_path
+        args = [*exec_args, *self._JPEGTRAN_ARGS_PREFIX]
+        args += ["-copy"]
         if self.config.keep_metadata:
-            args_l += ["all"]
+            args += ["all"]
         else:
-            args_l += ["none"]
-        args_l += ["-outfile", str(new_path), str(old_path)]
-        args_t = tuple(args_l)
-        self.run_ext(args_t)
+            args += ["none"]
+        args += ["-outfile", str(new_path), str(old_path)]
+        self.run_ext(tuple(args))
         return new_path
 
     def mozjpeg(
