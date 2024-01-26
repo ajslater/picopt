@@ -4,6 +4,7 @@ import sys
 from argparse import Action, Namespace, RawDescriptionHelpFormatter
 from importlib.metadata import PackageNotFoundError, version
 
+from confuse.exceptions import ConfigError
 from termcolor import colored, cprint
 
 from picopt import PROGRAM_NAME, walk
@@ -241,6 +242,9 @@ def main(args: tuple[str, ...] | None = None):
         wob = walk.Walk(config)
         totals = wob.run()
         totals.report()
+    except ConfigError as exc:
+        cprint(f"ERROR: {exc}", "red")
+        sys.exit(78)
     except Exception as exc:
         cprint(f"ERROR: {exc}", "red")
         import traceback
