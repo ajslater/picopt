@@ -136,7 +136,15 @@ optipng is frequently packaged and you may install it with homebrew, apt-get or 
 
 #### pngout
 
-pngout is a useful compression to use by itself or for a little gains after oxipng or optipng. It is not packaged for linux, but you may find the latest binary version [on JonoF's site](http://www.jonof.id.au/kenutils). Picopt looks for the binary to be called `pngout`
+pngout is a compression to use by itself or for a little extra gains after running oxipng or optipng. 
+
+It can be installed on macOS with:
+
+```sh
+brew install jonof/kenutils/pngout
+```
+
+It is not packaged for linux, but you may find the latest binary version [on JonoF's site](http://www.jonof.id.au/kenutils). Picopt looks for the binary to be called `pngout`
 
 #### svgo on Linux
 
