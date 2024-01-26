@@ -1,16 +1,14 @@
 # picopt
 
-A multi-format, recursive, multiprocessor aware, command line lossless image optimizer utility that uses external tools to do the optimizing.
-
-Picopt depends on Python [PIL](http://www.pythonware.com/products/pil/) to identify files and Python [rarfile](https://pypi.python.org/pypi/rarfile) to open CBRs.
+A multi-format, recursive, multiprocessor aware, command line, lossless image optimizer utility that can use external tools for even better optimizing.
 
 Picopt will optionally drop hidden timestamps at the root of your image directories to avoid reoptimizing images picopt has already optimized.
 
-The actual image optimization is best accomplished by external programs.
+## 💭 <a name="philosophy">Conversion Philosophy</a>
+
+### Warning
 
 Picopt transforms images in place and throws out the old image. Always have a backup of images before running picopt in case you are not satisfied with the results.
-
-## <a name="philosophy">Conversion Philosophy</a>
 
 ### Lossy Images
 
@@ -32,29 +30,25 @@ Sequenced Images, like animated GIFs and WebP, most of the time, should be conve
 
 By default picopt does not convert images between formats. You must turn on conversion to PNG or WebP explicitly.
 
-## <a name="formats">Formats</a>
+## 🖼️ <a name="formats">Formats</a>
 
-- By default picopt will optimize GIF, JPEG, PNG and WEBP images.
+- By default picopt will optimize GIF, JPEG, PNG, SVG and WEBP images.
 - Picopt can optionally optimize ZIP, ePub, and CBZ containers.
-- Picopt can be told to convert many lossless images formats such as BMP, PPM, GIF, TIFF into PNG or WebP.
-- Picopt can convert Animated GIFs into Animated WebP files.
-- Picopt can convert Animated PNGs (APNG) into Animated WebP files, but does not optimize APNG as APNG.
+- Picopt can convert many lossless images such as BMP, CBR, CUR, DIB, FITS, GIF, IMT, PCX, PIXAR, PNG,
+  PPM, PSD, QOI, SGI, SPIDER, SUN, TGA, TIFF, XBM, and XPM into PNG and WEBP.
+- Picopt can convert Animated GIF, TIFF, and FLI into Animated PNG or WebP files.
+- Picopt can convert Animated GIF, TIFF, FLI, and PNG into Animated WebP files.
 - Picopt can convert RAR files into Zipfiles and CBR files into CBZ files.
 
-Because Picopt supports so many lossless image formats, to avoid surprises to convert a BMP file to WEBP you must specify that you want to read the BMP format _and_ that you want to convert it to WEBP:
-e.g.
+Because picopt supports so many lossless image formats, to avoid surprises if you specify a conversion target, picopt will only convert GIF and PNG images to the target by default. To convert another format, like BMP, to WEBP you must specify that you want to read the BMP format _and_ that you want to convert it to WEBP:
 
 ```sh
 picopt -x BMP -c WEBP big_old.bmp
 ```
 
-## <a name="programs">External Programs</a>
-
-Picopt will perform some minor optimization on most formats natively without using external programs, but this is not very good compared to the optimizations external programs can provide.
-
 ### JPEG
 
-To optimize JPEG images. Picopt needs one of [mozjpeg](https://github.com/mozilla/mozjpeg) or [jpegtran](http://jpegclub.org/jpegtran/) on the path. in order of preference.
+To optimize JPEG images at all picopt needs one of [mozjpeg](https://github.com/mozilla/mozjpeg) or [jpegtran](http://jpegclub.org/jpegtran/) on the path. in order of preference.
 
 ### PNG
 
@@ -68,6 +62,10 @@ Animated GIFs are optimized with [gifsicle](http://www.lcdf.org/gifsicle/) if it
 
 WebP lossless formats are optimized with [cwebp](https://developers.google.com/speed/webp/docs/cwebp).
 
+### SVG
+
+Picopt can only optimize SVGs if [svgo](https://github.com/svg/svgo) is on the path.
+
 ### EPub
 
 EPub Books are zip files that often contain images and picopt unpacks and repacks this format natively. Images within the epub are handled by other programs. EPub optimization is not turned on by default.
@@ -77,11 +75,11 @@ EPub contents are never converted to other formats because it would break intern
 
 Picopt uncompresses, optimizes and rezips [comic book archive files](https://en.wikipedia.org/wiki/Comic_book_archive). Be aware that CBR rar archives may only be rezipped into CBZs instead of CBR. Comic book archive optimization is not turned on by default to prevent surprises.
 
-## <a name="install">Install</a>
+## 📦 <a name="install">Install</a>
 
 ### System Dependencies
 
-picopt requires several external system dependencies to run. We must install these first
+picopt is most effective with ependencies to run. We must install these first
 
 #### macOS
 
@@ -119,7 +117,17 @@ yum install libjpeg-progs
 
 See mozjepg, pngout & svgo install instructions below
 
-#### MozJPEG
+### Picopt python package
+
+```sh
+pip install picopt
+```
+
+## ⚙️ <a name="programs">External Programs</a>
+
+Picopt will perform optimization on most lossless formats without using external programs, but much more compression is possible if these external programs are on your path.
+
+#### mozjpeg
 
 mozjpeg offers better compression than libjpeg-progs jpegtran. It may or
 may not be packaged for your \*nix, but even when it is, picopt requires that its separately compiled version of jpegtran be symlinked to 'mozjpeg' somewhere in the path.
@@ -148,7 +156,11 @@ brew install jonof/kenutils/pngout
 
 It is not packaged for linux, but you may find the latest binary version [on JonoF's site](http://www.jonof.id.au/kenutils). Picopt looks for the binary to be called `pngout`
 
-#### svgo on Linux
+#### svgo
+
+svgo compresses SVGs. Svgo is packaged for homebrew, but picopt can also use it if it's installed with npm.
+
+##### On Linux
 
 To install svgo on Linux you can use the snap tool:
 
@@ -162,13 +174,7 @@ Or you can install svgo with npm:
 npm install -G svgo
 ```
 
-### Picopt python package
-
-```sh
-pip install picopt
-```
-
-## <a name="usage">Usage Examples</a>
+## ⌨️ <a name="usage">Usage Examples</a>
 
 Optimize all JPEG files in a directory:
 
@@ -230,12 +236,13 @@ Optimize pictures in my iPhoto library, but only after the last time I did this,
 picopt -rSt -D '2013 June 1 14:00' 'Pictures/iPhoto Library'
 ```
 
-## <a name="package">Packages</a>
+## 📦 <a name="package">Packages</a>
 
 - [PyPI](https://pypi.python.org/pypi/picopt/)
 - [Arch Linux](https://aur.archlinux.org/packages/picopt/)
 
-## <a name="alternatives">Alternatives</a>
+## 👀 <a name="alternatives">Alternatives</a>
 
-[imagemin](https://github.com/imagemin/imagemin-cli) looks to be an all in one cli and gui solution with bundled libraries, so no awkward dependencies.
-[Imageoptim](http://imageoptim.com/) is an all-in-one OS X GUI image optimizer. Imageoptim command line usage is possible with [an external program](https://code.google.com/p/imageoptim/issues/detail?can=2&start=0&num=100&q=&colspec=ID%20Type%20Status%20Priority%20Milestone%20Owner%20Summary%20Stars&groupby=&sort=&id=39).
+- [imagemin](https://github.com/imagemin/imagemin-cli) looks to be an all in one cli and gui solution with bundled libraries, so no awkward dependencies.
+
+- [Imageoptim](http://imageoptim.com/) is an all-in-one OS X GUI image optimizer. Imageoptim command line usage is possible with [an external program](https://code.google.com/p/imageoptim/issues/detail?can=2&start=0&num=100&q=&colspec=ID%20Type%20Status%20Priority%20Milestone%20Owner%20Summary%20Stars&groupby=&sort=&id=39).
