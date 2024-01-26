@@ -8,6 +8,8 @@ Picopt will optionally drop hidden timestamps at the root of your image director
 
 The actual image optimization is best accomplished by external programs.
 
+Picopt transforms images in place and throws out the old image. Always have a backup of images before running picopt in case you are not satisfied with the results.
+
 ## <a name="philosophy">Conversion Philosophy</a>
 
 ### Lossy Images
