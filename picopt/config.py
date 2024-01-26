@@ -5,6 +5,7 @@ import time
 from argparse import Namespace
 from collections.abc import ItemsView, Iterable
 from dataclasses import dataclass, fields
+from pathlib import Path
 from types import MappingProxyType
 
 from confuse import Configuration, Subview
@@ -342,16 +343,18 @@ def _set_timestamps(config: Subview) -> None:
     verbose: int = config["verbose"].get(int)  # type: ignore
     if verbose > 1:
         if timestamps:
-            ts_str = "Setting a timestamp file at the top of each directory tree."
-            roots = {}
-            for path in config["paths"].get(list):
+            roots = set()
+            paths: Iterable = config["paths"].get(list)  # type: ignore
+            for path_str in paths:
+                path = Path(path_str)
                 if path.is_dir():
-                    roots.add(path)
+                    roots.add(str(path))
                 else:
-                    roots.add(path.parent)
-            # TODO name each directory tree
+                    roots.add(str(path.parent))
+            roots_str = ", ".join(sorted(roots))
+            ts_str = f"Setting a timestamp file at the top of each directory tree: {roots_str}"
         else:
-            ts_str = "Not setting a timestamp."
+            ts_str = "Not setting timestamps."
         cprint(ts_str, "cyan")
 
 
