@@ -1,6 +1,5 @@
 """Confuse config for picopt."""
 import shutil
-import stat
 import subprocess
 import time
 from argparse import Namespace
@@ -172,7 +171,6 @@ _FORMAT_HANDLERS = MappingProxyType(
         EPub.OUTPUT_FILE_FORMAT: FileFormatHandlers(native=(EPub,)),
     }
 )
-MODE_EXECUTABLE = stat.S_IXUSR ^ stat.S_IXGRP ^ stat.S_IXOTH
 
 
 def _print_formats_config(handled_format_strs, convert_format_strs) -> None:
