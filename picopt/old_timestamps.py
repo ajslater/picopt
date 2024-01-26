@@ -2,15 +2,14 @@
 import os
 from pathlib import Path
 
+from config import is_path_ignored
 from confuse.templates import AttrDict
 from treestamps import Treestamps
-
-from picopt.configurable import Configurable
 
 OLD_TIMESTAMPS_NAME = ".picopt_timestamp"
 
 
-class OldTimestamps(Configurable):
+class OldTimestamps:
     """Old timestamps importer."""
 
     def _add_old_timestamp(self, old_timestamp_path: Path) -> None:
@@ -24,7 +23,7 @@ class OldTimestamps(Configurable):
 
     def _import_old_parent_timestamps(self, path: Path) -> None:
         """Walk up to the root eating old style timestamps."""
-        if self.is_path_ignored(path) or (
+        if is_path_ignored(self._config, path) or (
             not self._config.symlinks and path.is_symlink()
         ):
             return
@@ -35,7 +34,7 @@ class OldTimestamps(Configurable):
 
     def _import_old_child_timestamps(self, path: Path) -> None:
         if (
-            self.is_path_ignored(path)
+            is_path_ignored(self._config, path)
             or not self._config.symlinks
             and path.is_symlink()
         ):
@@ -57,5 +56,5 @@ class OldTimestamps(Configurable):
 
     def __init__(self, config: AttrDict, timestamps: Treestamps):
         """Hold new timestamp object."""
-        super().__init__(config)
+        self._config = config
         self._timestamps = timestamps

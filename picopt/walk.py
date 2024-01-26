@@ -10,8 +10,7 @@ from termcolor import cprint
 from treestamps import Grovestamps, GrovestampsConfig, Treestamps
 
 from picopt import PROGRAM_NAME
-from picopt.config import TIMESTAMPS_CONFIG_KEYS
-from picopt.configurable import Configurable
+from picopt.config import TIMESTAMPS_CONFIG_KEYS, is_path_ignored
 from picopt.data import PathInfo, ReportInfo
 from picopt.handlers.container import ContainerHandler
 from picopt.handlers.factory import create_handler
@@ -21,10 +20,12 @@ from picopt.old_timestamps import OLD_TIMESTAMPS_NAME, OldTimestamps
 from picopt.stats import ReportStats, Totals
 
 
-class Walk(Configurable):
+class Walk:
     """Walk object for storing state of a walk run."""
 
-    TIMESTAMPS_FILENAMES = frozenset(Treestamps.get_filenames(PROGRAM_NAME))
+    TIMESTAMPS_FILENAMES = frozenset(
+        {*Treestamps.get_filenames(PROGRAM_NAME), OLD_TIMESTAMPS_NAME}
+    )
     LOWERCASE_TESTNAME = ".picopt_case_sensitive_test"
     UPPERCASE_TESTNAME = LOWERCASE_TESTNAME.upper()
 
@@ -66,7 +67,7 @@ class Walk(Configurable):
     ############
     # Checkers #
     ############
-    def _is_skippable(self, path: Path) -> bool:  # noqa C901
+    def _is_skippable(self, path: Path) -> bool:
         """Handle things that are not optimizable files."""
         skip = False
         # File types
@@ -76,17 +77,14 @@ class Walk(Configurable):
             skip = True
         elif path.name in self.TIMESTAMPS_FILENAMES:
             if self._config.verbose > 1:
-                cprint(f"Skip timestamp {path}", "white", attrs=["dark"])
-            skip = True
-        elif path.name in OLD_TIMESTAMPS_NAME:
-            if self._config.verbose > 1:
-                cprint(f"Skip legacy timestamp {path}", "white", attrs=["dark"])
+                legacy = "legacy " if path.name == OLD_TIMESTAMPS_NAME else ""
+                cprint(f"Skip {legacy}timestamp {path}", "white", attrs=["dark"])
             skip = True
         elif not path.exists():
             if self._config.verbose > 1:
                 cprint(f"WARNING: {path} not found.", "yellow")
             skip = True
-        elif self.is_path_ignored(path):
+        elif is_path_ignored(self._config, path):
             if self._config.verbose > 1:
                 cprint(f"Skip ignored {path}", "white", attrs=["dark"])
             skip = True
@@ -299,7 +297,7 @@ class Walk(Configurable):
     ################
     def __init__(self, config: AttrDict) -> None:
         """Initialize."""
-        super().__init__(config)
+        self._config = config
         self._totals = Totals(config)
         top_paths = []
         paths: list[Path] = sorted(frozenset(self._config.paths))

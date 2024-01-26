@@ -5,6 +5,7 @@ import time
 from argparse import Namespace
 from collections.abc import ItemsView
 from dataclasses import dataclass, fields
+from pathlib import Path
 from types import MappingProxyType
 
 from confuse import Configuration
@@ -14,9 +15,9 @@ from confuse.templates import (
     Integer,
     MappingTemplate,
     Optional,
-    Path,
     Sequence,
 )
+from confuse.templates import Path as ConfusePath
 from dateutil.parser import parse
 from PIL.TiffImagePlugin import TiffImageFile
 from termcolor import cprint
@@ -82,7 +83,7 @@ TEMPLATE = MappingTemplate(
                 "jobs": Integer(),
                 "keep_metadata": bool,
                 "list_only": bool,
-                "paths": Sequence(Path()),
+                "paths": Sequence(ConfusePath()),
                 "recurse": bool,
                 "symlinks": bool,
                 "test": bool,
@@ -359,3 +360,8 @@ def get_config(args: Namespace | None = None, modname=PROGRAM_NAME) -> AttrDict:
         msg = "Not a valid config"
         raise TypeError(msg)
     return ad.picopt
+
+
+def is_path_ignored(config: AttrDict, path: Path):
+    """Match path against the ignore list."""
+    return any(path.match(ignore_glob) for ignore_glob in config.ignore)
