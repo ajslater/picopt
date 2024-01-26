@@ -21,7 +21,7 @@ from dateutil.parser import parse
 from termcolor import cprint
 
 from picopt import PROGRAM_NAME
-from picopt.handlers.convertible import (
+from picopt.formats import (
     CONVERTIBLE_ANIMATED_FILE_FORMATS,
     CONVERTIBLE_FILE_FORMATS,
     CONVERTIBLE_FORMAT_STRS,

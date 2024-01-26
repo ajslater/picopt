@@ -8,11 +8,11 @@ from PIL import Image, UnidentifiedImageError
 from PIL.TiffImagePlugin import TiffImageFile
 from termcolor import cprint
 
-from picopt.handlers.container import ContainerHandler
-from picopt.handlers.convertible import (
+from picopt.formats import (
     LOSSLESS_FORMAT_STRS,
     TIFF_LOSSLESS_COMPRESSION,
 )
+from picopt.handlers.container import ContainerHandler
 from picopt.handlers.handler import FileFormat, Handler
 from picopt.handlers.png_animated import PngAnimated
 from picopt.handlers.svg import Svg

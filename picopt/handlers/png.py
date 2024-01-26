@@ -6,7 +6,7 @@ from PIL.GifImagePlugin import GifImageFile
 from PIL.PngImagePlugin import PngImageFile
 from termcolor import cprint
 
-from picopt.handlers.convertible import CONVERTIBLE_FORMAT_STRS
+from picopt.formats import CONVERTIBLE_FORMAT_STRS
 from picopt.handlers.handler import FileFormat
 from picopt.handlers.image import ImageHandler
 from picopt.pillow.png_bit_depth import png_bit_depth

@@ -26,7 +26,6 @@ from picopt.handlers.handler import FileFormat
 # TIFF_LOSSY_COMPRESSION = frozenset({
 #    "jpeg", "webp"
 # })
-# TODO move into factory
 TIFF_LOSSLESS_COMPRESSION = frozenset(
     {
         None,
@@ -45,7 +44,6 @@ TIFF_LOSSLESS_COMPRESSION = frozenset(
     }
 )
 TIFF_FILE_FORMAT = FileFormat(TiffImageFile.format, True, False)
-# TODO duplicates from handlers/svg.py
 SVG_FORMAT_STR = "SVG"
 
 
@@ -64,6 +62,7 @@ CONVERTIBLE_FILE_FORMATS = frozenset(
             # PIL Read/Write lossless formats
             BmpImageFile,
             DibImageFile,
+            # GifImageFile,
             PcxImageFile,
             PpmImageFile,
             # PngImageFile,
@@ -72,7 +71,6 @@ CONVERTIBLE_FILE_FORMATS = frozenset(
             TgaImageFile,
             TiffImageFile,
             XbmImageFile,
-            # GifImageFile,
             ##################################
             # PIL Read only lossless formats #
             ##################################

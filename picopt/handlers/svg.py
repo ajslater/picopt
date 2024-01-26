@@ -1,6 +1,7 @@
 """WebP format."""
 from pathlib import Path
 
+from picopt.formats import SVG_FORMAT_STR
 from picopt.handlers.handler import FileFormat
 from picopt.handlers.image import ImageHandler
 
@@ -8,7 +9,7 @@ from picopt.handlers.image import ImageHandler
 class Svg(ImageHandler):
     """SVG format class."""
 
-    OUTPUT_FORMAT_STR = "SVG"
+    OUTPUT_FORMAT_STR = SVG_FORMAT_STR
     OUTPUT_FILE_FORMAT = FileFormat(OUTPUT_FORMAT_STR, True)
     INPUT_FORMAT_SUFFIX = "." + OUTPUT_FORMAT_STR.lower()
     INPUT_FILE_FORMATS = frozenset({OUTPUT_FILE_FORMAT})
