@@ -20,7 +20,7 @@ class Gif(ImageHandler):
         "--optimize=3",
         "--batch",
     )
-    PIL2_ARGS = MappingProxyType({"optimize": True, "save_all": True})
+    PIL2_KWARGS = MappingProxyType({"optimize": True, "save_all": True})
 
     def gifsicle(
         self, exec_args: tuple[str, ...], old_path: Path, new_path: Path

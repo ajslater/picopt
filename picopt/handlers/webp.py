@@ -14,8 +14,7 @@ from picopt.handlers.png import Png
 class WebPBase(ImageHandler, ABC):
     """Base for handlers that use WebP utility commands."""
 
-    # TODO rename all PIL2_ARGS to PIL_SAVE_KWARGS
-    PIL2_ARGS = MappingProxyType({"quality": 100, "method": 6})
+    PIL2_KWARGS = MappingProxyType({"quality": 100, "method": 6})
     OUTPUT_FORMAT_STR = WebPImageFile.format
     PROGRAMS = (("cwebp", "pil2native"),)
     # https://developers.google.com/speed/webp/docs/cwebp
@@ -71,6 +70,6 @@ class WebPLossless(WebPBase):
         "0",
         *WebPBase.CWEBP_ARGS_PREFIX,
     )
-    PIL2_ARGS = MappingProxyType({**WebPBase.PIL2_ARGS, "lossless": True})
+    PIL2_KWARGS = MappingProxyType({**WebPBase.PIL2_KWARGS, "lossless": True})
     CONVERGEABLE = frozenset({"cwebp"})
     PROGRAMS = (("pil2png",), ("cwebp", "pil2native"))

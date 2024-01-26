@@ -16,7 +16,7 @@ class ImageAnimated(ContainerHandler, ABC):
 
     PROGRAMS = (("pil2native",),)
     FRAME_PIL_FORMAT_STR = PngImageFile.format
-    PIL2_ARGS: MappingProxyType[str, Any] = MappingProxyType({})
+    PIL2_KWARGS: MappingProxyType[str, Any] = MappingProxyType({})
 
     @classmethod
     def identify_format(cls, path: Path) -> FileFormat | None:  # noqa: ARG003
@@ -62,6 +62,6 @@ class ImageAnimated(ContainerHandler, ABC):
                 self.OUTPUT_FORMAT_STR,
                 save_all=True,
                 append_images=tail_frame_images,
-                **self.PIL2_ARGS,
+                **self.PIL2_KWARGS,
                 **info,
             )

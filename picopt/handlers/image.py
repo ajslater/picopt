@@ -17,9 +17,8 @@ from picopt.stats import ReportStats
 class ImageHandler(Handler, metaclass=ABCMeta):
     """Image Handler superclass."""
 
-    # TODO PIL2_KWARGS
-    PIL2_ARGS: MappingProxyType[str, Any] = MappingProxyType({})
-    PIL2PNG_ARGS: MappingProxyType[str, Any] = MappingProxyType({"compress_level": 0})
+    PIL2_KWARGS: MappingProxyType[str, Any] = MappingProxyType({})
+    PIL2PNG_KWARGS: MappingProxyType[str, Any] = MappingProxyType({"compress_level": 0})
     CONVERGEABLE = frozenset()
     EMPTY_EXEC_ARGS: tuple[str, tuple[str, ...]] = ("", ())
 
@@ -93,17 +92,12 @@ class ImageHandler(Handler, metaclass=ABCMeta):
         opts: None | Mapping[str, Any] = None,
     ) -> Path:
         """Use PIL to save the image."""
-        if (
-            # TODO this is only for the ones that come first, not for optimizing.
-            self.input_file_format in self.INPUT_FILE_FORMATS
-            # TODO REMOVE
-            # and self.PREFERRED_PROGRAM in self.config.computed.available_programs
-        ):
+        if self.input_file_format in self.INPUT_FILE_FORMATS:
             return old_path
         if format_str is None:
             format_str = self.OUTPUT_FORMAT_STR
         if opts is None:
-            opts = self.PIL2_ARGS
+            opts = self.PIL2_KWARGS
         info = self.prepare_info(format_str)
 
         with Image.open(old_path) as image:
@@ -128,5 +122,5 @@ class ImageHandler(Handler, metaclass=ABCMeta):
             old_path,
             new_path,
             format_str=PngImageFile.format,
-            opts=self.PIL2PNG_ARGS,
+            opts=self.PIL2PNG_KWARGS,
         )

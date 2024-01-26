@@ -18,7 +18,7 @@ class Png(ImageHandler):
     OUTPUT_FILE_FORMAT = FileFormat(OUTPUT_FORMAT_STR, True, False)
     INPUT_FILE_FORMATS = frozenset({OUTPUT_FILE_FORMAT})
     CONVERT_FROM_FORMAT_STRS = frozenset(CONVERTABLE_FORMAT_STRS | {GIF_FORMAT_STR})
-    PIL2_ARGS = MappingProxyType({"optimize": True})
+    PIL2_KWARGS = MappingProxyType({"optimize": True})
     PROGRAMS = (
         ("pil2png",),
         ("oxipng", "optipng", "pil2native"),

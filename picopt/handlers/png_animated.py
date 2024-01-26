@@ -1,6 +1,4 @@
 """WebP Animated images are treated like containers."""
-from types import MappingProxyType
-
 from picopt.handlers.convertible import (
     CONVERTABLE_ANIMATED_FILE_FORMATS,
     CONVERTABLE_ANIMATED_FORMAT_STRS,
@@ -23,4 +21,4 @@ class PngAnimated(ImageAnimated):
     CONVERT_FROM_FORMAT_STRS = frozenset(
         CONVERTABLE_ANIMATED_FORMAT_STRS | {Gif.OUTPUT_FORMAT_STR}
     )
-    PIL2_ARGS = MappingProxyType({**Png.PIL2_ARGS})
+    PIL2_KWARGS = Png.PIL2_KWARGS

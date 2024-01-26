@@ -16,7 +16,7 @@ class WebPAnimatedBase(ImageAnimated):
     """Animated WebP container."""
 
     OUTPUT_FORMAT_STR: str = WebPBase.OUTPUT_FORMAT_STR
-    PIL2_ARGS = MappingProxyType({"quality": 100, "method": 6, "minimize_size": True})
+    PIL2_KWARGS = MappingProxyType({**WebPBase.PIL2_KWARGS, "minimize_size": True})
 
 
 class WebPAnimatedLossless(WebPAnimatedBase):
@@ -35,4 +35,4 @@ class WebPAnimatedLossless(WebPAnimatedBase):
         CONVERTABLE_ANIMATED_FORMAT_STRS
         | {Gif.OUTPUT_FORMAT_STR, PngAnimated.OUTPUT_FORMAT_STR}
     )
-    PIL2_ARGS = MappingProxyType({**WebPAnimatedBase.PIL2_ARGS, "lossless": True})
+    PIL2_KWARGS = MappingProxyType({**WebPAnimatedBase.PIL2_KWARGS, "lossless": True})
