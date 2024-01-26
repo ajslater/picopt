@@ -24,9 +24,9 @@ from termcolor import cprint
 
 from picopt import PROGRAM_NAME
 from picopt.handlers.convertible import (
-    CONVERTABLE_ANIMATED_FILE_FORMATS,
-    CONVERTABLE_FILE_FORMATS,
-    CONVERTABLE_FORMAT_STRS,
+    CONVERTIBLE_ANIMATED_FILE_FORMATS,
+    CONVERTIBLE_FILE_FORMATS,
+    CONVERTIBLE_FORMAT_STRS,
 )
 from picopt.handlers.gif import Gif, GifAnimated
 from picopt.handlers.handler import FileFormat, Handler
@@ -47,7 +47,7 @@ CONVERT_TO_FORMAT_STRS = frozenset(
         Cbz.OUTPUT_FORMAT_STR,
     )
 )
-CONTAINER_CONVERTABLE_FORMAT_STRS = frozenset(
+CONTAINER_CONVERTIBLE_FORMAT_STRS = frozenset(
     (Rar.INPUT_FORMAT_STR, Cbr.INPUT_FORMAT_STR)
 )
 DEFAULT_HANDLERS = frozenset({Gif, GifAnimated, Jpeg, Png, Svg, WebPLossless})
@@ -65,9 +65,9 @@ _HANDLERS = frozenset(
 )
 ALL_FORMAT_STRS: frozenset[str] = (
     frozenset([cls.OUTPUT_FORMAT_STR for cls in _HANDLERS])
-    | CONVERTABLE_FORMAT_STRS
+    | CONVERTIBLE_FORMAT_STRS
     | frozenset({TiffImageFile.format})
-    | CONTAINER_CONVERTABLE_FORMAT_STRS
+    | CONTAINER_CONVERTIBLE_FORMAT_STRS
 )
 TEMPLATE = MappingTemplate(
     {
@@ -129,22 +129,22 @@ class FileFormatHandlers:
 
 
 # Handlers for formats are listed in priority order
-_LOSSLESS_CONVERTABLE_FORMAT_HANDLERS = MappingProxyType(
+_LOSSLESS_CONVERTIBLE_FORMAT_HANDLERS = MappingProxyType(
     {
         ffmt: FileFormatHandlers(convert=(WebPLossless, Png))
-        for ffmt in CONVERTABLE_FILE_FORMATS
+        for ffmt in CONVERTIBLE_FILE_FORMATS
     }
 )
-_LOSSLESS_CONVERTABLE_ANIMATED_FORMAT_HANDLERS = MappingProxyType(
+_LOSSLESS_CONVERTIBLE_ANIMATED_FORMAT_HANDLERS = MappingProxyType(
     {
         ffmt: FileFormatHandlers(convert=(WebPAnimatedLossless, PngAnimated))
-        for ffmt in CONVERTABLE_ANIMATED_FILE_FORMATS
+        for ffmt in CONVERTIBLE_ANIMATED_FILE_FORMATS
     }
 )
 _FORMAT_HANDLERS = MappingProxyType(
     {
-        **_LOSSLESS_CONVERTABLE_FORMAT_HANDLERS,
-        **_LOSSLESS_CONVERTABLE_ANIMATED_FORMAT_HANDLERS,
+        **_LOSSLESS_CONVERTIBLE_FORMAT_HANDLERS,
+        **_LOSSLESS_CONVERTIBLE_ANIMATED_FORMAT_HANDLERS,
         Gif.OUTPUT_FILE_FORMAT: FileFormatHandlers(
             convert=(WebPLossless, Png),
             native=(Gif,),

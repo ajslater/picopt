@@ -57,8 +57,7 @@ def _create_file_format(
 
 
 # TODO should these be dicts?
-# TODO fix CONVERTIBLE SPELLING
-CONVERTABLE_FILE_FORMATS = frozenset(
+CONVERTIBLE_FILE_FORMATS = frozenset(
     {
         _create_file_format(image_file)
         for image_file in (
@@ -88,12 +87,10 @@ CONVERTABLE_FILE_FORMATS = frozenset(
         )
     }
 )
-# TODO fix CONVERTIBLE SPELLING
-CONVERTABLE_FORMAT_STRS = frozenset(
-    {img_format.format_str for img_format in CONVERTABLE_FILE_FORMATS}
+CONVERTIBLE_FORMAT_STRS = frozenset(
+    {img_format.format_str for img_format in CONVERTIBLE_FILE_FORMATS}
 )
-# TODO fix CONVERTIBLE SPELLING
-CONVERTABLE_ANIMATED_FILE_FORMATS = frozenset(
+CONVERTIBLE_ANIMATED_FILE_FORMATS = frozenset(
     {
         _create_file_format(image_file, True)
         for image_file in (
@@ -104,13 +101,12 @@ CONVERTABLE_ANIMATED_FILE_FORMATS = frozenset(
         )
     }
 )
-# TODO fix CONVERTIBLE SPELLING
-CONVERTABLE_ANIMATED_FORMAT_STRS = frozenset(
-    {img_format.format_str for img_format in CONVERTABLE_ANIMATED_FILE_FORMATS}
+CONVERTIBLE_ANIMATED_FORMAT_STRS = frozenset(
+    {img_format.format_str for img_format in CONVERTIBLE_ANIMATED_FILE_FORMATS}
 )
 
 LOSSLESS_FORMAT_STRS = frozenset(
-    CONVERTABLE_FORMAT_STRS
-    | CONVERTABLE_ANIMATED_FORMAT_STRS
+    CONVERTIBLE_FORMAT_STRS
+    | CONVERTIBLE_ANIMATED_FORMAT_STRS
     | {GifImageFile.format, PngImageFile.format, SVG_FORMAT_STR}
 )
