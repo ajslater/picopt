@@ -26,6 +26,7 @@ DEFAULT_CONFIG = {
     "formats": ["GIF", "JPEG", "PNG", "SVG", "WEBP"],
     "keep_metadata": True,
     "ignore": [],
+    "near_lossless": False,
     "recurse": True,
     "symlinks": True,
 }

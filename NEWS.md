@@ -8,6 +8,7 @@
   - Support converting animated formats to animated PNG.
   - Oxipng supersedes optipng for png compression.
   - `--destroy-metadata` option becomes `--strip-metadata`
+  - `--near-lossless` option for lossless WebP
 - Dev
   - walk.run now returns totals instead of running report on them.
 

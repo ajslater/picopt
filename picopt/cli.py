@@ -112,11 +112,11 @@ def get_arguments(params: tuple[str, ...] | None = None) -> Namespace:
         " By default formats are not converted to other formats.",
     )
     parser.add_argument(
-        "-e",
-        "--exhaustive",
+        "-n",
+        "--near-lossless",
         action="store_true",
-        dest="exhaustive",
-        help="Run WEBP optimization exhaustively until it stops optimizing the file further (slow)",
+        dest="near_lossless",
+        help="Precompress lossless WebP images with near lossless pixel adjustments. Provides dramatic compression advantages for little to no visual quality loss especially for discrete tone images like drawings.",
     )
     parser.add_argument(
         "-S",

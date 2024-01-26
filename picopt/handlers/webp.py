@@ -31,10 +31,20 @@ class WebPBase(ImageHandler, ABC):
         "-alpha_filter",
         "best",
     )
+    CONVERGEABLE = frozenset({"cwebp"})
 
-    def cwebp(self, exec_args: tuple[str, ...], old_path: Path, new_path: Path) -> Path:
+    def cwebp(
+        self,
+        exec_args: tuple[str, ...],
+        old_path: Path,
+        new_path: Path,
+        opts: tuple[str, ...] | None = None,
+    ) -> Path:
         """Optimize using cwebp."""
-        args = [*exec_args, *self.CWEBP_ARGS_PREFIX]
+        args = [*exec_args]
+        if opts:
+            args += [*opts]
+        args += [*self.CWEBP_ARGS_PREFIX]
         args += ["-metadata"]
         if self.config.keep_metadata:
             args += ["all"]
@@ -57,10 +67,21 @@ class WebPLossless(WebPBase):
     )
     CWEBP_ARGS_PREFIX = (
         # https://groups.google.com/a/webmproject.org/g/webp-discuss/c/0GmxDmlexek
-        "-near_lossless",
-        "0",
+        "-lossless",
         *WebPBase.CWEBP_ARGS_PREFIX,
     )
     PIL2_KWARGS = MappingProxyType({**WebPBase.PIL2_KWARGS, "lossless": True})
     CONVERGEABLE = frozenset({"cwebp"})
     PROGRAMS = (("pil2png",), ("cwebp", "pil2native"))
+    NEAR_LOSSLESS_OPTS: tuple[str, ...] = ("-near_lossless", "0")
+
+    def cwebp(
+        self,
+        exec_args: tuple[str, ...],
+        old_path: Path,
+        new_path: Path,
+        opts: tuple[str, ...] | None = None,
+    ) -> Path:
+        """Optimize using cwebp and with runtime optional arguments."""
+        opts = self.NEAR_LOSSLESS_OPTS if self.config.near_lossless else None
+        return super().cwebp(exec_args, old_path, new_path, opts=opts)

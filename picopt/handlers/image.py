@@ -40,7 +40,7 @@ class ImageHandler(Handler, metaclass=ABCMeta):
             if path != self.original_path:
                 self.working_paths.add(path)
 
-            converge = self.config.exhaustive and func in self.CONVERGEABLE
+            converge = self.config.near_lossless and func in self.CONVERGEABLE
             loop = True
             bytes_in = 0
             bytes_out = 0
@@ -65,7 +65,7 @@ class ImageHandler(Handler, metaclass=ABCMeta):
             self.config.test,
             bytes_count[0],
             bytes_count[1],
-            iterations=max_iterations,
+            iterations=max_iterations - 1,
         )
         return ReportStats(info)
 
