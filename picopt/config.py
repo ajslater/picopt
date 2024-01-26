@@ -18,7 +18,6 @@ from confuse.templates import (
 )
 from confuse.templates import Path as ConfusePath
 from dateutil.parser import parse
-from PIL.TiffImagePlugin import TiffImageFile
 from termcolor import cprint
 
 from picopt import PROGRAM_NAME
@@ -37,23 +36,28 @@ from picopt.handlers.webp import WebPLossless
 from picopt.handlers.webp_animated import WebPAnimatedLossless
 from picopt.handlers.zip import Cbr, Cbz, EPub, Rar, Zip
 
-# TODO move CONVERTIBLE FORMAT STRS into convertible wherever it ends up
-CONVERT_TO_FORMAT_STRS = frozenset(
+###########################
+# Confuse Config Template #
+###########################
+_CONVERT_TO_FORMAT_STRS = frozenset(
     (
         Png.OUTPUT_FORMAT_STR,
+        PngAnimated.OUTPUT_FORMAT_STR,
         WebPLossless.OUTPUT_FORMAT_STR,
+        WebPAnimatedLossless.OUTPUT_FORMAT_STR,
         Zip.OUTPUT_FORMAT_STR,
         Cbz.OUTPUT_FORMAT_STR,
     )
 )
-CONTAINER_CONVERTIBLE_FORMAT_STRS = frozenset(
-    (Rar.INPUT_FORMAT_STR, Cbr.INPUT_FORMAT_STR)
+_CONTAINER_CONVERTIBLE_FORMAT_STRS = frozenset(
+    [cls.INPUT_FORMAT_STR for cls in (Rar, Cbr)]
 )
-DEFAULT_HANDLERS = frozenset({Gif, GifAnimated, Jpeg, Png, Svg, WebPLossless})
-_HANDLERS = frozenset(
-    DEFAULT_HANDLERS
-    | {
-        WebPAnimatedLossless,
+
+DEFAULT_HANDLERS = frozenset(
+    {Gif, GifAnimated, Jpeg, Png, Svg, WebPLossless, WebPAnimatedLossless}
+)
+_EXTRA_HANDLERS = frozenset(
+    {
         Zip,
         Rar,
         Svg,
@@ -62,11 +66,11 @@ _HANDLERS = frozenset(
         EPub,
     }
 )
+_ALL_HANDLERS = frozenset(DEFAULT_HANDLERS | _EXTRA_HANDLERS)
 ALL_FORMAT_STRS: frozenset[str] = (
-    frozenset([cls.OUTPUT_FORMAT_STR for cls in _HANDLERS])
+    frozenset([cls.OUTPUT_FORMAT_STR for cls in _ALL_HANDLERS])
     | CONVERTIBLE_FORMAT_STRS
-    | frozenset({TiffImageFile.format})
-    | CONTAINER_CONVERTIBLE_FORMAT_STRS
+    | _CONTAINER_CONVERTIBLE_FORMAT_STRS
 )
 TEMPLATE = MappingTemplate(
     {
@@ -74,7 +78,7 @@ TEMPLATE = MappingTemplate(
             {
                 "after": Optional(float),
                 "bigger": bool,
-                "convert_to": Optional(Sequence(Choice(CONVERT_TO_FORMAT_STRS))),
+                "convert_to": Optional(Sequence(Choice(_CONVERT_TO_FORMAT_STRS))),
                 "exhaustive": bool,
                 "extra_formats": Optional(Sequence(Choice(ALL_FORMAT_STRS))),
                 "formats": Sequence(Choice(ALL_FORMAT_STRS)),
@@ -113,6 +117,9 @@ TIMESTAMPS_CONFIG_KEYS = {
 }
 
 
+########################
+# File Format Handlers #
+########################
 @dataclass
 class FileFormatHandlers:
     """FileFormat handlers for a File FileFormat."""
@@ -297,6 +304,9 @@ def _set_format_handler_map(
     _print_formats_config(handled_format_strs, convert_format_strs)
 
 
+#########################
+# Other Computed Config #
+#########################
 def _set_after(config) -> None:
     after = config[PROGRAM_NAME]["after"].get()
     if after is None:
