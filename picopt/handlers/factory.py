@@ -19,6 +19,9 @@ from picopt.handlers.zip import Cbr, Cbz, EPub, Rar, Zip
 from picopt.path import PathInfo
 from picopt.pillow.webp_lossless import is_lossless
 
+###################
+# Get File Format #
+###################
 _CONTAINER_HANDLERS: tuple[type[ContainerHandler], ...] = (
     Cbz,
     Zip,
@@ -28,7 +31,6 @@ _CONTAINER_HANDLERS: tuple[type[ContainerHandler], ...] = (
     PngAnimated,
     WebPAnimatedLossless,
 )
-
 
 def _extract_image_info(
     path: Path, keep_metadata: bool
@@ -107,6 +109,9 @@ def _create_handler_get_format(
     return file_format, info
 
 
+#####################
+# Get Handler Class #
+#####################
 def _get_handler_class(
     config: AttrDict, file_format: FileFormat, key: str
 ) -> type[Handler] | None:
@@ -126,6 +131,9 @@ def _create_handler_get_handler_class(
     return handler_cls
 
 
+####################
+# No Handler Class #
+####################
 def _create_handler_no_handler_class(
     config: AttrDict, path: Path, file_format: FileFormat | None
 ) -> None:
