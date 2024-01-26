@@ -23,4 +23,4 @@ class PngAnimated(ImageAnimated):
     CONVERT_FROM_FORMAT_STRS = frozenset(
         CONVERTABLE_ANIMATED_FORMAT_STRS | {Gif.OUTPUT_FORMAT_STR}
     )
-    PIL2_ARGS = MappingProxyType({**Png.PIL2_ARGS_OPTIMIZE})
+    PIL2_ARGS = MappingProxyType({**Png.PIL2_ARGS})

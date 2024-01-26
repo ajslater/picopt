@@ -18,14 +18,10 @@ class Png(ImageHandler):
     OUTPUT_FILE_FORMAT = FileFormat(OUTPUT_FORMAT_STR, True, False)
     INPUT_FILE_FORMATS = frozenset({OUTPUT_FILE_FORMAT})
     CONVERT_FROM_FORMAT_STRS = frozenset(CONVERTABLE_FORMAT_STRS | {GIF_FORMAT_STR})
-    PIL2_ARGS_OPTIMIZE = MappingProxyType(
-        {
-            "optimize": True,
-        }
-    )
+    PIL2_ARGS = MappingProxyType({"optimize": True})
     PROGRAMS = (
-        ("pil2native",),
-        ("oxipng", "optipng", "pil2png"),
+        ("pil2png",),
+        ("oxipng", "optipng", "pil2native"),
         ("pngout",),
     )
     _OXIPNG_ARGS: tuple[str, ...] = (
@@ -60,13 +56,6 @@ class Png(ImageHandler):
         args += ["-out", str(new_path), str(old_path)]
         self.run_ext(tuple(args))
         return new_path
-
-    def pil2png(self, _exec_args, old_path: Path, new_path: Path) -> Path:
-        """Pil2png optimized."""
-        # TODO PRESERVE pnginfo in opts
-        return self.pil2native(
-            self.EMPTY_EXEC_ARGS, old_path, new_path, opts=self.PIL2_ARGS_OPTIMIZE
-        )
 
     def pngout(
         self, exec_args: tuple[str, ...], old_path: Path, new_path: Path

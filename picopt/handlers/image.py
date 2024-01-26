@@ -6,6 +6,7 @@ from types import MappingProxyType
 from typing import Any
 
 from PIL import Image
+from PIL.PngImagePlugin import PngImageFile
 from termcolor import cprint
 
 from picopt.data import ReportInfo
@@ -18,6 +19,7 @@ class ImageHandler(Handler, metaclass=ABCMeta):
 
     # TODO PIL2_KWARGS
     PIL2_ARGS: MappingProxyType[str, Any] = MappingProxyType({})
+    PIL2PNG_ARGS: MappingProxyType[str, Any] = MappingProxyType({"compress_level": 0})
     CONVERGEABLE = frozenset()
     EMPTY_EXEC_ARGS: tuple[str, tuple[str, ...]] = ("", ())
 
@@ -115,3 +117,16 @@ class ImageHandler(Handler, metaclass=ABCMeta):
         image.close()  # for animated images
         self.input_file_format = self.OUTPUT_FILE_FORMAT
         return new_path
+
+    def pil2png(
+        self, _exec_args: tuple[str, ...], old_path: Path, new_path: Path
+    ) -> Path:
+        """Internally convert unhandled formats to uncompressed png for cwebp."""
+        # It's faster to create a undercompressed png than anything else
+        return self.pil2native(
+            self.EMPTY_EXEC_ARGS,
+            old_path,
+            new_path,
+            format_str=PngImageFile.format,
+            opts=self.PIL2PNG_ARGS,
+        )

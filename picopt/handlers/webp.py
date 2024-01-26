@@ -5,7 +5,7 @@ from types import MappingProxyType
 
 from PIL.WebPImagePlugin import WebPImageFile
 
-from picopt.handlers.convertible import PNG_FORMAT_STR, TIFF_FILE_FORMAT
+from picopt.handlers.convertible import TIFF_FILE_FORMAT
 from picopt.handlers.handler import FileFormat
 from picopt.handlers.image import ImageHandler
 from picopt.handlers.png import Png
@@ -71,20 +71,6 @@ class WebPLossless(WebPBase):
         "0",
         *WebPBase.CWEBP_ARGS_PREFIX,
     )
-    PIL2PNG_ARGS = MappingProxyType({"compress_level": 0})
     PIL2_ARGS = MappingProxyType({**WebPBase.PIL2_ARGS, "lossless": True})
-    CONVERGEABLE = frozenset({"cwebp", "pil2webp"})
+    CONVERGEABLE = frozenset({"cwebp"})
     PROGRAMS = (("pil2png",), ("cwebp", "pil2native"))
-
-    def pil2png(
-        self, _exec_args: tuple[str, ...], old_path: Path, new_path: Path
-    ) -> Path:
-        """Internally convert unhandled formats to uncompressed png for cwebp."""
-        # It's faster to create a undercompressed png than anything else
-        return self.pil2native(
-            self.EMPTY_EXEC_ARGS,
-            old_path,
-            new_path,
-            format_str=PNG_FORMAT_STR,
-            opts=self.PIL2PNG_ARGS,
-        )
