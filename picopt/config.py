@@ -150,7 +150,7 @@ _FORMAT_HANDLERS = MappingProxyType(
             native=(Gif,),
         ),
         GifAnimated.OUTPUT_FILE_FORMAT: FileFormatHandlers(
-            convert=(WebPAnimatedLossless,),
+            convert=(WebPAnimatedLossless, PngAnimated),
             native=(GifAnimated,),
         ),
         Jpeg.OUTPUT_FILE_FORMAT: FileFormatHandlers(native=(Jpeg,)),

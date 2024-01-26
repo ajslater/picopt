@@ -11,7 +11,7 @@ __all__ = ()
 TMP_ROOT = get_test_dir()
 FNS = {
     "07themecamplist.pdf": (93676, 93676, ("pdf", 93676), ("pdf", 93676)),
-    "test_animated_gif.gif": (16383, 16358, ("gif", 16358), ("webp", 11866)),
+    "test_animated_gif.gif": (16383, 16358, ("png", 13411), ("webp", 11866)),
     "test_animated_png.png": (63435, 63435, ("png", 63435), ("webp", 41694)),
     "test_animated_webp.webp": (13610, 13610, ("webp", 13610), ("webp", 13610)),
     "test_png.png": (7967, 4149, ("png", 4149), ("webp", 2044)),
