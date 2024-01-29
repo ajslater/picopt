@@ -1,7 +1,6 @@
 """Run pictures through image specific external optimizers."""
-import argparse
 import sys
-from argparse import Action, Namespace, RawDescriptionHelpFormatter
+from argparse import Action, ArgumentParser, Namespace, RawDescriptionHelpFormatter
 from importlib.metadata import PackageNotFoundError, version
 
 from confuse.exceptions import ConfigError
@@ -53,7 +52,7 @@ def get_arguments(params: tuple[str, ...] | None = None) -> Namespace:
         colored("error", "red"),
     )
     epilog = "\n  ".join(epilog)
-    parser = argparse.ArgumentParser(
+    parser = ArgumentParser(
         description=description,
         epilog=epilog,
         formatter_class=RawDescriptionHelpFormatter,
