@@ -1,14 +1,12 @@
 """Test comic format."""
 import platform
-import shutil
-from collections.abc import Mapping
 from types import MappingProxyType
 
 from picopt import PROGRAM_NAME, cli
-from tests import IMAGES_DIR, get_test_dir
+from tests import get_test_dir
+from tests.integration.base_test_images import BaseTestImagesDir
 
 __all__ = ()
-TMP_ROOT = get_test_dir()
 FNS = {
     "07themecamplist.pdf": (93676, 93676, ("pdf", 93676), ("pdf", 93676)),
     "test_animated_gif.gif": (16383, 16358, ("png", 13411), ("webp", 11866)),
@@ -82,44 +80,33 @@ EXHAUSTIVE_FNS = MappingProxyType(
 )
 
 
-class BaseTestImagesDir:
-    """Test images dir."""
-
-    FNS: Mapping = MappingProxyType({})
-
-    def setup_method(self) -> None:
-        """Set up method."""
-        self.teardown_method()
-        shutil.copytree(IMAGES_DIR, TMP_ROOT)
-        for name, sizes in self.FNS.items():
-            path = TMP_ROOT / name
-            assert path.stat().st_size == sizes[0]
-
-    def teardown_method(self) -> None:
-        """Tear down method."""
-        if TMP_ROOT.exists():
-            shutil.rmtree(TMP_ROOT)
-
-
 class TestImagesDir(BaseTestImagesDir):
     """Test images dir."""
 
     FNS = FNS
+    TMP_ROOT = get_test_dir()
 
     def test_no_convert(self) -> None:
         """Test no convert."""
-        args = (PROGRAM_NAME, "-rvv", str(TMP_ROOT))
+        args = (PROGRAM_NAME, "-rvv", str(self.TMP_ROOT))
         cli.main(args)
         for name, sizes in self.FNS.items():
-            path = TMP_ROOT / name
+            path = self.TMP_ROOT / name
             assert path.stat().st_size == sizes[1]
 
     def test_convert_to_png(self) -> None:
         """Test convert to PNG."""
-        args = (PROGRAM_NAME, "-rvvx", "BMP,GIF,PPM,TIFF", "-c", "PNG", str(TMP_ROOT))
+        args = (
+            PROGRAM_NAME,
+            "-rvvx",
+            "BMP,GIF,PPM,TIFF",
+            "-c",
+            "PNG",
+            str(self.TMP_ROOT),
+        )
         cli.main(args)
         for name, sizes in self.FNS.items():
-            path = (TMP_ROOT / name).with_suffix("." + sizes[2][0])
+            path = (self.TMP_ROOT / name).with_suffix("." + sizes[2][0])
             assert path.stat().st_size == sizes[2][1]
 
     def test_convert_to_webp(self) -> None:
@@ -130,11 +117,11 @@ class TestImagesDir(BaseTestImagesDir):
             "BMP,GIF,PNG,PPM,TIFF",
             "-c",
             "WEBP",
-            str(TMP_ROOT),
+            str(self.TMP_ROOT),
         )
         cli.main(args)
         for name, sizes in self.FNS.items():
-            path = (TMP_ROOT / name).with_suffix("." + sizes[3][0])
+            path = (self.TMP_ROOT / name).with_suffix("." + sizes[3][0])
             assert path.stat().st_size == sizes[3][1]
 
 
@@ -147,9 +134,9 @@ class TestExhaustiveImageDir(BaseTestImagesDir):
             PROGRAM_NAME,
             "-rvvvnc",
             "WEBP",
-            str(TMP_ROOT),
+            str(self.TMP_ROOT),
         )
         cli.main(args)
         for name, sizes in self.FNS.items():
-            path = (TMP_ROOT / name).with_suffix("." + sizes[3][0])
+            path = (self.TMP_ROOT / name).with_suffix("." + sizes[3][0])
             assert path.stat().st_size == sizes[3][1]

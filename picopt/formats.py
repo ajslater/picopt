@@ -7,6 +7,7 @@ from PIL.FitsImagePlugin import FitsImageFile
 from PIL.FliImagePlugin import FliImageFile
 from PIL.GifImagePlugin import GifImageFile
 from PIL.ImtImagePlugin import ImtImageFile
+from PIL.MpoImagePlugin import MpoImageFile
 from PIL.PcxImagePlugin import PcxImageFile
 from PIL.PixarImagePlugin import PixarImageFile
 from PIL.PngImagePlugin import PngImageFile
@@ -31,6 +32,7 @@ class FileFormat:
     animated: bool = False
 
 
+MPO_FILE_FORMAT = FileFormat(MpoImageFile.format, False, True)
 SVG_FORMAT_STR = "SVG"
 TIFF_FILE_FORMAT = FileFormat(TiffImageFile.format, True, False)
 TIFF_LOSSLESS_COMPRESSION = frozenset(
@@ -81,6 +83,10 @@ _CONVERTABLE_PIL_IMAGE_FILES = (
     SunImageFile,
     XpmImageFile,
     QoiImageFile,
+    ###################
+    # Animated to not #
+    ###################
+    MpoImageFile,
 )
 CONVERTIBLE_FORMAT_STRS = frozenset(
     {img_file.format for img_file in _CONVERTABLE_PIL_IMAGE_FILES}
@@ -109,7 +115,7 @@ CONVERTIBLE_ANIMATED_FILE_FORMATS = frozenset(
 )
 
 LOSSLESS_FORMAT_STRS = frozenset(
-    CONVERTIBLE_FORMAT_STRS
+    CONVERTIBLE_FORMAT_STRS - {MpoImageFile.format}
     | CONVERTIBLE_ANIMATED_FORMAT_STRS
     | {GifImageFile.format, PngImageFile.format, SVG_FORMAT_STR}
 )

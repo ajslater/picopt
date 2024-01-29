@@ -5,6 +5,7 @@ from typing import Any
 
 from confuse.templates import AttrDict
 from PIL import Image, UnidentifiedImageError
+from PIL.MpoImagePlugin import MpoImageFile
 from PIL.TiffImagePlugin import TiffImageFile
 from termcolor import cprint
 
@@ -59,6 +60,8 @@ def _extract_image_info(
                         n_frames = image.n_frames
                         if n_frames is not None:
                             info["n_frames"] = n_frames
+                    if image_format_str == MpoImageFile.format:
+                        info["mpinfo"] = image.mpinfo  # type: ignore
             image.close()  # for animated images
     except UnidentifiedImageError:
         pass

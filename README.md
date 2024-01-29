@@ -38,6 +38,7 @@ By default picopt does not convert images between formats. You must turn on conv
   PPM, PSD, QOI, SGI, SPIDER, SUN, TGA, TIFF, XBM, and XPM into PNG and WEBP.
 - Picopt can convert Animated GIF, TIFF, and FLI into Animated PNG or WebP files.
 - Picopt can convert Animated GIF, TIFF, FLI, and PNG into Animated WebP files.
+- Picopt can convert MPO to JPEG by stripping secondary images if a primary image exists. (Experimental)
 - Picopt can convert RAR files into Zipfiles and CBR files into CBZ files.
 
 Because picopt supports so many lossless image formats, to avoid surprises if you specify a conversion target, picopt will only convert GIF and PNG images to the target by default. To convert another format, like BMP, to WEBP you must specify that you want to read the BMP format _and_ that you want to convert it to WEBP:
@@ -65,6 +66,14 @@ WebP lossless formats are optimized with [cwebp](https://developers.google.com/s
 ### SVG
 
 Picopt can only optimize SVGs if [svgo](https://github.com/svg/svgo) is on the path.
+
+### MPO (Experimental)
+
+Picopt can extract the primary image from an multi JPEG MPO that also contains thumbnails and convert the file to an ordinary JPEG. Picopt will also optimize this image if it can.
+To enable this you must run with `-x MPO -c JPEG`
+Steroscopic MPOs should have no primary image tagged in the MPO directory and be unaffected.
+
+This feature has not been tested with a large variety of MPOs and should be considered experimental.
 
 ### EPub
 

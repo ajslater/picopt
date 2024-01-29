@@ -26,6 +26,7 @@ from picopt.formats import (
     CONVERTIBLE_ANIMATED_FILE_FORMATS,
     CONVERTIBLE_FILE_FORMATS,
     LOSSLESS_FORMAT_STRS,
+    MPO_FILE_FORMAT,
     FileFormat,
 )
 from picopt.handlers.gif import Gif, GifAnimated
@@ -44,7 +45,15 @@ from picopt.handlers.zip import Cbr, Cbz, EPub, Rar, Zip
 _CONVERT_TO_FORMAT_STRS = frozenset(
     {
         cls.OUTPUT_FORMAT_STR
-        for cls in (Png, PngAnimated, WebPLossless, WebPAnimatedLossless, Zip, Cbz)
+        for cls in (
+            Png,
+            PngAnimated,
+            WebPLossless,
+            WebPAnimatedLossless,
+            Zip,
+            Cbz,
+            Jpeg,
+        )
     }
 )
 _CONTAINER_CONVERTIBLE_FORMAT_STRS = frozenset(
@@ -69,6 +78,7 @@ ALL_FORMAT_STRS: frozenset[str] = (
     frozenset([cls.OUTPUT_FORMAT_STR for cls in _ALL_HANDLERS])
     | LOSSLESS_FORMAT_STRS
     | _CONTAINER_CONVERTIBLE_FORMAT_STRS
+    | {MPO_FILE_FORMAT.format_str}
 )
 TEMPLATE = MappingTemplate(
     {
@@ -158,6 +168,7 @@ _FORMAT_HANDLERS = MappingProxyType(
             convert=(WebPAnimatedLossless, PngAnimated),
             native=(GifAnimated,),
         ),
+        MPO_FILE_FORMAT: FileFormatHandlers(convert=(Jpeg,)),
         Jpeg.OUTPUT_FILE_FORMAT: FileFormatHandlers(native=(Jpeg,)),
         Png.OUTPUT_FILE_FORMAT: FileFormatHandlers(
             convert=(WebPLossless,), native=(Png,)

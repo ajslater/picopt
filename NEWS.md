@@ -6,6 +6,7 @@
   - Support optimizing SVG with svgo.
   - Support converting more lossless formats to PNG & WEBP: CUR, DIB, FITS, IMT, PCX, PIXAR, PSD, QOI, SGI, SPIDER, SUN, TGA, XBM, XPM.
   - Support converting animated formats to animated PNG.
+  - Support converting losslessly converting MPO to JPEG (choose primary image)
   - Oxipng supersedes optipng for png compression.
   - `--destroy-metadata` option becomes `--strip-metadata`
   - `--near-lossless` option for lossless WebP
