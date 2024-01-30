@@ -1,4 +1,5 @@
 """FileType abstract class for image and container formats."""
+import os
 import subprocess
 from abc import ABC
 from collections.abc import Mapping
@@ -102,6 +103,7 @@ class Handler(ABC):
         self.info: dict[str, Any] = dict(info)
         self.convert = input_file_format != self.OUTPUT_FILE_FORMAT
         self.is_case_sensitive = path_info.is_case_sensitive
+        self.stat = path_info.stat
 
     def get_working_path(self, identifier: str = "") -> Path:
         """Return a working path with a custom suffix."""
@@ -122,6 +124,9 @@ class Handler(ABC):
             if not self.config.test and (
                 (bytes_out > 0) and ((bytes_out < bytes_in) or self.config.bigger)
             ):
+                ############
+                # SAVE NEW #
+                ############
                 last_working_path.replace(self.final_path)
 
                 # Add original path to working_paths if the file has
@@ -133,11 +138,28 @@ class Handler(ABC):
                     compare_original_str = compare_original_str.lower()
                 if compare_final_str != compare_original_str:
                     self.working_paths.add(self.original_path)
+
+                #######################
+                # RESTORE STAT TO NEW #
+                #######################
+                if self.config.preserve and self.stat:
+                    os.chown(self.final_path, self.stat.st_uid, self.stat.st_gid)
+                    self.final_path.chmod(self.stat.st_mode)
+                    os.utime(
+                        self.final_path,
+                        ns=(self.stat.st_atime_ns, self.stat.st_mtime_ns)
+                    )
             else:
+                ###############
+                # DISCARD NEW #
+                ###############
                 self.working_paths.add(last_working_path)
                 bytes_out = bytes_in
-            if self.final_path in self.working_paths:
-                self.working_paths.remove(self.final_path)
+
+            ###########
+            # CLEANUP #
+            ###########
+            self.working_paths.discard(self.final_path)
             for working_path in self.working_paths:
                 working_path.unlink(missing_ok=True)
         except OSError as exc:

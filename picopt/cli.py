@@ -200,6 +200,12 @@ def get_arguments(params: tuple[str, ...] | None = None) -> Namespace:
         action="store",
         help="Path to a config file",
     )
+    parser.add_argument(
+        "-p",
+        "--preserve",
+        action="store_true",
+        help="Preserve file attributes (uid, gid, mode, mtime) after optimization.",
+    )
     ###########
     # Actions #
     ###########

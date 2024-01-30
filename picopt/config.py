@@ -95,6 +95,7 @@ TEMPLATE = MappingTemplate(
                 "list_only": bool,
                 "near_lossless": bool,
                 "paths": Sequence(ConfusePath()),
+                "preserve": bool,
                 "recurse": bool,
                 "symlinks": bool,
                 "test": bool,

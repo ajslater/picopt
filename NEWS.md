@@ -10,6 +10,7 @@
   - Oxipng supersedes optipng for png compression.
   - `--destroy-metadata` option becomes `--strip-metadata`
   - `--near-lossless` option for lossless WebP
+  - `--preserve` file attributes after optimization.
 - Dev
   - walk.run now returns totals instead of running report on them.
 

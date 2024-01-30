@@ -9,6 +9,7 @@ picopt:
   list_only: False
   near_lossless: False
   paths: []
+  preserve: False
   recurse: False
   symlinks: True
   test: False
