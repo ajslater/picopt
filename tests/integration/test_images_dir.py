@@ -9,10 +9,10 @@ from tests.integration.base_test_images import BaseTestImagesDir
 __all__ = ()
 FNS = {
     "07themecamplist.pdf": (93676, 93676, ("pdf", 93676), ("pdf", 93676)),
-    "test_animated_gif.gif": (16383, 16358, ("png", 13411), ("webp", 11866)),
+    "test_animated_gif.gif": (16383, 16358, ("png", 13409), ("webp", 11866)),
     "test_animated_png.png": (63435, 63435, ("png", 63435), ("webp", 53522)),
     "test_animated_webp.webp": (13610, 13610, ("webp", 13610), ("webp", 13610)),
-    "test_png.png": (7967, 4149, ("png", 4149), ("webp", 3870)),
+    "test_png.png": (7967, 4379, ("png", 4379), ("webp", 3870)),
     "test_pre-optimized_jpg.jpg": (
         22664,
         22664,
