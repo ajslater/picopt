@@ -183,7 +183,7 @@ class Walk:
                 info.container_mtime,
                 info.convert,
                 info.is_case_sensitive,
-                stat=entry_path.stat() if self._config.preserve else None
+                stat=entry_path.stat() if self._config.preserve else None,
             )
             result = self.walk_file(path_info)
             if result:

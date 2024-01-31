@@ -147,7 +147,7 @@ class Handler(ABC):
                     self.final_path.chmod(self.stat.st_mode)
                     os.utime(
                         self.final_path,
-                        ns=(self.stat.st_atime_ns, self.stat.st_mtime_ns)
+                        ns=(self.stat.st_atime_ns, self.stat.st_mtime_ns),
                     )
             else:
                 ###############

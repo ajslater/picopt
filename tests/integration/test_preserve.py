@@ -24,17 +24,17 @@ FNS = MappingProxyType(
 
 STATS = ("uid", "gid", "mode", "mtime_ns")
 
+
 class TestPreserve(BaseTestImagesDir):
     """Test images dir."""
 
     TMP_ROOT = get_test_dir()
     FNS = FNS
 
-
     def test_preserve(self) -> None:
         """Test no convert."""
         stats = {}
-        for name in  self.FNS:
+        for name in self.FNS:
             path = self.TMP_ROOT / name
             stats[path] = path.stat()
         args = (PROGRAM_NAME, "-rpvvv", str(self.TMP_ROOT))
