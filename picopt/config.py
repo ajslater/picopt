@@ -229,7 +229,7 @@ def _get_handler_stages(
     stages = {}
     for program_priority_list in handler_class.PROGRAMS:
         for program in program_priority_list:
-            if program.startswith("pil2") or program == Handler.INTERNAL:
+            if program.startswith(("pil2", Handler.INTERNAL)):
                 exec_args = None
             elif program.startswith("npx_"):
                 bin_path = shutil.which("npx")

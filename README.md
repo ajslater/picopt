@@ -53,7 +53,8 @@ To optimize JPEG images at all picopt needs one of [mozjpeg](https://github.com/
 
 ### PNG
 
-To optimize PNG images or convert other lossless formats to PNG picopt requires either [oxipng](https://github.com/shssoichiro/oxipng), [optipng](https://optipng.sourceforge.net/), or [pngout](http://advsys.net/ken/utils.htm) be on the path. oxipng provides the most advantage, but best results will be had by using pngout as well.
+Picopt uses an internal oxipng python module to to optimize PNG images and convert other lossless formats to PNG picopt.
+The external [pngout](http://advsys.net/ken/utils.htm) tool can provide a small extra bit of compression.
 
 ### Animated GIF
 
@@ -93,7 +94,7 @@ picopt is most effective with ependencies to run. We must install these first
 #### macOS
 
 ```sh
-brew install gifsicle mozjpeg oxipng svgo webp
+brew install gifsicle mozjpeg svgo webp
 
 ln -s $(brew --prefix)/opt/mozjpeg/bin/jpegtran /usr/local/bin/mozjpeg
 ```
@@ -110,12 +111,12 @@ if you don't want to install mozjpeg using the instructions below then use jpegt
 apt-get install libjpeg-progs
 ```
 
-See mozjepg, oxipng, pngout & svgo install instructions below
+See mozjepg, pngout & svgo install instructions below
 
 #### Redhat / Fedora
 
 ```sh
-yum install gifsicle oxipng python-imaging libwebp-tools
+yum install gifsicle python-imaging libwebp-tools
 ```
 
 if you don't want to install mozjpeg using the instructions below then use jpegtran:
@@ -145,17 +146,9 @@ Instructions for installing on macOS are given above.
 Some near recent binaries for Windows and Debian x86 [can be found here](https://mozjpeg.codelove.de/binaries.html).
 Most Linux distributions still require a more manual install as elucidated here on [Casey Hoffer's blog](https://www.caseyhofford.com/2019/05/01/improved-image-compression-install-mozjpeg-on-ubuntu-server/)
 
-#### oxipng
-
-oxipng is a newer, maintained fork of optipng. Unfortunately it isn't packaged for many Linuxes, but it has easily downloaded binary installs at the [Github Oxipng Release Page](https://github.com/shssoichiro/oxipng/releases)
-
-### optipng
-
-optipng is frequently packaged and you may install it with homebrew, apt-get or yum. oxipng tends to give better results.
-
 #### pngout
 
-pngout is a compression tool that can be used by itself or for small extra compression after running oxipng or optipng. It does not run on 16 bit PNGs.
+pngout is a compression tool that can be used for small extra compression. It does not run on 16 bit PNGs.
 
 It can be installed on macOS with:
 

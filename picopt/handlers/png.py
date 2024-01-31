@@ -1,7 +1,9 @@
 """PNG format."""
 from pathlib import Path
 from types import MappingProxyType
+from typing import Any
 
+import oxipng
 from PIL.GifImagePlugin import GifImageFile
 from PIL.PngImagePlugin import PngImageFile
 from termcolor import cprint
@@ -20,43 +22,33 @@ class Png(ImageHandler):
     CONVERT_FROM_FORMAT_STRS = frozenset(
         CONVERTIBLE_FORMAT_STRS | {GifImageFile.format}
     )
-    PIL2_KWARGS = MappingProxyType({"optimize": True})
     PROGRAMS = (
         ("pil2png",),
-        ("oxipng", "optipng", "pil2native"),
+        ("internal_oxipng",),
         ("pngout",),
     )
-    _OXIPNG_ARGS: tuple[str, ...] = (
-        "--opt",
-        "5",
-        "--alpha",
-        "--fix",
-        "--force",
-        "--zopfli",
+    _OXIPNG_KWARGS: MappingProxyType[str, Any] = MappingProxyType(
+        {
+            "level": 5,
+            "fix_errors": True,
+            "force": True,
+            "optimize_alpha": True,
+            "deflate": oxipng.Deflaters.zopfli(15),
+        }
     )
-    _OPTIPNG_ARGS: tuple[str, ...] = ("-o5", "-fix", "-force")
     _PNGOUT_ARGS: tuple[str, ...] = ("-force", "-y")
 
-    def oxipng(
-        self, exec_args: tuple[str, ...], old_path: Path, new_path: Path
-    ) -> Path:
-        """Run the external program oxipng on the file."""
-        args = [*exec_args, *self._OXIPNG_ARGS]
+    def internal_oxipng(
+        self,
+        exec_args: tuple[str, ...],  # noqa: ARG002
+        old_path: Path,
+        new_path: Path,
+    ):
+        """Run internal oxipng on the file."""
+        opts = {**self._OXIPNG_KWARGS}
         if not self.config.keep_metadata:
-            args += ["--strip", "safe"]
-        args += ["--out", str(new_path), str(old_path)]
-        self.run_ext(tuple(args))
-        return new_path
-
-    def optipng(
-        self, exec_args: tuple[str, ...], old_path: Path, new_path: Path
-    ) -> Path:
-        """Run the external program optipng on the file."""
-        args = [*exec_args, *self._OPTIPNG_ARGS]
-        if not self.config.keep_metadata:
-            args += ["-strip", "all"]
-        args += ["-out", str(new_path), str(old_path)]
-        self.run_ext(tuple(args))
+            opts["strip"] = oxipng.StripChunks.safe()
+        oxipng.optimize(old_path, output=new_path, **opts)
         return new_path
 
     def pngout(

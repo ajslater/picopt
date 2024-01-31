@@ -46,7 +46,7 @@ class Handler(ABC):
     OUTPUT_FILE_FORMAT: FileFormat = FileFormat(OUTPUT_FORMAT_STR, False, False)
     INPUT_FILE_FORMATS: frozenset[FileFormat] = frozenset({OUTPUT_FILE_FORMAT})
     CONVERT_FROM_FORMAT_STRS: frozenset[str] = frozenset()
-    INTERNAL: str = "python_internal"
+    INTERNAL: str = "internal"
     PROGRAMS: tuple[tuple[str, ...], ...] = ()
     WORKING_SUFFIX: str = f"{PROGRAM_NAME}__tmp"
 

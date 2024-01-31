@@ -9,10 +9,10 @@ from tests.integration.base_test_images import BaseTestImagesDir
 __all__ = ()
 FNS = {
     "07themecamplist.pdf": (93676, 93676, ("pdf", 93676), ("pdf", 93676)),
-    "test_animated_gif.gif": (16383, 16358, ("png", 13409), ("webp", 11866)),
+    "test_animated_gif.gif": (16383, 16358, ("png", 13411), ("webp", 11866)),
     "test_animated_png.png": (63435, 63435, ("png", 63435), ("webp", 53522)),
     "test_animated_webp.webp": (13610, 13610, ("webp", 13610), ("webp", 13610)),
-    "test_png.png": (7967, 4379, ("png", 4379), ("webp", 3870)),
+    "test_png.png": (7967, 4149, ("png", 4149), ("webp", 3870)),
     "test_pre-optimized_jpg.jpg": (
         22664,
         22664,
@@ -35,9 +35,9 @@ if platform.system() == "Darwin":
     FNS.update(
         {
             "test_bmp.bmp": (141430, 141430, ("png", 67215), ("webp", 47524)),
-            "test_gif.gif": (138952, 138944, ("png", 112467), ("webp", 107924)),
+            "test_gif.gif": (138952, 138944, ("png", 112137), ("webp", 107924)),
             "test_jpg.jpg": (97373, 87913, ("jpg", 87913), ("jpg", 87913)),
-            "test_png_16rgba.png": (3435, 2870, ("png", 2870), ("webp", 1142)),
+            "test_png_16rgba.png": (3435, 2090, ("png", 2090), ("webp", 1142)),
             "test_pnm.pnm": (27661, 27661, ("png", 15510), ("webp", 12808)),
             "test_pre-optimized_png.png": (
                 256572,
@@ -52,9 +52,9 @@ else:
     FNS.update(
         {
             "test_bmp.bmp": (141430, 141430, ("png", 67215), ("webp", 47524)),
-            "test_gif.gif": (138952, 138944, ("png", 112467), ("webp", 107924)),
+            "test_gif.gif": (138952, 138944, ("png", 112137), ("webp", 107924)),
             "test_jpg.jpg": (97373, 87922, ("jpg", 87922), ("jpg", 87922)),
-            "test_png_16rgba.png": (3435, 2870, ("png", 2870), ("webp", 1142)),
+            "test_png_16rgba.png": (3435, 2090, ("png", 2090), ("webp", 1142)),
             "test_pnm.pnm": (27661, 27661, ("png", 15510), ("webp", 12808)),
             "test_pre-optimized_png.png": (
                 256572,
@@ -68,7 +68,7 @@ else:
 
 EXHAUSTIVE_FNS = MappingProxyType(
     {
-        "test_png_16rgba.png": (3435, 2870, ("png", 2870), ("webp", 738)),
+        "test_png_16rgba.png": (3435, 2090, ("png", 2090), ("webp", 738)),
         "test_webp_lossless.webp": (5334, 3870, ("webp", 3870), ("webp", 1946)),
         "test_webp_lossless_pre-optimized.webp": (
             3798,
