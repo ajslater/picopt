@@ -116,6 +116,8 @@ class ImageHandler(Handler, metaclass=ABCMeta):
     ) -> Path:
         """Internally convert unhandled formats to uncompressed png for cwebp."""
         # It's faster to create a undercompressed png than anything else
+        if self.input_file_format.format_str == PngImageFile.format:
+            return old_path
         return self.pil2native(
             self.EMPTY_EXEC_ARGS,
             old_path,
