@@ -1,13 +1,17 @@
 """WebP format."""
 from abc import ABC
-from pathlib import Path
+from io import BytesIO
 from types import MappingProxyType
+from typing import TYPE_CHECKING, BinaryIO
 
 from PIL.WebPImagePlugin import WebPImageFile
 
 from picopt.formats import TIFF_FILE_FORMAT, FileFormat
 from picopt.handlers.image import ImageHandler
 from picopt.handlers.png import Png
+
+if TYPE_CHECKING:
+    from pathlib import Path
 
 
 class WebPBase(ImageHandler, ABC):
@@ -36,10 +40,9 @@ class WebPBase(ImageHandler, ABC):
     def cwebp(
         self,
         exec_args: tuple[str, ...],
-        old_path: Path,
-        new_path: Path,
+        input_buffer: BinaryIO,
         opts: tuple[str, ...] | None = None,
-    ) -> Path:
+    ) -> BinaryIO:
         """Optimize using cwebp."""
         args = [*exec_args]
         if opts:
@@ -50,9 +53,30 @@ class WebPBase(ImageHandler, ABC):
             args += ["all"]
         else:
             args += ["none"]
-        args += [str(old_path), "-o", str(new_path)]
-        self.run_ext(tuple(args))
-        return new_path
+
+        input_path_tmp = isinstance(input_buffer, BytesIO)
+        input_path: Path | None = (
+            self.get_working_path("cwebp-input")
+            if input_path_tmp
+            else self.path_info.path
+        )
+        if not input_path:
+            reason = "No input path for cwebp"
+            raise ValueError(reason)
+
+        output_path = self.get_working_path("cwebp-output")
+        output_path_tmp = bool(self.path_info.path)
+        args += [str(input_path), "-o", str(output_path)]
+        # XXX if python cwebp gains enough options to beat this or
+        #     or cwebp gains stdin or stdout powers we can not use this
+        return self.run_ext_fs(
+            tuple(args),
+            input_buffer,
+            input_path,
+            output_path,
+            input_path_tmp,
+            output_path_tmp,
+        )
 
 
 class WebPLossless(WebPBase):
@@ -78,10 +102,9 @@ class WebPLossless(WebPBase):
     def cwebp(
         self,
         exec_args: tuple[str, ...],
-        old_path: Path,
-        new_path: Path,
+        input_buffer: BinaryIO,
         opts: tuple[str, ...] | None = None,
-    ) -> Path:
+    ) -> BinaryIO:
         """Optimize using cwebp and with runtime optional arguments."""
         opts = self.NEAR_LOSSLESS_OPTS if self.config.near_lossless else None
-        return super().cwebp(exec_args, old_path, new_path, opts=opts)
+        return super().cwebp(exec_args, input_buffer, opts=opts)

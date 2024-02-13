@@ -12,11 +12,10 @@ from picopt.handlers.png import Png
 from picopt.handlers.webp import WebPLossless
 from picopt.handlers.zip import Cbr, Rar
 
-DEFAULT_FORMAT_STRS = frozenset(
+_DEFAULT_FORMAT_STRS = frozenset(
     [handler_cls.OUTPUT_FORMAT_STR for handler_cls in DEFAULT_HANDLERS]
 )
-EXTRA_FORMAT_STRS = ALL_FORMAT_STRS - DEFAULT_FORMAT_STRS
-FORMAT_DELIMETER = ","
+_LIST_DELIMETER = ","
 try:
     VERSION = version(PROGRAM_NAME)
 except PackageNotFoundError:
@@ -29,7 +28,7 @@ class SplitArgsAction(Action):
     def __call__(self, _parser, namespace, values, _option_string=None):
         """Split values string into list."""
         if isinstance(values, str):
-            values = tuple(sorted(values.strip().split(FORMAT_DELIMETER)))
+            values = tuple(sorted(values.strip().split(_LIST_DELIMETER)))
         setattr(namespace, self.dest, values)
 
 
@@ -89,8 +88,8 @@ def get_arguments(params: tuple[str, ...] | None = None) -> Namespace:
         action=SplitArgsAction,
         dest="formats",
         help="Only optimize images of the specified "
-        f"'{FORMAT_DELIMETER}' delimited formats from: {_comma_join(ALL_FORMAT_STRS)}. "
-        f"Defaults to {_comma_join(DEFAULT_FORMAT_STRS)}",
+        f"comma delimited formats from: {_comma_join(ALL_FORMAT_STRS)}. "
+        f"Defaults to {_comma_join(_DEFAULT_FORMAT_STRS)}",
     )
     parser.add_argument(
         "-x",
@@ -129,7 +128,7 @@ def get_arguments(params: tuple[str, ...] | None = None) -> Namespace:
         "--ignore",
         action=SplitArgsAction,
         dest="ignore",
-        help="List of globs to ignore.",
+        help="Comma dilenated list of globs to ignore.",
     )
     parser.add_argument(
         "-b",

@@ -47,4 +47,5 @@ class TestPreserve(BaseTestImagesDir):
             print(name)
             for stat_name_suffix in STATS:
                 stat_name = "st_" + stat_name_suffix
+                print(f"\t{stat_name}")
                 assert getattr(old_stat, stat_name) == getattr(new_stat, stat_name)

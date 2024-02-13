@@ -1,5 +1,5 @@
 """PNG format."""
-from pathlib import Path
+from io import BufferedReader, BytesIO
 from types import MappingProxyType
 from typing import Any
 
@@ -27,6 +27,7 @@ class Png(ImageHandler):
         ("internal_oxipng",),
         ("pngout",),
     )
+    PIL2_KWARGS = MappingProxyType({"optimize": True})
     _OXIPNG_KWARGS: MappingProxyType[str, Any] = MappingProxyType(
         {
             "level": 5,
@@ -36,35 +37,34 @@ class Png(ImageHandler):
             "deflate": oxipng.Deflaters.zopfli(15),
         }
     )
-    _PNGOUT_ARGS: tuple[str, ...] = ("-force", "-y")
+    _PNGOUT_ARGS: tuple[str, ...] = ("-", "-", "-force", "-y", "-q")
+    _PNGOUT_DEPTH_MAX = 8
 
     def internal_oxipng(
-        self,
-        exec_args: tuple[str, ...],  # noqa: ARG002
-        old_path: Path,
-        new_path: Path,
-    ):
+        self, _exec_args: tuple[str, ...], input_buffer: BufferedReader | BytesIO
+    ) -> BytesIO:
         """Run internal oxipng on the file."""
         opts = {**self._OXIPNG_KWARGS}
         if not self.config.keep_metadata:
             opts["strip"] = oxipng.StripChunks.safe()
-        oxipng.optimize(old_path, output=new_path, **opts)
-        return new_path
+        input_buffer.seek(0)
+        with input_buffer:
+            result = oxipng.optimize_from_memory(input_buffer.read(), **opts)
+        return BytesIO(result)
 
     def pngout(
-        self, exec_args: tuple[str, ...], old_path: Path, new_path: Path
-    ) -> Path:
+        self,
+        exec_args: tuple[str, ...],
+        input_buffer: BufferedReader | BytesIO,
+    ) -> BytesIO | BufferedReader:
         """Run the external program pngout on the file."""
-        depth = png_bit_depth(old_path)
-        if depth in (16, None):
+        depth = png_bit_depth(input_buffer)
+        if not depth or depth > self._PNGOUT_DEPTH_MAX or depth < 1:
             cprint(
-                f"Skipped pngout for {depth} bit PNG: {old_path}",
+                f"Skipped pngout for {depth} bit PNG: {self.original_path}",
                 "white",
                 attrs=["dark"],
             )
-            result = old_path
-        else:
-            args = (*exec_args, *self._PNGOUT_ARGS, str(old_path), str(new_path))
-            self.run_ext(args)
-            result = new_path
-        return result
+            return input_buffer
+        args = (*exec_args, *self._PNGOUT_ARGS)
+        return self.run_ext(args, input_buffer)

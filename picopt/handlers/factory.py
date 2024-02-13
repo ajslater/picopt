@@ -1,6 +1,6 @@
 """Return a handler for a path."""
 from collections.abc import Mapping
-from pathlib import Path
+from contextlib import suppress
 from typing import Any
 
 from confuse.templates import AttrDict
@@ -10,12 +10,10 @@ from PIL.TiffImagePlugin import TiffImageFile
 from termcolor import cprint
 
 from picopt.formats import LOSSLESS_FORMAT_STRS, TIFF_LOSSLESS_COMPRESSION, FileFormat
-from picopt.handlers.container import ContainerHandler
 from picopt.handlers.handler import Handler
-from picopt.handlers.png_animated import PngAnimated
+from picopt.handlers.non_pil import NonPILIdentifier
 from picopt.handlers.svg import Svg
 from picopt.handlers.webp import WebPLossless
-from picopt.handlers.webp_animated import WebPAnimatedLossless
 from picopt.handlers.zip import Cbr, Cbz, EPub, Rar, Zip
 from picopt.path import PathInfo
 from picopt.pillow.webp_lossless import is_lossless
@@ -23,19 +21,18 @@ from picopt.pillow.webp_lossless import is_lossless
 ###################
 # Get File Format #
 ###################
-_CONTAINER_HANDLERS: tuple[type[ContainerHandler], ...] = (
+_NON_PIL_HANDLERS: tuple[type[NonPILIdentifier], ...] = (
+    Svg,
     Cbz,
     Zip,
     Cbr,
     Rar,
     EPub,
-    PngAnimated,
-    WebPAnimatedLossless,
 )
 
 
 def _extract_image_info(
-    path: Path, keep_metadata: bool
+    path_info: PathInfo, keep_metadata: bool
 ) -> tuple[str | None, dict[str, Any]]:
     """Get image format and info from a file."""
     image_format_str = None
@@ -43,35 +40,39 @@ def _extract_image_info(
     n_frames = 1
     animated = False
     try:
-        lower_suffix = path.suffix.lower()
-        if lower_suffix == Svg.INPUT_FORMAT_SUFFIX:
-            image_format_str = Svg.OUTPUT_FORMAT_STR
-        else:
-            with Image.open(path, mode="r") as image:
-                image.verify()
-            image.close()  # for animated images
-            with Image.open(path, mode="r") as image:
-                image_format_str = image.format
-                if image_format_str:
-                    info = image.info if keep_metadata else {}
-                    animated = getattr(image, "is_animated", False)
-                    info["animated"] = animated
-                    if animated:
-                        n_frames = image.n_frames
-                        if n_frames is not None:
-                            info["n_frames"] = n_frames
-                    if image_format_str == MpoImageFile.format:
-                        info["mpinfo"] = image.mpinfo  # type: ignore
-            image.close()  # for animated images
+        fp = path_info.path_or_buffer()
+        with Image.open(fp) as image:
+            image.verify()
+        image.close()  # for animated images
+        with suppress(AttributeError):
+            fp.close()  # type: ignore
+        fp = path_info.path_or_buffer()
+        with Image.open(fp) as image:
+            image_format_str = image.format
+            if image_format_str:
+                info = image.info if keep_metadata else {}
+                animated = getattr(image, "is_animated", False)
+                info["animated"] = animated
+                if animated:
+                    n_frames = image.n_frames
+                    if n_frames is not None:
+                        info["n_frames"] = n_frames
+                if image_format_str == MpoImageFile.format:
+                    info["mpinfo"] = image.mpinfo  # type: ignore
+        image.close()  # for animated images
+        with suppress(AttributeError):
+            fp.close()  # type: ignore
     except UnidentifiedImageError:
         pass
     return image_format_str, info
 
 
-def _is_lossless(image_format_str: str, path: Path, info: Mapping[str, Any]) -> bool:
+def _is_lossless(
+    image_format_str: str, path_info: PathInfo, info: Mapping[str, Any]
+) -> bool:
     """Determine if image format is lossless."""
     if image_format_str == WebPLossless.OUTPUT_FORMAT_STR:
-        lossless = is_lossless(str(path))
+        lossless = is_lossless(path_info.fp_or_buffer())
     elif image_format_str == TiffImageFile.format:
         lossless = info.get("compression") in TIFF_LOSSLESS_COMPRESSION
     else:
@@ -80,36 +81,38 @@ def _is_lossless(image_format_str: str, path: Path, info: Mapping[str, Any]) -> 
 
 
 def _get_image_format(
-    path: Path, keep_metadata: bool
+    path_info: PathInfo, keep_metadata: bool
 ) -> tuple[FileFormat | None, Mapping[str, Any]]:
     """Construct the image format with PIL."""
-    image_format_str, info = _extract_image_info(path, keep_metadata)
+    image_format_str, info = _extract_image_info(path_info, keep_metadata)
 
     file_format = None
     if image_format_str:
-        lossless = _is_lossless(image_format_str, path, info)
+        lossless = _is_lossless(image_format_str, path_info, info)
         file_format = FileFormat(
             image_format_str, lossless, info.get("animated", False)
         )
     return file_format, info
 
 
-def _get_container_format(path: Path) -> FileFormat | None:
+def _get_non_pil_format(path_info: PathInfo) -> FileFormat | None:
     """Get the container format by querying each handler."""
     file_format = None
-    for container_handler in _CONTAINER_HANDLERS:
-        file_format = container_handler.identify_format(path)
+    for handler in _NON_PIL_HANDLERS:
+        file_format = handler.identify_format(path_info)
         if file_format is not None:
             break
+    else:
+        file_format = None
     return file_format
 
 
 def _create_handler_get_format(
-    config: AttrDict, path: Path
+    config: AttrDict, path_info: PathInfo
 ) -> tuple[FileFormat | None, Mapping[str, Any]]:
-    file_format, info = _get_image_format(path, config.keep_metadata)
+    file_format, info = _get_image_format(path_info, config.keep_metadata)
     if not file_format:
-        file_format = _get_container_format(path)
+        file_format = _get_non_pil_format(path_info)
     return file_format, info
 
 
@@ -139,7 +142,7 @@ def _create_handler_get_handler_class(
 # No Handler Class #
 ####################
 def _create_handler_no_handler_class(
-    config: AttrDict, path: Path, file_format: FileFormat | None
+    config: AttrDict, path_info: PathInfo, file_format: FileFormat | None
 ) -> None:
     if config.verbose > 1 and not config.list_only:
         if file_format:
@@ -152,8 +155,9 @@ def _create_handler_no_handler_class(
                 fmt += " animated"
         else:
             fmt = "unknown"
+        # TODO add container path as prefix?
         cprint(
-            f"Skipped {path}: ({fmt}) is not an enabled image or container.",
+            f"Skipped {path_info.name()}: ({fmt}) is not an enabled image or container.",
             "white",
             attrs=["dark"],
         )
@@ -166,17 +170,20 @@ def create_handler(config: AttrDict, path_info: PathInfo) -> Handler | None:
     # This is the consumer of config._format_handlers
     handler_cls: type[Handler] | None = None
     try:
-        file_format, info = _create_handler_get_format(config, path_info.path)
+        file_format, info = _create_handler_get_format(config, path_info)
         handler_cls = _create_handler_get_handler_class(
             config, path_info.convert, file_format
         )
     except OSError as exc:
         cprint(f"WARNING: getting handler {exc}", "yellow")
+        from traceback import print_exc
+
+        print_exc()
         file_format = None
         info = {}
 
     if handler_cls and file_format is not None:
         handler = handler_cls(config, path_info, file_format, info)
     else:
-        handler = _create_handler_no_handler_class(config, path_info.path, file_format)
+        handler = _create_handler_no_handler_class(config, path_info, file_format)
     return handler

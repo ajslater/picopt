@@ -16,33 +16,27 @@ if TYPE_CHECKING:
 class ReportInfo:
     """Info for Reports."""
 
-    path: Path
+    # TODO just combine with ReportStats
+
+    path: Path | None
     convert: bool
     test: bool
     bytes_in: int = 0
     bytes_out: int = 0
     exc: Exception | None = None
     iterations: int = 0
+    data: bytes = b""
 
 
-class ReportStats:
+class ReportStats(ReportInfo):
     """Container for reported stats from optimization operations."""
 
     _TAB = " " * 4
 
-    def __init__(
-        self,
-        info: ReportInfo,
-    ) -> None:
+    def __init__(self, *args, **kwargs) -> None:
         """Initialize required instance variables."""
-        self.path = info.path
-        self.test = info.test
-        self.convert = info.convert
-        self.exc = info.exc
-        self.bytes_in = info.bytes_in
-        self.bytes_out = info.bytes_out
+        super().__init__(*args, **kwargs)
         self.saved = self.bytes_in - self.bytes_out
-        self.iterations = info.iterations
 
     def _new_percent_saved(self) -> str:
         """Spit out how much space the optimization saved."""
@@ -54,12 +48,15 @@ class ReportStats:
 
     def _report_saved(self) -> str:
         """Return the percent saved."""
-        report = ""
-
-        report += f"{self.path}: "
+        report = f"{self.path}: "
         report += self._new_percent_saved()
         if self.test:
-            report += " could be saved."
+            report += " would be"
+        if self.saved > 0:
+            report += " saved"
+        elif self.saved < 0:
+            report += " lost"
+
         if self.iterations > 1:
             report += f" ({self.iterations} iterations)"
         return report

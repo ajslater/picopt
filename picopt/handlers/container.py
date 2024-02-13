@@ -1,8 +1,8 @@
 """Optimize comic archives."""
-import shutil
 from abc import ABCMeta, abstractmethod
-from collections.abc import Mapping
-from pathlib import Path
+from collections.abc import Generator, Mapping
+from io import BytesIO
+from multiprocessing.pool import ApplyResult
 
 from confuse.templates import AttrDict
 from termcolor import cprint
@@ -10,7 +10,7 @@ from termcolor import cprint
 from picopt.formats import FileFormat
 from picopt.handlers.handler import Handler
 from picopt.path import PathInfo
-from picopt.stats import ReportInfo, ReportStats
+from picopt.stats import ReportStats
 
 
 class ContainerHandler(Handler, metaclass=ABCMeta):
@@ -21,15 +21,15 @@ class ContainerHandler(Handler, metaclass=ABCMeta):
 
     @classmethod
     @abstractmethod
-    def identify_format(cls, path: Path) -> FileFormat | None:
+    def identify_format(cls, path_info: PathInfo) -> FileFormat | None:
         """Return the format if this handler can handle this path."""
 
     @abstractmethod
-    def unpack_into(self) -> None:
+    def unpack_into(self) -> Generator[PathInfo, None, None]:
         """Unpack a container into a tmp dir to work on it's contents."""
 
     @abstractmethod
-    def pack_into(self, working_path: Path) -> None:
+    def pack_into(self) -> BytesIO:
         """Create a container from a tmp dir's contents."""
 
     def __init__(
@@ -47,65 +47,54 @@ class ContainerHandler(Handler, metaclass=ABCMeta):
             info,
         )
         self.comment: bytes | None = None
-        self.tmp_container_dir: Path = Path(
-            str(self.get_working_path()) + self.CONTAINER_DIR_SUFFIX
-        )
+        self._tasks: dict[PathInfo, ApplyResult] = {}
+        self._optimized_contents: dict[PathInfo, bytes] = {}
 
-    def unpack(self) -> Handler | ReportStats:
+    def get_container_paths(self) -> tuple[str, ...]:
+        """Create a container path for output."""
+        return (*self.path_info.container_paths, str(self.original_path))
+
+    def unpack(self) -> Generator[PathInfo, None, None]:
         """Create directory and unpack container."""
-        try:
-            if self.config.verbose:
-                cprint(f"Unpacking {self.original_path}...", end="")
-
-            # create a clean tmpdir
-            if self.tmp_container_dir.exists():
-                shutil.rmtree(self.tmp_container_dir)
-            self.tmp_container_dir.mkdir(parents=True)
-
-            # extract archive into the tmpdir
-            self.unpack_into()
-
-            if self.config.verbose:
-                cprint("done")
-        except Exception as exc:
-            return self.error(exc)
-        return self
-
-    def cleanup_after_optimize(self, last_working_path: Path) -> tuple[int, int]:
-        """Clean up the temp dir as well as the old container."""
         if self.config.verbose:
-            cprint(".", end="")
-        shutil.rmtree(self.tmp_container_dir)
+            cprint(f"Unpacking {self.original_path}...", end="")
+
+        yield from self.unpack_into()
 
         if self.config.verbose:
-            cprint(".", end="")
-        bytes_count = super().cleanup_after_optimize(last_working_path)
+            cprint("done")
 
-        if self.config.verbose:
-            cprint("done.")
-        return bytes_count
+    def set_task(self, path_info: PathInfo, mp_result: ApplyResult | None) -> None:
+        """Store the mutiprocessing task."""
+        if mp_result is None:
+            # if not handled by picopt, place it in the results.
+            self._optimized_contents[path_info] = path_info.data()
+        else:
+            self._tasks[path_info] = mp_result
+
+    def optimize_contents(self) -> None:
+        """Store results from mutiprocessing task."""
+        for path_info in tuple(self._tasks):
+            mp_results = self._tasks.pop(path_info)
+            report = mp_results.get()
+            # Clearing has to happen AFTER mp_results.get() or we risk not passing the data
+            path_info.data_clear()
+            self._optimized_contents[path_info] = report.data
 
     def repack(self) -> ReportStats:
         """Create a new container and clean up the tmp dir."""
-        new_path = self.get_working_path()
         try:
             # archive into new filename
             if self.config.verbose:
-                cprint(f"Repacking {self.final_path}", end="")
-            self.pack_into(new_path)
+                cprint(f"Repacking {self.final_path}...", end="")
+            container_buffer = self.pack_into()
 
-            bytes_count = self.cleanup_after_optimize(new_path)
-            info = ReportInfo(
-                self.final_path,
-                self.convert,
-                self.config.test,
-                bytes_count[0],
-                bytes_count[1],
-            )
-            report_stats = ReportStats(info)
+            # TODO how different is this from what ImageHandler does?
+            report_stats = self.cleanup_after_optimize(container_buffer)
+            if self.config.verbose:
+                cprint("done")
             if self.config.verbose:
                 report_stats.report()
         except Exception as exc:
-            shutil.rmtree(self.tmp_container_dir, ignore_errors=True)
             return self.error(exc)
         return report_stats

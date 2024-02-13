@@ -1,6 +1,7 @@
 """Gif format."""
-from pathlib import Path
+from io import BytesIO
 from types import MappingProxyType
+from typing import BinaryIO
 
 from PIL.GifImagePlugin import GifImageFile
 
@@ -15,17 +16,19 @@ class Gif(ImageHandler):
     OUTPUT_FILE_FORMAT = FileFormat(OUTPUT_FORMAT_STR, True, False)
     INPUT_FILE_FORMATS = frozenset({OUTPUT_FILE_FORMAT})
     PROGRAMS = (("gifsicle", "pil2native"),)
-    PIL2_KWARGS = MappingProxyType({"optimize": True, "save_all": True})
-    _GIFSICLE_ARGS_PREFIX: tuple[str, ...] = ("--optimize=3", "--threads")
+    PIL2_KWARGS = MappingProxyType({"optimize": True})
+    _GIFSICLE_ARGS_PREFIX: tuple[str, ...] = (
+        "--optimize=3",
+        "--threads",
+        "--output",
+        "-",
+        "-",
+    )
 
-    def gifsicle(
-        self, exec_args: tuple[str, ...], old_path: Path, new_path: Path
-    ) -> Path:
+    def gifsicle(self, exec_args: tuple[str, ...], input_buffer: BinaryIO) -> BytesIO:
         """Return gifsicle args."""
-        opt_args = (*self._GIFSICLE_ARGS_PREFIX, "--output", str(new_path))
-        args = (*exec_args, *opt_args, str(old_path))
-        self.run_ext(args)
-        return new_path
+        args = (*exec_args, *self._GIFSICLE_ARGS_PREFIX)
+        return self.run_ext(args, input_buffer)
 
 
 class GifAnimated(Gif):

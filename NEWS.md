@@ -11,6 +11,7 @@
   - `--destroy-metadata` option becomes `--strip-metadata`
   - `--near-lossless` option for lossless WebP
   - `--preserve` file attributes after optimization.
+  - ~25% faster due to avoiding disk io.
 - Dev
   - walk.run now returns totals instead of running report on them.
 

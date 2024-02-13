@@ -1,14 +1,7 @@
 """Unpack items from a file descriptor."""
-import struct
 from dataclasses import dataclass
+from mmap import mmap
 from typing import BinaryIO
-
-
-def unpack(
-    fmt_type: str, length: int, file_desc: BinaryIO
-) -> tuple[bytes, ...] | tuple[int]:
-    """Unpack information from a file according to format string & length."""
-    return struct.unpack(fmt_type * length, file_desc.read(length))
 
 
 @dataclass
@@ -16,10 +9,10 @@ class ImageHeader:
     """The seek location and value of a byte header."""
 
     offset: int
-    compare_bytes: tuple[bytes, ...]
+    compare_bytes: bytes
 
-    def compare(self, img: BinaryIO) -> bool:
+    def compare(self, img: BinaryIO | mmap) -> bool:
         """Seek to a spot in a binary file and compare a byte array."""
         img.seek(self.offset)
-        compare = unpack("c", len(self.compare_bytes), img)
+        compare = img.read(len(self.compare_bytes))
         return compare == self.compare_bytes

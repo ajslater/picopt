@@ -1,6 +1,6 @@
 """JPEG format."""
 from io import BytesIO
-from pathlib import Path
+from typing import BinaryIO
 
 import piexif
 from PIL.JpegImagePlugin import JpegImageFile
@@ -32,33 +32,21 @@ class Jpeg(ImageHandler):
         """Initialize suffix instance variables."""
         return frozenset((default_suffix, "." + cls.OUTPUT_FORMAT_STR.lower()))
 
-    def _jpegtran(
-        self, exec_args: tuple[str, ...], old_path: Path, new_path: Path
-    ) -> Path:
+    def _jpegtran(self, exec_args: tuple[str, ...], input_buffer: BinaryIO) -> BytesIO:
         """Run the jpegtran type program."""
-        args = [*exec_args, *self._JPEGTRAN_ARGS_PREFIX]
-        args += ["-copy"]
-        if self.config.keep_metadata:
-            args += ["all"]
-        else:
-            args += ["none"]
-        args += ["-outfile", str(new_path), str(old_path)]
-        self.run_ext(tuple(args))
-        return new_path
+        copy_arg = "all" if self.config.keep_metadata else "none"
+        args = (*exec_args, *self._JPEGTRAN_ARGS_PREFIX, "-copy", copy_arg)
+        return self.run_ext(args, input_buffer)
 
-    def mozjpeg(
-        self, exec_args: tuple[str, ...], old_path: Path, new_path: Path
-    ) -> Path:
+    def mozjpeg(self, exec_args: tuple[str, ...], input_buffer: BinaryIO) -> BytesIO:
         """Create argument list for mozjpeg."""
-        return self._jpegtran(exec_args, old_path, new_path)
+        return self._jpegtran(exec_args, input_buffer)
 
-    def jpegtran(
-        self, exec_args: tuple[str, ...], old_path: Path, new_path: Path
-    ) -> Path:
+    def jpegtran(self, exec_args: tuple[str, ...], input_buffer: BinaryIO) -> BytesIO:
         """Create argument list for jpegtran."""
-        return self._jpegtran(exec_args, old_path, new_path)
+        return self._jpegtran(exec_args, input_buffer)
 
-    def _mpo2jpeg_get_offsets(self, old_path) -> tuple[int, int]:
+    def _mpo2jpeg_get_frame(self, input_buffer: BinaryIO) -> bytes:
         """Get Primary JPEG Offsets."""
         mpo_info = self.info.pop("mpinfo", {})
         mpo_metadata_list = mpo_info.get(MPO_METADATA, ())
@@ -67,49 +55,39 @@ class Jpeg(ImageHandler):
             attr = mpo_metadata.get("Attribute", {})
             mp_type = attr.get("MPType")
             if mp_type == MPO_TYPE_PRIMARY:
-                offset = mpo_metadata.get("DataOffset")
-                size = mpo_metadata.get("Size")
+                offset = mpo_metadata.get("DataOffset", -1)
+                size = mpo_metadata.get("Size", -1)
                 break
         else:
-            offset = size = None
+            offset = size = -1
 
-        result = (offset, size)
-        if None in result:
-            reason = f"{old_path} could not find {MPO_TYPE_PRIMARY} in MPO"
+        if -1 in (offset, size):
+            reason = f"{self.original_path} could not find {MPO_TYPE_PRIMARY} in MPO"
             raise ValueError(reason)
-        return result  # type: ignore
+        input_buffer.seek(offset)
+        return input_buffer.read(size)
 
-    def _mpo2jpeg_copy_exif(self, jpeg_data) -> bytes:
+    def _mpo2jpeg_copy_exif(self, jpeg_data: bytes) -> BytesIO:
         """Copy MPO EXIF into JPEG."""
+        output_buffer = BytesIO()
         if exif := self.info.get("exif"):
-            jpeg_data_with_exif = BytesIO()
-            piexif.insert(exif, jpeg_data, jpeg_data_with_exif)
-            image = jpeg_data_with_exif.read()
+            piexif.insert(exif, jpeg_data, output_buffer)
         else:
-            image = jpeg_data
-        return image
+            output_buffer.write(jpeg_data)
+        return output_buffer
 
     def pil2jpeg(
         self,
         exec_args: tuple[str, ...],  # noqa: ARG002
-        old_path: Path,
-        new_path: Path,
-    ):
+        input_buffer: BinaryIO,
+    ) -> BinaryIO:
         """Convert MPOs with primary images to jpeg."""
         # XXX Much work because PIL doesn't have direct unprocessed file bytes access.
         if self.input_file_format != MPO_FILE_FORMAT:
-            return old_path
+            return input_buffer
 
-        offset, size = self._mpo2jpeg_get_offsets(old_path)
-
-        with old_path.open("rb") as mpo_file:
-            mpo_file.seek(offset)
-            jpeg_image = mpo_file.read(size)
-
-        jpeg_image = self._mpo2jpeg_copy_exif(jpeg_image)
-
-        with new_path.open("wb") as jpeg_file:
-            jpeg_file.write(jpeg_image)
+        jpeg_data = self._mpo2jpeg_get_frame(input_buffer)
+        output_buffer = self._mpo2jpeg_copy_exif(jpeg_data)
 
         self.input_file_format = self.OUTPUT_FILE_FORMAT
-        return new_path
+        return output_buffer

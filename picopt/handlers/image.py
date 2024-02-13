@@ -1,16 +1,16 @@
 """FileFormat Superclass."""
 from abc import ABCMeta
 from collections.abc import Mapping
-from pathlib import Path
+from io import BufferedReader, BytesIO
 from types import MappingProxyType
-from typing import Any
+from typing import Any, BinaryIO
 
 from PIL import Image
 from PIL.PngImagePlugin import PngImageFile
 from termcolor import cprint
 
 from picopt.handlers.handler import Handler
-from picopt.stats import ReportInfo, ReportStats
+from picopt.stats import ReportStats
 
 
 class ImageHandler(Handler, metaclass=ABCMeta):
@@ -26,7 +26,6 @@ class ImageHandler(Handler, metaclass=ABCMeta):
 
         And report back statistics.
         """
-        path = self.original_path
         max_iterations = 0
         stages = self.config.computed.handler_stages.get(self.__class__, {})
         if not stages:
@@ -36,38 +35,30 @@ class ImageHandler(Handler, metaclass=ABCMeta):
             )
             raise ValueError
 
-        for func, exec_args in stages.items():
-            if path != self.original_path:
-                self.working_paths.add(path)
+        image_buffer: BinaryIO = self.path_info.fp_or_buffer()
 
-            converge = self.config.near_lossless and func in self.CONVERGEABLE
+        for func, exec_args in stages.items():
             loop = True
-            bytes_in = 0
-            bytes_out = 0
+            converge = self.config.near_lossless and func in self.CONVERGEABLE
             iterations = 0
             while loop:
                 if converge:
-                    bytes_in = path.stat().st_size
-                new_path = self.get_working_path(func)
-                path = getattr(self, func)(exec_args, path, new_path)
-                if converge:
-                    bytes_out = path.stat().st_size
-                loop = (
-                    converge and path.suffix == new_path.suffix and bytes_in > bytes_out
+                    bytes_in = self.get_buffer_len(image_buffer)
+                new_image_buffer: BinaryIO = getattr(self, func)(
+                    exec_args, image_buffer
                 )
+                if image_buffer != new_image_buffer:
+                    image_buffer.close()
+                image_buffer = new_image_buffer
+                if converge:
+                    bytes_out = self.get_buffer_len(image_buffer)
+                loop = converge and bytes_in > bytes_out  # type: ignore
                 iterations += 1
             max_iterations = max(max_iterations, iterations)
 
-        bytes_count = self.cleanup_after_optimize(path)
-        info = ReportInfo(
-            self.final_path,
-            self.convert,
-            self.config.test,
-            bytes_count[0],
-            bytes_count[1],
-            iterations=max_iterations - 1,
-        )
-        return ReportStats(info)
+        report_stats = self.cleanup_after_optimize(image_buffer)
+        report_stats.iterations = max_iterations - 1
+        return report_stats
 
     def optimize_image(self) -> ReportStats:
         """Optimize a given image from a filename."""
@@ -82,26 +73,27 @@ class ImageHandler(Handler, metaclass=ABCMeta):
             report_stats = self.error(exc)
         return report_stats
 
-    def pil2native(  # noqa: PLR0913
+    def pil2native(
         self,
-        exec_args: tuple[str, tuple[str, ...]],  # noqa: ARG002
-        old_path: Path,
-        new_path: Path,
+        _exec_args: tuple[str, tuple[str, ...]],
+        input_buffer: BytesIO | BufferedReader,
         format_str: None | str = None,
         opts: None | Mapping[str, Any] = None,
-    ) -> Path:
+    ) -> BytesIO | BufferedReader:
         """Use PIL to save the image."""
         if self.input_file_format in self.INPUT_FILE_FORMATS:
-            return old_path
+            return input_buffer
         if format_str is None:
             format_str = self.OUTPUT_FORMAT_STR
         if opts is None:
             opts = self.PIL2_KWARGS
+
         info = self.prepare_info(format_str)
 
-        with Image.open(old_path) as image:
+        output_buffer = BytesIO()
+        with Image.open(input_buffer) as image:
             image.save(
-                new_path,
+                output_buffer,
                 format_str,
                 save_all=True,
                 **opts,
@@ -109,16 +101,15 @@ class ImageHandler(Handler, metaclass=ABCMeta):
             )
         image.close()  # for animated images
         self.input_file_format = self.OUTPUT_FILE_FORMAT
-        return new_path
+        return output_buffer
 
     def pil2png(
-        self, _exec_args: tuple[str, ...], old_path: Path, new_path: Path
-    ) -> Path:
+        self, _exec_args: tuple[str, ...], input_buffer: BytesIO | BufferedReader
+    ) -> BytesIO | BufferedReader:
         """Internally convert unhandled formats to uncompressed png for cwebp."""
         return self.pil2native(
             self.EMPTY_EXEC_ARGS,
-            old_path,
-            new_path,
+            input_buffer,
             format_str=PngImageFile.format,
             opts=self.PIL2PNG_KWARGS,
         )

@@ -1,11 +1,13 @@
 """WebP format."""
-from pathlib import Path
+from io import BytesIO
+from typing import BinaryIO
 
 from picopt.formats import SVG_FORMAT_STR, FileFormat
 from picopt.handlers.image import ImageHandler
+from picopt.handlers.non_pil import NonPILIdentifier
 
 
-class Svg(ImageHandler):
+class Svg(ImageHandler, NonPILIdentifier):
     """SVG format class."""
 
     OUTPUT_FORMAT_STR = SVG_FORMAT_STR
@@ -13,27 +15,17 @@ class Svg(ImageHandler):
     INPUT_FORMAT_SUFFIX = "." + OUTPUT_FORMAT_STR.lower()
     INPUT_FILE_FORMATS = frozenset({OUTPUT_FILE_FORMAT})
     PROGRAMS = (("svgo", "npx_svgo"),)
-    _SVGO_ARGS = ("--multipass",)
+    _SVGO_ARGS = ("--multipass", "--output", "-", "--input", "-")
 
-    def _svgo(self, exec_args: tuple[str, ...], old_path: Path, new_path: Path) -> Path:
+    def _svgo(self, exec_args: tuple[str, ...], input_buffer: BinaryIO) -> BytesIO:
         """Optimize using svgo."""
-        args = (
-            *exec_args,
-            *self._SVGO_ARGS,
-            "--input",
-            str(old_path),
-            "--output",
-            str(new_path),
-        )
-        self.run_ext(args)
-        return new_path
+        args = (*exec_args, *self._SVGO_ARGS)
+        return self.run_ext(args, input_buffer)
 
-    def svgo(self, exec_args: tuple[str, ...], old_path: Path, new_path: Path) -> Path:
+    def svgo(self, exec_args: tuple[str, ...], input_buffer: BinaryIO) -> BytesIO:
         """Svgo executable."""
-        return self._svgo(exec_args, old_path, new_path)
+        return self._svgo(exec_args, input_buffer)
 
-    def npx_svgo(
-        self, exec_args: tuple[str, ...], old_path: Path, new_path: Path
-    ) -> Path:
+    def npx_svgo(self, exec_args: tuple[str, ...], input_buffer: BinaryIO) -> BytesIO:
         """Npx installed svgo."""
-        return self._svgo(exec_args, old_path, new_path)
+        return self._svgo(exec_args, input_buffer)

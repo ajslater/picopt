@@ -12,11 +12,11 @@ SRC_CBZ = CONTAINER_DIR / "test_cbz.cbz"
 
 if system() == "Darwin":
     FNS = {
-        "test_cbz.cbz": (93408, 84493, ("cbz", 84493)),
-        "test_cbr.cbr": (93725, 93725, ("cbz", 84506)),
-        "test_rar.rar": (93675, 93675, ("zip", 84493)),
-        "test_zip.zip": (7783, 6918, ("zip", 6918)),
-        "igp-twss.epub": (292448, 281248, ("epub", 281248)),
+        "test_cbz.cbz": (93408, 84544, ("cbz", 84544)),
+        "test_cbr.cbr": (93725, 93725, ("cbz", 88048)),
+        "test_rar.rar": (93675, 93675, ("zip", 88035)),
+        "test_zip.zip": (7783, 7015, ("zip", 7015)),
+        "igp-twss.epub": (292448, 285999, ("epub", 285999)),
     }
 else:
     FNS = {
@@ -84,5 +84,6 @@ class TestContainersDir:
         )
         cli.main(args)
         for name, sizes in FNS.items():
+            print(name)
             path = (TMP_ROOT / name).with_suffix("." + sizes[2][0])
             assert path.stat().st_size == sizes[2][1]
