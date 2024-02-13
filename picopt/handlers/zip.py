@@ -80,8 +80,6 @@ class Zip(NonPILIdentifier, ContainerHandler):
                     and zipinfo.compress_type == ZIP_STORED
                 ):
                     zipinfo.compress_type = ZIP_DEFLATED
-                # now = datetime.utcnow()
-                # zipinfo.date_time = (now.year, now,month, now.day, now,hour, now.minute, now.second)
                 new_zf.writestr(zipinfo, data)
                 if self.config.verbose:
                     cprint(".", end="")
