@@ -32,8 +32,8 @@ By default picopt does not convert images between formats. You must turn on conv
 
 ## 🖼️ <a name="formats">Formats</a>
 
-- By default picopt will optimize GIF, JPEG, PNG, SVG and WEBP images.
-- Picopt can optionally optimize ZIP, ePub, and CBZ containers.
+- By default picopt will optimize GIF, JPEG, PNG, and WEBP images.
+- Picopt can optionally optimize SVG images, ZIP, ePub, and CBZ containers.
 - Picopt can convert many lossless images such as BMP, CBR, CUR, DIB, FITS, GIF, IMT, PCX, PIXAR, PNG,
   PPM, PSD, QOI, SGI, SPIDER, SUN, TGA, TIFF, XBM, and XPM into PNG and WEBP.
 - Picopt can convert Animated GIF, TIFF, and FLI into Animated PNG or WebP files.

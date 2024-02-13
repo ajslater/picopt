@@ -61,19 +61,21 @@ _CONTAINER_CONVERTIBLE_FORMAT_STRS = frozenset(
 )
 
 DEFAULT_HANDLERS = frozenset(
-    {Gif, GifAnimated, Jpeg, Png, Svg, WebPLossless, WebPAnimatedLossless}
+    {Gif, GifAnimated, Jpeg, Png, WebPLossless, WebPAnimatedLossless}
 )
-_EXTRA_HANDLERS = frozenset(
-    {
-        Zip,
-        Rar,
-        Svg,
-        Cbz,
-        Cbr,
-        EPub,
-    }
+_ALL_HANDLERS = frozenset(
+    DEFAULT_HANDLERS
+    | frozenset(
+        {
+            Zip,
+            Rar,
+            Svg,
+            Cbz,
+            Cbr,
+            EPub,
+        }
+    )
 )
-_ALL_HANDLERS = frozenset(DEFAULT_HANDLERS | _EXTRA_HANDLERS)
 ALL_FORMAT_STRS: frozenset[str] = (
     frozenset([cls.OUTPUT_FORMAT_STR for cls in _ALL_HANDLERS])
     | LOSSLESS_FORMAT_STRS

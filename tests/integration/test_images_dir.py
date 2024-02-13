@@ -88,7 +88,7 @@ class TestImagesDir(BaseTestImagesDir):
 
     def test_no_convert(self) -> None:
         """Test no convert."""
-        args = (PROGRAM_NAME, "-rvv", str(self.TMP_ROOT))
+        args = (PROGRAM_NAME, "-rvvx SVG", str(self.TMP_ROOT))
         cli.main(args)
         for name, sizes in self.FNS.items():
             path = self.TMP_ROOT / name
@@ -99,7 +99,7 @@ class TestImagesDir(BaseTestImagesDir):
         args = (
             PROGRAM_NAME,
             "-rvvx",
-            "BMP,GIF,PPM,TIFF",
+            "BMP,PPM,SVG,TIFF",
             "-c",
             "PNG",
             str(self.TMP_ROOT),
@@ -114,7 +114,7 @@ class TestImagesDir(BaseTestImagesDir):
         args = (
             PROGRAM_NAME,
             "-rvvx",
-            "BMP,GIF,PNG,PPM,TIFF",
+            "BMP,PPM,SVG,TIFF",
             "-c",
             "WEBP",
             str(self.TMP_ROOT),

@@ -76,28 +76,28 @@ class TestTimestamps:
 
     def test_no_timestamp(self) -> None:
         """Test no timestamp."""
-        args = (PROGRAM_NAME, "-rtvvv", TMP_FN)
+        args = (PROGRAM_NAME, "-rtvvvx SVG", TMP_FN)
         cli.main(args)
         self._assert_sizes(1)
 
     def test_timestamp(self):
         """Test timestamp."""
         self._write_timestamp(TMP_FN)
-        args = (PROGRAM_NAME, "-rtvvv", TMP_FN)
+        args = (PROGRAM_NAME, "-rtvvvx SVG", TMP_FN)
         cli.main(args)
         self._assert_sizes(0)
 
     def test_different_config(self):
         """Test different config."""
         self._write_timestamp(FN)
-        args = (PROGRAM_NAME, "-brtvvv", TMP_FN)
+        args = (PROGRAM_NAME, "-brtvvvx SVG", TMP_FN)
         cli.main(args)
         self._assert_sizes(1)
 
     def test_timestamp_dir(self):
         """Test timestamp dir."""
         self._write_timestamp(TMP_ROOT)
-        args = (PROGRAM_NAME, "-rtvvv", TMP_FN)
+        args = (PROGRAM_NAME, "-rtvvvx SVG", TMP_FN)
         cli.main(args)
         self._assert_sizes(0)
 
@@ -113,7 +113,7 @@ class TestTimestamps:
         """Test timestamp children."""
         tmp_child_dir = self._setup_child_dir()
         self._write_timestamp(tmp_child_dir)
-        args = (PROGRAM_NAME, "-rtvvv", str(TMP_ROOT))
+        args = (PROGRAM_NAME, "-rtvvvx SVG", str(TMP_ROOT))
         cli.main(args)
         self._assert_sizes(0, tmp_child_dir)
 
@@ -122,7 +122,7 @@ class TestTimestamps:
         tmp_child_dir = self._setup_child_dir()
 
         self._write_timestamp(TMP_ROOT)
-        args = (PROGRAM_NAME, "-rtvvv", str(tmp_child_dir))
+        args = (PROGRAM_NAME, "-rtvvvx SVG", str(tmp_child_dir))
         cli.main(args)
         self._assert_sizes(0, tmp_child_dir)
         assert (tmp_child_dir / TIMESTAMPS_FN).exists()
@@ -130,7 +130,7 @@ class TestTimestamps:
 
     def test_journal_cleanup(self) -> None:
         """Test journal cleanup."""
-        args = (PROGRAM_NAME, "-rtvvv", TMP_FN)
+        args = (PROGRAM_NAME, "-rtvvvx SVG", TMP_FN)
         cli.main(args)
         assert not WAL_PATH.exists()
 
@@ -154,6 +154,6 @@ class TestTimestamps:
     def test_timestamp_read_journal(self):
         """Test timestamp read journal."""
         self._write_wal(TMP_FN)
-        args = (PROGRAM_NAME, "-rtvvv", TMP_FN)
+        args = (PROGRAM_NAME, "-rtvvvx SVG", TMP_FN)
         cli.main(args)
         self._assert_sizes(0)
