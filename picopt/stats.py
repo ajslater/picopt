@@ -8,34 +8,45 @@ from confuse import AttrDict
 from humanize import naturalsize
 from termcolor import cprint
 
+from picopt.path import PathInfo
+
 if TYPE_CHECKING:
     from termcolor._types import Attribute, Color
 
 
 @dataclass
-class ReportInfo:
-    """Info for Reports."""
-
-    # TODO just combine with ReportStats
+class ReportStatBase:
+    """Base dataclass for ReportStats."""
 
     path: Path | None
-    convert: bool
-    test: bool
     bytes_in: int = 0
     bytes_out: int = 0
     exc: Exception | None = None
     iterations: int = 0
     data: bytes = b""
+    bigger: bool = False
+    test: bool = False
+    convert: bool = False
 
 
-class ReportStats(ReportInfo):
+class ReportStats(ReportStatBase):
     """Container for reported stats from optimization operations."""
 
     _TAB = " " * 4
 
-    def __init__(self, *args, **kwargs) -> None:
+    def __init__(
+        self,
+        *args,
+        config: AttrDict | None = None,
+        path_info: PathInfo | None = None,
+        **kwargs,
+    ) -> None:
         """Initialize required instance variables."""
-        super().__init__(*args, **kwargs)
+        # Don't store these large data structs, just tidbits.
+        bigger = config.bigger if config else False
+        test = config.test if config else False
+        convert = path_info.convert if path_info else False
+        super().__init__(*args, bigger=bigger, test=test, convert=convert, **kwargs)
         self.saved = self.bytes_in - self.bytes_out
 
     def _new_percent_saved(self) -> str:
@@ -55,7 +66,11 @@ class ReportStats(ReportInfo):
         if self.saved > 0:
             report += " saved"
         elif self.saved < 0:
+            if not self.bigger:
+                report += " would have been"
             report += " lost"
+            if not self.bigger:
+                report += " (new file discarded)"
 
         if self.iterations > 1:
             report += f" ({self.iterations} iterations)"

@@ -256,18 +256,16 @@ class Handler(ABC):
 
         return ReportStats(
             report_path,
-            self.path_info.convert,
-            self.config.test,
-            bytes_in,
-            bytes_out,
-            data=return_data,  # TODO this should be unneccissary or a buffer.
+            path_info=self.path_info,
+            config=self.config,
+            bytes_in=bytes_in,
+            bytes_out=bytes_out,
+            data=return_data,
         )
 
     def error(self, exc: Exception) -> ReportStats:
         """Return an error result."""
-        return ReportStats(
-            self.original_path, self.path_info.convert, self.config.test, exc=exc
-        )
+        return ReportStats(self.original_path, exc=exc)
 
     def prepare_info(self, format_str) -> MappingProxyType[str, Any]:
         """Prepare an info dict for saving."""

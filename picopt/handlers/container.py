@@ -93,8 +93,8 @@ class ContainerHandler(Handler, metaclass=ABCMeta):
             report_stats = self.cleanup_after_optimize(container_buffer)
             if self.config.verbose:
                 cprint("done")
-            if self.config.verbose:
-                report_stats.report()
         except Exception as exc:
-            return self.error(exc)
+            report_stats = self.error(exc)
+        if self.config.verbose:
+            report_stats.report()
         return report_stats

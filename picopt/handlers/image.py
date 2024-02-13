@@ -64,13 +64,14 @@ class ImageHandler(Handler, metaclass=ABCMeta):
         """Optimize a given image from a filename."""
         try:
             report_stats = self._optimize_with_progs()
-            if self.config.verbose:
-                report_stats.report()
         except Exception as exc:
             import traceback
 
             traceback.print_exc()
             report_stats = self.error(exc)
+        if self.config.verbose:
+            report_stats.report()
+
         return report_stats
 
     def pil2native(
