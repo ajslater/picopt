@@ -23,6 +23,7 @@ from picopt.handlers.svg import Svg
 from picopt.handlers.webp import WebPLossless
 from picopt.handlers.zip import Cbr, Cbz, EPub, Rar, Zip
 from picopt.path import PathInfo
+from picopt.pillow.jpeg_xmp import get_jpeg_xmp
 from picopt.pillow.webp_lossless import is_lossless
 
 ###################
@@ -47,13 +48,7 @@ def _set_xmp(keep_metadata: bool, image: Image.Image, info: dict) -> None:
     try:
         xmp = None
         if image.format == JpegImageFile.format:
-            # Copied from PIL JpegImageFile
-            for segment, content in image.applist:  # type: ignore
-                if segment == "APP1":
-                    marker, xmp_tags = content.split(b"\x00")[:2]
-                    if marker == b"http://ns.adobe.com/xap/1.0/":
-                        xmp = xmp_tags
-                        break
+            xmp = get_jpeg_xmp(image)  # type: ignore
         elif image.format == PngImageFile.format:
             xmp = info.get(PNGINFO_XMP_KEY)
         if isinstance(image, TiffImageFile):
