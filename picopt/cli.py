@@ -8,6 +8,7 @@ from termcolor import colored, cprint
 
 from picopt import PROGRAM_NAME, walk
 from picopt.config import ALL_FORMAT_STRS, DEFAULT_HANDLERS, get_config
+from picopt.exceptions import PicoptError
 from picopt.handlers.png import Png
 from picopt.handlers.webp import WebPLossless
 from picopt.handlers.zip import Cbr, Rar
@@ -246,9 +247,12 @@ def main(args: tuple[str, ...] | None = None):
         wob = walk.Walk(config)
         totals = wob.run()
         totals.report()
-    except ConfigError as exc:
-        cprint(f"ERROR: {exc}", "red")
+    except ConfigError as err:
+        cprint(f"ERROR: {err}", "red")
         sys.exit(78)
+    except PicoptError as err:
+        cprint(f"ERROR: {err}", "red")
+        sys.exit(1)
     except Exception as exc:
         cprint(f"ERROR: {exc}", "red")
         import traceback

@@ -12,6 +12,7 @@ from treestamps import Grovestamps, GrovestampsConfig, Treestamps
 
 from picopt import PROGRAM_NAME
 from picopt.config import TIMESTAMPS_CONFIG_KEYS
+from picopt.exceptions import PicoptError
 from picopt.handlers.container import ContainerHandler
 from picopt.handlers.factory import create_handler
 from picopt.handlers.handler import Handler
@@ -54,11 +55,11 @@ class Walk:
         # Validate top_paths
         if not self._top_paths:
             msg = "No paths to optimize."
-            raise ValueError(msg)
+            raise PicoptError(msg)
         for path in self._top_paths:
             if not path.exists():
                 msg = f"Path does not exist: {path}"
-                raise ValueError(msg)
+                raise PicoptError(msg)
 
         # Init timestamps
         if self._config.timestamps:
@@ -252,7 +253,7 @@ class Walk:
         elif isinstance(handler, ImageHandler):
             result = self._pool.apply_async(handler.optimize_wrapper)
         else:
-            msg = f"Bad handler {handler}"
+            msg = f"Bad picopt handler {handler}"
             raise TypeError(msg)
         return result
 

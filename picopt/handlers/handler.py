@@ -274,7 +274,7 @@ class Handler(ABC):
                 report_path = str(self.original_path)
             final_data_buffer.close()
 
-        except OSError as exc:
+        except Exception as exc:
             cprint(f"ERROR: cleanup_after_optimize: {exc}", "red")
             raise
 
