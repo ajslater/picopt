@@ -192,7 +192,6 @@ class Handler(ABC):
             reason = "This should not happen. no buffer and no final path."
             raise ValueError(reason)
 
-        # TODO if file pointers are identical, noop.
         if isinstance(final_data_buffer, BytesIO):
             with self.final_path.open("wb") as final_file, final_data_buffer:
                 final_data_buffer.seek(0)
