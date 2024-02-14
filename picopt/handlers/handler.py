@@ -244,9 +244,6 @@ class Handler(ABC):
                 else:
                     report_path = str(self.final_path)
             else:
-                # TODO either bytes_out = -1 or 0 or
-                #   return_data == self.data
-                # bytes_out = bytes_in
                 report_path = str(self.original_path)
             final_data_buffer.close()
 
