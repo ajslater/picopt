@@ -56,7 +56,7 @@ To optimize JPEG images at all picopt needs one of [mozjpeg](https://github.com/
 Picopt uses an internal oxipng python module to to optimize PNG images and convert other lossless formats to PNG picopt.
 The external [pngout](http://advsys.net/ken/utils.htm) tool can provide a small extra bit of compression.
 
-Animated PNGs are optimized with the internal optimizer, as oxipng does not support them yet.
+Animated PNGs are optimized with the internal optimizer.
 
 ### Animated GIF
 
