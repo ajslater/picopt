@@ -153,7 +153,7 @@ class Walk:
         """Recursively optimize a directory."""
         if (
             not self._config.recurse
-            # or path_info.container_mtime
+            or path_info.container_mtime
             or not path_info.is_dir()
         ):
             # Skip
@@ -195,9 +195,7 @@ class Walk:
             path_info.top_path,
         )
 
-        if (
-            self._config.timestamps and not path_info.container_mtime
-        ):  # TODO info.container_mtime is never happens because of first check in this method
+        if self._config.timestamps:
             # Compact timestamps after every directory completes
             timestamps = self._timestamps[path_info.top_path]
             timestamps.set(dir_path, compact=True)
