@@ -152,7 +152,6 @@ class PathInfo:
 
     def suffix(self) -> str:
         """Return file suffix."""
-        # TODO actually use
         if self._suffix is None:
             self._suffix = Path(self.name()).suffix
         return self._suffix
