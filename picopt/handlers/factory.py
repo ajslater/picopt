@@ -5,11 +5,18 @@ from typing import Any
 
 from confuse.templates import AttrDict
 from PIL import Image, UnidentifiedImageError
-from PIL.MpoImagePlugin import MpoImageFile
+from PIL.JpegImagePlugin import JpegImageFile
+from PIL.PngImagePlugin import PngImageFile
+from PIL.TiffImagePlugin import XMP as TIFF_XMP_TAG
 from PIL.TiffImagePlugin import TiffImageFile
 from termcolor import cprint
 
-from picopt.formats import LOSSLESS_FORMAT_STRS, TIFF_LOSSLESS_COMPRESSION, FileFormat
+from picopt.formats import (
+    LOSSLESS_FORMAT_STRS,
+    PNGINFO_XMP_KEY,
+    TIFF_LOSSLESS_COMPRESSION,
+    FileFormat,
+)
 from picopt.handlers.handler import Handler
 from picopt.handlers.non_pil import NonPILIdentifier
 from picopt.handlers.svg import Svg
@@ -29,6 +36,33 @@ _NON_PIL_HANDLERS: tuple[type[NonPILIdentifier], ...] = (
     Rar,
     EPub,
 )
+
+
+def _set_xmp(keep_metadata: bool, image: Image.Image, info: dict) -> None:
+    """Extract and set XMP info in the info dict."""
+    # Pillow's only extracts raw xmp data into the info dict sometimes for some formats.
+    # Pillow's support for writing xmp data is very different between PNG & WEBP.
+    if not keep_metadata or "xmp" in info:
+        return
+    try:
+        xmp = None
+        if image.format == JpegImageFile.format:
+            # Copied from PIL JpegImageFile
+            for segment, content in image.applist:  # type: ignore
+                if segment == "APP1":
+                    marker, xmp_tags = content.split(b"\x00")[:2]
+                    if marker == b"http://ns.adobe.com/xap/1.0/":
+                        xmp = xmp_tags
+                        break
+        elif image.format == PngImageFile.format:
+            xmp = info.get(PNGINFO_XMP_KEY)
+        if isinstance(image, TiffImageFile):
+            # elif image.format == TiffImageFile.format:
+            xmp = image.tag_v2.get(TIFF_XMP_TAG)
+        if xmp:
+            info["xmp"] = xmp
+    except Exception:
+        cprint("Failed to extract xmp data:")
 
 
 def _extract_image_info(
@@ -57,7 +91,14 @@ def _extract_image_info(
                     n_frames = image.n_frames
                     if n_frames is not None:
                         info["n_frames"] = n_frames
-                if image_format_str == MpoImageFile.format:
+                try:
+                    _set_xmp(keep_metadata, image, info)
+                except Exception as exc:
+                    cprint(
+                        f"WARNING: Failed to extract xmp data for {path_info.name()}, {exc}",
+                        "yellow",
+                    )
+                with suppress(AttributeError):
                     info["mpinfo"] = image.mpinfo  # type: ignore
         image.close()  # for animated images
         with suppress(AttributeError):

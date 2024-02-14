@@ -66,5 +66,6 @@ class Png(ImageHandler):
                 attrs=["dark"],
             )
             return input_buffer
-        args = (*exec_args, *self._PNGOUT_ARGS)
+        opts = ("-k1",) if self.config.keep_metadata else ("-k0",)
+        args = (*exec_args, *self._PNGOUT_ARGS, *opts)
         return self.run_ext(args, input_buffer)

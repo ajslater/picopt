@@ -55,6 +55,7 @@ TIFF_LOSSLESS_COMPRESSION = frozenset(
 # TIFF_LOSSY_COMPRESSION = frozenset({
 #    "jpeg", "webp"
 # })
+PNGINFO_XMP_KEY = "XML:com.adobe.xmp"
 
 
 _CONVERTABLE_PIL_IMAGE_FILES = (

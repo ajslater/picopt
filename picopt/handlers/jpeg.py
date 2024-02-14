@@ -1,9 +1,11 @@
 """JPEG format."""
+import struct
 from io import BytesIO
 from typing import BinaryIO
 
 import piexif
 from PIL.JpegImagePlugin import JpegImageFile
+from termcolor import cprint
 
 from picopt.formats import MPO_FILE_FORMAT, FileFormat
 from picopt.handlers.image import ImageHandler
@@ -67,14 +69,31 @@ class Jpeg(ImageHandler):
         input_buffer.seek(offset)
         return input_buffer.read(size)
 
-    def _mpo2jpeg_copy_exif(self, jpeg_data: bytes) -> BytesIO:
+    def _mpo2jpeg_copy_exif(self, jpeg_data: bytes) -> bytes:
         """Copy MPO EXIF into JPEG."""
         output_buffer = BytesIO()
         if exif := self.info.get("exif"):
             piexif.insert(exif, jpeg_data, output_buffer)
-        else:
-            output_buffer.write(jpeg_data)
-        return output_buffer
+            return output_buffer.read()
+        return jpeg_data
+
+    def _mpo2jpeg_copy_xmp(self, jpeg_data: bytes) -> bytes:
+        """Copy MPO XMP into JPEG manually."""
+        if xmp := self.info.get("xmp"):
+            jpeg_buffer = bytearray(jpeg_data)
+            xmp_bytes = b"http://ns.adobe.com/xap/1.0/\0" + xmp.encode("utf-8") + b"\0"
+            soi_index = jpeg_buffer.find(b"\xFF\xD8")
+            if soi_index == -1:
+                reason = "SOI marker not found in JPEG buffer."
+                raise ValueError(reason)
+            return (
+                jpeg_buffer[: soi_index + 2]
+                + b"\xFF\xE1"
+                + struct.pack("<H", len(xmp_bytes) + 2)
+                + xmp_bytes
+                + jpeg_buffer[soi_index + 2 :]
+            )
+        return jpeg_data
 
     def pil2jpeg(
         self,
@@ -87,7 +106,18 @@ class Jpeg(ImageHandler):
             return input_buffer
 
         jpeg_data = self._mpo2jpeg_get_frame(input_buffer)
-        output_buffer = self._mpo2jpeg_copy_exif(jpeg_data)
+        try:
+            jpeg_data = self._mpo2jpeg_copy_exif(jpeg_data)
+        except Exception as exc:
+            cprint(
+                f"WARNING: could not copy EXIF data for {self.path_info.name()}: {exc}"
+            )
+        try:
+            jpeg_data = self._mpo2jpeg_copy_xmp(jpeg_data)
+        except Exception as exc:
+            cprint(
+                f"WARNING: could not copy XMP data for {self.path_info.name()}: {exc}"
+            )
 
         self.input_file_format = self.OUTPUT_FILE_FORMAT
-        return output_buffer
+        return BytesIO(jpeg_data)

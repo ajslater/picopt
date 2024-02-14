@@ -8,6 +8,7 @@
   - Support converting animated formats to animated PNG.
   - Support converting losslessly converting MPO to JPEG (choose primary image)
   - Internal oxipng replaces external optipng for png compression.
+  - Better support for preserving EXIF, ICC_PROFILE, & XMP data across optimization and conversion.
   - `--destroy-metadata` option becomes `--strip-metadata`
   - `--near-lossless` option for lossless WebP
   - `--preserve` file attributes after optimization.

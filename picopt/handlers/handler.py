@@ -9,12 +9,12 @@ from types import MappingProxyType
 from typing import Any, BinaryIO
 
 from confuse.templates import AttrDict
-from PIL.PngImagePlugin import PngImageFile
+from PIL.PngImagePlugin import PngImageFile, PngInfo
 from PIL.WebPImagePlugin import WebPImageFile
 from termcolor import cprint
 
 from picopt import PROGRAM_NAME
-from picopt.formats import FileFormat
+from picopt.formats import PNGINFO_XMP_KEY, FileFormat
 from picopt.path import PathInfo
 from picopt.stats import ReportStats
 
@@ -280,6 +280,10 @@ class Handler(ABC):
             transparency = self.info.get("transparency")
             if isinstance(transparency, int):
                 self.info.pop("transparency", None)
+            if xmp := self.info.get("xmp", None):
+                pnginfo = self.info.get("pnginfo", PngInfo())
+                pnginfo.add_text(PNGINFO_XMP_KEY, xmp, zip=True)
+                self.info["pnginfo"] = pnginfo
         if self.config.keep_metadata:
             info = self.info
         else:

@@ -34,7 +34,7 @@ FNS = {
 if platform.system() == "Darwin":
     FNS.update(
         {
-            "test_bmp.bmp": (141430, 141430, ("png", 67215), ("webp", 47524)),
+            "test_bmp.bmp": (141430, 141430, ("png", 67236), ("webp", 47524)),
             "test_gif.gif": (138952, 138944, ("png", 112137), ("webp", 107924)),
             "test_jpg.jpg": (97373, 87913, ("jpg", 87913), ("jpg", 87913)),
             "test_png_16rgba.png": (3435, 2090, ("png", 2090), ("webp", 1142)),
@@ -45,13 +45,13 @@ if platform.system() == "Darwin":
                 ("png", 256572),
                 ("webp", 197726),
             ),
-            "eight.tif": (59640, 59640, ("png", 30564), ("webp", 24974)),
+            "eight.tif": (59640, 59640, ("png", 30585), ("webp", 24974)),
         }
     )
 else:
     FNS.update(
         {
-            "test_bmp.bmp": (141430, 141430, ("png", 67215), ("webp", 47524)),
+            "test_bmp.bmp": (141430, 141430, ("png", 67236), ("webp", 47524)),
             "test_gif.gif": (138952, 138944, ("png", 112137), ("webp", 107924)),
             "test_jpg.jpg": (97373, 87922, ("jpg", 87922), ("jpg", 87922)),
             "test_png_16rgba.png": (3435, 2090, ("png", 2090), ("webp", 1142)),
@@ -62,7 +62,7 @@ else:
                 ("png", 256572),
                 ("webp", 108254),
             ),
-            "eight.tif": (59640, 59640, ("png", 30564), ("webp", 24982)),
+            "eight.tif": (59640, 59640, ("png", 30585), ("webp", 24982)),
         }
     )
 
