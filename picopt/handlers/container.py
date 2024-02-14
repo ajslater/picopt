@@ -3,6 +3,7 @@ from abc import ABCMeta, abstractmethod
 from collections.abc import Generator, Mapping
 from io import BytesIO
 from multiprocessing.pool import ApplyResult
+from typing import BinaryIO
 
 from confuse.templates import AttrDict
 from termcolor import cprint
@@ -81,20 +82,16 @@ class ContainerHandler(Handler, metaclass=ABCMeta):
             path_info.data_clear()
             self._optimized_contents[path_info] = report.data
 
+    def optimize(self) -> tuple[BinaryIO, int]:
+        """Make pack_into return correct types."""
+        return self.pack_into(), 1
+
     def repack(self) -> ReportStats:
         """Create a new container and clean up the tmp dir."""
-        try:
-            # archive into new filename
-            if self.config.verbose:
-                cprint(f"Repacking {self.final_path}...", end="")
-            container_buffer = self.pack_into()
-
-            # TODO how different is this from what ImageHandler does?
-            report_stats = self.cleanup_after_optimize(container_buffer)
-            if self.config.verbose:
-                cprint("done")
-        except Exception as exc:
-            report_stats = self.error(exc)
         if self.config.verbose:
-            report_stats.report()
+            cprint(f"Repacking {self.final_path}...", end="")
+
+        report_stats = self.optimize_wrapper()
+        if self.config.verbose:
+            cprint("done")
         return report_stats

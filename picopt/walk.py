@@ -153,7 +153,7 @@ class Walk:
         """Recursively optimize a directory."""
         if (
             not self._config.recurse
-            or path_info.container_mtime
+            or path_info.is_container_child()
             or not path_info.is_dir()
         ):
             # Skip
@@ -250,7 +250,7 @@ class Walk:
             # Unpack inline, not in the pool, and walk immediately like dirs.
             result = self._walk_container(handler)
         elif isinstance(handler, ImageHandler):
-            result = self._pool.apply_async(handler.optimize_image)
+            result = self._pool.apply_async(handler.optimize_wrapper)
         else:
             msg = f"Bad handler {handler}"
             raise TypeError(msg)

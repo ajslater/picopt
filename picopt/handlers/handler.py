@@ -1,7 +1,7 @@
 """FileType abstract class for image and container formats."""
 import os
 import subprocess
-from abc import ABC
+from abc import ABC, abstractmethod
 from collections.abc import Mapping
 from io import BufferedReader, BytesIO
 from pathlib import Path
@@ -87,41 +87,6 @@ class Handler(ABC):
         suffix += self.output_suffix
         return path.with_suffix(suffix)
 
-    def run_ext_fs(  # noqa: PLR0913
-        self,
-        args: tuple[str | None, ...],
-        input_buffer: BinaryIO,
-        input_path: Path,
-        output_path: Path,
-        input_path_tmp: bool,
-        output_path_tmp: bool,
-    ) -> BinaryIO:
-        """Run EXTERNAL program that lacks stdin/stdout streaming."""
-        if input_path_tmp:
-            with input_path.open("wb") as input_tmp_file, input_buffer:
-                input_buffer.seek(0)
-                input_tmp_file.write(input_buffer.read())
-
-        subprocess.run(
-            args,  # noqa S603 # type: ignore
-            check=True,
-            text=True,
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.PIPE,
-        )
-
-        if input_path_tmp:
-            input_path.unlink(missing_ok=True)
-
-        if output_path_tmp:
-            with output_path.open("rb") as output_tmp_file:
-                output_buffer = BytesIO(output_tmp_file.read())
-            output_path.unlink(missing_ok=True)
-        else:
-            self.working_path = output_path
-            output_buffer = output_path.open("rb")
-        return output_buffer
-
     @classmethod
     def get_default_suffix(cls):
         """Get the default suffix based on the format."""
@@ -159,6 +124,67 @@ class Handler(ABC):
         self.info: dict[str, Any] = dict(info)
         if self.config.preserve:
             self.path_info.stat()
+
+    def prepare_info(self, format_str) -> MappingProxyType[str, Any]:
+        """Prepare an info dict for saving."""
+        if format_str == WebPImageFile.format:
+            self.info.pop("background", None)
+            background = self.info.get("background")
+            if isinstance(background, int):
+                # GIF background is an int.
+                rgb = _gif_palette_index_to_rgb(background)
+                self.info["background"] = (*rgb, 0)
+        if format_str == PngImageFile.format:
+            transparency = self.info.get("transparency")
+            if isinstance(transparency, int):
+                self.info.pop("transparency", None)
+            if xmp := self.info.get("xmp", None):
+                pnginfo = self.info.get("pnginfo", PngInfo())
+                pnginfo.add_text(PNGINFO_XMP_KEY, xmp, zip=True)
+                self.info["pnginfo"] = pnginfo
+        if self.config.keep_metadata:
+            info = self.info
+        else:
+            info = {}
+            for key, val in self.info:
+                if key in SAVE_INFO_KEYS:
+                    info[key] = val
+        return MappingProxyType(info)
+
+    def run_ext_fs(  # noqa: PLR0913
+        self,
+        args: tuple[str | None, ...],
+        input_buffer: BinaryIO,
+        input_path: Path,
+        output_path: Path,
+        input_path_tmp: bool,
+        output_path_tmp: bool,
+    ) -> BinaryIO:
+        """Run EXTERNAL program that lacks stdin/stdout streaming."""
+        if input_path_tmp:
+            with input_path.open("wb") as input_tmp_file, input_buffer:
+                input_buffer.seek(0)
+                input_tmp_file.write(input_buffer.read())
+
+        subprocess.run(
+            args,  # noqa S603 # type: ignore
+            check=True,
+            text=True,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.PIPE,
+        )
+
+        if input_path_tmp:
+            input_path.unlink(missing_ok=True)
+
+        if output_path_tmp:
+            with output_path.open("rb") as output_tmp_file:
+                output_buffer = BytesIO(output_tmp_file.read())
+            output_path.unlink(missing_ok=True)
+        else:
+            self.working_path = output_path
+            output_buffer = output_path.open("rb")
+        return output_buffer
 
     def _cleanup_filesystem(self, final_data_buffer: BinaryIO) -> None:
         """Write file to filesystem and clean up."""
@@ -212,7 +238,9 @@ class Handler(ABC):
             raise TypeError(reason)
         return size
 
-    def cleanup_after_optimize(self, final_data_buffer: BinaryIO) -> ReportStats:
+    def _cleanup_after_optimize(
+        self, final_data_buffer: BinaryIO, iterations: int
+    ) -> ReportStats:
         """Replace old file with better one or discard new wasteful file."""
         try:
             return_data = b""
@@ -258,34 +286,24 @@ class Handler(ABC):
             bytes_in=bytes_in,
             bytes_out=bytes_out,
             data=return_data,
+            iterations=iterations,
         )
+
+    @abstractmethod
+    def optimize(self) -> tuple[BinaryIO, int]:
+        """Implement by subclasses."""
 
     def error(self, exc: Exception) -> ReportStats:
         """Return an error result."""
         return ReportStats(self.original_path, exc=exc)
 
-    def prepare_info(self, format_str) -> MappingProxyType[str, Any]:
-        """Prepare an info dict for saving."""
-        if format_str == WebPImageFile.format:
-            self.info.pop("background", None)
-            background = self.info.get("background")
-            if isinstance(background, int):
-                # GIF background is an int.
-                rgb = _gif_palette_index_to_rgb(background)
-                self.info["background"] = (*rgb, 0)
-        if format_str == PngImageFile.format:
-            transparency = self.info.get("transparency")
-            if isinstance(transparency, int):
-                self.info.pop("transparency", None)
-            if xmp := self.info.get("xmp", None):
-                pnginfo = self.info.get("pnginfo", PngInfo())
-                pnginfo.add_text(PNGINFO_XMP_KEY, xmp, zip=True)
-                self.info["pnginfo"] = pnginfo
-        if self.config.keep_metadata:
-            info = self.info
-        else:
-            info = {}
-            for key, val in self.info:
-                if key in SAVE_INFO_KEYS:
-                    info[key] = val
-        return MappingProxyType(info)
+    def optimize_wrapper(self) -> ReportStats:
+        """Wrap subclass optimize."""
+        try:
+            buffer, iterations = self.optimize()
+            report_stats = self._cleanup_after_optimize(buffer, iterations)
+        except Exception as exc:
+            report_stats = self.error(exc)
+        if self.config.verbose:
+            report_stats.report()
+        return report_stats

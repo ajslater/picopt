@@ -197,6 +197,10 @@ def _create_handler_no_handler_class(
         else:
             fmt = "unknown"
         # TODO add container path as prefix?
+        # container.get_container_paths()
+        # handler.get_working_path()
+        # container print_path)
+        # move all that into path.py and look for path_info.name() calls and replace where appropriate
         cprint(
             f"Skipped {path_info.name()}: ({fmt}) is not an enabled image or container.",
             "white",

@@ -10,7 +10,6 @@ from PIL.PngImagePlugin import PngImageFile
 from termcolor import cprint
 
 from picopt.handlers.handler import Handler
-from picopt.stats import ReportStats
 
 
 class ImageHandler(Handler, metaclass=ABCMeta):
@@ -21,7 +20,7 @@ class ImageHandler(Handler, metaclass=ABCMeta):
     CONVERGEABLE = frozenset()
     EMPTY_EXEC_ARGS: tuple[str, tuple[str, ...]] = ("", ())
 
-    def _optimize_with_progs(self) -> ReportStats:
+    def optimize(self) -> tuple[BinaryIO, int]:
         """Use the correct optimizing functions in sequence.
 
         And report back statistics.
@@ -56,23 +55,7 @@ class ImageHandler(Handler, metaclass=ABCMeta):
                 iterations += 1
             max_iterations = max(max_iterations, iterations)
 
-        report_stats = self.cleanup_after_optimize(image_buffer)
-        report_stats.iterations = max_iterations - 1
-        return report_stats
-
-    def optimize_image(self) -> ReportStats:
-        """Optimize a given image from a filename."""
-        try:
-            report_stats = self._optimize_with_progs()
-        except Exception as exc:
-            import traceback
-
-            traceback.print_exc()
-            report_stats = self.error(exc)
-        if self.config.verbose:
-            report_stats.report()
-
-        return report_stats
+        return image_buffer, max_iterations - 1
 
     def pil2native(
         self,
