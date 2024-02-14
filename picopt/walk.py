@@ -75,20 +75,20 @@ class Walk:
 
         # File types
         if path_info.zipinfo and path_info.is_dir():
-            reason = f"Skip archive directory {path_info.name()}"
+            reason = f"Skip archive directory {path_info.full_name()}"
         elif (
             not self._config.symlinks and path_info.path and path_info.path.is_symlink()
         ):
-            reason = f"Skip symlink {path_info.name()}"
+            reason = f"Skip symlink {path_info.full_name()}"
         elif path_info.name() in self.TIMESTAMPS_FILENAMES:
             legacy = "legacy " if path_info.name() == OLD_TIMESTAMPS_NAME else ""
-            reason = f"Skip {legacy}timestamp {path_info.name()}"
+            reason = f"Skip {legacy}timestamp {path_info.full_name()}"
         elif not path_info.zipinfo and path_info.path and not path_info.path.exists():
-            reason = f"WARNING: {path_info.name()} not found."
+            reason = f"WARNING: {path_info.full_name()} not found."
             color = "yellow"
             attrs = []
         elif is_path_ignored(self._config, Path(path_info.name())):
-            reason = f"Skip ignored {path_info.name()}"
+            reason = f"Skip ignored {path_info.full_name()}"
 
         if reason and self._config.verbose > 1:
             cprint(reason, color, attrs=attrs)

@@ -53,6 +53,7 @@ class PathInfo:
         self._bytes_in: int | None = None
         self._mtime: float | None = None
         self._name: str | None = None
+        self._full_name: str | None = None
         self._suffix: str | None = None
         self._is_container_child: bool | None = None
 
@@ -149,6 +150,12 @@ class PathInfo:
             else:
                 self._name = "Unknown"
         return self._name
+
+    def full_name(self) -> str:
+        """Full name."""
+        if self._full_name is None:
+            self._full_name = " ".join((*self.container_paths, self.name()))
+        return self._full_name
 
     def suffix(self) -> str:
         """Return file suffix."""

@@ -95,7 +95,7 @@ def _extract_image_info(
                     _set_xmp(keep_metadata, image, info)
                 except Exception as exc:
                     cprint(
-                        f"WARNING: Failed to extract xmp data for {path_info.name()}, {exc}",
+                        f"WARNING: Failed to extract xmp data for {path_info.full_name()}, {exc}",
                         "yellow",
                     )
                 with suppress(AttributeError):
@@ -196,13 +196,8 @@ def _create_handler_no_handler_class(
                 fmt += " animated"
         else:
             fmt = "unknown"
-        # TODO add container path as prefix?
-        # container.get_container_paths()
-        # handler.get_working_path()
-        # container print_path)
-        # move all that into path.py and look for path_info.name() calls and replace where appropriate
         cprint(
-            f"Skipped {path_info.name()}: ({fmt}) is not an enabled image or container.",
+            f"Skipped {path_info.full_name()}: ({fmt}) is not an enabled image or container.",
             "white",
             attrs=["dark"],
         )

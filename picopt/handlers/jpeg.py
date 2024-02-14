@@ -110,13 +110,13 @@ class Jpeg(ImageHandler):
             jpeg_data = self._mpo2jpeg_copy_exif(jpeg_data)
         except Exception as exc:
             cprint(
-                f"WARNING: could not copy EXIF data for {self.path_info.name()}: {exc}"
+                f"WARNING: could not copy EXIF data for {self.path_info.full_name()}: {exc}"
             )
         try:
             jpeg_data = self._mpo2jpeg_copy_xmp(jpeg_data)
         except Exception as exc:
             cprint(
-                f"WARNING: could not copy XMP data for {self.path_info.name()}: {exc}"
+                f"WARNING: could not copy XMP data for {self.path_info.full_name()}: {exc}"
             )
 
         self.input_file_format = self.OUTPUT_FILE_FORMAT
