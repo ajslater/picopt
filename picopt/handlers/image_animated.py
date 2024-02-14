@@ -36,12 +36,13 @@ class ImageAnimated(ContainerHandler, ABC):
         frame_info = {}
         with Image.open(self.original_path) as image:
             for frame in ImageSequence.Iterator(image):
-                # TODO it would be better to do what i do for mpo and read
-                #   the bytes directly because this shows bad numbers for
-                #   compressing png.
                 # Save the frame as quickly as possible with the correct
                 #   lossless format. Real optimization happens later with
                 #   the specific handler.
+                # XXX It would be better to do what i do for mpo and read
+                #   the bytes directly because this shows bad numbers for
+                #   compressing uncompressed frames. But Pillow doesn't have
+                #   raw access to frames.
                 with BytesIO() as frame_buffer:
                     frame.save(
                         frame_buffer,
