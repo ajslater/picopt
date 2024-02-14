@@ -114,7 +114,7 @@ def get_arguments(params: tuple[str, ...] | None = None) -> Namespace:
         "--near-lossless",
         action="store_true",
         dest="near_lossless",
-        help="Precompress lossless WebP images with near lossless pixel adjustments. Provides dramatic compression advantages for little to no visual quality loss especially for discrete tone images like drawings.",
+        help="Precompress lossless WebP images with near lossless pixel adjustments. Provides more compression for little to no visual quality loss especially for discrete tone images like drawings.",
     )
     parser.add_argument(
         "-S",

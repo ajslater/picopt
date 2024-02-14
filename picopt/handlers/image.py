@@ -17,15 +17,13 @@ class ImageHandler(Handler, metaclass=ABCMeta):
 
     PIL2_KWARGS: MappingProxyType[str, Any] = MappingProxyType({})
     PIL2PNG_KWARGS: MappingProxyType[str, Any] = MappingProxyType({"compress_level": 0})
-    CONVERGEABLE = frozenset()
     EMPTY_EXEC_ARGS: tuple[str, tuple[str, ...]] = ("", ())
 
-    def optimize(self) -> tuple[BinaryIO, int]:
+    def optimize(self) -> BinaryIO:
         """Use the correct optimizing functions in sequence.
 
         And report back statistics.
         """
-        max_iterations = 0
         stages = self.config.computed.handler_stages.get(self.__class__, {})
         if not stages:
             cprint(
@@ -37,25 +35,12 @@ class ImageHandler(Handler, metaclass=ABCMeta):
         image_buffer: BinaryIO = self.path_info.fp_or_buffer()
 
         for func, exec_args in stages.items():
-            loop = True
-            converge = self.config.near_lossless and func in self.CONVERGEABLE
-            iterations = 0
-            while loop:
-                if converge:
-                    bytes_in = self.get_buffer_len(image_buffer)
-                new_image_buffer: BinaryIO = getattr(self, func)(
-                    exec_args, image_buffer
-                )
-                if image_buffer != new_image_buffer:
-                    image_buffer.close()
-                image_buffer = new_image_buffer
-                if converge:
-                    bytes_out = self.get_buffer_len(image_buffer)
-                loop = converge and bytes_in > bytes_out  # type: ignore
-                iterations += 1
-            max_iterations = max(max_iterations, iterations)
+            new_image_buffer: BinaryIO = getattr(self, func)(exec_args, image_buffer)
+            if image_buffer != new_image_buffer:
+                image_buffer.close()
+            image_buffer = new_image_buffer
 
-        return image_buffer, max_iterations - 1
+        return image_buffer
 
     def pil2native(
         self,

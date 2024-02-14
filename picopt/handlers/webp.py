@@ -35,7 +35,6 @@ class WebPBase(ImageHandler, ABC):
         "-alpha_filter",
         "best",
     )
-    CONVERGEABLE = frozenset({"cwebp"})
 
     def cwebp(
         self,
@@ -95,7 +94,6 @@ class WebPLossless(WebPBase):
         *WebPBase.CWEBP_ARGS_PREFIX,
     )
     PIL2_KWARGS = MappingProxyType({**WebPBase.PIL2_KWARGS, "lossless": True})
-    CONVERGEABLE = frozenset({"cwebp"})
     PROGRAMS = (("pil2png",), ("cwebp", "pil2native"))
     NEAR_LOSSLESS_OPTS: tuple[str, ...] = ("-near_lossless", "0")
 

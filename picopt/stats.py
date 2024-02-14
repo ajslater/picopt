@@ -22,7 +22,6 @@ class ReportStatBase:
     bytes_in: int = 0
     bytes_out: int = 0
     exc: Exception | None = None
-    iterations: int = 0
     data: bytes = b""
     bigger: bool = False
     test: bool = False
@@ -72,8 +71,6 @@ class ReportStats(ReportStatBase):
             if not self.bigger:
                 report += " (new file discarded)"
 
-        if self.iterations > 1:
-            report += f" ({self.iterations} iterations)"
         return report
 
     def _report_error(self) -> str:

@@ -82,9 +82,9 @@ class ContainerHandler(Handler, metaclass=ABCMeta):
             path_info.data_clear()
             self._optimized_contents[path_info] = report.data
 
-    def optimize(self) -> tuple[BinaryIO, int]:
-        """Make pack_into return correct types."""
-        return self.pack_into(), 1
+    def optimize(self) -> BinaryIO:
+        """Run pack_into."""
+        return self.pack_into()
 
     def repack(self) -> ReportStats:
         """Create a new container and clean up the tmp dir."""

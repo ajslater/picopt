@@ -68,8 +68,8 @@ else:
 
 EXHAUSTIVE_FNS = MappingProxyType(
     {
-        "test_png_16rgba.png": (3435, 2090, ("png", 2090), ("webp", 738)),
-        "test_webp_lossless.webp": (5334, 3870, ("webp", 3870), ("webp", 1946)),
+        "test_png_16rgba.png": (3435, 2090, ("png", 2090), ("webp", 728)),
+        "test_webp_lossless.webp": (5334, 3870, ("webp", 3870), ("webp", 2044)),
         "test_webp_lossless_pre-optimized.webp": (
             3798,
             3798,
@@ -125,7 +125,7 @@ class TestImagesDir(BaseTestImagesDir):
             assert path.stat().st_size == sizes[3][1]
 
 
-class TestExhaustiveImageDir(BaseTestImagesDir):
+class TestNearLosslessImageDir(BaseTestImagesDir):
     FNS = EXHAUSTIVE_FNS
 
     def test_convert_to_webp_near_lossless(self) -> None:

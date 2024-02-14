@@ -258,9 +258,7 @@ class Handler(ABC):
         report_path = CONTAINER_PATH_DELIMETER.join((*cps, str(self.final_path)))
         return report_path, return_data
 
-    def _cleanup_after_optimize(
-        self, final_data_buffer: BinaryIO, iterations: int
-    ) -> ReportStats:
+    def _cleanup_after_optimize(self, final_data_buffer: BinaryIO) -> ReportStats:
         """Replace old file with better one or discard new wasteful file."""
         try:
             bytes_in = self.path_info.bytes_in()
@@ -287,11 +285,10 @@ class Handler(ABC):
             bytes_in=bytes_in,
             bytes_out=bytes_out,
             data=return_data,
-            iterations=iterations,
         )
 
     @abstractmethod
-    def optimize(self) -> tuple[BinaryIO, int]:
+    def optimize(self) -> BinaryIO:
         """Implement by subclasses."""
 
     def error(self, exc: Exception) -> ReportStats:
@@ -301,8 +298,8 @@ class Handler(ABC):
     def optimize_wrapper(self) -> ReportStats:
         """Wrap subclass optimize."""
         try:
-            buffer, iterations = self.optimize()
-            report_stats = self._cleanup_after_optimize(buffer, iterations)
+            buffer = self.optimize()
+            report_stats = self._cleanup_after_optimize(buffer)
         except Exception as exc:
             report_stats = self.error(exc)
         if self.config.verbose:
