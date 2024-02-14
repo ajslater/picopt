@@ -15,7 +15,7 @@ from termcolor import cprint
 
 from picopt import PROGRAM_NAME
 from picopt.formats import PNGINFO_XMP_KEY, FileFormat
-from picopt.path import PathInfo
+from picopt.path import CONTAINER_PATH_DELIMETER, PathInfo
 from picopt.stats import ReportStats
 
 SAVE_INFO_KEYS: frozenset[str] = frozenset(
@@ -237,40 +237,42 @@ class Handler(ABC):
             raise TypeError(reason)
         return size
 
+    def _cleanup_after_optimize_save_new(
+        self, final_data_buffer: BinaryIO
+    ) -> tuple[str, bytes]:
+        """Save new data."""
+        return_data = b""
+        if (
+            isinstance(final_data_buffer, BytesIO)
+            or self.path_info.is_container_child()
+        ):
+            if self.path_info.is_container_child():
+                # only return the data in the report for containers.
+                final_data_buffer.seek(0)
+                return_data = final_data_buffer.read()
+            if isinstance(final_data_buffer, BufferedReader) and self.working_path:
+                self.working_path.unlink(missing_ok=True)
+        if self.path_info.path:
+            self._cleanup_filesystem(final_data_buffer)
+        cps = self.path_info.container_paths
+        report_path = CONTAINER_PATH_DELIMETER.join((*cps, str(self.final_path)))
+        return report_path, return_data
+
     def _cleanup_after_optimize(
         self, final_data_buffer: BinaryIO, iterations: int
     ) -> ReportStats:
         """Replace old file with better one or discard new wasteful file."""
         try:
-            return_data = b""
             bytes_in = self.path_info.bytes_in()
             bytes_out = self.get_buffer_len(final_data_buffer)
             if not self.config.test and (
                 (bytes_out > 0) and ((bytes_out < bytes_in) or self.config.bigger)
             ):
-                ############
-                # SAVE NEW #
-                ############
-                if (
-                    isinstance(final_data_buffer, BytesIO)
-                    or self.path_info.is_container_child()
-                ):
-                    if self.path_info.is_container_child():
-                        # only return the data in the report for containers.
-                        final_data_buffer.seek(0)
-                        return_data = final_data_buffer.read()
-                    if (
-                        isinstance(final_data_buffer, BufferedReader)
-                        and self.working_path
-                    ):
-                        self.working_path.unlink(missing_ok=True)
-                if self.path_info.path:
-                    self._cleanup_filesystem(final_data_buffer)
-                if cps := self.path_info.container_paths:
-                    report_path = " - ".join((*cps, str(self.final_path)))
-                else:
-                    report_path = str(self.final_path)
+                report_path, return_data = self._cleanup_after_optimize_save_new(
+                    final_data_buffer
+                )
             else:
+                return_data = b""
                 report_path = str(self.original_path)
             final_data_buffer.close()
 

@@ -9,6 +9,7 @@ from zipfile import ZipInfo
 from confuse import AttrDict
 
 TMP_DIR = Path("__picopt_tmp")
+CONTAINER_PATH_DELIMETER = " - "
 
 
 class PathInfo:
@@ -154,7 +155,9 @@ class PathInfo:
     def full_name(self) -> str:
         """Full name."""
         if self._full_name is None:
-            self._full_name = " ".join((*self.container_paths, self.name()))
+            self._full_name = CONTAINER_PATH_DELIMETER.join(
+                (*self.container_paths, self.name())
+            )
         return self._full_name
 
     def suffix(self) -> str:
