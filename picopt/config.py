@@ -259,6 +259,43 @@ def _get_handler_stages(
     return stages
 
 
+def _set_format_handler_map_entry(  # noqa: PLR0913
+    handler_type: str,
+    handler_class: type[Handler],
+    convert_to: frozenset[str],
+    handler_stages: dict[type[Handler], dict[str, tuple[str, ...]]],
+    convert_format_strs: dict,
+    file_format: FileFormat,
+    convert_handlers: dict[FileFormat, type[Handler]],
+    native_handlers: dict[FileFormat, type[Handler]],
+    handled_format_strs: set[str],
+) -> bool:
+    """Create an entry for the format handler maps."""
+    if (
+        handler_type == "convert"
+        and handler_class.OUTPUT_FILE_FORMAT.format_str not in convert_to
+    ):
+        return False
+
+    # Get handler stages by class with caching
+    if handler_class not in handler_stages:
+        handler_stages[handler_class] = _get_handler_stages(handler_class)
+    stages = handler_stages.get(handler_class)
+    if not stages:
+        return False
+
+    if handler_type == "convert":
+        if handler_class.OUTPUT_FORMAT_STR not in convert_format_strs:
+            convert_format_strs[handler_class.OUTPUT_FORMAT_STR] = set()
+        convert_format_strs[handler_class.OUTPUT_FORMAT_STR].add(file_format.format_str)
+        convert_handlers[file_format] = handler_class
+    else:
+        native_handlers[file_format] = handler_class
+
+    handled_format_strs.add(file_format.format_str)
+    return True
+
+
 def _set_format_handler_map(
     config: Subview,
 ) -> None:
@@ -281,31 +318,18 @@ def _set_format_handler_map(
             possible_handler_classes,
         ) in sorted(possible_file_handlers.items()):
             for handler_class in possible_handler_classes:
-                if (
-                    handler_type == "convert"
-                    and handler_class.OUTPUT_FILE_FORMAT.format_str not in convert_to
+                if _set_format_handler_map_entry(
+                    handler_type,
+                    handler_class,
+                    convert_to,
+                    handler_stages,
+                    convert_format_strs,
+                    file_format,
+                    convert_handlers,
+                    native_handlers,
+                    handled_format_strs,
                 ):
-                    continue
-
-                # Get handler stages by class with caching
-                if handler_class not in handler_stages:
-                    handler_stages[handler_class] = _get_handler_stages(handler_class)
-                stages = handler_stages.get(handler_class)
-                if not stages:
-                    continue
-
-                if handler_type == "convert":
-                    if handler_class.OUTPUT_FORMAT_STR not in convert_format_strs:
-                        convert_format_strs[handler_class.OUTPUT_FORMAT_STR] = set()
-                    convert_format_strs[handler_class.OUTPUT_FORMAT_STR].add(
-                        file_format.format_str
-                    )
-                    convert_handlers[file_format] = handler_class
-                else:
-                    native_handlers[file_format] = handler_class
-
-                handled_format_strs.add(file_format.format_str)
-                break
+                    break
 
     convert_handlers = native_handlers | convert_handlers
 
