@@ -51,18 +51,22 @@ picopt -x BMP -c WEBP big_old.bmp
 
 To optimize JPEG images at all picopt needs one of [mozjpeg](https://github.com/mozilla/mozjpeg) or [jpegtran](http://jpegclub.org/jpegtran/) on the path. in order of preference.
 
-### PNG
+### PNG & APNG
 
 Picopt uses an internal oxipng python module to to optimize PNG images and convert other lossless formats to PNG picopt.
 The external [pngout](http://advsys.net/ken/utils.htm) tool can provide a small extra bit of compression.
 
+Animated PNGs are optimized with the internal optimizer, as oxipng does not support them yet.
+
 ### Animated GIF
 
-Animated GIFs are optimized with [gifsicle](http://www.lcdf.org/gifsicle/) if it is available.
+Gifs and Animated GIFs are optimized with [gifsicle](http://www.lcdf.org/gifsicle/) if available.
+or interaallly if is not. Gifsicle only provides a small advantage over the internal optimizer.
 
 ### WebP
 
-WebP lossless formats are optimized with [cwebp](https://developers.google.com/speed/webp/docs/cwebp).
+WebP lossless formats are optimized with [cwebp](https://developers.google.com/speed/webp/docs/cwebp) if available and with the internal optimizer if not.
+cwebp provides significant improvements over the internal optimizer.
 
 ### SVG
 
