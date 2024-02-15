@@ -1,5 +1,4 @@
 """JPEG format."""
-import struct
 from io import BytesIO
 from typing import BinaryIO
 
@@ -9,12 +8,7 @@ from termcolor import cprint
 
 from picopt.formats import MPO_FILE_FORMAT, FileFormat
 from picopt.handlers.image import ImageHandler
-from picopt.pillow.jpeg_xmp import (
-    APP1_SECTION_DELIMETER,
-    EOI_MARKER,
-    SOI_MARKER,
-    XAP_MARKER,
-)
+from picopt.pillow.jpeg_xmp import set_jpeg_xmp
 
 MPO_METADATA: int = 45058
 MPO_TYPE_PRIMARY: str = "Baseline MP Primary Image"
@@ -86,19 +80,7 @@ class Jpeg(ImageHandler):
     def _mpo2jpeg_copy_xmp(self, jpeg_data: bytes) -> bytes:
         """Copy MPO XMP into JPEG manually."""
         if xmp := self.info.get("xmp"):
-            jpeg_buffer = bytearray(jpeg_data)
-            soi_index = jpeg_buffer.find(SOI_MARKER)
-            if soi_index == -1:
-                reason = "SOI marker not found in JPEG buffer."
-                raise ValueError(reason)
-            xmp_bytes = XAP_MARKER + APP1_SECTION_DELIMETER + xmp.encode("utf-8") + APP1_SECTION_DELIMETER
-            jpeg_data = (
-                jpeg_buffer[: soi_index + len(SOI_MARKER)]
-                + EOI_MARKER
-                + struct.pack("<H", len(xmp_bytes) + len(EOI_MARKER))
-                + xmp_bytes
-                + jpeg_buffer[soi_index + len(SOI_MARKER) :]
-            )
+            jpeg_data = set_jpeg_xmp(jpeg_data, xmp)
         return jpeg_data
 
     def pil2jpeg(
