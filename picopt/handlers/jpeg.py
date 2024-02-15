@@ -9,6 +9,12 @@ from termcolor import cprint
 
 from picopt.formats import MPO_FILE_FORMAT, FileFormat
 from picopt.handlers.image import ImageHandler
+from picopt.pillow.jpeg_xmp import (
+    APP1_SECTION_DELIMETER,
+    EOI_MARKER,
+    SOI_MARKER,
+    XAP_MARKER,
+)
 
 MPO_METADATA: int = 45058
 MPO_TYPE_PRIMARY: str = "Baseline MP Primary Image"
@@ -81,17 +87,17 @@ class Jpeg(ImageHandler):
         """Copy MPO XMP into JPEG manually."""
         if xmp := self.info.get("xmp"):
             jpeg_buffer = bytearray(jpeg_data)
-            xmp_bytes = b"http://ns.adobe.com/xap/1.0/\0" + xmp.encode("utf-8") + b"\0"
-            soi_index = jpeg_buffer.find(b"\xFF\xD8")
+            soi_index = jpeg_buffer.find(SOI_MARKER)
             if soi_index == -1:
                 reason = "SOI marker not found in JPEG buffer."
                 raise ValueError(reason)
-            return (
-                jpeg_buffer[: soi_index + 2]
-                + b"\xFF\xE1"
-                + struct.pack("<H", len(xmp_bytes) + 2)
+            xmp_bytes = XAP_MARKER + APP1_SECTION_DELIMETER + xmp.encode("utf-8") + APP1_SECTION_DELIMETER
+            jpeg_data = (
+                jpeg_buffer[: soi_index + len(SOI_MARKER)]
+                + EOI_MARKER
+                + struct.pack("<H", len(xmp_bytes) + len(EOI_MARKER))
                 + xmp_bytes
-                + jpeg_buffer[soi_index + 2 :]
+                + jpeg_buffer[soi_index + len(SOI_MARKER) :]
             )
         return jpeg_data
 
