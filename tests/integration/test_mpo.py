@@ -1,4 +1,6 @@
 """Test comic format."""
+import os
+import shutil
 from types import MappingProxyType
 
 from picopt import PROGRAM_NAME, cli
@@ -13,6 +15,7 @@ FNS = MappingProxyType(
             22664,
             22664,
             ("jpg", 22664),
+            ("jpg", 22664),
         ),
         "test_mpo.jpeg": (
             7106225,
@@ -20,6 +23,7 @@ FNS = MappingProxyType(
             # 6450372
             # 5963686
             ("jpeg", 5963686),
+            ("jpeg", 6450372),
         ),
     }
 )
@@ -46,3 +50,20 @@ class TestMPO(BaseTestImagesDir):
         for name, sizes in self.FNS.items():
             path = (self.TMP_ROOT / name).with_suffix("." + sizes[2][0])
             assert path.stat().st_size == sizes[2][1]
+
+    def test_convert_to_jpeg_no_local(self) -> None:
+        """Test convert to PNG."""
+        orig_path = os.environ.get("PATH", "")
+        new_path = orig_path.replace(":/usr/local/bin:", ":")
+        new_path = new_path.replace(":/opt/homebrew/bin:", ":")
+        os.environ["PATH"] = new_path
+        print(new_path)
+        mozjpeg = shutil.which("mozjpeg")
+        print(f"{mozjpeg=}")
+        assert not mozjpeg
+        args = (PROGRAM_NAME, "-rvvvx", "MPO", "-c", "JPEG", str(self.TMP_ROOT))
+        cli.main(args)
+        os.environ["PATH"] = orig_path
+        for name, sizes in self.FNS.items():
+            path = (self.TMP_ROOT / name).with_suffix("." + sizes[3][0])
+            assert path.stat().st_size == sizes[3][1]
