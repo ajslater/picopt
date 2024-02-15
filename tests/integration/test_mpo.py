@@ -20,8 +20,6 @@ FNS = MappingProxyType(
         "test_mpo.jpeg": (
             7106225,
             7106225,
-            # 6450372
-            # 5963686
             ("jpeg", 5963686),
             ("jpeg", 6450372),
         ),
@@ -61,6 +59,9 @@ class TestMPO(BaseTestImagesDir):
         mozjpeg = shutil.which("mozjpeg")
         print(f"{mozjpeg=}")
         assert not mozjpeg
+        jpegtran = shutil.which("jpegtran")
+        print(f"{jpegtran=}")
+        assert not jpegtran
         args = (PROGRAM_NAME, "-rvvvx", "MPO", "-c", "JPEG", str(self.TMP_ROOT))
         cli.main(args)
         os.environ["PATH"] = orig_path

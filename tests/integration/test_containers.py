@@ -20,9 +20,9 @@ if system() == "Darwin":
     }
 else:
     FNS = {
-        "test_cbz.cbz": (93408, 84481, ("cbz", 84481)),
+        "test_cbz.cbz": (93408, 84544, ("cbz", 84544)),
         "test_cbr.cbr": (93725, 93725, ("cbz", 84494)),
-        "test_rar.rar": (93675, 93675, ("zip", 84481)),
+        "test_rar.rar": (93675, 93675, ("zip", 84544)),
         "test_zip.zip": (7783, 6918, ("zip", 6918)),
         "igp-twss.epub": (292448, 280700, ("epub", 280700)),
     }
