@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 """Get raw jpeg xml from Pillow."""
+# XXX This only seems to get some XMP data. xmp-tool finds more.
 from PIL.JpegImagePlugin import JpegImageFile
 
 APP1_SECTION_DELIMETER = b"\x00"
