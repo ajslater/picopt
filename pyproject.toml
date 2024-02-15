@@ -60,8 +60,8 @@ vulture = "^2.1"
 picopt = "picopt.cli:main"
 
 [tool.poetry.urls]
-"Source" = "https://github.com/ajslater/picopt"
-"Issues" = "https://github.com/ajslater/picopt/issues"
+Source = "https://github.com/ajslater/picopt"
+Issues = "https://github.com/ajslater/picopt/issues"
 
 [tool.codespell]
 skip = ".git,.mypy_cache,.pytest_cache,.ruff_cache,.venv,*~,./dist,./node_modules,./package-lock.json,./poetry.lock,./test-results"
@@ -83,33 +83,16 @@ omit = [
   "dist/*",
   "node_modules/*",
   "test-results/*",
-  "typings/*"
+  "typings/*",
 ]
 
 [tool.coverage.html]
 directory = "test-results/coverage"
 
 [tool.pytest.ini_options]
+addopts = "--junitxml=test-results/pytest/junit.xml -ra --strict-markers --cov --cov-append --cov-report=html --cov-report=term"
 junit_family = "xunit2"
-addopts = """
-  --junitxml=test-results/pytest/junit.xml
-  -ra
-  --strict-markers
-  --cov
-  --cov-append
-  --cov-report=html
-  --cov-report=term
-  --ignore=.git
-  --ignore=.mypy_cache
-  --ignore=.pytest_cache
-  --ignore=.venv
-  --ignore=dist
-  --ignore=node_modules
-  --ignore=test-results
-  --ignore=typings
-  --ignore=vulture_whitelist.py
-  --ignore-glob=*__pycache__*
-"""
+testpaths = "tests"
 
 [tool.pyright]
 exclude = [
@@ -125,7 +108,7 @@ exclude = [
   "poetry.lock",
   "test-results",
   "typings",
-  "vulture_whitelist.py"
+  "vulture_whitelist.py",
 ]
 pythonVersion = "3.10"
 pythonPlatform = "All"
@@ -141,16 +124,66 @@ extend-exclude = ["cache", "typings"]
 target-version = "py310"
 
 [tool.ruff.lint]
-extend-ignore = ["S101", "D203", "D213",
-  # Format ignores
-  "W191", "E501", "E111", "E114", "E117", "D206", "D300", "Q000", "Q001",
-  "Q002", "Q003", "COM812", "COM819", "ISC001", "ISC002"
+extend-ignore = [
+  "S101",
+  "D203",
+  "D213",
+  "W191",
+  "E501",
+  "E111",
+  "E114",
+  "E117",
+  "D206",
+  "D300",
+  "Q000",
+  "Q001",
+  "Q002",
+  "Q003",
+  "COM812",
+  "COM819",
+  "ISC001",
+  "ISC002",
 ]
-extend-select = ["A", "ARG", "B", "B9", "C", "C4", "C90", "D", "DJ",
-  "DTZ", "E", "EM", "EXE", "F", "I", "ICN", "INP", "ISC", "PIE", "PL",
-  "PT", "PTH", "PYI", "Q", "N", "RET", "RSE", "RUF", "S", "SIM", "SLF",
-  "T10", "T20", "TCH", "TID", "TRY", "UP", "W", "YTT"
-  # "ANN", "ERA", "COM"
+extend-select = [
+  "A",
+  "ARG",
+  "B",
+  "B9",
+  "C",
+  "C4",
+  "C90",
+  "D",
+  "DJ",
+  "DTZ",
+  "E",
+  "EM",
+  "EXE",
+  "F",
+  "I",
+  "ICN",
+  "INP",
+  "ISC",
+  "PIE",
+  "PL",
+  "PT",
+  "PTH",
+  "PYI",
+  "Q",
+  "N",
+  "RET",
+  "RSE",
+  "RUF",
+  "S",
+  "SIM",
+  "SLF",
+  "T10",
+  "T20",
+  "TCH",
+  "TID",
+  "TRY",
+  "UP",
+  "W",
+  "YTT",
 ]
 external = ["V101"]
 task-tags = ["TODO", "FIXME", "XXX", "http", "HACK"]
@@ -162,6 +195,13 @@ task-tags = ["TODO", "FIXME", "XXX", "http", "HACK"]
 ignore-overlong-task-comments = true
 
 [tool.vulture]
-exclude = [".git/", ".mypy_cache/", ".pytest_cache", ".ruff_cache", ".venv", "*__pycache__*"]
+exclude = [
+  ".git/",
+  ".mypy_cache/",
+  ".pytest_cache",
+  ".ruff_cache",
+  ".venv",
+  "*__pycache__*",
+]
 min_confidence = 61
 sort_by_size = true

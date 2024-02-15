@@ -2,7 +2,7 @@ picopt:
   after: null
   bigger: False
   convert_to: []
-  formats: ["GIF", "JPEG", "PNG", "WEBP"]
+  formats: [GIF, JPEG, PNG, WEBP]
   ignore: []
   jobs: 0
   keep_metadata: True

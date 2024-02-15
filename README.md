@@ -41,7 +41,9 @@ By default picopt does not convert images between formats. You must turn on conv
 - Picopt can convert MPO to JPEG by stripping secondary images if a primary image exists. (Experimental)
 - Picopt can convert RAR files into Zipfiles and CBR files into CBZ files.
 
-Because picopt supports so many lossless image formats, to avoid surprises if you specify a conversion target, picopt will only convert GIF and PNG images to the target by default. To convert another format, like BMP, to WEBP you must specify that you want to read the BMP format _and_ that you want to convert it to WEBP:
+Because picopt supports so many lossless image formats, to avoid surprises if you specify a conversion target, picopt will only convert GIF and PNG images to the target by default. To convert another format, like BMP, to WEBP you must specify that you want to read the BMP format _and_ that you want t:qo convert it to WEBP:
+
+<!-- eslint-skip -->
 
 ```sh
 picopt -x BMP -c WEBP big_old.bmp
@@ -97,6 +99,8 @@ picopt is most effective with ependencies to run. We must install these first
 
 #### macOS
 
+<!-- eslint-skip -->
+
 ```sh
 brew install gifsicle mozjpeg svgo webp
 
@@ -105,11 +109,15 @@ ln -s $(brew --prefix)/opt/mozjpeg/bin/jpegtran /usr/local/bin/mozjpeg
 
 #### Debian / Ubuntu
 
+<!-- eslint-skip -->
+
 ```sh
 apt-get install gifsicle python-imaging webp
 ```
 
 if you don't want to install mozjpeg using the instructions below then use jpegtran:
+
+<!-- eslint-skip -->
 
 ```sh
 apt-get install libjpeg-progs
@@ -119,11 +127,15 @@ See mozjepg, pngout & svgo install instructions below
 
 #### Redhat / Fedora
 
+<!-- eslint-skip -->
+
 ```sh
 yum install gifsicle python-imaging libwebp-tools
 ```
 
 if you don't want to install mozjpeg using the instructions below then use jpegtran:
+
+<!-- eslint-skip -->
 
 ```sh
 yum install libjpeg-progs
@@ -132,6 +144,8 @@ yum install libjpeg-progs
 See mozjepg, pngout & svgo install instructions below
 
 ### Picopt python package
+
+<!-- eslint-skip -->
 
 ```sh
 pip install picopt
@@ -156,6 +170,8 @@ pngout is a compression tool that can be used for small extra compression. It do
 
 It can be installed on macOS with:
 
+<!-- eslint-skip -->
+
 ```sh
 brew install jonof/kenutils/pngout
 ```
@@ -170,11 +186,15 @@ svgo compresses SVGs. Svgo is packaged for homebrew, but picopt can also use it 
 
 To install svgo on Linux you can use the snap tool:
 
+<!-- eslint-skip -->
+
 ```sh
 snap install svgo
 ```
 
 Or you can install svgo with npm:
+
+<!-- eslint-skip -->
 
 ```sh
 npm install -G svgo
@@ -184,11 +204,15 @@ npm install -G svgo
 
 Optimize all JPEG files in a directory:
 
+<!-- eslint-skip -->
+
 ```sh
 picopt *.jpg
 ```
 
 Optimize all files and recurse directories:
+
+<!-- eslint-skip -->
 
 ```sh
 picopt -r *
@@ -196,11 +220,15 @@ picopt -r *
 
 Optimize files, recurse directories, also optimize ePub & CBZ containers, convert lossless images into WEBP, convert CBR into CBZ.
 
+<!-- eslint-skip -->
+
 ```sh
 picopt -rx EPUB,CBR,CBZ -c WEBP,CBZ *
 ```
 
 Optimize files and recurse directories AND optimize comic book archives:
+
+<!-- eslint-skip -->
 
 ```sh
 picopt -rx CBZ *
@@ -208,11 +236,15 @@ picopt -rx CBZ *
 
 Optimize comic directory recursively. Convert CBRs to CBZ. Convert lossless images, including TIFF, to lossless WEBP. Do not follow symlinks. Set timestamps.
 
+<!-- eslint-skip -->
+
 ```sh
 picopt -rStc CBZ,WEBP -x TIFF,CBR,CBZ /Volumes/Media/Comics
 ```
 
 Optimize all files, but only JPEG format files:
+
+<!-- eslint-skip -->
 
 ```sh
 picopt -f JPEG *
@@ -220,11 +252,15 @@ picopt -f JPEG *
 
 Optimize files and containers, but not JPEGS:
 
+<!-- eslint-skip -->
+
 ```sh
 picopt -f GIF,PNG,WEBP,ZIP,CBZ,EPUB *
 ```
 
 Optimize files, but not animated gifs:
+
+<!-- eslint-skip -->
 
 ```sh
 picopt -f PNG,WEBP,ZIP,CBZ,EPUB *
@@ -232,11 +268,15 @@ picopt -f PNG,WEBP,ZIP,CBZ,EPUB *
 
 Just list files picopt.py would try to optimize:
 
+<!-- eslint-skip -->
+
 ```sh
 picopt -L *
 ```
 
 Optimize pictures in my iPhoto library, but only after the last time I did this, skipping symlinks to avoid duplicate work. Also drop a timestamp file so I don't have to remember the last time I did this:
+
+<!-- eslint-skip -->
 
 ```sh
 picopt -rSt -D '2013 June 1 14:00' 'Pictures/iPhoto Library'
