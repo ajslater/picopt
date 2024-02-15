@@ -14,6 +14,16 @@
       "prettier-plugin-packagejson",
       "prettier-plugin-sh",
       "prettier-plugin-toml"
+    ],
+    "overrides": [
+      {
+        "files": [
+          "**/*.md"
+        ],
+        "options": {
+          "proseWrap": "always"
+        }
+      }
     ]
   },
   "remarkConfig": {
@@ -23,7 +33,10 @@
       "preset-lint-markdown-style-guide",
       "preset-lint-recommended",
       "preset-prettier"
-    ]
+    ],
+    "settings": {
+      "ignorePath": ".gitignore"
+    }
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.0.1",

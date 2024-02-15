@@ -16,25 +16,13 @@ export default [
     languageOptions: {
       globals: {
         ...globals.node,
-        //...eslintrc.Legacy.environments.get("es2024"),
       },
-      /*
-      parserOptions: {
-        // Eslint doesn't supply ecmaVersion in `parser.js` `context.parserOptions`
-        // This is required to avoid ecmaVersion < 2015 error or 'import' / 'export' error
-        ecmaVersion: "latest",
-        sourceType: "module",
-      }
-      */
     },
     linterOptions: {
       reportUnusedDisableDirectives: "warn",
     },
     plugins: {
-      //arrayFunc,
       // import: importPlugin,
-      //prettier: eslintPluginPrettierRecommended,
-      //security: pluginSecurity,
       unicorn: eslintPluginUnicorn,
     },
     rules: {
@@ -51,7 +39,7 @@ export default [
       ],
       /*
       ...importPlugin.configs["recommended"].rules,
-            "import/no-unresolved": [
+      "import/no-unresolved": [
         "error",
         {
           ignore: ["^[@]"],
@@ -64,7 +52,6 @@ export default [
       "import/parsers": {
         espree: [".js", ".cjs", ".mjs", ".jsx"],
         "@typescript-eslint/parser": [".ts"],
-
       },
       "import/resolver": {
         typescript: true,
@@ -102,7 +89,7 @@ export default [
       ecmaFeatures: {
         impliedStrict: true,
       },
-      ecmaVersion: 2022,
+      ecmaVersion: "latest",
     },
     plugins: [
       "eslint-comments",
@@ -138,15 +125,7 @@ export default [
       "plugin:no-unsanitized/DOM",
     ],
     rules: {
-      /*
-      "import/no-unresolved": [
-        "error",
-        {
-          ignore: ["^[@]"],
-        },
-      ],
-      */
-      "max-params": ["warn", 4],
+      "eslint-comments/no-unused-disable": 1,
       "no-constructor-bind/no-constructor-bind": "error",
       "no-constructor-bind/no-constructor-state": "error",
       "no-secrets/no-secrets": "error",
