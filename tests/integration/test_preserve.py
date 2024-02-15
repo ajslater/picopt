@@ -1,5 +1,5 @@
 """Test comic format."""
-from types import MappingProxyType
+import platform
 
 from picopt import PROGRAM_NAME, cli
 from tests import get_test_dir
@@ -7,21 +7,34 @@ from tests.integration.base_test_images import BaseTestImagesDir
 
 __all__ = ()
 
-FNS = MappingProxyType(
-    {
-        "test_pre-optimized_jpg.jpg": (
-            22664,
-            22664,
-            ("jpg", 22664),
-        ),
-        "test_jpg.jpg": (
-            97373,
-            87913,
-            ("jpg", 87913),
-        ),
-    }
-)
+FNS: dict[str, tuple] = {
+    "test_pre-optimized_jpg.jpg": (
+        22664,
+        22664,
+        ("jpg", 22664),
+    ),
+}
 
+if platform.system() == "Darwin":
+    FNS.update(
+        {
+            "test_jpg.jpg": (
+                97373,
+                87913,
+                ("jpg", 87913),
+            ),
+        }
+    )
+else:
+    FNS.update(
+        {
+            "test_jpg.jpg": (
+                97373,
+                88561,
+                ("jpg", 88561),
+            ),
+        }
+    )
 STATS = ("uid", "gid", "mode", "mtime_ns")
 
 
