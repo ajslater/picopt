@@ -50,15 +50,15 @@ workflows:
           filters:
             branches:
               only:
-                - circleci
                 - develop
+                - pre-release
                 - main
                 - /.*-ci/
       - deploy:
           filters:
             branches:
               only:
-                - circleci
+                - pre-release
                 - main
           requires:
             - build
