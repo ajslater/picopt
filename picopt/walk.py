@@ -115,7 +115,7 @@ class Walk:
         mtime = path_info.mtime()
         return bool(mtime <= walk_after)
 
-    def _clean_up_working_files(self, path) -> None:
+    def _clean_up_working_files(self, path: Path) -> None:
         """Auto-clean old working temp files if encountered."""
         try:
             if path.is_dir():
@@ -239,7 +239,7 @@ class Walk:
 
         path = path_info.path
         if path and path.name.rfind(Handler.WORKING_SUFFIX) > -1:
-            self._clean_up_working_files(path_info)
+            self._clean_up_working_files(path)
             if self._config.verbose == 1:
                 cprint(".", "yellow", end="")
             return True
