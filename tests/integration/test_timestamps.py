@@ -1,7 +1,7 @@
 """Test comic format."""
-import platform
 import shutil
 from datetime import datetime, timezone
+from types import MappingProxyType
 
 from ruamel.yaml import YAML
 
@@ -18,7 +18,7 @@ TIMESTAMPS_PATH = TMP_ROOT / TIMESTAMPS_FN
 WAL_FN = f".{PROGRAM_NAME}_treestamps.wal.yaml"
 WAL_PATH = TMP_ROOT / WAL_FN
 
-FNS = {FN: (97373, 87913)} if platform.system() == "Darwin" else {FN: (97373, 88561)}
+FNS = MappingProxyType({FN: (97373, 87913)})
 
 DEFAULT_CONFIG = {
     "bigger": False,
