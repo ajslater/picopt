@@ -206,6 +206,12 @@ def get_arguments(params: tuple[str, ...] | None = None) -> Namespace:
         action="store_true",
         help="Preserve file attributes (uid, gid, mode, mtime) after optimization.",
     )
+    parser.add_argument(
+        "-D",
+        "--disable-programs",
+        action=SplitArgsAction,
+        help="Disable a comma delineated list of external programs from optimizing files.",
+    )
     ###########
     # Actions #
     ###########

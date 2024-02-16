@@ -2,6 +2,7 @@ picopt:
   after: null
   bigger: False
   convert_to: []
+  disable_programs: []
   formats: [GIF, JPEG, PNG, WEBP]
   ignore: []
   jobs: 0

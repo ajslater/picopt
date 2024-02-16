@@ -1,5 +1,4 @@
 """Confuse config for picopt."""
-import os
 import shutil
 import subprocess
 import time
@@ -91,6 +90,7 @@ TEMPLATE = MappingTemplate(
                 "after": Optional(float),
                 "bigger": bool,
                 "convert_to": Optional(Sequence(Choice(_CONVERT_TO_FORMAT_STRS))),
+                "disable_programs": Sequence(str),
                 "extra_formats": Optional(Sequence(Choice(ALL_FORMAT_STRS))),
                 "formats": Sequence(Choice(ALL_FORMAT_STRS)),
                 "ignore": Sequence(str),
@@ -249,12 +249,14 @@ def _set_all_format_strs(config: Subview) -> frozenset[str]:
 
 
 def _get_handler_stages(
-    handler_class: type[Handler],
+    handler_class: type[Handler], disabled_programs: frozenset
 ) -> dict[str, tuple[str, ...]]:
     """Get the program stages for each handler."""
     stages = {}
     for program_priority_list in handler_class.PROGRAMS:
         for program in program_priority_list:
+            if program in disabled_programs:
+                continue
             if program.startswith(("pil2", Handler.INTERNAL)):
                 exec_args = None
             elif program.startswith("npx_"):
@@ -273,9 +275,6 @@ def _get_handler_stages(
                     )
                 except (subprocess.CalledProcessError, FileNotFoundError, OSError):
                     continue
-            elif os.environ.get("PICOPT_INTERNAL_JPEG") and program in _JPEG_PROGS:
-                # Hack for testing
-                continue
             else:
                 bin_path = shutil.which(program)
                 if not bin_path:
@@ -296,6 +295,7 @@ def _set_format_handler_map_entry(  # noqa: PLR0913
     convert_handlers: dict[FileFormat, type[Handler]],
     native_handlers: dict[FileFormat, type[Handler]],
     handled_format_strs: set[str],
+    disabled_programs: frozenset,
 ) -> bool:
     """Create an entry for the format handler maps."""
     if (
@@ -306,7 +306,9 @@ def _set_format_handler_map_entry(  # noqa: PLR0913
 
     # Get handler stages by class with caching
     if handler_class not in handler_stages:
-        handler_stages[handler_class] = _get_handler_stages(handler_class)
+        handler_stages[handler_class] = _get_handler_stages(
+            handler_class, disabled_programs
+        )
     stages = handler_stages.get(handler_class)
     if not stages:
         return False
@@ -360,9 +362,7 @@ def _is_cwebp_modern(handler_stages: dict) -> tuple[bool, str]:
     return True, cwebp_version
 
 
-def _set_format_handler_map(
-    config: Subview,
-) -> None:
+def _set_format_handler_map(config: Subview) -> None:
     """Create a format to handler map from config."""
     all_format_strs = _set_all_format_strs(config)
     convert_to = _config_formats_list_to_set(config, "convert_to")
@@ -373,6 +373,10 @@ def _set_format_handler_map(
 
     handled_format_strs = set()
     convert_format_strs = {}
+    disabled_programs: list | frozenset = config["disable_programs"].get(list)  # type: ignore
+    disabled_programs = (
+        frozenset(disabled_programs) if disabled_programs else frozenset()
+    )
 
     for file_format, possible_file_handlers in _FORMAT_HANDLERS.items():
         if file_format.format_str not in all_format_strs:
@@ -392,6 +396,7 @@ def _set_format_handler_map(
                     convert_handlers,
                     native_handlers,
                     handled_format_strs,
+                    disabled_programs,
                 ):
                     break
 

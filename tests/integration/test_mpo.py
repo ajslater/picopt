@@ -1,5 +1,4 @@
 """Test comic format."""
-import os
 from types import MappingProxyType
 
 from picopt import PROGRAM_NAME, cli
@@ -50,10 +49,17 @@ class TestMPO(BaseTestImagesDir):
 
     def test_convert_to_jpeg_no_local(self) -> None:
         """Test convert to PNG."""
-        os.environ["PICOPT_INTERNAL_JPEG"] = "1"
-        args = (PROGRAM_NAME, "-rvvvx", "MPO", "-c", "JPEG", str(self.TMP_ROOT))
+        args = (
+            PROGRAM_NAME,
+            "-rvvvx",
+            "MPO",
+            "-c",
+            "JPEG",
+            "-D",
+            "mozjpeg,jpegtran",
+            str(self.TMP_ROOT),
+        )
         cli.main(args)
-        del os.environ["PICOPT_INTERNAL_JPEG"]
         for name, sizes in self.FNS.items():
             path = (self.TMP_ROOT / name).with_suffix("." + sizes[3][0])
             assert path.stat().st_size == sizes[3][1]

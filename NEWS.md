@@ -12,8 +12,9 @@
   - Better support for preserving EXIF, ICC_PROFILE, & XMP data across
     optimization and conversion.
   - `--destroy-metadata` option becomes `--strip-metadata`
-  - `--near-lossless` option for lossless WebP
+  - `--near-lossless` option for lossless WebP.
   - `--preserve` file attributes after optimization.
+  - `--disable-programs` option.
   - ~25% faster due to avoiding disk io.
 - Dev
   - walk.run now returns totals instead of running report on them.
