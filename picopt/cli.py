@@ -182,7 +182,7 @@ def get_arguments(params: tuple[str, ...] | None = None) -> Namespace:
         "--strip-metadata",
         action="store_false",
         dest="keep_metadata",
-        help="Strip metadata like EXIF and ICC Profiles",
+        help="Strip metadata like EXIF, XMP and ICC Profiles",
     )
     parser.add_argument(
         "-j",
@@ -191,7 +191,7 @@ def get_arguments(params: tuple[str, ...] | None = None) -> Namespace:
         action="store",
         dest="jobs",
         help="Number of parallel jobs to run simultaneously. Defaults "
-        "to maximum available.",
+        "to number of available cores.",
     )
     parser.add_argument(
         "-C",
