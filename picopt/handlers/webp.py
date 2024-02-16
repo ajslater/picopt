@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING, BinaryIO
 
 from PIL.WebPImagePlugin import WebPImageFile
 
-from picopt.formats import TIFF_FILE_FORMAT, FileFormat
+from picopt.formats import FileFormat
 from picopt.handlers.image import ImageHandler
 from picopt.handlers.png import Png
 
@@ -82,9 +82,8 @@ class WebPLossless(WebPBase):
     """Handle lossless webp images and images that convert to lossless webp."""
 
     OUTPUT_FILE_FORMAT = FileFormat(WebPBase.OUTPUT_FORMAT_STR, True, False)
-    INPUT_FILE_FORMATS = frozenset(
-        {OUTPUT_FILE_FORMAT, Png.OUTPUT_FILE_FORMAT, TIFF_FILE_FORMAT}
-    )
+    INPUT_FILE_FORMATS = frozenset({OUTPUT_FILE_FORMAT, Png.OUTPUT_FILE_FORMAT})
+    # newer cwebp can use tiff, but not as packaged for old linux?, TIFF_FILE_FORMAT}
     CONVERT_FROM_FORMAT_STRS = frozenset(
         Png.CONVERT_FROM_FORMAT_STRS | {Png.OUTPUT_FORMAT_STR}
     )
