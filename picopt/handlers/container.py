@@ -78,9 +78,10 @@ class ContainerHandler(Handler, metaclass=ABCMeta):
         for path_info in tuple(self._tasks):
             mp_results = self._tasks.pop(path_info)
             report = mp_results.get()
+            data = report.data if report.data else path_info.data()
             # Clearing has to happen AFTER mp_results.get() or we risk not passing the data
             path_info.data_clear()
-            self._optimized_contents[path_info] = report.data
+            self._optimized_contents[path_info] = data
 
     def optimize(self) -> BinaryIO:
         """Run pack_into."""
