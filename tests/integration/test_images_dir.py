@@ -30,15 +30,15 @@ FNS = {
     ),
     "mri.tif": (230578, 230578, ("png", 131743), ("webp", 114740)),
     "test_webp_lossy.webp": (2764, 2764, ("webp", 2764), ("webp", 2764)),
+    "test_bmp.bmp": (141430, 141430, ("png", 67236), ("webp", 47524)),
+    "test_png_16rgba.png": (3435, 2090, ("png", 2090), ("webp", 684)),
+    "test_pnm.pnm": (27661, 27661, ("png", 15510), ("webp", 12808)),
+    "test_jpg.jpg": (97373, 87913, ("jpg", 87913), ("jpg", 87913)),
 }
 if platform.system() == "Darwin":
     FNS.update(
         {
-            "test_bmp.bmp": (141430, 141430, ("png", 67236), ("webp", 47524)),
             "test_gif.gif": (138952, 138944, ("png", 112137), ("webp", 107924)),
-            "test_jpg.jpg": (97373, 87913, ("jpg", 87913), ("jpg", 87913)),
-            "test_png_16rgba.png": (3435, 2090, ("png", 2090), ("webp", 1142)),
-            "test_pnm.pnm": (27661, 27661, ("png", 15510), ("webp", 12808)),
             "test_pre-optimized_png.png": (
                 256572,
                 256572,
@@ -51,11 +51,7 @@ if platform.system() == "Darwin":
 else:
     FNS.update(
         {
-            "test_bmp.bmp": (141430, 141430, ("png", 67236), ("webp", 47524)),
             "test_gif.gif": (138952, 138944, ("png", 112137), ("webp", 107952)),
-            "test_jpg.jpg": (97373, 87913, ("jpg", 87913), ("jpg", 87913)),
-            "test_png_16rgba.png": (3435, 2090, ("png", 2090), ("webp", 1142)),
-            "test_pnm.pnm": (27661, 27661, ("png", 15510), ("webp", 12808)),
             "test_pre-optimized_png.png": (
                 256572,
                 256572,
@@ -66,9 +62,9 @@ else:
         }
     )
 
-EXHAUSTIVE_FNS = MappingProxyType(
+NEAR_LOSSLESS_FNS = MappingProxyType(
     {
-        "test_png_16rgba.png": (3435, 2090, ("png", 2090), ("webp", 728)),
+        "test_png_16rgba.png": (3435, 2090, ("png", 2090), ("webp", 622)),
         "test_webp_lossless.webp": (5334, 3870, ("webp", 3870), ("webp", 2044)),
         "test_webp_lossless_pre-optimized.webp": (
             3798,
@@ -126,7 +122,7 @@ class TestImagesDir(BaseTestImagesDir):
 
 
 class TestNearLosslessImageDir(BaseTestImagesDir):
-    FNS = EXHAUSTIVE_FNS
+    FNS = NEAR_LOSSLESS_FNS
 
     def test_convert_to_webp_near_lossless(self) -> None:
         """Test convert to WEBP."""
