@@ -65,8 +65,6 @@ class ReportStats(ReportStatBase):
         if self.saved > 0:
             report += " saved"
         elif self.saved < 0:
-            if not self.bigger:
-                report += " would have been"
             report += " lost"
         if self.saved <= 0 and not self.bigger:
             report += ", kept original"
