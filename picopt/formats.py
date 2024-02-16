@@ -56,6 +56,11 @@ TIFF_LOSSLESS_COMPRESSION = frozenset(
 #    "jpeg", "webp"
 # })
 PNGINFO_XMP_KEY = "XML:com.adobe.xmp"
+PPM_FILE_FORMAT = FileFormat(PpmImageFile.format, True, False)
+MODERN_CWEBP_FORMATS = frozenset({PPM_FILE_FORMAT, TIFF_FILE_FORMAT})
+MODERN_CWEBP_FORMAT_STRS = frozenset(
+    sorted(fmt.format_str for fmt in MODERN_CWEBP_FORMATS)
+)
 
 
 _CONVERTABLE_PIL_IMAGE_FILES = (

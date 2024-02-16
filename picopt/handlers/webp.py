@@ -1,14 +1,17 @@
 """WebP format."""
 from abc import ABC
+from collections.abc import Mapping
 from io import BytesIO
 from types import MappingProxyType
-from typing import TYPE_CHECKING, BinaryIO
+from typing import TYPE_CHECKING, Any, BinaryIO
 
+from confuse import AttrDict
 from PIL.WebPImagePlugin import WebPImageFile
 
-from picopt.formats import FileFormat
+from picopt.formats import MODERN_CWEBP_FORMATS, FileFormat
 from picopt.handlers.image import ImageHandler
 from picopt.handlers.png import Png
+from picopt.path import PathInfo
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -83,7 +86,6 @@ class WebPLossless(WebPBase):
 
     OUTPUT_FILE_FORMAT = FileFormat(WebPBase.OUTPUT_FORMAT_STR, True, False)
     INPUT_FILE_FORMATS = frozenset({OUTPUT_FILE_FORMAT, Png.OUTPUT_FILE_FORMAT})
-    # newer cwebp can use tiff, but not as packaged for old linux?, TIFF_FILE_FORMAT}
     CONVERT_FROM_FORMAT_STRS = frozenset(
         Png.CONVERT_FROM_FORMAT_STRS | {Png.OUTPUT_FORMAT_STR}
     )
@@ -95,6 +97,18 @@ class WebPLossless(WebPBase):
     PIL2_KWARGS = MappingProxyType({**WebPBase.PIL2_KWARGS, "lossless": True})
     PROGRAMS = (("pil2png",), ("cwebp", "pil2native"))
     NEAR_LOSSLESS_OPTS: tuple[str, ...] = ("-near_lossless", "0")
+
+    def __init__(
+        self,
+        config: AttrDict,
+        path_info: PathInfo,
+        input_file_format: FileFormat,
+        info: Mapping[str, Any],
+    ):
+        """Initialize extra input formats."""
+        super().__init__(config, path_info, input_file_format, info)
+        if config.computed.is_modern_cwebp:
+            self._input_file_formats |= MODERN_CWEBP_FORMATS
 
     def cwebp(
         self,

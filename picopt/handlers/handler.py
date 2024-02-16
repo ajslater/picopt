@@ -124,6 +124,7 @@ class Handler(ABC):
         self.info: dict[str, Any] = dict(info)
         if self.config.preserve:
             self.path_info.stat()
+        self._input_file_formats = self.INPUT_FILE_FORMATS
 
     def prepare_info(self, format_str) -> MappingProxyType[str, Any]:
         """Prepare an info dict for saving."""

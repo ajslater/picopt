@@ -50,7 +50,7 @@ class ImageHandler(Handler, metaclass=ABCMeta):
         opts: None | Mapping[str, Any] = None,
     ) -> BytesIO | BufferedReader:
         """Use PIL to save the image."""
-        if self.input_file_format in self.INPUT_FILE_FORMATS:
+        if self.input_file_format in self._input_file_formats:
             return input_buffer
         if format_str is None:
             format_str = self.OUTPUT_FORMAT_STR
