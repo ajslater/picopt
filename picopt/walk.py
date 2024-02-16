@@ -145,7 +145,10 @@ class Walk:
                 self._totals.errors.append(final_result)
             else:
                 self._totals.bytes_in += final_result.bytes_in
-                self._totals.bytes_out += final_result.bytes_out
+                if final_result.saved > 0 and not self._config.bigger:
+                    self._totals.bytes_out += final_result.bytes_out
+                else:
+                    self._totals.bytes_out += final_result.bytes_in
             if self._config.timestamps and not container_mtime:
                 timestamps = self._timestamps[top_path]
                 timestamps.set(final_result.path)
@@ -349,6 +352,8 @@ class Walk:
         # Shut down multiprocessing
         self._pool.close()
         self._pool.join()
+
+        cprint("done.")
 
         if self._config.timestamps:
             self._timestamps.dump()
