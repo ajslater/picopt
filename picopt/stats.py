@@ -68,8 +68,8 @@ class ReportStats(ReportStatBase):
             if not self.bigger:
                 report += " would have been"
             report += " lost"
-            if not self.bigger:
-                report += " (new file discarded)"
+        if self.saved <= 0 and not self.bigger:
+            report += ", kept original"
 
         return report
 
