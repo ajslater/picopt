@@ -54,7 +54,9 @@ class TestMPO(BaseTestImagesDir):
         orig_path = os.environ.get("PATH", "")
         new_path = orig_path.replace(":/usr/local/bin:", ":")
         new_path = new_path.replace(":/opt/homebrew/bin:", ":")
-        new_path = new_path.replace(":/usr/bin:", ":")  # XXX Dangerous
+        # XXX Dangerous
+        new_path = new_path.replace(":/usr/bin:", ":")
+        new_path = new_path.replace(":/bin:", ":")
         os.environ["PATH"] = new_path
         print(new_path)
         mozjpeg = shutil.which("mozjpeg")

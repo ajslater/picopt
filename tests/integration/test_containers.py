@@ -1,6 +1,6 @@
 """Test comic format."""
 import shutil
-from platform import system
+from types import MappingProxyType
 from zipfile import ZipFile
 
 from picopt import PROGRAM_NAME, cli
@@ -10,22 +10,15 @@ __all__ = ()
 TMP_ROOT = get_test_dir()
 SRC_CBZ = CONTAINER_DIR / "test_cbz.cbz"
 
-if system() == "Darwin":
-    FNS = {
+FNS = MappingProxyType(
+    {
         "test_cbz.cbz": (93408, 84544, ("cbz", 84544)),
         "test_cbr.cbr": (93725, 93725, ("cbz", 88048)),
         "test_rar.rar": (93675, 93675, ("zip", 88035)),
         "test_zip.zip": (7783, 7015, ("zip", 7015)),
         "igp-twss.epub": (292448, 285999, ("epub", 285999)),
     }
-else:
-    FNS = {
-        "test_cbz.cbz": (93408, 84544, ("cbz", 84544)),
-        "test_cbr.cbr": (93725, 93725, ("cbz", 88048)),
-        "test_rar.rar": (93675, 93675, ("zip", 84544)),
-        "test_zip.zip": (7783, 7015, ("zip", 7015)),
-        "igp-twss.epub": (292448, 280700, ("epub", 280700)),
-    }
+)
 
 EPUB_FN = "igp-twss.epub"
 BMP_FN = "OPS/test_bmp.bmp"
