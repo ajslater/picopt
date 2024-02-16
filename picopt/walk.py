@@ -103,7 +103,7 @@ class Walk:
         """Is the file older than the timestamp."""
         if self._config.after is not None:
             walk_after = self._config.after
-        elif self._config.timestamps:
+        elif path_info.path and self._config.timestamps:
             timestamps = self._timestamps.get(path_info.top_path, {})
             walk_after = timestamps.get(path_info.path)
         else:
