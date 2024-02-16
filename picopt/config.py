@@ -1,4 +1,5 @@
 """Confuse config for picopt."""
+import os
 import shutil
 import subprocess
 import time
@@ -131,6 +132,7 @@ TIMESTAMPS_CONFIG_KEYS = {
 }
 # cwebp before this version only accepts PNG & WEBP
 MIN_CWEBP_VERSION = (1, 2, 3)
+_JPEG_PROGS = frozenset({"mozjpeg", "jpegtran"})
 
 
 ########################
@@ -271,6 +273,9 @@ def _get_handler_stages(
                     )
                 except (subprocess.CalledProcessError, FileNotFoundError, OSError):
                     continue
+            elif os.environ.get("PICOPT_INTERNAL_JPEG") and program in _JPEG_PROGS:
+                # Hack for testing
+                continue
             else:
                 bin_path = shutil.which(program)
                 if not bin_path:
