@@ -238,9 +238,7 @@ class Handler(ABC):
             raise TypeError(reason)
         return size
 
-    def _cleanup_after_optimize_save_new(
-        self, final_data_buffer: BinaryIO
-    ) -> tuple[str, bytes]:
+    def _cleanup_after_optimize_save_new(self, final_data_buffer: BinaryIO) -> bytes:
         """Save new data."""
         return_data = b""
         if (
@@ -255,38 +253,33 @@ class Handler(ABC):
                 self.working_path.unlink(missing_ok=True)
         if self.path_info.path:
             self._cleanup_filesystem(final_data_buffer)
-        cps = self.path_info.container_paths
-        report_path = CONTAINER_PATH_DELIMETER.join((*cps, str(self.final_path)))
-        return report_path, return_data
+        return return_data
 
     def _cleanup_after_optimize(self, final_data_buffer: BinaryIO) -> ReportStats:
         """Replace old file with better one or discard new wasteful file."""
+        cps = self.path_info.container_paths
+        report_path = CONTAINER_PATH_DELIMETER.join((*cps, str(self.final_path)))
         try:
             bytes_in = self.path_info.bytes_in()
             bytes_out = self.get_buffer_len(final_data_buffer)
             if not self.config.test and (
                 (bytes_out > 0) and ((bytes_out < bytes_in) or self.config.bigger)
             ):
-                report_path, return_data = self._cleanup_after_optimize_save_new(
-                    final_data_buffer
-                )
+                return_data = self._cleanup_after_optimize_save_new(final_data_buffer)
             else:
                 return_data = b""
-                report_path = str(self.original_path)
             final_data_buffer.close()
-
+            return ReportStats(
+                report_path,
+                path_info=self.path_info,
+                config=self.config,
+                bytes_in=bytes_in,
+                bytes_out=bytes_out,
+                data=return_data,
+            )
         except Exception as exc:
-            cprint(f"ERROR: cleanup_after_optimize: {exc}", "red")
+            cprint(f"ERROR: cleanup_after_optimize: {report_path} {exc}", "red")
             raise
-
-        return ReportStats(
-            report_path,
-            path_info=self.path_info,
-            config=self.config,
-            bytes_in=bytes_in,
-            bytes_out=bytes_out,
-            data=return_data,
-        )
 
     @abstractmethod
     def optimize(self) -> BinaryIO:

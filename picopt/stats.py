@@ -42,7 +42,6 @@ class ReportStats(ReportStatBase):
         self.bigger: bool = config.bigger if config else False
         self.test: bool = config.test if config else False
         self.convert: bool = path_info.convert if path_info else False
-        self.in_container: bool = path_info.is_container_child() if path_info else False
         super().__init__(*args, **kwargs)
         self.saved = self.bytes_in - self.bytes_out
 
@@ -56,10 +55,7 @@ class ReportStats(ReportStatBase):
 
     def _report_saved(self) -> str:
         """Return the percent saved."""
-        report = ""
-        if self.in_container:
-            report += "  "
-        report += f"{self.path}: "
+        report = f"{self.path}: "
         report += self._new_percent_saved()
         if self.test:
             report += " would be"
