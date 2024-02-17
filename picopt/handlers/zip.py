@@ -52,6 +52,8 @@ class Zip(NonPILIdentifier, ContainerHandler):
             self._set_comment(archive.comment)
             for archive_info in archive.infolist():
                 zipinfo = self.to_zipinfo(archive_info)
+                if zipinfo.is_dir():
+                    continue
                 path_info = PathInfo(
                     self.path_info.top_path,
                     self.path_info.mtime(),
