@@ -16,7 +16,7 @@ FNS = MappingProxyType(
         "test_cbr.cbr": (93725, 93725, ("cbz", 88048)),
         "test_rar.rar": (93675, 93675, ("zip", 88035)),
         "test_zip.zip": (7783, 7015, ("zip", 7015)),
-        "igp-twss.epub": (292448, 285999, ("epub", 285999)),
+        "igp-twss.epub": (292448, 285439, ("epub", 285439)),
     }
 )
 
