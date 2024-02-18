@@ -197,7 +197,7 @@ Picopt will perform optimization on most lossless formats without using external
 programs, but much more compression is possible if these external programs are
 on your path.
 
-#### mozjpeg
+### mozjpeg
 
 mozjpeg offers better compression than libjpeg-progs jpegtran. It may or may not
 be packaged for your \*nix, but even when it is, picopt requires that its
@@ -210,7 +210,7 @@ for Windows and Debian x86
 distributions still require a more manual install as elucidated here on
 [Casey Hoffer's blog](https://www.caseyhofford.com/2019/05/01/improved-image-compression-install-mozjpeg-on-ubuntu-server/)
 
-#### pngout
+### pngout
 
 pngout is a compression tool that can be used for small extra compression. It
 does not run on 16 bit PNGs.
@@ -227,12 +227,12 @@ It is not packaged for linux, but you may find the latest binary version
 [on JonoF's site](http://www.jonof.id.au/kenutils). Picopt looks for the binary
 to be called `pngout`
 
-#### svgo
+### svgo
 
 svgo compresses SVGs. Svgo is packaged for homebrew, but picopt can also use it
 if it's installed with npm.
 
-##### On Linux
+#### On Linux
 
 To install svgo on Linux you can use the snap tool:
 
