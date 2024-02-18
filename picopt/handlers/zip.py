@@ -73,9 +73,14 @@ class Zip(NonPILIdentifier, ContainerHandler):
         ) as new_zf:
             for path_info in tuple(self._optimized_contents):
                 data = self._optimized_contents.pop(path_info)
-                if not path_info.zipinfo:
+                zipinfo = path_info.zipinfo
+                if not zipinfo:
                     continue
-                zipinfo: ZipInfo = path_info.zipinfo
+                if (
+                    path_info.container_filename
+                    and path_info.container_filename != zipinfo.filename
+                ):
+                    zipinfo.filename = path_info.container_filename
                 if (
                     not self.config.keep_metadata
                     and zipinfo

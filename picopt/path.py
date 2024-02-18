@@ -32,6 +32,7 @@ class PathInfo:
         self.container_mtime: float = container_mtime
         self.convert: bool = convert
         self.is_case_sensitive: bool = is_case_sensitive
+        self.container_filename: str = ""
 
         # type
         # A filesystem path

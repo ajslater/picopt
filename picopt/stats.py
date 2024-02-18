@@ -8,7 +8,7 @@ from confuse import AttrDict
 from humanize import naturalsize
 from termcolor import cprint
 
-from picopt.path import PathInfo
+from picopt.path import CONTAINER_PATH_DELIMETER, PathInfo
 
 if TYPE_CHECKING:
     from termcolor._types import Attribute, Color
@@ -42,6 +42,9 @@ class ReportStats(ReportStatBase):
         self.bigger: bool = config.bigger if config else False
         self.test: bool = config.test if config else False
         self.convert: bool = path_info.convert if path_info else False
+        self.container_paths: tuple[str, ...] = (
+            tuple(path_info.container_paths) if path_info else ()
+        )
         super().__init__(*args, **kwargs)
         self.saved = self.bytes_in - self.bytes_out
 
@@ -53,9 +56,13 @@ class ReportStats(ReportStatBase):
 
         return f"{percent_saved:.2f}% ({saved})"
 
+    def _get_full_path(self) -> str:
+        cps = self.container_paths
+        return CONTAINER_PATH_DELIMETER.join((*cps, str(self.path)))
+
     def _report_saved(self) -> str:
         """Return the percent saved."""
-        report = f"{self.path}: "
+        report = f"{self._get_full_path()}: "
         report += self._new_percent_saved()
         if self.test:
             report += " would be"
@@ -70,7 +77,7 @@ class ReportStats(ReportStatBase):
 
     def _report_error(self) -> str:
         """Return the error report string."""
-        report = f"ERROR: {self.path}"
+        report = f"ERROR: {self._get_full_path()}"
         if isinstance(self.exc, CalledProcessError):
             report += f"\n{self._TAB}retcode: {self.exc.returncode}"
             if self.exc.cmd:

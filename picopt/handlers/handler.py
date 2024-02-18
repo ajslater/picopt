@@ -15,7 +15,7 @@ from termcolor import cprint
 
 from picopt import PROGRAM_NAME
 from picopt.formats import PNGINFO_XMP_KEY, FileFormat
-from picopt.path import CONTAINER_PATH_DELIMETER, PathInfo
+from picopt.path import PathInfo
 from picopt.stats import ReportStats
 
 SAVE_INFO_KEYS: frozenset[str] = frozenset(
@@ -245,20 +245,15 @@ class Handler(ABC):
             isinstance(final_data_buffer, BytesIO)
             or self.path_info.is_container_child()
         ):
-            if self.path_info.is_container_child():
-                # only return the data in the report for containers.
-                final_data_buffer.seek(0)
-                return_data = final_data_buffer.read()
-            if isinstance(final_data_buffer, BufferedReader) and self.working_path:
-                self.working_path.unlink(missing_ok=True)
+            # only return the data in the report for containers.
+            final_data_buffer.seek(0)
+            return_data = final_data_buffer.read()
         if self.path_info.path:
             self._cleanup_filesystem(final_data_buffer)
         return return_data
 
     def _cleanup_after_optimize(self, final_data_buffer: BinaryIO) -> ReportStats:
         """Replace old file with better one or discard new wasteful file."""
-        cps = self.path_info.container_paths
-        report_path = CONTAINER_PATH_DELIMETER.join((*cps, str(self.final_path)))
         try:
             bytes_in = self.path_info.bytes_in()
             bytes_out = self.get_buffer_len(final_data_buffer)
@@ -268,11 +263,15 @@ class Handler(ABC):
                 return_data = self._cleanup_after_optimize_save_new(final_data_buffer)
             else:
                 return_data = b""
-                if self.working_path:
-                    self.working_path.unlink(missing_ok=True)
             final_data_buffer.close()
+            if (
+                self.working_path
+                and self.working_path != self.final_path
+                and isinstance(final_data_buffer, BufferedReader)
+            ):
+                self.working_path.unlink(missing_ok=True)
             return ReportStats(
-                report_path,
+                self.final_path,
                 path_info=self.path_info,
                 config=self.config,
                 bytes_in=bytes_in,
@@ -280,7 +279,7 @@ class Handler(ABC):
                 data=return_data,
             )
         except Exception as exc:
-            cprint(f"ERROR: cleanup_after_optimize: {report_path} {exc}", "red")
+            cprint(f"ERROR: cleanup_after_optimize: {self.final_path} {exc}", "red")
             raise
 
     @abstractmethod
