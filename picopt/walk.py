@@ -181,7 +181,7 @@ class Walk:
             else:
                 files.append(entry_path)
 
-        for entry_path in files:
+        for entry_path in sorted(files):
             path_info = PathInfo(
                 path_info.top_path,
                 path_info.container_mtime,
@@ -189,8 +189,7 @@ class Walk:
                 path_info.is_case_sensitive,
                 path=entry_path,
             )
-            result = self.walk_file(path_info)
-            if result:
+            if result := self.walk_file(path_info):
                 results.append(result)
 
         self._finish_results(
