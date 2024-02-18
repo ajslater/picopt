@@ -268,6 +268,8 @@ class Handler(ABC):
                 return_data = self._cleanup_after_optimize_save_new(final_data_buffer)
             else:
                 return_data = b""
+                if self.working_path:
+                    self.working_path.unlink(missing_ok=True)
             final_data_buffer.close()
             return ReportStats(
                 report_path,
