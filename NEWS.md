@@ -2,6 +2,9 @@
 
 ## v4.0.0
 
+- Alert!
+  - Timestamps options changed, invalidating old timestamps. On your first run
+    in a path with picopt 4.0 use the `-N` option to ignoring the old timestamp.
 - Features
   - Support optimizing SVG with svgo.
   - Support converting more lossless formats to PNG & WEBP: CUR, DIB, FITS, IMT,
