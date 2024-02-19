@@ -1,66 +1,59 @@
 """FileType abstract class for image and container formats."""
-import shutil
+import os
 import subprocess
-from abc import ABC
-from dataclasses import dataclass
+from abc import ABC, abstractmethod
+from collections.abc import Mapping
+from io import BufferedReader, BytesIO
 from pathlib import Path
 from types import MappingProxyType
-from typing import Optional
+from typing import Any, BinaryIO
 
 from confuse.templates import AttrDict
+from PIL.PngImagePlugin import PngImageFile, PngInfo
+from PIL.WebPImagePlugin import WebPImageFile
 from termcolor import cprint
 
 from picopt import PROGRAM_NAME
-from picopt.data import PathInfo, ReportInfo
+from picopt.formats import PNGINFO_XMP_KEY, FileFormat
+from picopt.path import PathInfo
 from picopt.stats import ReportStats
 
-
-@dataclass(eq=True, frozen=True)
-class FileFormat:
-    """A file format, with image attributes."""
-
-    format_str: str
-    lossless: bool = True
-    animated: bool = False
+SAVE_INFO_KEYS: frozenset[str] = frozenset(
+    {"n_frames", "loop", "duration", "background"}
+)
+WORKING_PATH_TRANS_TABLE = str.maketrans({c: "_" for c in " /"})
 
 
-@dataclass(eq=True, frozen=True)
-class Metadata:
-    """Image metadata class."""
+def _gif_palette_index_to_rgb(
+    palette_index: int,
+) -> tuple[int, int, int]:
+    """Convert an 8-bit color palette index to an RGB tuple."""
+    # Extract the individual color components from the palette index.
+    red = (palette_index >> 5) & 0x7
+    green = (palette_index >> 2) & 0x7
+    blue = palette_index & 0x3
 
-    exif: bytes = b""
-    icc_profile: str = ""
-    n_frames: int = 1
+    # Scale the color components to the range 0-255.
+    red = red * 36
+    green = green * 36
+    blue = blue * 36
+
+    return (red, green, blue)
 
 
 class Handler(ABC):
     """FileType superclass for image and container formats."""
 
-    BEST_ONLY: bool = True
     OUTPUT_FORMAT_STR: str = "unimplemented"
     OUTPUT_FILE_FORMAT: FileFormat = FileFormat(OUTPUT_FORMAT_STR, False, False)
-    INTERNAL: str = "python_internal"
-    PROGRAMS: MappingProxyType[str, Optional[str]] = MappingProxyType({})
-    WORKING_SUFFIX: str = f"{PROGRAM_NAME}__tmp"
+    INPUT_FILE_FORMATS: frozenset[FileFormat] = frozenset({OUTPUT_FILE_FORMAT})
+    CONVERT_FROM_FORMAT_STRS: frozenset[str] = frozenset()
+    INTERNAL: str = "internal"
+    PROGRAMS: tuple[tuple[str, ...], ...] = ()
+    WORKING_SUFFIX: str = f"{PROGRAM_NAME}-tmp"
 
     @classmethod
-    def init_programs(
-        cls, programs: tuple[str, ...]
-    ) -> MappingProxyType[str, Optional[str]]:
-        """Initialize the PROGRAM map."""
-        program_dict = {}
-        for program in programs:
-            if program.startswith("pil2") or program == cls.INTERNAL:
-                bin_path = None
-            else:
-                bin_path = shutil.which(program)
-                if not bin_path:
-                    continue
-            program_dict[program] = bin_path
-        return MappingProxyType(program_dict)
-
-    @staticmethod
-    def run_ext(args: tuple[Optional[str], ...]) -> None:
+    def run_ext(cls, args: tuple[str, ...], input_buffer: BinaryIO) -> BytesIO:
         """Run EXTERNAL program."""
         for arg in args:
             # Guarantee tuple[str]
@@ -68,33 +61,31 @@ class Handler(ABC):
                 reason = f"{args}"
                 raise ValueError(reason)
 
-        subprocess.run(
-            args,  # noqa S603 # type: ignore
+        input_buffer.seek(0)
+        result = subprocess.run(
+            args,  # noqa: S603
             check=True,
-            text=True,
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.PIPE,
+            input=input_buffer.read(),
+            stdout=subprocess.PIPE,
         )
+        return BytesIO(result.stdout)
 
-    @classmethod
-    def native_input_file_formats(cls) -> frozenset[FileFormat]:
-        """Return input formats handled without conversion."""
-        return frozenset({cls.OUTPUT_FILE_FORMAT})
+    def get_working_path(self, identifier: str) -> Path:
+        """Return a working path with a custom suffix."""
+        # Used by cwebp
+        if cps := self.path_info.container_paths:
+            path_tail = "__".join((*cps[1:], str(self.original_path)))
+            path_tail = path_tail.translate(WORKING_PATH_TRANS_TABLE)
+            path = Path(cps[0] + "__" + path_tail)
+        else:
+            path = self.original_path
 
-    @classmethod
-    def is_handler_available(
-        cls,
-        convert_handlers: dict,
-        available_programs: set,
-        file_format: FileFormat,
-    ):
-        """Can this handler run with available programs."""
-        handled_file_formats = cls.native_input_file_formats() | convert_handlers.get(
-            cls, set()
-        )
-        return file_format in handled_file_formats and bool(
-            available_programs & set(cls.PROGRAMS.keys())
-        )
+        suffixes = [self.original_path.suffix, self.WORKING_SUFFIX]
+        if identifier:
+            suffixes += [identifier]
+        suffix = ".".join(suffixes)
+        suffix += self.output_suffix
+        return path.with_suffix(suffix)
 
     @classmethod
     def get_default_suffix(cls):
@@ -113,70 +104,199 @@ class Handler(ABC):
         config: AttrDict,
         path_info: PathInfo,
         input_file_format: FileFormat,
-        metadata: Metadata,
+        info: Mapping[str, Any],
     ):
         """Initialize handler."""
         self.config: AttrDict = config
-        self.original_path: Path = path_info.path
-        self.working_paths: set[Path] = set()
+        self.path_info: PathInfo = path_info
+        self.original_path: Path = (
+            path_info.path if path_info.path else Path(path_info.name())
+        )
+        self.working_path = self.original_path
         default_suffix = self.get_default_suffix()
         self._suffixes = self.get_suffixes(default_suffix)
+        suffix = path_info.suffix()
         self.output_suffix: str = (
-            self.original_path.suffix
-            if self.original_path
-            and self.original_path.suffix.lower() in self._suffixes
-            else default_suffix
+            suffix if (suffix.lower() in self._suffixes) else default_suffix
         )
         self.final_path: Path = self.original_path.with_suffix(self.output_suffix)
         self.input_file_format: FileFormat = input_file_format
-        self.metadata = metadata
-        self.convert = input_file_format != self.OUTPUT_FILE_FORMAT
-        self.is_case_sensitive = path_info.is_case_sensitive
+        self.info: dict[str, Any] = dict(info)
+        if self.config.preserve:
+            self.path_info.stat()
+        self._input_file_formats = self.INPUT_FILE_FORMATS
 
-    def get_working_path(self, identifier: str = "") -> Path:
-        """Return a working path with a custom suffix."""
-        suffixes = [self.original_path.suffix, self.WORKING_SUFFIX]
-        if identifier:
-            suffixes += [identifier]
-        suffix = ".".join(suffixes)
-        suffix += self.output_suffix
-        return self.original_path.with_suffix(suffix)
+    def prepare_info(self, format_str) -> MappingProxyType[str, Any]:
+        """Prepare an info dict for saving."""
+        if format_str == WebPImageFile.format:
+            self.info.pop("background", None)
+            background = self.info.get("background")
+            if isinstance(background, int):
+                # GIF background is an int.
+                rgb = _gif_palette_index_to_rgb(background)
+                self.info["background"] = (*rgb, 0)
+        if format_str == PngImageFile.format:
+            transparency = self.info.get("transparency")
+            if isinstance(transparency, int):
+                self.info.pop("transparency", None)
+            if xmp := self.info.get("xmp", None):
+                pnginfo = self.info.get("pnginfo", PngInfo())
+                pnginfo.add_text(PNGINFO_XMP_KEY, xmp, zip=True)
+                self.info["pnginfo"] = pnginfo
+        if self.config.keep_metadata:
+            info = self.info
+        else:
+            info = {}
+            for key, val in self.info:
+                if key in SAVE_INFO_KEYS:
+                    info[key] = val
+        return MappingProxyType(info)
 
-    def cleanup_after_optimize(self, last_working_path: Path) -> tuple[int, int]:
+    def run_ext_fs(  # noqa: PLR0913
+        self,
+        args: tuple[str | None, ...],
+        input_buffer: BinaryIO,
+        input_path: Path,
+        output_path: Path,
+        input_path_tmp: bool,
+        output_path_tmp: bool,
+    ) -> BinaryIO:
+        """Run EXTERNAL program that lacks stdin/stdout streaming."""
+        if input_path_tmp:
+            with input_path.open("wb") as input_tmp_file, input_buffer:
+                input_buffer.seek(0)
+                input_tmp_file.write(input_buffer.read())
+
+        subprocess.run(
+            args,  # noqa S603 # type: ignore
+            check=True,
+            text=True,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.PIPE,
+        )
+
+        if input_path_tmp:
+            input_path.unlink(missing_ok=True)
+
+        if output_path_tmp:
+            with output_path.open("rb") as output_tmp_file:
+                output_buffer = BytesIO(output_tmp_file.read())
+            output_path.unlink(missing_ok=True)
+        else:
+            self.working_path = output_path
+            output_buffer = output_path.open("rb")
+        return output_buffer
+
+    def _cleanup_filesystem(self, final_data_buffer: BinaryIO) -> None:
+        """Write file to filesystem and clean up."""
+        if not self.final_path:
+            reason = "This should not happen. no buffer and no final path."
+            raise ValueError(reason)
+
+        if isinstance(final_data_buffer, BytesIO):
+            with self.final_path.open("wb") as final_file, final_data_buffer:
+                final_data_buffer.seek(0)
+                final_file.write(final_data_buffer.read())
+        else:
+            final_data_buffer.close()
+            self.working_path.replace(self.final_path)
+
+        ###########
+        # CLEANUP #
+        ###########
+        # Remove original path if the file has
+        # a new name. But be careful of case sensitive fs.
+        compare_final_str = str(self.final_path)
+        compare_original_str = str(self.original_path)
+        if not self.path_info.is_case_sensitive:
+            compare_final_str = compare_final_str.lower()
+            compare_original_str = compare_original_str.lower()
+        if compare_final_str != compare_original_str:
+            self.original_path.unlink(missing_ok=True)
+
+        ###############################
+        # RESTORE STATS TO FINAL PATH #
+        ###############################
+        if self.config.preserve:
+            stat = self.path_info.stat()
+            if stat and stat is not True:
+                os.chown(self.final_path, stat.st_uid, stat.st_gid)
+                self.final_path.chmod(stat.st_mode)
+                os.utime(
+                    self.final_path,
+                    ns=(stat.st_atime_ns, stat.st_mtime_ns),
+                )
+
+    def get_buffer_len(self, buffer: BinaryIO) -> int:
+        """Return buffer size."""
+        if isinstance(buffer, BufferedReader):
+            size = self.working_path.stat().st_size
+        elif isinstance(buffer, BytesIO):
+            size = buffer.getbuffer().nbytes
+        else:
+            reason = f"Unknown type for input_buffer: {type(buffer)}"
+            raise TypeError(reason)
+        return size
+
+    def _cleanup_after_optimize_save_new(self, final_data_buffer: BinaryIO) -> bytes:
+        """Save new data."""
+        return_data = b""
+        if (
+            isinstance(final_data_buffer, BytesIO)
+            or self.path_info.is_container_child()
+        ):
+            # only return the data in the report for containers.
+            final_data_buffer.seek(0)
+            return_data = final_data_buffer.read()
+        if self.path_info.path:
+            self._cleanup_filesystem(final_data_buffer)
+        return return_data
+
+    def _cleanup_after_optimize(self, final_data_buffer: BinaryIO) -> ReportStats:
         """Replace old file with better one or discard new wasteful file."""
-        bytes_in = 0
-        bytes_out = 0
         try:
-            bytes_in = self.original_path.stat().st_size
-            bytes_out = last_working_path.stat().st_size
+            bytes_in = self.path_info.bytes_in()
+            bytes_out = self.get_buffer_len(final_data_buffer)
             if not self.config.test and (
                 (bytes_out > 0) and ((bytes_out < bytes_in) or self.config.bigger)
             ):
-                last_working_path.replace(self.final_path)
-
-                # Add original path to working_paths if the file has
-                # a new name. But be careful of case sensitive fs.
-                compare_final_str = str(self.final_path)
-                compare_original_str = str(self.original_path)
-                if not self.is_case_sensitive:
-                    compare_final_str = compare_final_str.lower()
-                    compare_original_str = compare_original_str.lower()
-                if compare_final_str != compare_original_str:
-                    self.working_paths.add(self.original_path)
+                return_data = self._cleanup_after_optimize_save_new(final_data_buffer)
             else:
-                self.working_paths.add(last_working_path)
-                bytes_out = bytes_in
-            if self.final_path in self.working_paths:
-                self.working_paths.remove(self.final_path)
-            for working_path in self.working_paths:
-                working_path.unlink(missing_ok=True)
-        except OSError as exc:
-            cprint(f"ERROR: cleanup_after_optimize: {exc}", "red")
+                return_data = b""
+            final_data_buffer.close()
+            if (
+                self.working_path
+                and self.working_path != self.final_path
+                and isinstance(final_data_buffer, BufferedReader)
+            ):
+                self.working_path.unlink(missing_ok=True)
+            return ReportStats(
+                self.final_path,
+                path_info=self.path_info,
+                config=self.config,
+                bytes_in=bytes_in,
+                bytes_out=bytes_out,
+                data=return_data,
+            )
+        except Exception as exc:
+            cprint(f"ERROR: cleanup_after_optimize: {self.final_path} {exc}", "red")
             raise
 
-        return (bytes_in, bytes_out)
+    @abstractmethod
+    def optimize(self) -> BinaryIO:
+        """Implement by subclasses."""
 
     def error(self, exc: Exception) -> ReportStats:
         """Return an error result."""
-        info = ReportInfo(self.original_path, self.convert, self.config.test, exc=exc)
-        return ReportStats(info)
+        return ReportStats(self.original_path, exc=exc)
+
+    def optimize_wrapper(self) -> ReportStats:
+        """Wrap subclass optimize."""
+        try:
+            buffer = self.optimize()
+            report_stats = self._cleanup_after_optimize(buffer)
+        except Exception as exc:
+            report_stats = self.error(exc)
+        if self.config.verbose:
+            report_stats.report()
+        return report_stats

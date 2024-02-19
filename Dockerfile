@@ -8,12 +8,14 @@ RUN apt-get update \
   && apt-get install -y --no-install-recommends \
     gifsicle \
     libjpeg-progs \
-    optipng \
     python3-pip \
     unrar \
     webp \
   && apt-get clean \
   && rm -rf /var/lib/apt/lists/*
+
+# hadolint ignore=DL3016
+RUN npm install svgo
 
 WORKDIR /
 COPY --chown=circleci:circleci in bin

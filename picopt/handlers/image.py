@@ -1,90 +1,84 @@
 """FileFormat Superclass."""
 from abc import ABCMeta
-from pathlib import Path
+from collections.abc import Mapping
+from io import BufferedReader, BytesIO
 from types import MappingProxyType
-from typing import Any
+from typing import Any, BinaryIO
 
 from PIL import Image
-from PIL.BmpImagePlugin import BmpImageFile
 from PIL.PngImagePlugin import PngImageFile
-from PIL.PpmImagePlugin import PpmImageFile
-from PIL.TiffImagePlugin import TiffImageFile
+from termcolor import cprint
 
-from picopt.data import ReportInfo
-from picopt.handlers.handler import FileFormat, Handler
-from picopt.stats import ReportStats
-
-PPM_FILE_FORMAT = FileFormat(PpmImageFile.format, True, False)
-BPM_FILE_FORMAT = FileFormat(BmpImageFile.format, True, False)
-CONVERTABLE_FILE_FORMATS = {BPM_FILE_FORMAT, PPM_FILE_FORMAT}
-CONVERTABLE_FORMAT_STRS = {
-    img_format.format_str for img_format in CONVERTABLE_FILE_FORMATS
-}
-PNG_ANIMATED_FILE_FORMAT = FileFormat(PngImageFile.format, True, True)
-TIFF_FORMAT_STR = TiffImageFile.format
-TIFF_FILE_FORMAT = FileFormat(TIFF_FORMAT_STR, True, False)
-TIFF_ANIMATED_FILE_FORMAT = FileFormat(TIFF_FORMAT_STR, True, True)
-_NATIVE_ONLY_FILE_FORMATS = {
-    PNG_ANIMATED_FILE_FORMAT,
-    TIFF_ANIMATED_FILE_FORMAT,
-    TIFF_FILE_FORMAT,
-}
+from picopt.handlers.handler import Handler
 
 
 class ImageHandler(Handler, metaclass=ABCMeta):
     """Image Handler superclass."""
 
-    PIL2_ARGS: MappingProxyType[str, Any] = MappingProxyType({})
-    PREFERRED_PROGRAM: str = "unimplemented"
+    PIL2_KWARGS: MappingProxyType[str, Any] = MappingProxyType({})
+    PIL2PNG_KWARGS: MappingProxyType[str, Any] = MappingProxyType({"compress_level": 0})
+    EMPTY_EXEC_ARGS: tuple[str, tuple[str, ...]] = ("", ())
 
-    def _optimize_with_progs(self) -> ReportStats:
+    def optimize(self) -> BinaryIO:
         """Use the correct optimizing functions in sequence.
 
         And report back statistics.
         """
-        path = self.original_path
-        for func in self.PROGRAMS:
-            if path != self.original_path:
-                self.working_paths.add(path)
-            new_path = self.get_working_path(func)
-            path = getattr(self, func)(path, new_path)
-            if self.BEST_ONLY:
-                break
+        stages = self.config.computed.handler_stages.get(self.__class__, {})
+        if not stages:
+            cprint(
+                f"Tried to execute handler {self.__class__.__name__} with no available stages.",
+                "yellow",
+            )
+            raise ValueError
 
-        bytes_count = self.cleanup_after_optimize(path)
-        info = ReportInfo(
-            self.final_path,
-            self.convert,
-            self.config.test,
-            bytes_count[0],
-            bytes_count[1],
-        )
-        return ReportStats(info)
+        image_buffer: BinaryIO = self.path_info.fp_or_buffer()
 
-    def optimize_image(self) -> ReportStats:
-        """Optimize a given image from a filename."""
-        try:
-            report_stats = self._optimize_with_progs()
-            if self.config.verbose:
-                report_stats.report()
-        except Exception as exc:
-            report_stats = self.error(exc)
-        return report_stats
+        for func, exec_args in stages.items():
+            new_image_buffer: BinaryIO = getattr(self, func)(exec_args, image_buffer)
+            if image_buffer != new_image_buffer:
+                image_buffer.close()
+            image_buffer = new_image_buffer
 
-    def pil2native(self, old_path: Path, new_path: Path) -> Path:
+        return image_buffer
+
+    def pil2native(
+        self,
+        _exec_args: tuple[str, tuple[str, ...]],
+        input_buffer: BytesIO | BufferedReader,
+        format_str: None | str = None,
+        opts: None | Mapping[str, Any] = None,
+    ) -> BytesIO | BufferedReader:
         """Use PIL to save the image."""
-        if (
-            self.input_file_format not in _NATIVE_ONLY_FILE_FORMATS
-            and self.PREFERRED_PROGRAM in self.config.computed.available_programs
-        ):
-            return old_path
-        with Image.open(old_path) as image:
+        if self.input_file_format in self._input_file_formats:
+            return input_buffer
+        if format_str is None:
+            format_str = self.OUTPUT_FORMAT_STR
+        if opts is None:
+            opts = self.PIL2_KWARGS
+
+        info = self.prepare_info(format_str)
+
+        output_buffer = BytesIO()
+        with Image.open(input_buffer) as image:
             image.save(
-                new_path,
-                self.OUTPUT_FORMAT_STR,
-                exif=self.metadata.exif,
-                icc_profile=self.metadata.icc_profile,
-                **self.PIL2_ARGS,
+                output_buffer,
+                format_str,
+                save_all=True,
+                **opts,
+                **info,
             )
         image.close()  # for animated images
-        return new_path
+        self.input_file_format = self.OUTPUT_FILE_FORMAT
+        return output_buffer
+
+    def pil2png(
+        self, _exec_args: tuple[str, ...], input_buffer: BytesIO | BufferedReader
+    ) -> BytesIO | BufferedReader:
+        """Internally convert unhandled formats to uncompressed png for cwebp."""
+        return self.pil2native(
+            self.EMPTY_EXEC_ARGS,
+            input_buffer,
+            format_str=PngImageFile.format,
+            opts=self.PIL2PNG_KWARGS,
+        )

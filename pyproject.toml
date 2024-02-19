@@ -1,10 +1,14 @@
+[project]
+name = "picopt"
+requires-python = ">=3.10"
+
 [build-system]
 requires = ["poetry-core>=1.0.0"]
 build-backend = "poetry.core.masonry.api"
 
 [tool.poetry]
 name = "picopt"
-version = "3.3.7"
+version = "4.0.0rc0"
 description = "A multi format lossless image optimizer that uses external tools"
 license = "GPL-3.0-only"
 authors = ["AJ Slater <aj@slater.net>"]
@@ -27,26 +31,28 @@ packages = [{ include = "picopt" }, { include = "tests", format = "sdist" }]
 include = ["NEWS.md"]
 
 [tool.poetry.dependencies]
-python = "^3.9"
+python = "^3.10"
 confuse = "^2.0.0"
 humanize = "^4.0.0"
+piexif = "^1.1.3"
+pyoxipng = "^9.0.0"
 python-dateutil = "^2.8"
 rarfile = "^4.0"
 "ruamel.yaml" = "^0.18.5"
 termcolor = "^2.0.1"
-treestamps = "^0.4.4"
-Pillow = ">=9.4,<11.0"
+treestamps = "^1.0.1"
+Pillow = ">=9.5,<11.0"
 
 [tool.poetry.group.dev.dependencies]
 codespell = "^2.1.0"
 coverage = { extras = ["toml"], version = "^7.0" }
 neovim = "^0.3.1"
 pyright = "^1.1.237"
-pytest = "^7.0.0"
+pytest = "^8.0.0"
 pytest-cov = "^4.0"
 pytest-gitignore = "^1.3"
 radon = { version = "^6.0.1", extras = ["toml"] }
-ruff = "^0.1.13"
+ruff = "^0.2.0"
 types-python-dateutil = "^2.8.0"
 vulture = "^2.1"
 
@@ -54,8 +60,8 @@ vulture = "^2.1"
 picopt = "picopt.cli:main"
 
 [tool.poetry.urls]
-"Source" = "https://github.com/ajslater/picopt"
-"Issues" = "https://github.com/ajslater/picopt/issues"
+Source = "https://github.com/ajslater/picopt"
+Issues = "https://github.com/ajslater/picopt/issues"
 
 [tool.codespell]
 skip = ".git,.mypy_cache,.pytest_cache,.ruff_cache,.venv,*~,./dist,./node_modules,./package-lock.json,./poetry.lock,./test-results"
@@ -77,33 +83,16 @@ omit = [
   "dist/*",
   "node_modules/*",
   "test-results/*",
-  "typings/*"
+  "typings/*",
 ]
 
 [tool.coverage.html]
 directory = "test-results/coverage"
 
 [tool.pytest.ini_options]
+addopts = "--junitxml=test-results/pytest/junit.xml -ra --strict-markers --cov --cov-append --cov-report=html --cov-report=term"
 junit_family = "xunit2"
-addopts = """
-  --junitxml=test-results/pytest/junit.xml
-  -ra
-  --strict-markers
-  --cov
-  --cov-append
-  --cov-report=html
-  --cov-report=term
-  --ignore=.git
-  --ignore=.mypy_cache
-  --ignore=.pytest_cache
-  --ignore=.venv
-  --ignore=dist
-  --ignore=node_modules
-  --ignore=test-results
-  --ignore=typings
-  --ignore=vulture_whitelist.py
-  --ignore-glob=*__pycache__*
-"""
+testpaths = "tests"
 
 [tool.pyright]
 exclude = [
@@ -119,41 +108,100 @@ exclude = [
   "poetry.lock",
   "test-results",
   "typings",
-  "vulture_whitelist.py"
+  "vulture_whitelist.py",
 ]
-useLibraryCodeForTypes = true
-reportMissingImports = true
+pythonVersion = "3.10"
+pythonPlatform = "All"
 reportImportCycles = true
+reportMisingImports = true
+useLibraryCodeForTypes = true
 
 [tool.radon]
 exclude = "*~,.git/*,.mypy_cache/*,.pytest_cache/*,.ruff_cache/*,.venv/*,__pycache__/*,dist/*,node_modules/*,test-results/*,typings/*"
 
 [tool.ruff]
 extend-exclude = ["cache", "typings"]
-extend-ignore = ["S101", "D203", "D213",
-  # Format ignores
-  "W191", "E501", "E111", "E114", "E117", "D206", "D300", "Q000", "Q001",
-  "Q002", "Q003", "COM812", "COM819", "ISC001", "ISC002"
+target-version = "py310"
+
+[tool.ruff.lint]
+extend-ignore = [
+  "S101",
+  "D203",
+  "D213",
+  "W191",
+  "E501",
+  "E111",
+  "E114",
+  "E117",
+  "D206",
+  "D300",
+  "Q000",
+  "Q001",
+  "Q002",
+  "Q003",
+  "COM812",
+  "COM819",
+  "ISC001",
+  "ISC002",
 ]
-extend-select = ["A", "ARG", "B", "B9", "C", "C4", "C90", "D", "DJ",
-  "DTZ", "E", "EM", "EXE", "F", "I", "ICN", "INP", "ISC", "PIE", "PL",
-  "PT", "PTH", "PYI", "Q", "N", "RET", "RSE", "RUF", "S", "SIM", "SLF",
-  "T10", "T20", "TCH", "TID", "TRY", "UP", "W", "YTT"
-  # "ANN", "ERA", "COM"
+extend-select = [
+  "A",
+  "ARG",
+  "B",
+  "B9",
+  "C",
+  "C4",
+  "C90",
+  "D",
+  "DJ",
+  "DTZ",
+  "E",
+  "EM",
+  "EXE",
+  "F",
+  "I",
+  "ICN",
+  "INP",
+  "ISC",
+  "PIE",
+  "PL",
+  "PT",
+  "PTH",
+  "PYI",
+  "Q",
+  "N",
+  "RET",
+  "RSE",
+  "RUF",
+  "S",
+  "SIM",
+  "SLF",
+  "T10",
+  "T20",
+  "TCH",
+  "TID",
+  "TRY",
+  "UP",
+  "W",
+  "YTT",
 ]
 external = ["V101"]
-# format = "grouped"
-# show-source = true
-target-version = "py39"
 task-tags = ["TODO", "FIXME", "XXX", "http", "HACK"]
 
-[tool.ruff.per-file-ignores]
+[tool.ruff.lint.per-file-ignores]
 "tests/*" = ["SLF001", "T201", "T203"]
 
-[tool.ruff.pycodestyle]
+[tool.ruff.lint.pycodestyle]
 ignore-overlong-task-comments = true
 
 [tool.vulture]
-exclude = [".git/", ".mypy_cache/", ".pytest_cache", ".ruff_cache", ".venv", "*__pycache__*"]
+exclude = [
+  ".git/",
+  ".mypy_cache/",
+  ".pytest_cache",
+  ".ruff_cache",
+  ".venv",
+  "*__pycache__*",
+]
 min_confidence = 61
 sort_by_size = true

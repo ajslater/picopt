@@ -10,10 +10,10 @@ TMP_ROOT = get_test_dir()
 FN = "test_zip.zip"
 SRC_CBZ = CONTAINER_DIR / FN
 
-FNS = {FN: (2974, 2921)} if system() == "Darwin" else {FN: (2974, 2921)}
+FNS = {FN: (7783, 7015)} if system() == "Darwin" else {FN: (7783, 7015)}
 
 
-class TestContainersDir:
+class TestOneContainer:
     """Test containers dir."""
 
     def setup_method(self) -> None:

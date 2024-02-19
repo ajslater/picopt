@@ -1,12 +1,36 @@
 # 📰 Picopt News
 
+## v4.0.0
+
+- Alert!
+  - Timestamps options changed, invalidating old timestamps. On your first run
+    in a path with picopt 4.0 use the `-N` option to ignoring the old timestamp.
+- Features
+  - Support optimizing SVG with svgo.
+  - Support converting more lossless formats to PNG & WEBP: CUR, DIB, FITS, IMT,
+    PCX, PIXAR, PSD, QOI, SGI, SPIDER, SUN, TGA, XBM, XPM.
+  - Support converting animated formats to animated PNG.
+  - Support converting losslessly converting MPO to JPEG (choose primary image)
+  - Internal oxipng replaces external optipng for png compression.
+  - Better support for preserving EXIF, ICC_PROFILE, & XMP data across
+    optimization and conversion.
+  - `--destroy-metadata` option becomes `--strip-metadata`
+  - `--near-lossless` option for lossless WebP.
+  - `--preserve` file attributes after optimization.
+  - `--disable-programs` option.
+  - ~25% faster due to avoiding disk io.
+- Fixes
+  - wal file would write illegal key names and fail to load for some files.
+- Dev
+  - walk.run now returns totals instead of running report on them.
+
 ## v3.3.7
 
 - Fix
   - Remove Lossy WebP optimization. Wasn't optimal.
   - Fix non zero exit code on success.
 - Features
-  - Improve webp optimization.
+  - Improve WebP optimization.
 
 ## v3.3.6
 
@@ -45,7 +69,8 @@
 
 ## v3.2.5
 
-- Fix occasionally removing both final and originals on case insensitive filesystem.
+- Fix occasionally removing both final and originals on case insensitive
+  filesystem.
 
 ## v3.2.4
 
@@ -95,7 +120,8 @@
 
 ## v3.1.0
 
-- Change walk algorithm to complete directories and containers before opening new ones.
+- Change walk algorithm to complete directories and containers before opening
+  new ones.
 - Case insensitive format config.
 - Ignore symlinks when asked to in timestamps.
 
@@ -131,9 +157,10 @@
 - Timestamps
   - Timestamps are now kept in .picopt_treestamps.yaml files.
   - Picopt will convert and clean up old style timestamps.
-  - Timestamps are now recorded after optimizing every image for
-    each image individually instead of directories, preserving progress.
-  - Timestamps record configuration. Running with a new config invalidates non-matching timestamps.
+  - Timestamps are now recorded after optimizing every image for each image
+    individually instead of directories, preserving progress.
+  - Timestamps record configuration. Running with a new config invalidates
+    non-matching timestamps.
 - Configuration
   - .picoptrc.yaml files can configure options
   - Changed cli option names.
@@ -210,7 +237,8 @@
 
 ## v1.4.5
 
-- When setting new timestamps, don't remove timestamps above the root paths specified as input
+- When setting new timestamps, don't remove timestamps above the root paths
+  specified as input
 
 ## v1.4.4
 
@@ -256,7 +284,8 @@
 
 ## v1.2
 
-- picopt learned the -j option for specifying number of subprocesses (thanks @DarwinAwardWinner)
+- picopt learned the -j option for specifying number of subprocesses (thanks
+  @DarwinAwardWinner)
 
 ## v1.1.3
 
@@ -311,7 +340,8 @@
 
 ## v0.12.0
 
-- Added multithreaded jpegrescan operation when picopt isn't using up all the cores at the suggestion of Alex Roe.
+- Added multithreaded jpegrescan operation when picopt isn't using up all the
+  cores at the suggestion of Alex Roe.
 - Added destroy metadata option at the suggestion of Alex Roe.
 
 ## v0.11.4
