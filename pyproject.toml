@@ -40,7 +40,7 @@ python-dateutil = "^2.8"
 rarfile = "^4.0"
 "ruamel.yaml" = "^0.18.5"
 termcolor = "^2.0.1"
-treestamps = "^1.0.0"
+treestamps = "^1.0.1"
 Pillow = ">=9.5,<11.0"
 
 [tool.poetry.group.dev.dependencies]
