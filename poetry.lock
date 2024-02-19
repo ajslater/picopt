@@ -981,13 +981,13 @@ files = [
 
 [[package]]
 name = "treestamps"
-version = "1.0.0"
+version = "1.0.1"
 description = "Create timestamp records for recursive operations on directory trees."
 optional = false
 python-versions = ">=3.10,<4.0"
 files = [
-  { file = "treestamps-1.0.0-py3-none-any.whl", hash = "sha256:65adaa0064a99fbe0015a02f0b37a24a82527f24cd8ecdb596ec71b525388ea8" },
-  { file = "treestamps-1.0.0.tar.gz", hash = "sha256:ca7f153708d071599ab0ef1c00612768cb8667d676145e3fc694e65f8dac1c97" },
+  { file = "treestamps-1.0.1-py3-none-any.whl", hash = "sha256:d837fdb039470430c424a9e734acdebc0f93723968b96f3f6de4f54b2928897f" },
+  { file = "treestamps-1.0.1.tar.gz", hash = "sha256:6541202b3b750bd24c0266b4dd6d149528b7bb0a82678b15ed8635dc626d0054" },
 ]
 
 [package.dependencies]
@@ -1022,4 +1022,4 @@ tomli = { version = ">=1.1.0", markers = "python_version < \"3.11\"" }
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.10"
-content-hash = "a2f06501d9948afaa102f654c94ca5968b7fb010692eebe5bda9fcf9bf640cad"
+content-hash = "30c0f85250d8a966baa8df7ec7be8b27e59c94a50bdd04268e4b4d558b27dec5"
