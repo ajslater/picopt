@@ -19,6 +19,8 @@
   - `--preserve` file attributes after optimization.
   - `--disable-programs` option.
   - ~25% faster due to avoiding disk io.
+- Fixes
+  - wal file would write illegal key names and fail to load for some files.
 - Dev
   - walk.run now returns totals instead of running report on them.
 
