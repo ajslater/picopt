@@ -17,9 +17,10 @@ FNS = {
 DEFAULT_CONFIG = {
     "bigger": False,
     "convert_to": [],
-    "formats": ["GIF", "PNG", "JPEG", "WEBP"],
+    "formats": ["GIF", "PNG", "JPEG", "SVG", "WEBP"],
     "keep_metadata": True,
     "ignore": [],
+    "near_lossless": False,
     "recurse": True,
     "symlinks": True,
 }

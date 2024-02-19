@@ -1,4 +1,4 @@
-FROM cimg/python:3.11-node
+FROM cimg/python:3.12-node
 
 ENV DEBIAN_FRONTEND noninteractive
 
@@ -10,12 +10,14 @@ RUN apt-get update \
     gifsicle \
     git \
     libjpeg-progs \
-    optipng \
     shellcheck \
     unrar \
     webp \
   && apt-get clean \
   && rm -rf /var/lib/apt/lists/*
+
+# hadolint ignore=DL3016
+RUN npm install --global svgo
 
 WORKDIR /app
 RUN chown circleci:circleci /app

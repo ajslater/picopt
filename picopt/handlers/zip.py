@@ -1,37 +1,31 @@
 """Handler for zip files."""
-import os
-from pathlib import Path
-from types import MappingProxyType
-from typing import Optional
-from zipfile import ZIP_DEFLATED, ZipFile, is_zipfile
+from collections.abc import Generator
+from io import BytesIO
+from zipfile import ZIP_DEFLATED, ZIP_STORED, ZipFile, ZipInfo, is_zipfile
 
-from PIL import Image, UnidentifiedImageError
-from rarfile import RarFile, is_rarfile
+from rarfile import RarFile, RarInfo, is_rarfile
 from termcolor import cprint
 
+from picopt.formats import FileFormat
 from picopt.handlers.container import ContainerHandler
-from picopt.handlers.handler import FileFormat
+from picopt.handlers.non_pil import NonPILIdentifier
+from picopt.path import PathInfo
 
 
-class Zip(ContainerHandler):
+class Zip(NonPILIdentifier, ContainerHandler):
     """Ziplike container."""
 
     OUTPUT_FORMAT_STR: str = "ZIP"
     OUTPUT_FILE_FORMAT: FileFormat = FileFormat(OUTPUT_FORMAT_STR)
-    PROGRAMS: MappingProxyType[str, Optional[str]] = MappingProxyType(
-        {
-            ContainerHandler.INTERNAL: None,
-        }
-    )
+    INPUT_FILE_FORMATS = frozenset({OUTPUT_FILE_FORMAT})
+    PROGRAMS = ((ContainerHandler.INTERNAL,),)
 
     @classmethod
-    def identify_format(cls, path: Path) -> Optional[FileFormat]:
+    def identify_format(cls, path_info: PathInfo) -> FileFormat | None:
         """Return the format if this handler can handle this path."""
-        file_format = None
-        suffix = path.suffix.lower()
-        if is_zipfile(path) and suffix == cls.get_default_suffix():
-            file_format = cls.OUTPUT_FILE_FORMAT
-        return file_format
+        if is_zipfile(path_info.path_or_buffer()):
+            return super().identify_format(path_info)
+        return None
 
     def _get_archive(self) -> ZipFile:
         """Use the zipfile builtin for this archive."""
@@ -42,96 +36,125 @@ class Zip(ContainerHandler):
             raise ValueError(msg)
         return archive
 
-    def _set_comment(self, comment: Optional[bytes]) -> None:
+    def _set_comment(self, comment: bytes | None) -> None:
         """Set the comment from the archive."""
         if comment:
             self.comment = comment
 
-    def unpack_into(self) -> None:
+    @staticmethod
+    def to_zipinfo(archive_info: ZipInfo) -> ZipInfo:
+        """Convert archive info to zipinfo."""
+        return archive_info
+
+    def unpack_into(self) -> Generator[PathInfo, None, None]:
         """Uncompress archive."""
         with self._get_archive() as archive:
-            archive.extractall(self.tmp_container_dir)
             self._set_comment(archive.comment)
+            for archive_info in archive.infolist():
+                zipinfo = self.to_zipinfo(archive_info)
+                if zipinfo.is_dir():
+                    continue
+                path_info = PathInfo(
+                    self.path_info.top_path,
+                    self.path_info.mtime(),
+                    self.path_info.convert,
+                    self.path_info.is_case_sensitive,
+                    zipinfo=zipinfo,
+                    data=archive.read(zipinfo.filename),
+                    container_paths=self.get_container_paths(),
+                )
+                yield path_info
 
-    @staticmethod
-    def _is_image(path: Path) -> bool:
-        """Is a file an image."""
-        result = False
-        try:
-            with Image.open(path, mode="r") as image:
-                if image.format:
-                    result = True
-            image.close()
-        except UnidentifiedImageError:
-            pass
-        return result
-
-    def pack_into(self, working_path: Path) -> None:
+    def pack_into(self) -> BytesIO:
         """Zip up the files in the tempdir into the new filename."""
+        output_buffer = BytesIO()
         with ZipFile(
-            working_path, "w", compression=ZIP_DEFLATED, compresslevel=9
+            output_buffer, "w", compression=ZIP_DEFLATED, compresslevel=9
         ) as new_zf:
-            for root, _, filenames in os.walk(self.tmp_container_dir):
-                root_path = Path(root)
-                for fname in sorted(filenames):
-                    if self.config.verbose:
-                        cprint(".", end="")
-                    full_path = root_path / fname
-                    # Do not deflate images in zipfile.
-                    # Picopte should have already achieved maximum
-                    # compression over deflate.
-                    compress_type = None if self._is_image(full_path) else ZIP_DEFLATED
-                    archive_path = full_path.relative_to(self.tmp_container_dir)
-                    new_zf.write(full_path, archive_path, compress_type)
+            for path_info in tuple(self._optimized_contents):
+                data = self._optimized_contents.pop(path_info)
+                zipinfo = path_info.zipinfo
+                if not zipinfo:
+                    continue
+                if (
+                    path_info.container_filename
+                    and path_info.container_filename != zipinfo.filename
+                ):
+                    zipinfo.filename = path_info.container_filename
+                if (
+                    not self.config.keep_metadata
+                    and zipinfo
+                    and zipinfo.compress_type == ZIP_STORED
+                ):
+                    zipinfo.compress_type = ZIP_DEFLATED
+                new_zf.writestr(zipinfo, data)
+                if self.config.verbose:
+                    cprint(".", end="")
             if self.comment:
                 new_zf.comment = self.comment
+                if self.config.verbose:
+                    cprint(".", end="")
+        return output_buffer
 
 
 class Rar(Zip):
     """RAR Container."""
 
     INPUT_FORMAT_STR: str = "RAR"
-    INPUT_FILE_FORMAT: FileFormat = FileFormat(INPUT_FORMAT_STR)
     INPUT_SUFFIX: str = "." + INPUT_FORMAT_STR.lower()
-    PROGRAMS: MappingProxyType[str, Optional[str]] = Zip.init_programs(("unrar",))
+    INPUT_FILE_FORMAT = FileFormat(INPUT_FORMAT_STR)
+    INPUT_FILE_FORMATS = frozenset({INPUT_FILE_FORMAT})
+    PROGRAMS = (("unrar",),)
+
+    @staticmethod
+    def to_zipinfo(archive_info: RarInfo | ZipInfo) -> ZipInfo:
+        """Convert RarInfo to ZipInfo."""
+        zipinfo_kwargs = {}
+        if archive_info.filename:
+            zipinfo_kwargs["filename"] = archive_info.filename
+        if archive_info.date_time:
+            zipinfo_kwargs["date_time"] = archive_info.date_time
+        return ZipInfo(**zipinfo_kwargs)
 
     @classmethod
-    def identify_format(cls, path: Path) -> Optional[FileFormat]:
+    def identify_format(cls, path_info: PathInfo) -> FileFormat | None:
         """Return the format if this handler can handle this path."""
         file_format = None
-        suffix = path.suffix.lower()
-        if is_rarfile(path) and suffix == cls.INPUT_SUFFIX:
+        suffix = path_info.suffix().lower()
+        if is_rarfile(path_info.path_or_buffer()) and suffix == cls.INPUT_SUFFIX:
             file_format = cls.INPUT_FILE_FORMAT
         return file_format
 
     def _get_archive(self) -> RarFile:  # type: ignore
         """Use the zipfile builtin for this archive."""
         if is_rarfile(self.original_path):
-            archive = RarFile(self.original_path)
+            archive = RarFile(self.original_path, mode="r")
         else:
             msg = f"Unknown archive type: {self.original_path}"
             raise ValueError(msg)
         return archive
 
-    def _set_comment(self, comment: Optional[str]) -> None:  # type: ignore
+    def _set_comment(self, comment: str | None) -> None:  # type: ignore
         """Set the comment from the archive."""
         if comment:
             self.comment = comment.encode()
 
 
-class CBZ(Zip):
+class Cbz(Zip):
     """CBZ Container."""
 
     OUTPUT_FORMAT_STR: str = "CBZ"
     OUTPUT_FILE_FORMAT: FileFormat = FileFormat(OUTPUT_FORMAT_STR)
+    INPUT_FILE_FORMATS = frozenset({OUTPUT_FILE_FORMAT})
 
 
-class CBR(Rar):
+class Cbr(Rar):
     """CBR Container."""
 
     INPUT_FORMAT_STR: str = "CBR"
-    INPUT_FILE_FORMAT: FileFormat = FileFormat(INPUT_FORMAT_STR)
     INPUT_SUFFIX: str = "." + INPUT_FORMAT_STR.lower()
+    INPUT_FILE_FORMAT = FileFormat(INPUT_FORMAT_STR)
+    INPUT_FILE_FORMATS = frozenset({INPUT_FILE_FORMAT})
     OUTPUT_FORMAT_STR: str = "CBZ"
     OUTPUT_FILE_FORMAT: FileFormat = FileFormat(OUTPUT_FORMAT_STR)
 
@@ -139,6 +162,8 @@ class CBR(Rar):
 class EPub(Zip):
     """Epub Container."""
 
+    # never convert inside epubs, breaks src links.
+    CONVERT: bool = False
     OUTPUT_FORMAT_STR: str = "EPUB"
     OUTPUT_FILE_FORMAT: FileFormat = FileFormat(OUTPUT_FORMAT_STR)
-    CONVERT: bool = False
+    INPUT_FILE_FORMATS = frozenset({OUTPUT_FILE_FORMAT})
