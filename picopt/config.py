@@ -99,6 +99,7 @@ TEMPLATE = MappingTemplate(
                 "list_only": bool,
                 "near_lossless": bool,
                 "paths": Sequence(ConfusePath()),
+                "png_max": bool,
                 "preserve": bool,
                 "recurse": bool,
                 "symlinks": bool,

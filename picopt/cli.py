@@ -118,6 +118,12 @@ def get_arguments(params: tuple[str, ...] | None = None) -> Namespace:
         help="Precompress lossless WebP images with near lossless pixel adjustments. Provides more compression for little to no visual quality loss especially for discrete tone images like drawings.",
     )
     parser.add_argument(
+        "--png-max",
+        action="store_true",
+        dest="png_max",
+        help="Overzealously optimize pngs with -O5 and Zopfli.",
+    )
+    parser.add_argument(
         "-S",
         "--no-symlinks",
         action="store_false",

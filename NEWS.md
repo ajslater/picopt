@@ -1,5 +1,9 @@
 # 📰 Picopt News
 
+## v4.0.1
+
+- Reduce overzealous png optimization. Provide an option to do that.
+
 ## v4.0.0
 
 - Alert!
