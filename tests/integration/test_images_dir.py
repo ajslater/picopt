@@ -31,7 +31,7 @@ FNS = {
     "mri.tif": (230578, 230578, ("png", 131743), ("webp", 114740)),
     "test_webp_lossy.webp": (2764, 2764, ("webp", 2764), ("webp", 2764)),
     "test_bmp.bmp": (141430, 141430, ("png", 67236), ("webp", 47524)),
-    "test_png_16rgba.png": (3435, 2090, ("png", 2090), ("webp", 1142)),
+    "test_png_16rgba.png": (3435, 2097, ("png", 2097), ("webp", 1142)),
     "test_pnm.pnm": (27661, 27661, ("png", 15510), ("webp", 12808)),
     "test_jpg.jpg": (97373, 87913, ("jpg", 87913), ("jpg", 87913)),
 }
@@ -64,7 +64,7 @@ else:
 
 NEAR_LOSSLESS_FNS = MappingProxyType(
     {
-        "test_png_16rgba.png": (3435, 2090, ("png", 2090), ("webp", 728)),
+        "test_png_16rgba.png": (3435, 2097, ("png", 2097), ("webp", 728)),
         "test_webp_lossless.webp": (5334, 3870, ("webp", 3870), ("webp", 2044)),
         "test_webp_lossless_pre-optimized.webp": (
             3798,

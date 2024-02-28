@@ -30,10 +30,15 @@ class Png(ImageHandler):
     PIL2_KWARGS = MappingProxyType({"optimize": True})
     _OXIPNG_KWARGS: MappingProxyType[str, Any] = MappingProxyType(
         {
-            "level": 5,
+            "level": 3,
             "fix_errors": True,
             "force": True,
             "optimize_alpha": True,
+        }
+    )
+    _OXIPNG_MAX_KWARGS: MappingProxyType[str, Any] = MappingProxyType(
+        {
+            "level": 5,
             "deflate": oxipng.Deflaters.zopfli(15),
         }
     )
@@ -44,6 +49,10 @@ class Png(ImageHandler):
         self, _exec_args: tuple[str, ...], input_buffer: BufferedReader | BytesIO
     ) -> BytesIO:
         """Run internal oxipng on the file."""
+        oxipng_kwargs = self._OXIPNG_KWARGS
+        if self.config.png_max:
+            oxipng_kwargs = dict(oxipng_kwargs)
+            oxipng_kwargs.update(self._OXIPNG_MAX_KWARGS)
         opts = {**self._OXIPNG_KWARGS}
         if not self.config.keep_metadata:
             opts["strip"] = oxipng.StripChunks.safe()
