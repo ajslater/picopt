@@ -1,4 +1,5 @@
 """Unpack items from a file descriptor."""
+
 from dataclasses import dataclass
 from mmap import mmap
 from typing import BinaryIO

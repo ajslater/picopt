@@ -1,4 +1,5 @@
 """Test comic format."""
+
 import shutil
 from platform import system
 

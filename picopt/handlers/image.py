@@ -1,4 +1,5 @@
 """FileFormat Superclass."""
+
 from abc import ABCMeta
 from collections.abc import Mapping
 from io import BufferedReader, BytesIO

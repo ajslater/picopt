@@ -1,4 +1,5 @@
 """Confuse config for picopt."""
+
 import shutil
 import subprocess
 import time
@@ -81,7 +82,7 @@ ALL_FORMAT_STRS: frozenset[str] = (
     frozenset([cls.OUTPUT_FORMAT_STR for cls in _ALL_HANDLERS])
     | LOSSLESS_FORMAT_STRS
     | _CONTAINER_CONVERTIBLE_FORMAT_STRS
-    | {MPO_FILE_FORMAT.format_str}
+    | {str(MPO_FILE_FORMAT.format_str)}
 )
 TEMPLATE = MappingTemplate(
     {
@@ -268,8 +269,8 @@ def _get_handler_stages(
                 # XXX sucks but easiest way to determine if an npx prog exists is
                 # running it.
                 try:
-                    subprocess.run(
-                        exec_args,  # noqa S603
+                    subprocess.run(  # noqa: S603
+                        exec_args,
                         check=True,
                         stdout=subprocess.DEVNULL,
                         stderr=subprocess.DEVNULL,
@@ -333,8 +334,8 @@ def _get_cwebp_version(handler_stages: dict):
     if not bin_path:
         return cwebp_version
     args = (*bin_path, "-version")
-    result = subprocess.run(
-        args,  # noqa S603
+    result = subprocess.run(  # noqa: S603
+        args,
         capture_output=True,
         text=True,
         check=True,

@@ -1,17 +1,67 @@
-import { FlatCompat } from "@eslint/eslintrc";
 import js from "@eslint/js";
-import arrayFunc from "eslint-plugin-array-func";
-// import plugin broken for flag config
-// https://github.com/import-js/eslint-plugin-import/issues/2556
-//import importPlugin from "eslint-plugin-import";
+import eslintConfigPrettier from "eslint-config-prettier";
+import eslintPluginArrayFunc from "eslint-plugin-array-func";
+import eslintPluginCompat from "eslint-plugin-compat";
+import eslintPluginDepend from "eslint-plugin-depend";
+import eslintPluginJsonc from "eslint-plugin-jsonc";
+import eslintPluginMarkdown from "eslint-plugin-markdown";
+import eslintPluginNoSecrets from "eslint-plugin-no-secrets";
+// import eslintPluginNoUnsanitized from "eslint-plugin-no-unsanitized";
+// https://github.com/mozilla/eslint-plugin-no-unsanitized/issues/241
+// import eslintPluginNoUseExtendNative from "eslint-plugin-no-use-extend-native";
+// Warnings break circleci build
+import eslintPluginPrettier from "eslint-plugin-prettier";
 import eslintPluginPrettierRecommended from "eslint-plugin-prettier/recommended";
-import pluginSecurity from "eslint-plugin-security";
+import eslintPluginPromise from "eslint-plugin-promise";
+import eslintPluginRegexp from "eslint-plugin-regexp";
+import eslintPluginSecurity from "eslint-plugin-security";
+import eslintPluginSimpleImportSort from "eslint-plugin-simple-import-sort";
+import eslintPluginSonarjs from "eslint-plugin-sonarjs";
+import eslintPluginToml from "eslint-plugin-toml";
 import eslintPluginUnicorn from "eslint-plugin-unicorn";
+import eslintPluginYml from "eslint-plugin-yml";
 import globals from "globals";
 
-const compat = new FlatCompat();
+const FLAT_RECOMMENDED = "flat/recommended";
 
 export default [
+  {
+    ignores: [
+      "!.circleci",
+      "**/__pycache__/",
+      "**/*min.css",
+      "**/*min.js",
+      "*~",
+      ".git/",
+      ".mypy_cache/",
+      ".pytest_cache/",
+      ".ruff_cache/",
+      ".venv/",
+      "dist/",
+      "node_modules/",
+      "package-lock.json",
+      "poetry.lock",
+      "test-results/",
+      "typings/",
+    ],
+  },
+  js.configs.recommended,
+  eslintPluginArrayFunc.configs.all,
+  eslintPluginCompat.configs[FLAT_RECOMMENDED],
+  eslintPluginDepend.configs[FLAT_RECOMMENDED],
+  ...eslintPluginJsonc.configs["flat/recommended-with-jsonc"],
+  ...eslintPluginMarkdown.configs.recommended,
+  // eslintPluginNoUseExtendNative.configs.recommended,
+  // eslintPluginNoUnsanitized.configs.recommended,
+  eslintPluginPrettierRecommended,
+  eslintPluginPromise.configs[FLAT_RECOMMENDED],
+  eslintPluginRegexp.configs[FLAT_RECOMMENDED],
+  eslintPluginSecurity.configs.recommended,
+  eslintPluginSonarjs.configs.recommended,
+  ...eslintPluginToml.configs[FLAT_RECOMMENDED],
+  ...eslintPluginYml.configs["flat/standard"],
+  ...eslintPluginYml.configs["flat/prettier"],
+  eslintConfigPrettier, // Best if last
   {
     languageOptions: {
       globals: {
@@ -22,156 +72,71 @@ export default [
       reportUnusedDisableDirectives: "warn",
     },
     plugins: {
-      // import: importPlugin,
+      arrayFunc: eslintPluginArrayFunc,
+      jsonc: eslintPluginJsonc,
+      markdown: eslintPluginMarkdown,
+      "no-secrets": eslintPluginNoSecrets,
+      // "no-use-extend-native": eslintPluginNoUseExtendNative,
+      // "no-unsantized": eslintPluginNoUnsanitized,
+      prettier: eslintPluginPrettier,
+      promise: eslintPluginPromise,
+      security: eslintPluginSecurity,
+      "simple-import-sort": eslintPluginSimpleImportSort,
+      toml: eslintPluginToml,
       unicorn: eslintPluginUnicorn,
+      yml: eslintPluginYml,
     },
     rules: {
+      "array-func/prefer-array-from": "off", // for modern browsers the spread operator, as preferred by unicorn, works fine.
+      // "import/no-unresolved": ["error", { ignore: ["^[@]"] } ],
       "max-params": ["warn", 4],
-      "no-console": process.env.NODE_ENV === "production" ? "warn" : "off",
-      "no-debugger": process.env.NODE_ENV === "production" ? "warn" : "off",
+      "no-console": "warn",
+      "no-debugger": "warn",
+      "no-secrets/no-secrets": "error",
       "prettier/prettier": "warn",
       "security/detect-object-injection": "off",
-      "space-before-function-paren": "off",
-      "unicorn/prevent-abbreviations": "off",
-      "unicorn/filename-case": [
-        "error",
-        { case: "kebabCase", ignore: [".*.md"] },
-      ],
-      /*
-      ...importPlugin.configs["recommended"].rules,
-      "import/no-unresolved": [
-        "error",
-        {
-          ignore: ["^[@]"],
-        },
-      ],
-      */
-    },
-    /*
-    settings: {
-      "import/parsers": {
-        espree: [".js", ".cjs", ".mjs", ".jsx"],
-        "@typescript-eslint/parser": [".ts"],
-      },
-      "import/resolver": {
-        typescript: true,
-        node: true,
-      },
-    },
-    */
-  },
-  js.configs.recommended,
-  arrayFunc.configs.all,
-  pluginSecurity.configs.recommended,
-  eslintPluginPrettierRecommended,
-  ...compat.config({
-    ignorePatterns: [
-      "*~",
-      "**/__pycache__",
-      ".git",
-      "!.circleci",
-      ".mypy_cache",
-      ".pytest_cache",
-      ".ruff_cache",
-      ".venv",
-      "dist",
-      "node_modules",
-      "package-lock.json",
-      "test-results",
-      "typings",
-    ],
-    root: true,
-    env: {
-      node: true,
-      es2024: true,
-    },
-    parserOptions: {
-      ecmaFeatures: {
-        impliedStrict: true,
-      },
-      ecmaVersion: "latest",
-    },
-    plugins: [
-      "eslint-comments",
-      //"import",
-      "markdown",
-      "no-constructor-bind",
-      "no-secrets",
-      "no-unsanitized",
-      "no-use-extend-native",
-      "optimize-regex",
-      "promise",
-      "simple-import-sort",
-      "sonarjs",
-      "switch-case",
-    ],
-    extends: [
-      // CODE QUALITY
-      "plugin:sonarjs/recommended",
-      // LANGS
-      "plugin:jsonc/recommended-with-jsonc",
-      "plugin:markdown/recommended",
-      "plugin:toml/recommended",
-      "plugin:yml/standard",
-      "plugin:yml/prettier",
-      // PRACTICES
-      "plugin:eslint-comments/recommended",
-      //"plugin:import/recommended",
-      "plugin:no-use-extend-native/recommended",
-      "plugin:optimize-regex/all",
-      "plugin:promise/recommended",
-      "plugin:switch-case/recommended",
-      // SECURITY
-      "plugin:no-unsanitized/DOM",
-    ],
-    rules: {
-      "eslint-comments/no-unused-disable": 1,
-      "no-constructor-bind/no-constructor-bind": "error",
-      "no-constructor-bind/no-constructor-state": "error",
-      "no-secrets/no-secrets": "error",
       "simple-import-sort/exports": "warn",
       "simple-import-sort/imports": "warn",
-      "switch-case/newline-between-switch-case": "off", // Malfunctioning
+      "space-before-function-paren": "off",
+      "unicorn/filename-case": [
+        "error",
+        { case: "kebabCase", ignore: [".*.md", "config_default.yaml"] },
+      ],
+      "unicorn/prefer-node-protocol": "off",
+      "unicorn/prevent-abbreviations": "off",
+      "unicorn/switch-case-braces": ["warn", "avoid"],
     },
-    overrides: [
-      {
-        files: ["**/*.md"],
-        processor: "markdown/markdown",
-        rules: {
-          "prettier/prettier": ["error", { parser: "markdown" }],
-        },
-      },
-      {
-        files: ["**/*.md/*.js"], // Will match js code inside *.md files
-        rules: {
-          "no-unused-vars": "off",
-          "no-undef": "off",
-        },
-      },
-      {
-        files: ["**/*.md/*.sh"],
-        rules: {
-          "prettier/prettier": ["error", { parser: "sh" }],
-        },
-      },
-      {
-        files: ["*.yaml", "*.yml"],
-        //parser: "yaml-eslint-parser",
-        rules: {
-          "unicorn/filename-case": "off",
-        },
-      },
-      {
-        files: ["*.toml"],
-        //parser: "toml-eslint-parser",
-        rules: {
-          "prettier/prettier": ["error", { parser: "toml" }],
-        },
-      },
-      {
-        files: ["*.json", "*.json5", "*.jsonc"],
-        //parser: "jsonc-eslint-parser",
-      },
-    ],
-  }),
+  },
+  {
+    files: ["**/*.md"],
+    processor: "markdown/markdown",
+    rules: {
+      "prettier/prettier": ["warn", { parser: "markdown" }],
+    },
+  },
+  {
+    files: ["**/*.md/*.js"], // Will match js code inside *.md files
+    rules: {
+      "no-undef": "off",
+      "no-unused-vars": "off",
+    },
+  },
+  {
+    files: ["**/*.md/*.sh"],
+    rules: {
+      "prettier/prettier": ["error", { parser: "sh" }],
+    },
+  },
+  {
+    files: ["**/*.toml"],
+    rules: {
+      "prettier/prettier": ["error", { parser: "toml" }],
+    },
+  },
+  {
+    files: ["docker-compose*.yaml"],
+    rules: {
+      "yml/no-empty-mapping-value": "off",
+    },
+  },
 ];

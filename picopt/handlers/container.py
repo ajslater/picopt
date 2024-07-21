@@ -1,4 +1,5 @@
 """Optimize comic archives."""
+
 from abc import ABCMeta, abstractmethod
 from collections.abc import Generator, Mapping
 from io import BytesIO

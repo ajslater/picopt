@@ -1,4 +1,5 @@
 """PNG format."""
+
 from io import BufferedReader, BytesIO
 from types import MappingProxyType
 from typing import Any
@@ -16,11 +17,11 @@ from picopt.pillow.png_bit_depth import png_bit_depth
 class Png(ImageHandler):
     """PNG format class."""
 
-    OUTPUT_FORMAT_STR = PngImageFile.format
+    OUTPUT_FORMAT_STR = str(PngImageFile.format)
     OUTPUT_FILE_FORMAT = FileFormat(OUTPUT_FORMAT_STR, True, False)
     INPUT_FILE_FORMATS = frozenset({OUTPUT_FILE_FORMAT})
     CONVERT_FROM_FORMAT_STRS = frozenset(
-        CONVERTIBLE_FORMAT_STRS | {GifImageFile.format}
+        CONVERTIBLE_FORMAT_STRS | {str(GifImageFile.format)}
     )
     PROGRAMS = (
         ("pil2png",),

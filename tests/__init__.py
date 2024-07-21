@@ -1,4 +1,5 @@
 """Tests init."""
+
 import inspect
 from pathlib import Path
 

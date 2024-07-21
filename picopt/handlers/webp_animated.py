@@ -1,4 +1,5 @@
 """WebP Animated images are treated like containers."""
+
 from types import MappingProxyType
 
 from PIL.WebPImagePlugin import WebPImageFile

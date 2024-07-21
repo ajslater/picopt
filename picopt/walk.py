@@ -1,4 +1,5 @@
 """Walk the directory trees and files and call the optimizers."""
+
 import os
 import shutil
 import traceback

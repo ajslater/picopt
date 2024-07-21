@@ -1,4 +1,5 @@
 """Test comic format."""
+
 import platform
 from types import MappingProxyType
 

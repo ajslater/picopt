@@ -1,6 +1,6 @@
 """Base class for testing images."""
+
 import shutil
-from abc import ABC
 from collections.abc import Mapping
 from pathlib import Path
 from types import MappingProxyType
@@ -8,7 +8,7 @@ from types import MappingProxyType
 from tests import IMAGES_DIR, get_test_dir
 
 
-class BaseTestImagesDir(ABC):
+class BaseTestImagesDir:
     """Test images dir."""
 
     FNS: Mapping = MappingProxyType({})

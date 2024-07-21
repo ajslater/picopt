@@ -1,4 +1,5 @@
 """Statistics for the optimization operations."""
+
 from dataclasses import dataclass
 from pathlib import Path
 from subprocess import CalledProcessError

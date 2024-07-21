@@ -1,4 +1,5 @@
 """Run pictures through image specific external optimizers."""
+
 import sys
 from argparse import Action, ArgumentParser, Namespace, RawDescriptionHelpFormatter
 from importlib.metadata import PackageNotFoundError, version

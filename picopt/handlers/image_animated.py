@@ -1,4 +1,5 @@
 """Animated images are treated like containers."""
+
 from abc import ABC
 from collections.abc import Generator
 from io import BytesIO
@@ -21,7 +22,7 @@ class ImageAnimated(ContainerHandler, ABC):
 
     PROGRAMS = (("pil2native",),)
     PIL2_FRAME_KWARGS = MappingProxyType(
-        {"format": PngImageFile.format, "compress_level": 0}
+        {"format": str(PngImageFile.format), "compress_level": 0}
     )
     PIL2_KWARGS: MappingProxyType[str, Any] = MappingProxyType({})
 
@@ -46,7 +47,7 @@ class ImageAnimated(ContainerHandler, ABC):
                 with BytesIO() as frame_buffer:
                     frame.save(
                         frame_buffer,
-                        **self.PIL2_FRAME_KWARGS,
+                        **self.PIL2_FRAME_KWARGS,  # type: ignore
                     )
                     for key in ANIMATED_INFO_KEYS:
                         value = frame.info.get(key)

@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 """Get raw jpeg xml from Pillow."""
+
 # XXX This only seems to get some XMP data. xmp-tool finds more.
 import struct
 
@@ -7,8 +8,8 @@ from PIL.JpegImagePlugin import JpegImageFile
 
 APP1_SECTION_DELIMETER = b"\x00"
 XAP_MARKER = b"http://ns.adobe.com/xap/1.0/"
-SOI_MARKER = b"\xFF\xD8"
-EOI_MARKER = b"\xFF\xE1"
+SOI_MARKER = b"\xff\xd8"
+EOI_MARKER = b"\xff\xe1"
 
 
 def get_jpeg_xmp(image: JpegImageFile) -> str | None:

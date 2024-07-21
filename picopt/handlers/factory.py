@@ -1,4 +1,5 @@
 """Return a handler for a path."""
+
 from collections.abc import Mapping
 from contextlib import suppress
 from typing import Any
@@ -51,7 +52,7 @@ def _set_xmp(keep_metadata: bool, image: Image.Image, info: dict) -> None:
             xmp = get_jpeg_xmp(image)  # type: ignore
         elif image.format == PngImageFile.format:
             xmp = info.get(PNGINFO_XMP_KEY)
-        if isinstance(image, TiffImageFile):
+        if isinstance(image, TiffImageFile) and image.tag_v2:
             # elif image.format == TiffImageFile.format:
             xmp = image.tag_v2.get(TIFF_XMP_TAG)
         if xmp:
@@ -82,10 +83,8 @@ def _extract_image_info(
                 info = image.info if keep_metadata else {}
                 animated = getattr(image, "is_animated", False)
                 info["animated"] = animated
-                if animated:
-                    n_frames = image.n_frames
-                    if n_frames is not None:
-                        info["n_frames"] = n_frames
+                if animated and (n_frames := getattr(image, "n_frames", None)):
+                    info["n_frames"] = n_frames
                 try:
                     _set_xmp(keep_metadata, image, info)
                 except Exception as exc:

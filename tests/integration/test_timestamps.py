@@ -1,4 +1,5 @@
 """Test comic format."""
+
 import shutil
 from datetime import datetime, timezone
 from types import MappingProxyType

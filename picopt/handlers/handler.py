@@ -1,4 +1,5 @@
 """FileType abstract class for image and container formats."""
+
 import os
 import subprocess
 from abc import ABC, abstractmethod
@@ -62,8 +63,8 @@ class Handler(ABC):
                 raise ValueError(reason)
 
         input_buffer.seek(0)
-        result = subprocess.run(
-            args,  # noqa: S603
+        result = subprocess.run(  # noqa: S603
+            args,
             check=True,
             input=input_buffer.read(),
             stdout=subprocess.PIPE,
@@ -167,8 +168,8 @@ class Handler(ABC):
                 input_buffer.seek(0)
                 input_tmp_file.write(input_buffer.read())
 
-        subprocess.run(
-            args,  # noqa S603 # type: ignore
+        subprocess.run(  # noqa S603
+            args,  # type: ignore
             check=True,
             text=True,
             stdout=subprocess.DEVNULL,

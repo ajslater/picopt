@@ -4,6 +4,7 @@
 https://www.w3.org/TR/PNG-Chunks.html
 This should be a part of Pillow
 """
+
 from pathlib import Path
 from typing import BinaryIO
 

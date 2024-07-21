@@ -4,6 +4,7 @@
 This should be a part of Pillow
 https://developers.google.com/speed/webp/docs/webp_lossless_bitstream_specification
 """
+
 from io import BufferedReader, BytesIO
 from mmap import PROT_READ, mmap
 from pathlib import Path
