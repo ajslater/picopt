@@ -55,14 +55,14 @@ conversion to PNG or WebP explicitly.
 - Picopt can convert Animated GIF, TIFF, and FLI into Animated PNG or WebP
   files.
 - Picopt can convert Animated GIF, TIFF, FLI, and PNG into Animated WebP files.
-- Picopt can convert MPO to JPEG by stripping secondary images if a primary
-  image exists. (Experimental)
+- Picopt can convert MPO to JPEG by stripping secondary images (often thumbnails created by cameras) if a primary
+  image exists. (Experimental).
 - Picopt can convert RAR files into Zipfiles and CBR files into CBZ files.
 
 Because picopt supports so many lossless image formats, to avoid surprises if
 you specify a conversion target, picopt will only convert GIF and PNG images to
 the target by default. To convert another format, like BMP, to WEBP you must
-specify that you want to read the BMP format _and_ that you want t:qo convert it
+specify that you want to read the BMP format _and_ that you want to convert it
 to WEBP:
 
 <!-- eslint-skip -->
