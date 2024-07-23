@@ -133,7 +133,11 @@ book archive optimization is not turned on by default to prevent surprises.
 
 ### System Dependencies
 
-picopt is most effective with ependencies to run. We must install these first
+#### Python
+
+Picopt requires Python 3.10 or greater installed on whichever system you use.
+
+Picopt is most effective with these binary dependencies installed. We must install these first
 
 #### macOS
 
@@ -145,7 +149,7 @@ brew install gifsicle mozjpeg svgo webp
 ln -s $(brew --prefix)/opt/mozjpeg/bin/jpegtran /usr/local/bin/mozjpeg
 ```
 
-#### Debian / Ubuntu
+#### Debian / Ubuntu, Windows Linux Subsystem
 
 <!-- eslint-skip -->
 
