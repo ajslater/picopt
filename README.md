@@ -137,7 +137,8 @@ book archive optimization is not turned on by default to prevent surprises.
 
 Picopt requires Python 3.10 or greater installed on whichever system you use.
 
-Picopt is most effective with these binary dependencies installed. We must install these first
+Picopt is most effective with these binary dependencies installed. We must
+install these first
 
 #### macOS
 
