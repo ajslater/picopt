@@ -34,6 +34,7 @@ from picopt.formats import (
 from picopt.handlers.gif import Gif, GifAnimated
 from picopt.handlers.handler import Handler
 from picopt.handlers.jpeg import Jpeg
+from picopt.handlers.jpegxl import JpegXL, JpegXLLossless
 from picopt.handlers.png import Png
 from picopt.handlers.png_animated import PngAnimated
 from picopt.handlers.svg import Svg
@@ -55,6 +56,7 @@ _CONVERT_TO_FORMAT_STRS = frozenset(
             Zip,
             Cbz,
             Jpeg,
+            JpegXLLossless,
         )
     }
 )
@@ -63,7 +65,7 @@ _CONTAINER_CONVERTIBLE_FORMAT_STRS = frozenset(
 )
 
 DEFAULT_HANDLERS = frozenset(
-    {Gif, GifAnimated, Jpeg, Png, WebPLossless, WebPAnimatedLossless}
+    {Gif, GifAnimated, Jpeg, Png, WebPLossless, WebPAnimatedLossless, JpegXL}
 )
 _ALL_HANDLERS = frozenset(
     DEFAULT_HANDLERS
@@ -134,7 +136,6 @@ TIMESTAMPS_CONFIG_KEYS = {
 }
 # cwebp before this version only accepts PNG & WEBP
 MIN_CWEBP_VERSION = (1, 2, 3)
-_JPEG_PROGS = frozenset({"mozjpeg", "jpegtran"})
 
 
 ########################
@@ -157,7 +158,7 @@ class FileFormatHandlers:
 # Handlers for formats are listed in priority order
 _LOSSLESS_CONVERTIBLE_FORMAT_HANDLERS = MappingProxyType(
     {
-        ffmt: FileFormatHandlers(convert=(WebPLossless, Png))
+        ffmt: FileFormatHandlers(convert=(WebPLossless, Png, JpegXLLossless))
         for ffmt in CONVERTIBLE_FILE_FORMATS
     }
 )
@@ -172,7 +173,7 @@ _FORMAT_HANDLERS = MappingProxyType(
         **_LOSSLESS_CONVERTIBLE_FORMAT_HANDLERS,
         **_LOSSLESS_CONVERTIBLE_ANIMATED_FORMAT_HANDLERS,
         Gif.OUTPUT_FILE_FORMAT: FileFormatHandlers(
-            convert=(WebPLossless, Png),
+            convert=(WebPLossless, Png, JpegXLLossless),
             native=(Gif,),
         ),
         GifAnimated.OUTPUT_FILE_FORMAT: FileFormatHandlers(
@@ -180,14 +181,20 @@ _FORMAT_HANDLERS = MappingProxyType(
             native=(GifAnimated,),
         ),
         MPO_FILE_FORMAT: FileFormatHandlers(convert=(Jpeg,)),
-        Jpeg.OUTPUT_FILE_FORMAT: FileFormatHandlers(native=(Jpeg,)),
+        Jpeg.OUTPUT_FILE_FORMAT: FileFormatHandlers(
+            convert=(JpegXLLossless,), native=(Jpeg,)
+        ),
+        JpegXLLossless.OUTPUT_FILE_FORMAT: FileFormatHandlers(native=(JpegXLLossless,)),
+        JpegXL.OUTPUT_FILE_FORMAT: FileFormatHandlers(native=(JpegXL,)),
         Png.OUTPUT_FILE_FORMAT: FileFormatHandlers(
-            convert=(WebPLossless,), native=(Png,)
+            convert=(WebPLossless, JpegXLLossless), native=(Png,)
         ),
         PngAnimated.OUTPUT_FILE_FORMAT: FileFormatHandlers(
-            convert=(WebPAnimatedLossless,), native=(PngAnimated,)
+            convert=(WebPAnimatedLossless, JpegXLLossless), native=(PngAnimated,)
         ),
-        WebPLossless.OUTPUT_FILE_FORMAT: FileFormatHandlers(native=(WebPLossless,)),
+        WebPLossless.OUTPUT_FILE_FORMAT: FileFormatHandlers(
+            convert=(JpegXLLossless,), native=(WebPLossless,)
+        ),
         WebPAnimatedLossless.OUTPUT_FILE_FORMAT: FileFormatHandlers(
             native=(WebPAnimatedLossless,)
         ),

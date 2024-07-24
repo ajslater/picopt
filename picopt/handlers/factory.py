@@ -4,12 +4,14 @@ from collections.abc import Mapping
 from contextlib import suppress
 from typing import Any
 
+import pillow_jxl  # noqa F401
 from confuse.templates import AttrDict
 from PIL import Image, UnidentifiedImageError
 from PIL.JpegImagePlugin import JpegImageFile
 from PIL.PngImagePlugin import PngImageFile
 from PIL.TiffImagePlugin import XMP as TIFF_XMP_TAG
 from PIL.TiffImagePlugin import TiffImageFile
+from pillow_jxl.JpegXLImagePlugin import JXLImageFile
 from termcolor import cprint
 
 from picopt.formats import (
@@ -110,6 +112,8 @@ def _is_lossless(
         lossless = is_lossless(path_info.fp_or_buffer())
     elif image_format_str == TiffImageFile.format:
         lossless = info.get("compression") in TIFF_LOSSLESS_COMPRESSION
+    elif image_format_str == JXLImageFile.format:
+        lossless = bool(info.get("uses_original_profile"))
     else:
         lossless = image_format_str in LOSSLESS_FORMAT_STRS
     return lossless

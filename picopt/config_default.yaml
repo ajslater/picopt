@@ -3,7 +3,7 @@ picopt:
   bigger: False
   convert_to: []
   disable_programs: []
-  formats: [GIF, JPEG, PNG, WEBP]
+  formats: [GIF, JPEG, PNG, WEBP, JXL]
   ignore: []
   jobs: 0
   keep_metadata: True

@@ -10,6 +10,7 @@ from termcolor import colored, cprint
 from picopt import PROGRAM_NAME, walk
 from picopt.config import ALL_FORMAT_STRS, DEFAULT_HANDLERS, get_config
 from picopt.exceptions import PicoptError
+from picopt.handlers.jpegxl import JpegXLLossless
 from picopt.handlers.png import Png
 from picopt.handlers.webp import WebPLossless
 from picopt.handlers.zip import Cbr, Rar
@@ -106,7 +107,8 @@ def get_arguments(params: tuple[str, ...] | None = None) -> Namespace:
         action=SplitArgsAction,
         dest="convert_to",
         help="A list of formats to convert to. Lossless images may convert to"
-        f" {Png.OUTPUT_FORMAT_STR} or {WebPLossless.OUTPUT_FORMAT_STR}."
+        f" {WebPLossless.OUTPUT_FORMAT_STR},"
+        f" {Png.OUTPUT_FORMAT_STR} or  {JpegXLLossless.OUTPUT_FORMAT_STR}."
         f" {Rar.INPUT_FORMAT_STR} archives"
         f" may convert to {Rar.OUTPUT_FORMAT_STR} or {Cbr.OUTPUT_FORMAT_STR}."
         " By default formats are not converted to other formats.",

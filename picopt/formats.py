@@ -22,6 +22,7 @@ from PIL.TgaImagePlugin import TgaImageFile
 from PIL.TiffImagePlugin import TiffImageFile
 from PIL.XbmImagePlugin import XbmImageFile
 from PIL.XpmImagePlugin import XpmImageFile
+from pillow_jxl.JpegXLImagePlugin import JXLImageFile
 
 
 @dataclass(eq=True, frozen=True)
@@ -124,5 +125,10 @@ CONVERTIBLE_ANIMATED_FILE_FORMATS = frozenset(
 LOSSLESS_FORMAT_STRS: frozenset[str] = frozenset(
     CONVERTIBLE_FORMAT_STRS - {str(MpoImageFile.format)}
     | CONVERTIBLE_ANIMATED_FORMAT_STRS
-    | {str(GifImageFile.format), str(PngImageFile.format), SVG_FORMAT_STR}
+    | {
+        str(GifImageFile.format),
+        str(PngImageFile.format),
+        SVG_FORMAT_STR,
+        str(JXLImageFile.format),
+    }
 )

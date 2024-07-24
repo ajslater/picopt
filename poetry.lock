@@ -480,6 +480,40 @@ typing = ["typing-extensions"]
 xmp = ["defusedxml"]
 
 [[package]]
+name = "pillow-jxl-plugin"
+version = "1.2.5"
+description = ""
+optional = false
+python-versions = ">=3.8"
+files = [
+  { file = "pillow_jxl_plugin-1.2.5-cp310-cp310-macosx_12_0_arm64.whl", hash = "sha256:75a0cd76018e28efaceda8946b0f502d49bb0fa937c5217e32d8ed01d8990d36" },
+  { file = "pillow_jxl_plugin-1.2.5-cp310-cp310-macosx_12_0_x86_64.whl", hash = "sha256:ce5266492dc4f68217032ad828be84c2e1c70bc8e3af771bae4a9e5c2d2efec8" },
+  { file = "pillow_jxl_plugin-1.2.5-cp310-cp310-manylinux_2_28_x86_64.whl", hash = "sha256:94a209573d111b0c8094da859e01c72a2657d5e1cf801e9ac5b9c12dffdbc8fc" },
+  { file = "pillow_jxl_plugin-1.2.5-cp310-none-win_amd64.whl", hash = "sha256:055202d4f447570da16b0ca90a3609c862a5633dc27903fe31b5f145ac5ab273" },
+  { file = "pillow_jxl_plugin-1.2.5-cp311-cp311-macosx_12_0_arm64.whl", hash = "sha256:632266f3143848247ed0afc5e022787d2b8e14027d48b04b1babb9a364f64f66" },
+  { file = "pillow_jxl_plugin-1.2.5-cp311-cp311-macosx_12_0_x86_64.whl", hash = "sha256:43598cbef3e23218b59cf46c63883fefbd7e9be911e8ca7d28869845ef444ad2" },
+  { file = "pillow_jxl_plugin-1.2.5-cp311-cp311-manylinux_2_28_x86_64.whl", hash = "sha256:ab3dce74f79434bfda92a6d7c9fa6ff21e93d0188e67fbe9d9da456fa2b6b026" },
+  { file = "pillow_jxl_plugin-1.2.5-cp311-none-win_amd64.whl", hash = "sha256:7fee4397b3306a843781744ce160d3bf9d9858e49e7ce4bb8d5f746117cb71bd" },
+  { file = "pillow_jxl_plugin-1.2.5-cp312-cp312-macosx_12_0_arm64.whl", hash = "sha256:5aed08d15fffcf994ebbbac7f04da337096b148d36ae3a93b5d90e13215c5804" },
+  { file = "pillow_jxl_plugin-1.2.5-cp312-cp312-macosx_12_0_x86_64.whl", hash = "sha256:eeec94001d1fcd7582ab4b96ba69ba7ccf8a466f3c8f8fa781f3cc7d6358fa1b" },
+  { file = "pillow_jxl_plugin-1.2.5-cp312-cp312-manylinux_2_28_x86_64.whl", hash = "sha256:3a05e16f8f7e1eff992ee3b8615f39df9fcf04301ad38e3bbe2ad8fff9129a96" },
+  { file = "pillow_jxl_plugin-1.2.5-cp312-none-win_amd64.whl", hash = "sha256:1c334afb7b118f845a88cbd4899d5113e10d92f5c29d455f50591cda9f0ebd01" },
+  { file = "pillow_jxl_plugin-1.2.5-cp38-cp38-manylinux_2_28_x86_64.whl", hash = "sha256:e016bfd2b63ca197e5325ad23b52322eee3f1f85eb7486591c73bcd0f9ea56e7" },
+  { file = "pillow_jxl_plugin-1.2.5-cp38-none-win_amd64.whl", hash = "sha256:8ce91d43daf4d59201743643f0606cfa43bb3f599832dcf35bea180690f1520f" },
+  { file = "pillow_jxl_plugin-1.2.5-cp39-cp39-macosx_12_0_arm64.whl", hash = "sha256:0f4c062048de70816871837bfffdcc3a4999c5e748733727ae94b08b551b7aac" },
+  { file = "pillow_jxl_plugin-1.2.5-cp39-cp39-macosx_12_0_x86_64.whl", hash = "sha256:5533a14ec669d1c56ee778b957433ac4a12b433d153eb1f2e2cfb4d5c063ec77" },
+  { file = "pillow_jxl_plugin-1.2.5-cp39-cp39-manylinux_2_28_x86_64.whl", hash = "sha256:ae7ec66cbf8524ea694f15a81e50316f537639dcd13d6be0ed50b29db6da67b0" },
+  { file = "pillow_jxl_plugin-1.2.5-cp39-none-win_amd64.whl", hash = "sha256:114c35f16ca0a03d901e1ccae9f99e22bb08de317b1607d76d056103092e8034" },
+  { file = "pillow_jxl_plugin-1.2.5-pp310-pypy310_pp73-manylinux_2_28_x86_64.whl", hash = "sha256:09e594491488db24b95189a825c25092dae1c880906191e7a16313bfae0e6c03" },
+  { file = "pillow_jxl_plugin-1.2.5-pp39-pypy39_pp73-manylinux_2_28_x86_64.whl", hash = "sha256:d5feb20f31ea045529edee010ffa3c3361788e6d420cac6146ab794b8fbd92f1" },
+  { file = "pillow_jxl_plugin-1.2.5.tar.gz", hash = "sha256:7617f44a26ce45f1a1d5f393c06f0baba1d7aa1b7a822e250a1be80a7835a27f" },
+]
+
+[package.dependencies]
+packaging = "*"
+pillow = "*"
+
+[[package]]
 name = "pluggy"
 version = "1.5.0"
 description = "plugin and hook calling mechanisms for python"
@@ -959,4 +993,4 @@ tomli = { version = ">=1.1.0", markers = "python_version < \"3.11\"" }
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.10"
-content-hash = "99bf56f69669947bf8c57a75e9ca7b20618a0e5e354c799343ac9896aa58a602"
+content-hash = "d2e48da387854ef1fc5d0d32a2b2dcc3b53a6e31fdaf25ab2cdc2f33a3ecff43"
