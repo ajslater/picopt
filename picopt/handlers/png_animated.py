@@ -1,4 +1,5 @@
 """WebP Animated images are treated like containers."""
+
 from picopt.formats import (
     CONVERTIBLE_ANIMATED_FILE_FORMATS,
     CONVERTIBLE_ANIMATED_FORMAT_STRS,

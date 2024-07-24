@@ -1,4 +1,5 @@
 """Test comic format."""
+
 import shutil
 from types import MappingProxyType
 from zipfile import ZipFile

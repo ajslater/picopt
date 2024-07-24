@@ -1,4 +1,5 @@
 """Data classes."""
+
 from collections.abc import Sequence
 from datetime import datetime, timezone
 from io import BufferedReader, BytesIO

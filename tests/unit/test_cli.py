@@ -1,4 +1,5 @@
 """Test cli module."""
+
 import shutil
 import sys
 

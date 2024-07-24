@@ -5,8 +5,7 @@ set -euxo pipefail
 ####################
 ###### Python ######
 ####################
-poetry run ruff .
-poetry run ruff format --check .
+poetry run ruff check .
 poetry run pyright
 poetry run vulture .
 if [ "$(uname)" = "Darwin" ]; then

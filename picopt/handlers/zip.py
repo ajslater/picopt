@@ -1,4 +1,5 @@
 """Handler for zip files."""
+
 from collections.abc import Generator
 from io import BytesIO
 from zipfile import ZIP_DEFLATED, ZIP_STORED, ZipFile, ZipInfo, is_zipfile

@@ -1,4 +1,5 @@
 """Test png bit depth utility module."""
+
 import sys
 
 from picopt.pillow.png_bit_depth import main, png_bit_depth

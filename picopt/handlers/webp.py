@@ -1,4 +1,5 @@
 """WebP format."""
+
 from abc import ABC
 from collections.abc import Mapping
 from io import BytesIO
@@ -21,7 +22,7 @@ class WebPBase(ImageHandler, ABC):
     """Base for handlers that use WebP utility commands."""
 
     PIL2_KWARGS = MappingProxyType({"quality": 100, "method": 6})
-    OUTPUT_FORMAT_STR = WebPImageFile.format
+    OUTPUT_FORMAT_STR = str(WebPImageFile.format)
     PROGRAMS = (("cwebp", "pil2native"),)
     # https://developers.google.com/speed/webp/docs/cwebp
     CWEBP_ARGS_PREFIX = (

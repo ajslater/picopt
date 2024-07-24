@@ -1,4 +1,5 @@
 """Gif format."""
+
 from io import BytesIO
 from types import MappingProxyType
 from typing import BinaryIO
@@ -12,7 +13,7 @@ from picopt.handlers.image import ImageHandler
 class Gif(ImageHandler):
     """GIF handler."""
 
-    OUTPUT_FORMAT_STR = GifImageFile.format
+    OUTPUT_FORMAT_STR = str(GifImageFile.format)
     OUTPUT_FILE_FORMAT = FileFormat(OUTPUT_FORMAT_STR, True, False)
     INPUT_FILE_FORMATS = frozenset({OUTPUT_FILE_FORMAT})
     PROGRAMS = (("gifsicle", "pil2native"),)

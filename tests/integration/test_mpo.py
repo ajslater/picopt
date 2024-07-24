@@ -1,4 +1,5 @@
 """Test comic format."""
+
 from types import MappingProxyType
 
 from picopt import PROGRAM_NAME, cli
