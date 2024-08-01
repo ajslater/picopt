@@ -79,8 +79,8 @@ To optimize JPEG images at all picopt needs one of
 
 ### PNG & APNG
 
-Picopt uses an internal oxipng python module to optimize PNG images and
-convert other lossless formats to PNG picopt. The external
+Picopt uses an internal oxipng python module to optimize PNG images and convert
+other lossless formats to PNG picopt. The external
 [pngout](http://advsys.net/ken/utils.htm) tool can provide a small extra bit of
 compression.
 
