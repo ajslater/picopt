@@ -174,7 +174,7 @@ See mozjepg, pngout & svgo install instructions below
 <!-- eslint-skip -->
 
 ```sh
-yum install gifsicle python-imaging libwebp-tools
+dnf install gifsicle python3-pillow libwebp-tools
 ```
 
 if you don't want to install mozjpeg using the instructions below then use
@@ -183,7 +183,7 @@ jpegtran:
 <!-- eslint-skip -->
 
 ```sh
-yum install libjpeg-progs
+dnf install libjpeg-turbo-utils
 ```
 
 See mozjepg, pngout & svgo install instructions below
