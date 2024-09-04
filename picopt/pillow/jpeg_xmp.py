@@ -40,11 +40,11 @@ def set_jpeg_xmp(jpeg_data: bytes, xmp: str) -> bytes:
         + APP1_SECTION_DELIMETER
     )
     return (
-        jpeg_buffer[: soi_index + len(SOI_MARKER)]
+        bytes(jpeg_buffer[: soi_index + len(SOI_MARKER)])
         + EOI_MARKER
         + struct.pack("<H", len(xmp_bytes) + len(EOI_MARKER))
         + xmp_bytes
-        + jpeg_buffer[soi_index + len(SOI_MARKER) :]
+        + bytes(jpeg_buffer[soi_index + len(SOI_MARKER) :])
     )
 
 
