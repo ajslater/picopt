@@ -1,5 +1,11 @@
 # 📰 Picopt News
 
+## v4.0.3
+
+- Pillow 11 support.
+- Better jpeg xmp preservation.
+- Fix crash on reporting some errors.
+
 ## v4.0.2
 
 - Fix windows mmap crash. Thanks @Fletcher.
