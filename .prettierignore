@@ -7,3 +7,5 @@
 /node_modules
 /test-results
 __pycache__
+package-lock.json
+poetry.lock

@@ -26,7 +26,7 @@ their current format.
 ### Lossless Images
 
 Lossless WebP images are smaller than PNG, much smaller than GIF and, of course,
-a great deal smaller thein uncompressed bitmaps like BMP. As such the best
+a great deal smaller than uncompressed bitmaps like BMP. As such the best
 practice is probably to convert all lossless images to WebP Lossless as now all
 major browsers support it. The only downside is that decoding WebP Lossless
 takes on average 50% more CPU than PNG. All major desktop and mobile browsers
@@ -42,7 +42,7 @@ substitute.
 
 ### Conversion
 
-By default picopt does not convert images between formats. You must turn on
+By default, picopt does not convert images between formats. You must turn on
 conversion to PNG or WebP explicitly.
 
 ## 🖼️ <a name="formats">Formats</a>
@@ -79,8 +79,8 @@ To optimize JPEG images at all picopt needs one of
 
 ### PNG & APNG
 
-Picopt uses an internal oxipng python module to to optimize PNG images and
-convert other lossless formats to PNG picopt. The external
+Picopt uses an internal oxipng python module to optimize PNG images and convert
+other lossless formats to PNG picopt. The external
 [pngout](http://advsys.net/ken/utils.htm) tool can provide a small extra bit of
 compression.
 
@@ -106,7 +106,7 @@ path.
 
 ### MPO (Experimental)
 
-Picopt can extract the primary image from an multi JPEG MPO that also contains
+Picopt can extract the primary image from a multi JPEG MPO that also contains
 thumbnails and convert the file to an ordinary JPEG. Picopt will also optimize
 this image if it can. To enable this you must run with `-x MPO -c JPEG`
 Steroscopic MPOs should have no primary image tagged in the MPO directory and be
@@ -174,7 +174,7 @@ See mozjepg, pngout & svgo install instructions below
 <!-- eslint-skip -->
 
 ```sh
-yum install gifsicle python-imaging libwebp-tools
+dnf install gifsicle python3-pillow libwebp-tools
 ```
 
 if you don't want to install mozjpeg using the instructions below then use
@@ -183,7 +183,7 @@ jpegtran:
 <!-- eslint-skip -->
 
 ```sh
-yum install libjpeg-progs
+dnf install libjpeg-turbo-utils
 ```
 
 See mozjepg, pngout & svgo install instructions below
@@ -212,7 +212,7 @@ the path.
 Instructions for installing on macOS are given above. Some near recent binaries
 for Windows and Debian x86
 [can be found here](https://mozjpeg.codelove.de/binaries.html). Most Linux
-distributions still require a more manual install as elucidated here on
+distributions still require a more manual installation as elucidated here on
 [Casey Hoffer's blog](https://www.caseyhofford.com/2019/05/01/improved-image-compression-install-mozjpeg-on-ubuntu-server/)
 
 ### pngout
