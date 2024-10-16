@@ -8,7 +8,7 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.poetry]
 name = "picopt"
-version = "4.0.3"
+version = "4.0.4"
 description = "A multi format lossless image optimizer that uses external tools"
 license = "GPL-3.0-only"
 authors = ["AJ Slater <aj@slater.net>"]
@@ -35,7 +35,6 @@ python = "^3.10"
 confuse = "^2.0.0"
 humanize = "^4.0.0"
 piexif = "^1.1.3"
-pillow-jxl-plugin = "^1.2.5"
 pyoxipng = "^9.0.0"
 python-dateutil = "^2.8"
 rarfile = "^4.0"
