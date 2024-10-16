@@ -5,6 +5,7 @@
 - Pillow 11 support.
 - Better jpeg xmp preservation.
 - Fix crash on reporting some errors.
+- README Redhat installation and spelling fixes by @bpepple
 
 ## v4.0.3 - Bad release
 
