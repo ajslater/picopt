@@ -8,7 +8,7 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.poetry]
 name = "picopt"
-version = "4.0.1"
+version = "4.0.3"
 description = "A multi format lossless image optimizer that uses external tools"
 license = "GPL-3.0-only"
 authors = ["AJ Slater <aj@slater.net>"]
@@ -42,7 +42,8 @@ rarfile = "^4.0"
 "ruamel.yaml" = "^0.18.5"
 termcolor = "^2.0.1"
 treestamps = "^1.0.1"
-Pillow = ">=9.5,<11.0"
+Pillow = ">=9.5"
+defusedxml = "^0.7.1"
 
 [tool.poetry.group.dev.dependencies]
 codespell = "^2.1.0"

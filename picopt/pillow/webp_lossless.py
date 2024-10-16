@@ -6,7 +6,7 @@ https://developers.google.com/speed/webp/docs/webp_lossless_bitstream_specificat
 """
 
 from io import BufferedReader, BytesIO
-from mmap import PROT_READ, mmap
+from mmap import ACCESS_READ, mmap
 from pathlib import Path
 
 from picopt.pillow.header import ImageHeader
@@ -23,7 +23,7 @@ def is_lossless(input_buffer: BytesIO | BufferedReader) -> bool:
     result = True
 
     buffer: BytesIO | mmap = (
-        mmap(input_buffer.fileno(), 0, prot=PROT_READ)
+        mmap(input_buffer.fileno(), 0, access=ACCESS_READ)
         if isinstance(input_buffer, BufferedReader)
         else input_buffer
     )

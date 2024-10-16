@@ -5,7 +5,6 @@ import shutil
 import traceback
 from multiprocessing.pool import ApplyResult, Pool
 from pathlib import Path
-from types import MappingProxyType
 
 from confuse.templates import AttrDict
 from termcolor import cprint
@@ -284,15 +283,13 @@ class Walk:
             result = self._handle_file(handler)
         except Exception as exc:
             traceback.print_exc()
-            apply_kwargs = MappingProxyType(
-                {
-                    "path": path_info.path,
-                    "convert": path_info.convert,
-                    "bytes_in": path_info.bytes_in(),
-                    "test": self._config.test,
-                    "exc": exc,
-                }
-            )
+            apply_kwargs = {
+                "path": path_info.path,
+                "bytes_in": path_info.bytes_in(),
+                "exc": exc,
+                "config": self._config,
+                "path_info": path_info,
+            }
             result = self._pool.apply_async(ReportStats, (), apply_kwargs)
         return result
 

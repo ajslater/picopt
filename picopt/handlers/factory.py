@@ -7,16 +7,12 @@ from typing import Any
 import pillow_jxl  # noqa F401
 from confuse.templates import AttrDict
 from PIL import Image, UnidentifiedImageError
-from PIL.JpegImagePlugin import JpegImageFile
-from PIL.PngImagePlugin import PngImageFile
-from PIL.TiffImagePlugin import XMP as TIFF_XMP_TAG
 from PIL.TiffImagePlugin import TiffImageFile
 from pillow_jxl.JpegXLImagePlugin import JXLImageFile
 from termcolor import cprint
 
 from picopt.formats import (
     LOSSLESS_FORMAT_STRS,
-    PNGINFO_XMP_KEY,
     TIFF_LOSSLESS_COMPRESSION,
     FileFormat,
 )
@@ -26,7 +22,6 @@ from picopt.handlers.svg import Svg
 from picopt.handlers.webp import WebPLossless
 from picopt.handlers.zip import Cbr, Cbz, EPub, Rar, Zip
 from picopt.path import PathInfo
-from picopt.pillow.jpeg_xmp import get_jpeg_xmp
 from picopt.pillow.webp_lossless import is_lossless
 
 ###################
@@ -40,27 +35,6 @@ _NON_PIL_HANDLERS: tuple[type[NonPILIdentifier], ...] = (
     Rar,
     EPub,
 )
-
-
-def _set_xmp(keep_metadata: bool, image: Image.Image, info: dict) -> None:
-    """Extract and set XMP info in the info dict."""
-    # Pillow's only extracts raw xmp data into the info dict sometimes for some formats.
-    # Pillow's support for writing xmp data is very different between PNG & WEBP.
-    if not keep_metadata or "xmp" in info:
-        return
-    try:
-        xmp = None
-        if image.format == JpegImageFile.format:
-            xmp = get_jpeg_xmp(image)  # type: ignore
-        elif image.format == PngImageFile.format:
-            xmp = info.get(PNGINFO_XMP_KEY)
-        if isinstance(image, TiffImageFile) and image.tag_v2:
-            # elif image.format == TiffImageFile.format:
-            xmp = image.tag_v2.get(TIFF_XMP_TAG)
-        if xmp:
-            info["xmp"] = xmp
-    except Exception:
-        cprint("Failed to extract xmp data:")
 
 
 def _extract_image_info(
@@ -82,18 +56,13 @@ def _extract_image_info(
         with Image.open(fp) as image:
             image_format_str = image.format
             if image_format_str:
-                info = image.info if keep_metadata else {}
+                # It's a rare thing if an info key is an int tuple?
+                info: dict[str, Any] = image.info if keep_metadata else {}  # type: ignore
                 animated = getattr(image, "is_animated", False)
                 info["animated"] = animated
                 if animated and (n_frames := getattr(image, "n_frames", None)):
                     info["n_frames"] = n_frames
-                try:
-                    _set_xmp(keep_metadata, image, info)
-                except Exception as exc:
-                    cprint(
-                        f"WARNING: Failed to extract xmp data for {path_info.full_name()}, {exc}",
-                        "yellow",
-                    )
+                # extract_info_for_webp(keep_metadata, info, image, path_info)
                 with suppress(AttributeError):
                     info["mpinfo"] = image.mpinfo  # type: ignore
         image.close()  # for animated images
@@ -105,7 +74,9 @@ def _extract_image_info(
 
 
 def _is_lossless(
-    image_format_str: str, path_info: PathInfo, info: Mapping[str, Any]
+    image_format_str: str,
+    path_info: PathInfo,
+    info: Mapping[str, Any],
 ) -> bool:
     """Determine if image format is lossless."""
     if image_format_str == WebPLossless.OUTPUT_FORMAT_STR:

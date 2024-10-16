@@ -127,23 +127,31 @@ class Handler(ABC):
             self.path_info.stat()
         self._input_file_formats = self.INPUT_FILE_FORMATS
 
+    def _prepare_info_webp(self):
+        """Transform info for webp."""
+        background = self.info.pop("background", None)
+        if isinstance(background, int):
+            # GIF background is an int.
+            rgb = _gif_palette_index_to_rgb(background)
+            self.info["background"] = (*rgb, 0)
+        # webp_convert_info_metadata(self.config, self.info)
+
+    def _prepare_info_png(self):
+        """Transform info for png."""
+        transparency = self.info.get("transparency")
+        if isinstance(transparency, int):
+            self.info.pop("transparency", None)
+        if xmp := self.info.get("xmp", None):
+            pnginfo = self.info.get("pnginfo", PngInfo())
+            pnginfo.add_text(PNGINFO_XMP_KEY, xmp, zip=True)
+            self.info["pnginfo"] = pnginfo
+
     def prepare_info(self, format_str) -> MappingProxyType[str, Any]:
         """Prepare an info dict for saving."""
         if format_str == WebPImageFile.format:
-            self.info.pop("background", None)
-            background = self.info.get("background")
-            if isinstance(background, int):
-                # GIF background is an int.
-                rgb = _gif_palette_index_to_rgb(background)
-                self.info["background"] = (*rgb, 0)
-        if format_str == PngImageFile.format:
-            transparency = self.info.get("transparency")
-            if isinstance(transparency, int):
-                self.info.pop("transparency", None)
-            if xmp := self.info.get("xmp", None):
-                pnginfo = self.info.get("pnginfo", PngInfo())
-                pnginfo.add_text(PNGINFO_XMP_KEY, xmp, zip=True)
-                self.info["pnginfo"] = pnginfo
+            self._prepare_info_webp()
+        elif format_str == PngImageFile.format:
+            self._prepare_info_png()
         if self.config.keep_metadata:
             info = self.info
         else:
