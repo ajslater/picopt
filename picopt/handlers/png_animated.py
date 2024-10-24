@@ -14,7 +14,7 @@ class PngAnimated(ImageAnimated):
     """Animated Png container."""
 
     OUTPUT_FORMAT_STR: str = Png.OUTPUT_FORMAT_STR
-    OUTPUT_FILE_FORMAT = FileFormat(OUTPUT_FORMAT_STR, True, True)
+    OUTPUT_FILE_FORMAT = FileFormat(OUTPUT_FORMAT_STR, lossless=True, animated=True)
     INPUT_FILE_FORMATS = frozenset(
         {OUTPUT_FILE_FORMAT, GifAnimated.OUTPUT_FILE_FORMAT}
         | CONVERTIBLE_ANIMATED_FILE_FORMATS,

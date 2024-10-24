@@ -75,10 +75,10 @@ def webp_convert_info_metadata(config, info):
 
 def get_jpeg_xmp(image: JpegImageFile) -> str | None:
     """Get raw jpeg xml from Pillow."""
-    # XXX This only seems to get some XMP data. xmp-tool finds more.
+    # This only seems to get some XMP data. xmp-tool finds more.
     xmp = None
     # Copied from PIL JpegImageFile
-    for segment, content in image.applist:  # type: ignore
+    for segment, content in image.applist:
         if segment == "APP1":
             sections = content.split(APP1_SECTION_DELIMETER)
             marker, xmp_tags = sections[:2]

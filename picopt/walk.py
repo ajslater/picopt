@@ -165,7 +165,7 @@ class Walk:
 
         results = []
         files = []
-        dir_path: Path = path_info.path  # type: ignore
+        dir_path: Path = path_info.path  # type: ignore[reportAssignmentType]
 
         for name in sorted(os.listdir(dir_path)):
             entry_path = dir_path / name
@@ -334,7 +334,13 @@ class Walk:
         for top_path in self._top_paths:
             dirpath = Treestamps.get_dir(top_path)
             is_case_sensitive = self._is_case_sensitive(dirpath)
-            path_info = PathInfo(dirpath, 0.0, True, is_case_sensitive, path=top_path)
+            path_info = PathInfo(
+                dirpath,
+                0.0,
+                convert=True,
+                is_case_sensitive=is_case_sensitive,
+                path=top_path,
+            )
             result = self.walk_file(path_info)
             if not result:
                 continue

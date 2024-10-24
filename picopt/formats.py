@@ -33,9 +33,9 @@ class FileFormat:
     animated: bool = False
 
 
-MPO_FILE_FORMAT = FileFormat(str(MpoImageFile.format), False, True)
+MPO_FILE_FORMAT = FileFormat(str(MpoImageFile.format), lossless=False, animated=True)
 SVG_FORMAT_STR = "SVG"
-TIFF_FILE_FORMAT = FileFormat(str(TiffImageFile.format), True, False)
+TIFF_FILE_FORMAT = FileFormat(str(TiffImageFile.format), lossless=True, animated=False)
 TIFF_LOSSLESS_COMPRESSION = frozenset(
     {
         None,
@@ -53,11 +53,8 @@ TIFF_LOSSLESS_COMPRESSION = frozenset(
         "zstd",
     }
 )
-# TIFF_LOSSY_COMPRESSION = frozenset({
-#    "jpeg", "webp"
-# })
 PNGINFO_XMP_KEY = "XML:com.adobe.xmp"
-PPM_FILE_FORMAT = FileFormat(str(PpmImageFile.format), True, False)
+PPM_FILE_FORMAT = FileFormat(str(PpmImageFile.format), lossless=True, animated=False)
 MODERN_CWEBP_FORMATS = frozenset({PPM_FILE_FORMAT, TIFF_FILE_FORMAT})
 MODERN_CWEBP_FORMAT_STRS = frozenset(
     sorted(fmt.format_str for fmt in MODERN_CWEBP_FORMATS)
@@ -100,7 +97,10 @@ CONVERTIBLE_FORMAT_STRS: frozenset[str] = frozenset(
 )
 
 CONVERTIBLE_FILE_FORMATS: frozenset[FileFormat] = frozenset(
-    {FileFormat(str(format_str), True, False) for format_str in CONVERTIBLE_FORMAT_STRS}
+    {
+        FileFormat(str(format_str), lossless=True, animated=False)
+        for format_str in CONVERTIBLE_FORMAT_STRS
+    }
 )
 _CONVERTABLE_PIL_ANIMATED_IMAGE_FILES = (
     #################################
@@ -116,7 +116,7 @@ CONVERTIBLE_ANIMATED_FORMAT_STRS: frozenset[str] = frozenset(
 )
 CONVERTIBLE_ANIMATED_FILE_FORMATS = frozenset(
     {
-        FileFormat(str(format_str), True, True)
+        FileFormat(str(format_str), lossless=True, animated=True)
         for format_str in CONVERTIBLE_ANIMATED_FORMAT_STRS
     }
 )

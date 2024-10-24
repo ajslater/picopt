@@ -62,4 +62,4 @@ class TestCLI:
         try:
             cli.main()
         except SystemExit as exc:
-            assert exc.code == 1  # noqa PT017
+            assert exc.code == 1  # noqa: PT017

@@ -21,7 +21,8 @@ class ImageHandler(Handler, metaclass=ABCMeta):
     EMPTY_EXEC_ARGS: tuple[str, tuple[str, ...]] = ("", ())
 
     def optimize(self) -> BinaryIO:
-        """Use the correct optimizing functions in sequence.
+        """
+        Use the correct optimizing functions in sequence.
 
         And report back statistics.
         """

@@ -19,7 +19,7 @@ class Jpeg(ImageHandler):
     """JPEG format class."""
 
     OUTPUT_FORMAT_STR = str(JpegImageFile.format)
-    OUTPUT_FILE_FORMAT = FileFormat(OUTPUT_FORMAT_STR, False, False)
+    OUTPUT_FILE_FORMAT = FileFormat(OUTPUT_FORMAT_STR, lossless=False, animated=False)
     INPUT_FILE_FORMATS = frozenset({OUTPUT_FILE_FORMAT})
     PROGRAMS = (("mozjpeg", "jpegtran", "pil2jpeg"),)
     _JPEGTRAN_ARGS_PREFIX = ("-optimize", "-progressive")
@@ -90,7 +90,7 @@ class Jpeg(ImageHandler):
         input_buffer: BinaryIO,
     ) -> BinaryIO:
         """Convert MPOs with primary images to jpeg."""
-        # XXX Much work because PIL doesn't have direct unprocessed file bytes access.
+        # Much work because PIL doesn't have direct unprocessed file bytes access.
         if self.input_file_format != MPO_FILE_FORMAT:
             return input_buffer
 

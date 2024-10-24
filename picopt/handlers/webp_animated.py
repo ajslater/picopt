@@ -21,7 +21,9 @@ class WebPAnimatedBase(ImageAnimated):
 class WebPAnimatedLossless(WebPAnimatedBase):
     """Animated Lossless WebP Handler."""
 
-    OUTPUT_FILE_FORMAT = FileFormat(WebPAnimatedBase.OUTPUT_FORMAT_STR, True, True)
+    OUTPUT_FILE_FORMAT = FileFormat(
+        WebPAnimatedBase.OUTPUT_FORMAT_STR, lossless=True, animated=True
+    )
     INPUT_FILE_FORMATS = frozenset(
         {*PngAnimated.INPUT_FILE_FORMATS, OUTPUT_FILE_FORMAT}
     )

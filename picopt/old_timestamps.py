@@ -47,7 +47,7 @@ class OldTimestamps:
                 old_timestamp_path = root_path / OLD_TIMESTAMPS_NAME
                 self._add_old_timestamp(old_timestamp_path)
                 # Picopt is the only program that used old treestamps
-                self._timestamps._consumed_paths.add(old_timestamp_path)  # noqa SLF001
+                self._timestamps._consumed_paths.add(old_timestamp_path)  # noqa: SLF001
             for dirname in dirnames:
                 self._import_old_child_timestamps(root_path / dirname)
 

@@ -126,7 +126,7 @@ class Rar(Zip):
             file_format = cls.INPUT_FILE_FORMAT
         return file_format
 
-    def _get_archive(self) -> RarFile:  # type: ignore
+    def _get_archive(self) -> RarFile:  # type: ignore[reportIncompatibleMethodOverride]
         """Use the zipfile builtin for this archive."""
         if is_rarfile(self.original_path):
             archive = RarFile(self.original_path, mode="r")
@@ -135,7 +135,7 @@ class Rar(Zip):
             raise ValueError(msg)
         return archive
 
-    def _set_comment(self, comment: str | None) -> None:  # type: ignore
+    def _set_comment(self, comment: str | None) -> None:  # type: ignore[reportIncompatibleMethodOverride]
         """Set the comment from the archive."""
         if comment:
             self.comment = comment.encode()

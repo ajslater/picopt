@@ -49,23 +49,22 @@ def _extract_image_info(
             image.verify()
         image.close()  # for animated images
         with suppress(AttributeError):
-            fp.close()  # type: ignore
+            fp.close()  # type: ignore[reportAttributeAccessIssue]
         fp = path_info.path_or_buffer()
         with Image.open(fp) as image:
             image_format_str = image.format
             if image_format_str:
                 # It's a rare thing if an info key is an int tuple?
-                info: dict[str, Any] = image.info if keep_metadata else {}  # type: ignore
+                info: dict[str, Any] = image.info if keep_metadata else {}  # type: ignore[reportAssignmentType]
                 animated = getattr(image, "is_animated", False)
                 info["animated"] = animated
                 if animated and (n_frames := getattr(image, "n_frames", None)):
                     info["n_frames"] = n_frames
-                # extract_info_for_webp(keep_metadata, info, image, path_info)
                 with suppress(AttributeError):
-                    info["mpinfo"] = image.mpinfo  # type: ignore
+                    info["mpinfo"] = image.mpinfo  # type: ignore[reportAttributeAccessIssue]
         image.close()  # for animated images
         with suppress(AttributeError):
-            fp.close()  # type: ignore
+            fp.close()  # type: ignore[reportAttributeAccessIssue]
     except UnidentifiedImageError:
         pass
     return image_format_str, info

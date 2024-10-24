@@ -46,7 +46,9 @@ class Handler(ABC):
     """FileType superclass for image and container formats."""
 
     OUTPUT_FORMAT_STR: str = "unimplemented"
-    OUTPUT_FILE_FORMAT: FileFormat = FileFormat(OUTPUT_FORMAT_STR, False, False)
+    OUTPUT_FILE_FORMAT: FileFormat = FileFormat(
+        OUTPUT_FORMAT_STR, lossless=False, animated=False
+    )
     INPUT_FILE_FORMATS: frozenset[FileFormat] = frozenset({OUTPUT_FILE_FORMAT})
     CONVERT_FROM_FORMAT_STRS: frozenset[str] = frozenset()
     INTERNAL: str = "internal"
@@ -134,7 +136,6 @@ class Handler(ABC):
             # GIF background is an int.
             rgb = _gif_palette_index_to_rgb(background)
             self.info["background"] = (*rgb, 0)
-        # webp_convert_info_metadata(self.config, self.info)
 
     def _prepare_info_png(self):
         """Transform info for png."""
@@ -176,8 +177,8 @@ class Handler(ABC):
                 input_buffer.seek(0)
                 input_tmp_file.write(input_buffer.read())
 
-        subprocess.run(  # noqa S603
-            args,  # type: ignore
+        subprocess.run(  # noqa: S603
+            args,  # type: ignore[reportArgumentType]
             check=True,
             text=True,
             stdout=subprocess.DEVNULL,
