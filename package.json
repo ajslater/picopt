@@ -3,8 +3,8 @@
   "type": "module",
   "scripts": {
     "check": "remark . --quiet",
-    "fix": "eslint --fix . && prettier --write .",
-    "lint": "eslint . && prettier --check .",
+    "fix": "eslint_d --fix . && prettier --write .",
+    "lint": "eslint_d . && prettier --check .",
     "remark-check": "remark .",
     "remark-fix": "remark . --output"
   },
@@ -39,6 +39,7 @@
     }
   },
   "devDependencies": {
+    "@eslint-community/eslint-plugin-eslint-comments": "^4.4.1",
     "@eslint/eslintrc": "^3.0.1",
     "@fsouza/prettierd": "^0.25.2",
     "@prettier/plugin-xml": "^3.1.0",
@@ -47,10 +48,12 @@
     "eslint-plugin-array-func": "^5.0.1",
     "eslint-plugin-compat": "^6.0.0",
     "eslint-plugin-depend": "^0.11.0",
+    "eslint-plugin-import": "^2.31.0",
     "eslint-plugin-jsonc": "^2.13.0",
     "eslint-plugin-markdown": "^5.1.0",
     "eslint-plugin-no-constructor-bind": "^2.0.4",
     "eslint-plugin-no-secrets": "^1.0.2",
+    "eslint-plugin-no-unsanitized": "^4.1.2",
     "eslint-plugin-optimize-regex": "^1.2.1",
     "eslint-plugin-prettier": "^5.2.1",
     "eslint-plugin-promise": "^7.1.0",
