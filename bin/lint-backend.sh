@@ -19,7 +19,6 @@ fi
 ##### Javascript, JSON, Markdown, YAML #####
 ############################################
 npm run lint
-npm run remark-check
 
 ################################
 ###### Docker, Shell, Etc ######

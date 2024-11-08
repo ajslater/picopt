@@ -4,9 +4,7 @@
   "scripts": {
     "check": "remark . --quiet",
     "fix": "eslint_d --fix . && prettier --write .",
-    "lint": "eslint_d . && prettier --check .",
-    "remark-check": "remark .",
-    "remark-fix": "remark . --output"
+    "lint": "eslint_d . && prettier --check ."
   },
   "prettier": {
     "plugins": [
@@ -26,31 +24,19 @@
       }
     ]
   },
-  "remarkConfig": {
-    "plugins": [
-      "gfm",
-      "preset-lint-consistent",
-      "preset-lint-markdown-style-guide",
-      "preset-lint-recommended",
-      "preset-prettier"
-    ],
-    "settings": {
-      "ignorePath": ".gitignore"
-    }
-  },
   "devDependencies": {
     "@eslint-community/eslint-plugin-eslint-comments": "^4.4.1",
     "@eslint/eslintrc": "^3.0.1",
+    "@eslint/json": "^0.6.0",
+    "@eslint/markdown": "^6.2.1",
     "@fsouza/prettierd": "^0.25.2",
     "@prettier/plugin-xml": "^3.1.0",
     "eslint": "^9.7.0",
     "eslint-config-prettier": "^9.0.0",
     "eslint-plugin-array-func": "^5.0.1",
     "eslint-plugin-compat": "^6.0.0",
-    "eslint-plugin-depend": "^0.11.0",
+    "eslint-plugin-depend": "^0.12.0",
     "eslint-plugin-import": "^2.31.0",
-    "eslint-plugin-jsonc": "^2.13.0",
-    "eslint-plugin-markdown": "^5.1.0",
     "eslint-plugin-no-constructor-bind": "^2.0.4",
     "eslint-plugin-no-secrets": "^1.0.2",
     "eslint-plugin-no-unsanitized": "^4.1.2",
@@ -69,13 +55,6 @@
     "prettier": "^3.0.0",
     "prettier-plugin-packagejson": "^2.5.1",
     "prettier-plugin-sh": "^0.14.0",
-    "prettier-plugin-toml": "^2.0.1",
-    "remark": "^15.0.1",
-    "remark-cli": "^12.0.1",
-    "remark-gfm": "^4.0.0",
-    "remark-preset-lint-consistent": "^6.0.0",
-    "remark-preset-lint-markdown-style-guide": "^6.0.0",
-    "remark-preset-lint-recommended": "^7.0.0",
-    "remark-preset-prettier": "^2.0.1"
+    "prettier-plugin-toml": "^2.0.1"
   }
 }
