@@ -1,4 +1,4 @@
-FROM ubuntu:mantic
+FROM ubuntu:oracular
 
 ENV DEBIAN_FRONTEND noninteractive
 
