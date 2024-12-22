@@ -35,10 +35,8 @@ class OldTimestamps:
             self._import_old_parent_timestamps(path.parent)
 
     def _import_old_child_timestamps(self, path: Path) -> None:
-        if (
-            is_path_ignored(self._config, path)
-            or not self._config.symlinks
-            and path.is_symlink()
+        if is_path_ignored(self._config, path) or (
+            not self._config.symlinks and path.is_symlink()
         ):
             return
         for root, dirnames, filenames in os.walk(path):
