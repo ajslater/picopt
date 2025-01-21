@@ -32,7 +32,7 @@ jobs:
           root: .
   deploy:
     docker:
-      - image: cimg/python:3.11
+      - image: cimg/python:3.13
     steps:
       - attach_workspace:
           at: .
