@@ -18,7 +18,7 @@ RUN apt-get update \
 RUN npm install svgo
 
 WORKDIR /
-COPY --chown=circleci:circleci in bin
+COPY --chown=circleci:circleci bin bin
 COPY --chown=circleci:circleci packages packages
 RUN bin/mozjpeg.sh
 # hadolint ignore=DL3059
