@@ -1,6 +1,5 @@
 """Walk the directory trees and files and call the optimizers."""
 
-import os
 import shutil
 import traceback
 from multiprocessing.pool import ApplyResult, Pool
@@ -167,7 +166,7 @@ class Walk:
         files = []
         dir_path: Path = path_info.path  # type: ignore[reportAssignmentType]
 
-        for name in sorted(os.listdir(dir_path)):
+        for name in sorted(dir_path.iterdir()):
             entry_path = dir_path / name
             if entry_path.is_dir():
                 path_info = PathInfo(

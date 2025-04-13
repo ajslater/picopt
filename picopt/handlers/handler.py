@@ -22,7 +22,7 @@ from picopt.stats import ReportStats
 SAVE_INFO_KEYS: frozenset[str] = frozenset(
     {"n_frames", "loop", "duration", "background"}
 )
-WORKING_PATH_TRANS_TABLE = str.maketrans({c: "_" for c in " /"})
+WORKING_PATH_TRANS_TABLE = str.maketrans(dict.fromkeys(" /", "_"))
 
 
 def _gif_palette_index_to_rgb(

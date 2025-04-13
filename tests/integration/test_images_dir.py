@@ -10,10 +10,10 @@ from tests.integration.base_test_images import BaseTestImagesDir
 __all__ = ()
 FNS = {
     "07themecamplist.pdf": (93676, 93676, ("pdf", 93676), ("pdf", 93676)),
-    "test_animated_gif.gif": (16383, 16358, ("png", 13389), ("webp", 11894)),
-    "test_animated_png.png": (63435, 63435, ("png", 63435), ("webp", 53430)),
-    "test_animated_webp.webp": (13610, 12178, ("webp", 12178), ("webp", 12178)),
-    "test_png.png": (7967, 4149, ("png", 4149), ("webp", 3870)),
+    "test_animated_gif.gif": (16383, 16358, ("png", 13564), ("webp", 11892)),
+    "test_animated_png.png": (63435, 63435, ("png", 63435), ("webp", 53388)),
+    "test_animated_webp.webp": (13610, 12174, ("webp", 12174), ("webp", 12174)),
+    "test_png.png": (7967, 4150, ("png", 4150), ("webp", 3870)),
     "test_pre-optimized_jpg.jpg": (
         22664,
         22664,
@@ -29,24 +29,24 @@ FNS = {
         ("webp", 3798),
         ("webp", 3798),
     ),
-    "mri.tif": (230578, 230578, ("png", 131743), ("webp", 114740)),
+    "mri.tif": (230578, 230578, ("png", 131098), ("webp", 116954)),
     "test_webp_lossy.webp": (2764, 2764, ("webp", 2764), ("webp", 2764)),
-    "test_bmp.bmp": (141430, 141430, ("png", 67236), ("webp", 47524)),
+    "test_bmp.bmp": (141430, 141430, ("png", 67236), ("webp", 47436)),
     "test_png_16rgba.png": (3435, 2097, ("png", 2097), ("webp", 1142)),
-    "test_pnm.pnm": (27661, 27661, ("png", 15510), ("webp", 12808)),
+    "test_pnm.pnm": (27661, 27661, ("png", 15510), ("webp", 12758)),
     "test_jpg.jpg": (97373, 87913, ("jpg", 87913), ("jpg", 87913)),
 }
 if platform.system() == "Darwin":
     FNS.update(
         {
-            "test_gif.gif": (138952, 138944, ("png", 112137), ("webp", 107924)),
+            "test_gif.gif": (138952, 138944, ("png", 112290), ("webp", 108058)),
             "test_pre-optimized_png.png": (
                 256572,
                 256572,
                 ("png", 256572),
-                ("webp", 197726),
+                ("webp", 197088),
             ),
-            "eight.tif": (59640, 59640, ("png", 30585), ("webp", 24974)),
+            "eight.tif": (59640, 59640, ("png", 30585), ("webp", 25012)),
         }
     )
 else:

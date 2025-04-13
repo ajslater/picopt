@@ -12,7 +12,10 @@ from termcolor import cprint
 from picopt.path import CONTAINER_PATH_DELIMETER, PathInfo
 
 if TYPE_CHECKING:
-    from termcolor._types import Attribute, Color
+    from termcolor._types import (
+        Attribute,  # type: ignore[reportPrivateImportUsage]
+        Color,  # type: ignore[reportPrivateImportUsage]
+    )
 
 
 @dataclass
