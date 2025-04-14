@@ -1,7 +1,7 @@
 #!/bin/bash
 # Update python and npm dependencies
 set -euo pipefail
-poetry update
-poetry show --outdated
+uv sync --no-install-project --all-extras --upgrade
+uv tree --outdated
 npm update
 npm outdated

@@ -92,7 +92,7 @@ export default [
       "dist/",
       "node_modules/",
       "package-lock.json",
-      "poetry.lock",
+      "uv.lock",
       "test-results/",
       "typings/",
     ],

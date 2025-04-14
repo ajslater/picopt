@@ -8,4 +8,4 @@ __pycache__
 /node_modules
 /test-results
 package-lock.json
-poetry.lock
+uv.lock

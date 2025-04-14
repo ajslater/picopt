@@ -1,5 +1,9 @@
 # 📰 Picopt News
 
+## v4.0.5
+
+- uv build system
+
 ## v4.0.4
 
 - Pillow 11 support.
