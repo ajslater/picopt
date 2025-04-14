@@ -11,8 +11,7 @@ dependencies = [
   "python-dateutil<3.0,>=2.8",
   "rarfile<5.0,>=4.0",
   "ruamel-yaml<1.0.0,>=0.18.5",
-  "termcolor<3.0.0,>=2.0.1",
-  "treestamps<2.0.0,>=1.0.1",
+  "treestamps<2.0.0,>=1.2.0",
   "Pillow>=9.5",
   "defusedxml<1.0.0,>=0.7.1",
 ]
@@ -40,6 +39,7 @@ documentation = "https://github.com/ajslater/picopt"
 
 [project.scripts]
 picopt = "picopt.cli:main"
+
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"

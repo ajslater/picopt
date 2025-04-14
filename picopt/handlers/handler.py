@@ -267,7 +267,7 @@ class Handler(ABC):
         try:
             bytes_in = self.path_info.bytes_in()
             bytes_out = self.get_buffer_len(final_data_buffer)
-            if not self.config.test and (
+            if not self.config.dry_run and (
                 (bytes_out > 0) and ((bytes_out < bytes_in) or self.config.bigger)
             ):
                 return_data = self._cleanup_after_optimize_save_new(final_data_buffer)

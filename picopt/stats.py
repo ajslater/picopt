@@ -44,7 +44,7 @@ class ReportStats(ReportStatBase):
         """Initialize required instance variables."""
         # Don't store these large data structs, just tidbits.
         self.bigger: bool = config.bigger if config else False
-        self.test: bool = config.test if config else False
+        self.test: bool = config.dry_run if config else False
         self.convert: bool = path_info.convert if path_info else False
         self.container_paths: tuple[str, ...] = (
             tuple(path_info.container_paths) if path_info else ()
@@ -127,12 +127,12 @@ class Totals:
     ##########
     def _report_bytes_in(self) -> None:
         """Report Totals if there were bytes in."""
-        if not self._config.verbose and not self._config.test:
+        if not self._config.verbose and not self._config.dry_run:
             return
         bytes_saved = self.bytes_in - self.bytes_out
         percent_bytes_saved = bytes_saved / self.bytes_in * 100
         msg = ""
-        if self._config.test:
+        if self._config.dry_run:
             if percent_bytes_saved > 0:
                 msg += "Could save"
             elif percent_bytes_saved == 0:
@@ -148,8 +148,8 @@ class Totals:
         natural_saved = naturalsize(bytes_saved)
         msg += f" a total of {natural_saved} or {percent_bytes_saved:.2f}%"
         cprint(msg)
-        if self._config.test:
-            cprint("Test run did not change any files.")
+        if self._config.dry_run:
+            cprint("Dry run did not change any files.")
 
     def report(self) -> None:
         """Report the total number and percent of bytes saved."""
