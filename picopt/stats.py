@@ -3,19 +3,12 @@
 from dataclasses import dataclass
 from pathlib import Path
 from subprocess import CalledProcessError
-from typing import TYPE_CHECKING
 
 from confuse import AttrDict
 from humanize import naturalsize
 from termcolor import cprint
 
 from picopt.path import CONTAINER_PATH_DELIMETER, PathInfo
-
-if TYPE_CHECKING:
-    from termcolor._types import (
-        Attribute,  # type: ignore[reportPrivateImportUsage]
-        Color,  # type: ignore[reportPrivateImportUsage]
-    )
 
 
 @dataclass
@@ -100,14 +93,14 @@ class ReportStats(ReportStatBase):
         attrs = []
         if self.exc:
             report = self._report_error()
-            color: Color = "red"
+            color = "red"
         else:
             report = self._report_saved()
-            color: Color = "cyan" if self.convert else "white"
+            color = "cyan" if self.convert else "white"
 
             if self.saved <= 0:
-                color: Color = "blue"
-                attrs: list[Attribute] = ["bold"]
+                color = "blue"
+                attrs = ["bold"]
 
         cprint(report, color, attrs=attrs)
 

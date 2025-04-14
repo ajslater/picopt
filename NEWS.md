@@ -3,6 +3,7 @@
 ## v4.0.5
 
 - uv build system
+- updated treestamps
 
 ## v4.0.4
 
