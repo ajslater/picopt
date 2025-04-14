@@ -8,7 +8,6 @@ from picopt.handlers.zip import Cbz, Zip
 from tests import IMAGES_DIR, get_test_dir
 
 __all__ = ()  # hides module from pydocstring
-TYPE_NAME = "png"
 TMP_ROOT = get_test_dir()
 JPEG_SRC = IMAGES_DIR / "test_jpg.jpg"
 
@@ -29,7 +28,7 @@ class TestCLI:
 
     def test_get_arguments(self) -> None:
         """Test get arguments."""
-        args = ("picopt", "-rqc", "PNG,WEBP", "-x", "CBZ,ZIP", "-bTLM", str(TMP_ROOT))
+        args = ("picopt", "-rqc", "PNG,WEBP", "-x", "CBZ,ZIP", "-bdLM", str(TMP_ROOT))
         arguments = cli.get_arguments(args)
         arguments = arguments.picopt
         assert arguments.verbose == 0
@@ -42,7 +41,7 @@ class TestCLI:
         assert arguments.symlinks
         assert arguments.bigger
         assert not arguments.timestamps
-        assert arguments.test
+        assert arguments.dry_run
         assert arguments.list_only
         assert not arguments.keep_metadata
         assert arguments.paths[0] == str(TMP_ROOT)

@@ -4,6 +4,8 @@
 
 - uv build system
 - updated treestamps
+- animated png optimized with oxipng
+- -T --test option becomes -d --dry-run
 
 ## v4.0.4
 
