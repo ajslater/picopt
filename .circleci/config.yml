@@ -36,9 +36,8 @@ jobs:
     steps:
       - attach_workspace:
           at: .
-      - run: uv publish
       - run:
-          command: bin/publish-pypi.sh
+          command: uv publish
           name: Publish Package to PyPi
 version: 2.1
 workflows:
