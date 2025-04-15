@@ -34,8 +34,7 @@ from picopt.formats import (
 from picopt.handlers.gif import Gif, GifAnimated
 from picopt.handlers.handler import Handler
 from picopt.handlers.jpeg import Jpeg
-from picopt.handlers.png import Png
-from picopt.handlers.png_animated import PngAnimated
+from picopt.handlers.png import Png, PngAnimated
 from picopt.handlers.svg import Svg
 from picopt.handlers.webp import WebPLossless
 from picopt.handlers.webp_animated import WebPAnimatedLossless

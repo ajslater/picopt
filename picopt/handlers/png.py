@@ -1,34 +1,27 @@
 """PNG format."""
 
+from abc import ABC
 from io import BufferedReader, BytesIO
 from types import MappingProxyType
 from typing import Any
 
 import oxipng
-from PIL.GifImagePlugin import GifImageFile
 from PIL.PngImagePlugin import PngImageFile
 from termcolor import cprint
 
-from picopt.formats import CONVERTIBLE_FORMAT_STRS, FileFormat
+from picopt.formats import (
+    CONVERTIBLE_ANIMATED_FORMAT_STRS,
+    CONVERTIBLE_FORMAT_STRS,
+    FileFormat,
+)
+from picopt.handlers.gif import Gif, GifAnimated
 from picopt.handlers.image import ImageHandler
 from picopt.pillow.png_bit_depth import png_bit_depth
 
 
-class Png(ImageHandler):
-    """PNG format class."""
+class PngBase(ImageHandler, ABC):
+    """Abstract image handler that uses OxiPng."""
 
-    OUTPUT_FORMAT_STR = str(PngImageFile.format)
-    OUTPUT_FILE_FORMAT = FileFormat(OUTPUT_FORMAT_STR, lossless=True, animated=False)
-    INPUT_FILE_FORMATS = frozenset({OUTPUT_FILE_FORMAT})
-    CONVERT_FROM_FORMAT_STRS = frozenset(
-        CONVERTIBLE_FORMAT_STRS | {str(GifImageFile.format)}
-    )
-    PROGRAMS = (
-        ("pil2png",),
-        ("internal_oxipng",),
-        ("pngout",),
-    )
-    PIL2_KWARGS = MappingProxyType({"optimize": True})
     _OXIPNG_KWARGS: MappingProxyType[str, Any] = MappingProxyType(
         {
             "level": 3,
@@ -43,8 +36,8 @@ class Png(ImageHandler):
             "deflate": oxipng.Deflaters.zopfli(15),
         }
     )
-    _PNGOUT_ARGS: tuple[str, ...] = ("-", "-", "-force", "-y", "-q")
-    _PNGOUT_DEPTH_MAX = 8
+    PROGRAMS = (("pil2png",), ("internal_oxipng",))
+    PIL2_KWARGS = MappingProxyType({"optimize": True})
 
     def internal_oxipng(
         self, _exec_args: tuple[str, ...], input_buffer: BufferedReader | BytesIO
@@ -61,6 +54,23 @@ class Png(ImageHandler):
         with input_buffer:
             result = oxipng.optimize_from_memory(input_buffer.read(), **opts)
         return BytesIO(result)
+
+
+class Png(PngBase):
+    """PNG format class."""
+
+    OUTPUT_FORMAT_STR = str(PngImageFile.format)
+    OUTPUT_FILE_FORMAT = FileFormat(OUTPUT_FORMAT_STR, lossless=True, animated=False)
+    INPUT_FILE_FORMATS = frozenset({OUTPUT_FILE_FORMAT})
+    CONVERT_FROM_FORMAT_STRS = frozenset(
+        CONVERTIBLE_FORMAT_STRS | {Gif.OUTPUT_FORMAT_STR}
+    )
+    PROGRAMS = (
+        *PngBase.PROGRAMS,
+        ("pngout",),
+    )
+    _PNGOUT_ARGS: tuple[str, ...] = ("-", "-", "-force", "-y", "-q")
+    _PNGOUT_DEPTH_MAX = 8
 
     def pngout(
         self,
@@ -79,3 +89,14 @@ class Png(ImageHandler):
         opts = ("-k1",) if self.config.keep_metadata else ("-k0",)
         args = (*exec_args, *self._PNGOUT_ARGS, *opts)
         return self.run_ext(args, input_buffer)
+
+
+class PngAnimated(PngBase):
+    """Animated Png container."""
+
+    OUTPUT_FORMAT_STR: str = Png.OUTPUT_FORMAT_STR
+    OUTPUT_FILE_FORMAT = FileFormat(OUTPUT_FORMAT_STR, lossless=True, animated=True)
+    INPUT_FILE_FORMATS = frozenset({OUTPUT_FILE_FORMAT})
+    CONVERT_FROM_FORMAT_STRS = frozenset(
+        CONVERTIBLE_ANIMATED_FORMAT_STRS | {GifAnimated.OUTPUT_FORMAT_STR}
+    )

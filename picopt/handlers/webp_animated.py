@@ -6,7 +6,7 @@ from PIL.WebPImagePlugin import WebPImageFile
 
 from picopt.formats import FileFormat
 from picopt.handlers.image_animated import ImageAnimated
-from picopt.handlers.png_animated import PngAnimated
+from picopt.handlers.png import PngAnimated
 from picopt.handlers.webp import WebPBase
 
 
