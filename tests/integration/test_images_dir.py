@@ -10,8 +10,8 @@ from tests.integration.base_test_images import BaseTestImagesDir
 __all__ = ()
 FNS = {
     "07themecamplist.pdf": (93676, 93676, ("pdf", 93676), ("pdf", 93676)),
-    "test_animated_gif.gif": (16383, 16358, ("png", 13564), ("webp", 11892)),
-    "test_animated_png.png": (63435, 63435, ("png", 63435), ("webp", 53388)),
+    "test_animated_gif.gif": (16383, 16358, ("png", 24255), ("webp", 11892)),
+    "test_animated_png.png": (63435, 63058, ("png", 63058), ("webp", 53388)),
     "test_animated_webp.webp": (13610, 12174, ("webp", 12174), ("webp", 12174)),
     "test_png.png": (7967, 4150, ("png", 4150), ("webp", 3870)),
     "test_pre-optimized_jpg.jpg": (
@@ -29,7 +29,7 @@ FNS = {
         ("webp", 3798),
         ("webp", 3798),
     ),
-    "mri.tif": (230578, 230578, ("png", 131098), ("webp", 116954)),
+    "mri.tif": (230578, 230578, ("png", 129479), ("webp", 116954)),
     "test_webp_lossy.webp": (2764, 2764, ("webp", 2764), ("webp", 2764)),
     "test_bmp.bmp": (141430, 141430, ("png", 67236), ("webp", 47436)),
     "test_png_16rgba.png": (3435, 2097, ("png", 2097), ("webp", 1142)),
@@ -95,7 +95,7 @@ class TestImagesDir(BaseTestImagesDir):
         """Test convert to PNG."""
         args = (
             PROGRAM_NAME,
-            "-rvvx",
+            "-rvvbx",
             "BMP,PPM,SVG,TIFF",
             "-c",
             "PNG",
