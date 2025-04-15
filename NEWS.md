@@ -1,11 +1,12 @@
 # 📰 Picopt News
 
-## v4.0.5
+## v4.1.0
 
-- uv build system
-- updated treestamps
-- animated png optimized with oxipng
 - -T --test option becomes -d --dry-run
+- Fix tif & animated gifs not converted to pngs when asked.
+- animated pngs better optimized with oxipng
+- updated treestamps
+- uv build system
 
 ## v4.0.4
 

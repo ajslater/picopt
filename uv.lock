@@ -368,7 +368,7 @@ wheels = [
 
 [[package]]
 name = "picopt"
-version = "4.0.5"
+version = "4.1.0"
 source = { editable = "." }
 dependencies = [
     { name = "confuse" },

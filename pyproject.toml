@@ -15,7 +15,7 @@ dependencies = [
   "Pillow>=9.5",
   "defusedxml<1.0.0,>=0.7.1",
 ]
-version = "4.0.5"
+version = "4.1.0"
 description = "A multi format lossless image optimizer that uses external tools"
 readme = "README.md"
 keywords = ["image", "png", "jpg", "cbz", "cbr"]
