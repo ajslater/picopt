@@ -36,8 +36,9 @@ class ImageHandler(Handler, metaclass=ABCMeta):
 
         image_buffer: BinaryIO = self.path_info.fp_or_buffer()
 
-        for func, exec_args in stages.items():
-            new_image_buffer: BinaryIO = getattr(self, func)(exec_args, image_buffer)
+        for func_name, exec_args in stages.items():
+            func = getattr(self, func_name)
+            new_image_buffer: BinaryIO = func(exec_args, image_buffer)
             if image_buffer != new_image_buffer:
                 image_buffer.close()
             image_buffer = new_image_buffer
@@ -53,6 +54,8 @@ class ImageHandler(Handler, metaclass=ABCMeta):
     ) -> BytesIO | BufferedReader:
         """Use PIL to save the image."""
         if self.input_file_format in self._input_file_formats:
+            # if we're already in an acceptable format we don't need to use PIL to
+            # convert
             return input_buffer
         if format_str is None:
             format_str = self.OUTPUT_FORMAT_STR
