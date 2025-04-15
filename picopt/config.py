@@ -456,7 +456,7 @@ def _set_timestamps(config: Subview) -> None:
     """Set the timestamps attribute."""
     timestamps = (
         config["timestamps"].get(bool)
-        and not config["test"].get(bool)
+        and not config["dry_run"].get(bool)
         and not config["list_only"].get(bool)
     )
     config["timestamps"].set(timestamps)
