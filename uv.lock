@@ -3,6 +3,15 @@ revision = 1
 requires-python = ">=3.10, <4.0"
 
 [[package]]
+name = "asttokens"
+version = "3.0.0"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/4a/e7/82da0a03e7ba5141f05cce0d302e6eed121ae055e0456ca228bf693984bc/asttokens-3.0.0.tar.gz", hash = "sha256:0dcd8baa8d62b0c1d118b399b2ddba3c4aff271d0d7a9e0d4c1681c79035bbc7", size = 61978 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/25/8a/c46dcc25341b5bce5472c718902eb3d38600a903b14fa6aeecef3f21a46f/asttokens-3.0.0-py3-none-any.whl", hash = "sha256:e3078351a059199dd5138cb1c706e6430c05eff2ff136af5eb4790f9d28932e2", size = 26918 },
+]
+
+[[package]]
 name = "click"
 version = "8.1.8"
 source = { registry = "https://pypi.org/simple" }
@@ -128,6 +137,15 @@ wheels = [
 ]
 
 [[package]]
+name = "executing"
+version = "2.2.0"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/91/50/a9d80c47ff289c611ff12e63f7c5d13942c65d68125160cefd768c73e6e4/executing-2.2.0.tar.gz", hash = "sha256:5d108c028108fe2551d1a7b2e8b713341e2cb4fc0aa7dcf966fa4327a5226755", size = 978693 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/7b/8f/c4d9bafc34ad7ad5d8dc16dd1347ee0e507a52c3adb6bfa8887e1c6a26ba/executing-2.2.0-py2.py3-none-any.whl", hash = "sha256:11387150cad388d62750327a53d3339fad4888b39a6fe233c3afbb54ecffd3aa", size = 26702 },
+]
+
+[[package]]
 name = "greenlet"
 version = "3.1.1"
 source = { registry = "https://pypi.org/simple" }
@@ -201,6 +219,21 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/e0/84/ae8e64a6ffe3291105e9688f4e28fa65eba7924e0fe6053d85ca00556385/humanize-4.12.2.tar.gz", hash = "sha256:ce0715740e9caacc982bb89098182cf8ded3552693a433311c6a4ce6f4e12a2c", size = 80871 }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/55/c7/6f89082f619c76165feb633446bd0fee32b0e0cbad00d22480e5aea26ade/humanize-4.12.2-py3-none-any.whl", hash = "sha256:e4e44dced598b7e03487f3b1c6fd5b1146c30ea55a110e71d5d4bca3e094259e", size = 128305 },
+]
+
+[[package]]
+name = "icecream"
+version = "2.1.4"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "asttokens" },
+    { name = "colorama" },
+    { name = "executing" },
+    { name = "pygments" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/78/5e/9f41831f032b9ce456c919c4989952562fcc2b0eb8c038080c24ce20d6cd/icecream-2.1.4.tar.gz", hash = "sha256:58755e58397d5350a76f25976dee7b607f5febb3c6e1cddfe6b1951896e91573", size = 15872 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/57/1d/43ef7a6875190e6745ffcd1b12c7aaa7efed082897401e311ee1cd75c8b2/icecream-2.1.4-py3-none-any.whl", hash = "sha256:7bb715f69102cae871b3a361c3b656536db02cfcadac9664c673581cac4df4fd", size = 14782 },
 ]
 
 [[package]]
@@ -355,6 +388,7 @@ dev = [
     { name = "codespell" },
     { name = "coverage", extra = ["toml"] },
     { name = "hatchling" },
+    { name = "icecream" },
     { name = "neovim" },
     { name = "pyclean" },
     { name = "pyright" },
@@ -378,7 +412,7 @@ requires-dist = [
     { name = "python-dateutil", specifier = ">=2.8,<3.0" },
     { name = "rarfile", specifier = ">=4.0,<5.0" },
     { name = "ruamel-yaml", specifier = ">=0.18.5,<1.0.0" },
-    { name = "treestamps", specifier = ">=1.2.0,<2.0.0" },
+    { name = "treestamps", specifier = ">=1.2.3,<2.0.0" },
 ]
 
 [package.metadata.requires-dev]
@@ -386,6 +420,7 @@ dev = [
     { name = "codespell", specifier = ">=2.1.0,<3.0.0" },
     { name = "coverage", extras = ["toml"], specifier = ">=7.0,<8.0" },
     { name = "hatchling", specifier = ">=1.27.0,<2.0.0" },
+    { name = "icecream", specifier = ">=2.1.4" },
     { name = "neovim", specifier = ">=0.3.1,<1.0.0" },
     { name = "pyclean", specifier = ">=3.1.0,<4.0.0" },
     { name = "pyright", specifier = ">=1.1.237,<2.0.0" },
@@ -966,15 +1001,15 @@ wheels = [
 
 [[package]]
 name = "treestamps"
-version = "1.2.0"
+version = "1.2.3"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "ruamel-yaml" },
     { name = "termcolor" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/79/b2/c47b0fcb5e4dc5ac0d67595dbd24fe1e8f5bc706036daf4adac13df8671c/treestamps-1.2.0.tar.gz", hash = "sha256:25ede3199e11da39aa959200dbe96dafa9740e881d2529eafa4db45d383708e3", size = 22940 }
+sdist = { url = "https://files.pythonhosted.org/packages/b4/20/bfe77d41595983e4689429ce6ba1eb69ac560cc2d97d973e4bf16d5c8315/treestamps-1.2.3.tar.gz", hash = "sha256:33c9c4dee03baaabe7e321850fc2ad41235dfecab510c52eaac269246a9620b2", size = 23072 }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/f4/8f/6e80ec34a9f411ca9f25f84e45984d7822728e0ad5d13fc0a299348a8fc5/treestamps-1.2.0-py3-none-any.whl", hash = "sha256:8a33699e9ed74fb6684304be64dd2f65c30cccd8c4c97db4f3928704b0eaba04", size = 22638 },
+    { url = "https://files.pythonhosted.org/packages/04/e8/52fc64db72e6141f82afd8a07ac3ce5e62aed56bbbe29b7b4d34d86401a7/treestamps-1.2.3-py3-none-any.whl", hash = "sha256:4f80198cfeb0099b2baada6ac41a01498bb3390c9b22c9a59951d25a3cde6a89", size = 22753 },
 ]
 
 [[package]]
