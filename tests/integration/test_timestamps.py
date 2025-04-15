@@ -43,7 +43,12 @@ class TestTimestamps:
         """Assert sizes."""
         for name, sizes in FNS.items():
             path = root / name
-            assert path.stat().st_size == sizes[index]
+            old_size = sizes[index]
+            new_size = path.stat().st_size
+            if old_size != new_size:
+                print(name, old_size)
+                print(path, new_size)
+            assert old_size == new_size
 
     def setup_method(self) -> None:
         """Set up method."""
@@ -54,7 +59,6 @@ class TestTimestamps:
 
     def teardown_method(self) -> None:
         """Tear down method."""
-        print(sorted(TMP_ROOT.iterdir()))  # T201
         assert TIMESTAMPS_PATH.exists()
         assert not WAL_PATH.exists()
         shutil.rmtree(TMP_ROOT, ignore_errors=True)
@@ -73,7 +77,6 @@ class TestTimestamps:
         YAML().dump(yaml, TIMESTAMPS_PATH)
         assert TIMESTAMPS_PATH.exists()
         assert not WAL_PATH.exists()
-        print(yaml)
 
     def test_no_timestamp(self) -> None:
         """Test no timestamp."""
