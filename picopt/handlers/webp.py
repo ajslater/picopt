@@ -70,8 +70,8 @@ class WebPBase(ImageHandler, ABC):
         output_path = self.get_working_path("cwebp-output")
         output_path_tmp = bool(self.path_info.path)
         args += [str(input_path), "-o", str(output_path)]
-        # XXX if python cwebp gains enough options to beat this or
-        #     or cwebp gains stdin or stdout powers we can not use this
+        # If python cwebp gains enough options to beat this or
+        #     or cwebp gains stdin or stdout powers we can be rid of this
         return self.run_ext_fs(
             tuple(args),
             input_buffer,
@@ -85,7 +85,9 @@ class WebPBase(ImageHandler, ABC):
 class WebPLossless(WebPBase):
     """Handle lossless webp images and images that convert to lossless webp."""
 
-    OUTPUT_FILE_FORMAT = FileFormat(WebPBase.OUTPUT_FORMAT_STR, True, False)
+    OUTPUT_FILE_FORMAT = FileFormat(
+        WebPBase.OUTPUT_FORMAT_STR, lossless=True, animated=False
+    )
     INPUT_FILE_FORMATS = frozenset({OUTPUT_FILE_FORMAT, Png.OUTPUT_FILE_FORMAT})
     CONVERT_FROM_FORMAT_STRS = frozenset(
         Png.CONVERT_FROM_FORMAT_STRS | {Png.OUTPUT_FORMAT_STR}

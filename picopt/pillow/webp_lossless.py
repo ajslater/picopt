@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
-"""Determine if a webp is lossless.
+"""
+Determine if a webp is lossless.
 
 This should be a part of Pillow
 https://developers.google.com/speed/webp/docs/webp_lossless_bitstream_specification
@@ -39,8 +40,8 @@ def is_lossless(input_buffer: BytesIO | BufferedReader) -> bool:
                 buffer
                 if isinstance(buffer, mmap)
                 else bytearray(buffer.read(SEARCH_LEN))
-            )  # type: ignore
-            result = finder.find(VP8L_HEADER) != -1  # type: ignore
+            )
+            result = finder.find(VP8L_HEADER) != -1
         else:
             result = False
 
@@ -55,7 +56,7 @@ def main() -> None:
 
     with Path(sys.argv[1]).open("rb") as f:
         lossless = is_lossless(f)
-    print(lossless)  # noqa T201
+    print(lossless)  # noqa: T201
 
 
 if __name__ == "__main__":

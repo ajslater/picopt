@@ -34,8 +34,7 @@ from picopt.formats import (
 from picopt.handlers.gif import Gif, GifAnimated
 from picopt.handlers.handler import Handler
 from picopt.handlers.jpeg import Jpeg
-from picopt.handlers.png import Png
-from picopt.handlers.png_animated import PngAnimated
+from picopt.handlers.png import Png, PngAnimated
 from picopt.handlers.svg import Svg
 from picopt.handlers.webp import WebPLossless
 from picopt.handlers.webp_animated import WebPAnimatedLossless
@@ -92,6 +91,7 @@ TEMPLATE = MappingTemplate(
                 "bigger": bool,
                 "convert_to": Optional(Sequence(Choice(_CONVERT_TO_FORMAT_STRS))),
                 "disable_programs": Sequence(str),
+                "dry_run": bool,
                 "extra_formats": Optional(Sequence(Choice(ALL_FORMAT_STRS))),
                 "formats": Sequence(Choice(ALL_FORMAT_STRS)),
                 "ignore": Sequence(str),
@@ -104,7 +104,6 @@ TEMPLATE = MappingTemplate(
                 "preserve": bool,
                 "recurse": bool,
                 "symlinks": bool,
-                "test": bool,
                 "timestamps": bool,
                 "timestamps_check_config": bool,
                 "verbose": Integer(),
@@ -232,7 +231,7 @@ def _print_formats_config(
 
 
 def _config_formats_list_to_set(config: Subview, key: str) -> frozenset[str]:
-    val_list: Iterable = config[key].get(list) if key in config else []  # type: ignore
+    val_list: Iterable = config[key].get(list) if key in config else []  # type: ignore[reportAssignmentType]
     val_set = set()
     for val in val_list:
         val_set.add(val.upper())
@@ -266,7 +265,7 @@ def _get_handler_stages(
                 if not bin_path:
                     continue
                 exec_args = (bin_path, "--no", *program.split("_")[1:])
-                # XXX sucks but easiest way to determine if an npx prog exists is
+                # Sucks but easiest way to determine if an npx prog exists is
                 # running it.
                 try:
                     subprocess.run(  # noqa: S603
@@ -375,7 +374,7 @@ def _set_format_handler_map(config: Subview) -> None:
 
     handled_format_strs = set()
     convert_format_strs = {}
-    disabled_programs: list | frozenset = config["disable_programs"].get(list)  # type: ignore
+    disabled_programs: list | frozenset = config["disable_programs"].get(list)  # type: ignore[reportAssignmentType]
     disabled_programs = (
         frozenset(disabled_programs) if disabled_programs else frozenset()
     )
@@ -410,7 +409,7 @@ def _set_format_handler_map(config: Subview) -> None:
     config["computed"]["convert_handlers"].set(convert_handlers)
     config["computed"]["handler_stages"].set(handler_stages)
     config["computed"]["is_modern_cwebp"].set(is_modern_cwebp)
-    verbose: int = config["verbose"].get(int)  # type: ignore
+    verbose: int = config["verbose"].get(int)  # type: ignore[reportAssignmentType]
     _print_formats_config(
         verbose,
         handled_format_strs,
@@ -429,9 +428,9 @@ def _set_after(config: Subview) -> None:
         return
 
     try:
-        timestamp = float(after)  # type: ignore
+        timestamp = float(after)  # type: ignore[reportArgumentType]
     except ValueError:
-        after_dt = parse(after)  # type: ignore
+        after_dt = parse(after)  # type: ignore[reportArgumentType]
         timestamp = time.mktime(after_dt.timetuple())
 
     config["after"].set(timestamp)
@@ -442,11 +441,11 @@ def _set_after(config: Subview) -> None:
 
 def _set_ignore(config: Subview) -> None:
     """Remove duplicates from the ignore list."""
-    ignore: Iterable = config["ignore"].get(list)  # type: ignore
+    ignore: Iterable = config["ignore"].get(list)  # type: ignore[reportAssignmentType]
     ignore = tuple(sorted(ignore))
     config["ignore"].set(ignore)
     if ignore:
-        verbose: int = config["verbose"].get(int)  # type: ignore
+        verbose: int = config["verbose"].get(int)  # type: ignore[reportAssignmentType]
         if verbose > 1:
             ignore_list = ",".join(ignore)
             cprint(f"Ignoring: {ignore_list}", "cyan")
@@ -456,15 +455,15 @@ def _set_timestamps(config: Subview) -> None:
     """Set the timestamps attribute."""
     timestamps = (
         config["timestamps"].get(bool)
-        and not config["test"].get(bool)
+        and not config["dry_run"].get(bool)
         and not config["list_only"].get(bool)
     )
     config["timestamps"].set(timestamps)
-    verbose: int = config["verbose"].get(int)  # type: ignore
+    verbose: int = config["verbose"].get(int)  # type: ignore[reportAssignmentType]
     if verbose > 1:
         if timestamps:
             roots = set()
-            paths: Iterable = config["paths"].get(list)  # type: ignore
+            paths: Iterable = config["paths"].get(list)  # type: ignore[reportAssignmentType]
             for path_str in paths:
                 path = Path(path_str)
                 if path.is_dir():

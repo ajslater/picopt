@@ -14,7 +14,7 @@ class Gif(ImageHandler):
     """GIF handler."""
 
     OUTPUT_FORMAT_STR = str(GifImageFile.format)
-    OUTPUT_FILE_FORMAT = FileFormat(OUTPUT_FORMAT_STR, True, False)
+    OUTPUT_FILE_FORMAT = FileFormat(OUTPUT_FORMAT_STR, lossless=True, animated=False)
     INPUT_FILE_FORMATS = frozenset({OUTPUT_FILE_FORMAT})
     PROGRAMS = (("gifsicle", "pil2native"),)
     PIL2_KWARGS = MappingProxyType({"optimize": True})
@@ -35,5 +35,5 @@ class Gif(ImageHandler):
 class GifAnimated(Gif):
     """Animated GIF handler."""
 
-    OUTPUT_FILE_FORMAT = FileFormat(Gif.OUTPUT_FORMAT_STR, True, True)
+    OUTPUT_FILE_FORMAT = FileFormat(Gif.OUTPUT_FORMAT_STR, lossless=True, animated=True)
     INPUT_FILE_FORMATS = frozenset({OUTPUT_FILE_FORMAT})

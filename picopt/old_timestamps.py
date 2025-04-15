@@ -35,10 +35,8 @@ class OldTimestamps:
             self._import_old_parent_timestamps(path.parent)
 
     def _import_old_child_timestamps(self, path: Path) -> None:
-        if (
-            is_path_ignored(self._config, path)
-            or not self._config.symlinks
-            and path.is_symlink()
+        if is_path_ignored(self._config, path) or (
+            not self._config.symlinks and path.is_symlink()
         ):
             return
         for root, dirnames, filenames in os.walk(path):
@@ -47,7 +45,7 @@ class OldTimestamps:
                 old_timestamp_path = root_path / OLD_TIMESTAMPS_NAME
                 self._add_old_timestamp(old_timestamp_path)
                 # Picopt is the only program that used old treestamps
-                self._timestamps._consumed_paths.add(old_timestamp_path)  # noqa SLF001
+                self._timestamps._consumed_paths.add(old_timestamp_path)  # noqa: SLF001
             for dirname in dirnames:
                 self._import_old_child_timestamps(root_path / dirname)
 

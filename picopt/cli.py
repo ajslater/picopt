@@ -47,8 +47,8 @@ def get_arguments(params: tuple[str, ...] | None = None) -> Namespace:
         colored("skipped", "white", attrs=["dark"]),
         colored("skipped by timestamp", "green"),
         colored("optimization bigger than original", "blue", attrs=["bold"]),
-        "optimized",
-        colored("converted format", "cyan"),
+        "optimized in same format",
+        colored("converted to another format", "cyan"),
         colored("warning", "yellow"),
         colored("error", "red"),
     )
@@ -171,10 +171,10 @@ def get_arguments(params: tuple[str, ...] | None = None) -> Namespace:
         "datetime string",
     )
     parser.add_argument(
-        "-T",
-        "--test",
+        "-d",
+        "--dry_run",
         action="store_true",
-        dest="test",
+        dest="dry_run",
         help="Report how much would be saved, but do not replace files.",
     )
     parser.add_argument(

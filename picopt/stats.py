@@ -3,16 +3,12 @@
 from dataclasses import dataclass
 from pathlib import Path
 from subprocess import CalledProcessError
-from typing import TYPE_CHECKING
 
 from confuse import AttrDict
 from humanize import naturalsize
 from termcolor import cprint
 
 from picopt.path import CONTAINER_PATH_DELIMETER, PathInfo
-
-if TYPE_CHECKING:
-    from termcolor._types import Attribute, Color
 
 
 @dataclass
@@ -41,7 +37,7 @@ class ReportStats(ReportStatBase):
         """Initialize required instance variables."""
         # Don't store these large data structs, just tidbits.
         self.bigger: bool = config.bigger if config else False
-        self.test: bool = config.test if config else False
+        self.test: bool = config.dry_run if config else False
         self.convert: bool = path_info.convert if path_info else False
         self.container_paths: tuple[str, ...] = (
             tuple(path_info.container_paths) if path_info else ()
@@ -97,14 +93,14 @@ class ReportStats(ReportStatBase):
         attrs = []
         if self.exc:
             report = self._report_error()
-            color: Color = "red"
+            color = "red"
         else:
             report = self._report_saved()
-            color: Color = "cyan" if self.convert else "white"
+            color = "cyan" if self.convert else "white"
 
             if self.saved <= 0:
-                color: Color = "blue"
-                attrs: list[Attribute] = ["bold"]
+                color = "blue"
+                attrs = ["bold"]
 
         cprint(report, color, attrs=attrs)
 
@@ -124,12 +120,12 @@ class Totals:
     ##########
     def _report_bytes_in(self) -> None:
         """Report Totals if there were bytes in."""
-        if not self._config.verbose and not self._config.test:
+        if not self._config.verbose and not self._config.dry_run:
             return
         bytes_saved = self.bytes_in - self.bytes_out
         percent_bytes_saved = bytes_saved / self.bytes_in * 100
         msg = ""
-        if self._config.test:
+        if self._config.dry_run:
             if percent_bytes_saved > 0:
                 msg += "Could save"
             elif percent_bytes_saved == 0:
@@ -145,8 +141,8 @@ class Totals:
         natural_saved = naturalsize(bytes_saved)
         msg += f" a total of {natural_saved} or {percent_bytes_saved:.2f}%"
         cprint(msg)
-        if self._config.test:
-            cprint("Test run did not change any files.")
+        if self._config.dry_run:
+            cprint("Dry run did not change any files.")
 
     def report(self) -> None:
         """Report the total number and percent of bytes saved."""

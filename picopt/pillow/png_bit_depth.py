@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
-"""Get the bit depth of a png image manually.
+"""
+Get the bit depth of a png image manually.
 
 https://www.w3.org/TR/PNG-Chunks.html
 This should be a part of Pillow
@@ -34,7 +35,7 @@ def main() -> None:
 
     with Path(sys.argv[1]).open("rb") as f:
         bit_depth = png_bit_depth(f)
-    print(bit_depth)  # noqa T201
+    print(bit_depth)  # noqa: T201
 
 
 if __name__ == "__main__":

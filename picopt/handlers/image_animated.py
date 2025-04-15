@@ -40,14 +40,14 @@ class ImageAnimated(ContainerHandler, ABC):
                 # Save the frame as quickly as possible with the correct
                 #   lossless format. Real optimization happens later with
                 #   the specific handler.
-                # XXX It would be better to do what i do for mpo and read
+                # It would be better to do what i do for mpo and read
                 #   the bytes directly because this shows bad numbers for
                 #   compressing uncompressed frames. But Pillow doesn't have
                 #   raw access to frames.
                 with BytesIO() as frame_buffer:
                     frame.save(
                         frame_buffer,
-                        **self.PIL2_FRAME_KWARGS,  # type: ignore
+                        **self.PIL2_FRAME_KWARGS,  # type: ignore[reportArgumentType]
                     )
                     for key in ANIMATED_INFO_KEYS:
                         value = frame.info.get(key)

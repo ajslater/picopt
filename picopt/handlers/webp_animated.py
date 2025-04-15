@@ -6,7 +6,7 @@ from PIL.WebPImagePlugin import WebPImageFile
 
 from picopt.formats import FileFormat
 from picopt.handlers.image_animated import ImageAnimated
-from picopt.handlers.png_animated import PngAnimated
+from picopt.handlers.png import PngAnimated
 from picopt.handlers.webp import WebPBase
 
 
@@ -21,7 +21,9 @@ class WebPAnimatedBase(ImageAnimated):
 class WebPAnimatedLossless(WebPAnimatedBase):
     """Animated Lossless WebP Handler."""
 
-    OUTPUT_FILE_FORMAT = FileFormat(WebPAnimatedBase.OUTPUT_FORMAT_STR, True, True)
+    OUTPUT_FILE_FORMAT = FileFormat(
+        WebPAnimatedBase.OUTPUT_FORMAT_STR, lossless=True, animated=True
+    )
     INPUT_FILE_FORMATS = frozenset(
         {*PngAnimated.INPUT_FILE_FORMATS, OUTPUT_FILE_FORMAT}
     )

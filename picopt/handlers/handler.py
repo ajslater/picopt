@@ -22,7 +22,7 @@ from picopt.stats import ReportStats
 SAVE_INFO_KEYS: frozenset[str] = frozenset(
     {"n_frames", "loop", "duration", "background"}
 )
-WORKING_PATH_TRANS_TABLE = str.maketrans({c: "_" for c in " /"})
+WORKING_PATH_TRANS_TABLE = str.maketrans(dict.fromkeys(" /", "_"))
 
 
 def _gif_palette_index_to_rgb(
@@ -46,7 +46,9 @@ class Handler(ABC):
     """FileType superclass for image and container formats."""
 
     OUTPUT_FORMAT_STR: str = "unimplemented"
-    OUTPUT_FILE_FORMAT: FileFormat = FileFormat(OUTPUT_FORMAT_STR, False, False)
+    OUTPUT_FILE_FORMAT: FileFormat = FileFormat(
+        OUTPUT_FORMAT_STR, lossless=False, animated=False
+    )
     INPUT_FILE_FORMATS: frozenset[FileFormat] = frozenset({OUTPUT_FILE_FORMAT})
     CONVERT_FROM_FORMAT_STRS: frozenset[str] = frozenset()
     INTERNAL: str = "internal"
@@ -134,7 +136,6 @@ class Handler(ABC):
             # GIF background is an int.
             rgb = _gif_palette_index_to_rgb(background)
             self.info["background"] = (*rgb, 0)
-        # webp_convert_info_metadata(self.config, self.info)
 
     def _prepare_info_png(self):
         """Transform info for png."""
@@ -176,8 +177,8 @@ class Handler(ABC):
                 input_buffer.seek(0)
                 input_tmp_file.write(input_buffer.read())
 
-        subprocess.run(  # noqa S603
-            args,  # type: ignore
+        subprocess.run(  # noqa: S603
+            args,  # type: ignore[reportArgumentType]
             check=True,
             text=True,
             stdout=subprocess.DEVNULL,
@@ -266,7 +267,7 @@ class Handler(ABC):
         try:
             bytes_in = self.path_info.bytes_in()
             bytes_out = self.get_buffer_len(final_data_buffer)
-            if not self.config.test and (
+            if not self.config.dry_run and (
                 (bytes_out > 0) and ((bytes_out < bytes_in) or self.config.bigger)
             ):
                 return_data = self._cleanup_after_optimize_save_new(final_data_buffer)
