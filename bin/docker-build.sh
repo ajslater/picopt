@@ -1,4 +1,5 @@
 #!/bin/bash
+# run all phases of build with docker
 set -euo pipefail
 docker-compose build picopt-build-builder
 docker-compose up --exit-code-from picopt-lint picopt-lint
