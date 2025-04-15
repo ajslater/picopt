@@ -31,7 +31,6 @@ FNS = {
     "mri.tif": (230578, 230578, ("png", 129479), ("webp", 116954)),
     "test_webp_lossy.webp": (2764, 2764, ("webp", 2764), ("webp", 2764)),
     "test_png_16rgba.png": (3435, 2097, ("png", 2097), ("webp", 1142)),
-    "test_pnm.pnm": (27661, 27661, ("png", 15510), ("webp", 12758)),
     "test_jpg.jpg": (97373, 87913, ("jpg", 87913), ("jpg", 87913)),
 }
 if platform.system() == "Darwin":
@@ -47,6 +46,7 @@ if platform.system() == "Darwin":
             ),
             "eight.tif": (59640, 59640, ("png", 30585), ("webp", 25012)),
             "test_bmp.bmp": (141430, 141430, ("png", 67236), ("webp", 47436)),
+            "test_pnm.pnm": (27661, 27661, ("png", 15510), ("webp", 12758)),
         }
     )
 else:
@@ -62,6 +62,7 @@ else:
             ),
             "eight.tif": (59640, 59640, ("png", 30585), ("webp", 24982)),
             "test_bmp.bmp": (141430, 141430, ("png", 67236), ("webp", 47524)),
+            "test_pnm.pnm": (27661, 27661, ("png", 15510), ("webp", 12808)),
         }
     )
 
