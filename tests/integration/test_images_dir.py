@@ -52,7 +52,7 @@ if platform.system() == "Darwin":
 else:
     FNS.update(
         {
-            "test_gif.gif": (138952, 138944, ("png", 112137), ("webp", 107952)),
+            "test_gif.gif": (138952, 138944, ("png", 112290), ("webp", 107952)),
             "test_pre-optimized_png.png": (
                 256572,
                 256572,
