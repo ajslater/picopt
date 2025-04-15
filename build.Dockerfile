@@ -34,4 +34,4 @@ RUN mkdir -p test-results dist
 
 # Install
 # hadolint ignore=DL3059
-RUN uv install
+RUN uv sync
