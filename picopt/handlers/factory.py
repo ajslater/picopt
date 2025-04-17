@@ -14,11 +14,30 @@ from picopt.formats import (
     TIFF_LOSSLESS_COMPRESSION,
     FileFormat,
 )
+from picopt.handlers.archive.rar import (
+    Cbr,
+    Rar,
+)
+from picopt.handlers.archive.seven_zip import (
+    Cb7,
+    SevenZip,
+)
+from picopt.handlers.archive.tar import (
+    Cbt,
+    Tar,
+    TarBz,
+    TarGz,
+    TarXz,
+)
+from picopt.handlers.archive.zip import (
+    Cbz,
+    EPub,
+    Zip,
+)
 from picopt.handlers.handler import Handler
 from picopt.handlers.non_pil import NonPILIdentifier
 from picopt.handlers.svg import Svg
 from picopt.handlers.webp import WebPLossless
-from picopt.handlers.zip import Cbr, Cbz, EPub, Rar, Zip
 from picopt.path import PathInfo
 from picopt.pillow.webp_lossless import is_lossless
 
@@ -32,6 +51,13 @@ _NON_PIL_HANDLERS: tuple[type[NonPILIdentifier], ...] = (
     Cbr,
     Rar,
     EPub,
+    SevenZip,
+    Cb7,
+    TarGz,
+    TarBz,
+    TarXz,
+    Cbt,
+    Tar,  # must be after other tars to detect properly
 )
 
 

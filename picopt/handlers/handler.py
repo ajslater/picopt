@@ -46,6 +46,8 @@ class Handler(ABC):
     """FileType superclass for image and container formats."""
 
     OUTPUT_FORMAT_STR: str = "unimplemented"
+    # if multiple suffixes, default suffix is first. Otherwise generated from OUTPUT_FORMAT_STR.
+    SUFFIXES = ()
     OUTPUT_FILE_FORMAT: FileFormat = FileFormat(
         OUTPUT_FORMAT_STR, lossless=False, animated=False
     )
@@ -90,18 +92,6 @@ class Handler(ABC):
         suffix += self.output_suffix
         return path.with_suffix(suffix)
 
-    @classmethod
-    def get_default_suffix(cls):
-        """Get the default suffix based on the format."""
-        # overridden in jpeg
-        return "." + cls.OUTPUT_FORMAT_STR.lower()
-
-    @classmethod
-    def get_suffixes(cls, default_suffix: str) -> frozenset:
-        """Initialize suffix instance variables."""
-        # overridden in jpeg
-        return frozenset((default_suffix,))
-
     def __init__(
         self,
         config: AttrDict,
@@ -116,11 +106,12 @@ class Handler(ABC):
             path_info.path if path_info.path else Path(path_info.name())
         )
         self.working_path = self.original_path
-        default_suffix = self.get_default_suffix()
-        self._suffixes = self.get_suffixes(default_suffix)
+        default_suffix = (
+            self.SUFFIXES[0] if self.SUFFIXES else "." + self.OUTPUT_FORMAT_STR.lower()
+        )
         suffix = path_info.suffix()
         self.output_suffix: str = (
-            suffix if (suffix.lower() in self._suffixes) else default_suffix
+            suffix if (suffix.lower() in self.SUFFIXES) else default_suffix
         )
         self.final_path: Path = self.original_path.with_suffix(self.output_suffix)
         self.input_file_format: FileFormat = input_file_format

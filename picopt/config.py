@@ -31,6 +31,26 @@ from picopt.formats import (
     MPO_FILE_FORMAT,
     FileFormat,
 )
+from picopt.handlers.archive.rar import (
+    Cbr,
+    Rar,
+)
+from picopt.handlers.archive.seven_zip import (
+    Cb7,
+    SevenZip,
+)
+from picopt.handlers.archive.tar import (
+    Cbt,
+    Tar,
+    TarBz,
+    TarGz,
+    TarXz,
+)
+from picopt.handlers.archive.zip import (
+    Cbz,
+    EPub,
+    Zip,
+)
 from picopt.handlers.gif import Gif, GifAnimated
 from picopt.handlers.handler import Handler
 from picopt.handlers.jpeg import Jpeg
@@ -38,7 +58,6 @@ from picopt.handlers.png import Png, PngAnimated
 from picopt.handlers.svg import Svg
 from picopt.handlers.webp import WebPLossless
 from picopt.handlers.webp_animated import WebPAnimatedLossless
-from picopt.handlers.zip import Cbr, Cbz, EPub, Rar, Zip
 
 ###########################
 # Confuse Config Template #
@@ -57,26 +76,32 @@ _CONVERT_TO_FORMAT_STRS = frozenset(
         )
     }
 )
+_TEMPORARILY_CONVERT_ONLY = (SevenZip, Cb7, Tar, TarGz, TarBz, TarXz)
 _CONTAINER_CONVERTIBLE_FORMAT_STRS = frozenset(
-    {cls.INPUT_FORMAT_STR for cls in (Rar, Cbr)}
+    {cls.INPUT_FORMAT_STR for cls in (Rar, Cbr, Cbt, *_TEMPORARILY_CONVERT_ONLY)}
 )
 
 DEFAULT_HANDLERS = frozenset(
     {Gif, GifAnimated, Jpeg, Png, WebPLossless, WebPAnimatedLossless}
 )
-_ALL_HANDLERS = frozenset(
-    DEFAULT_HANDLERS
-    | frozenset(
-        {
-            Zip,
-            Rar,
-            Svg,
-            Cbz,
-            Cbr,
-            EPub,
-        }
-    )
+_NON_PIL_HANDLERS = frozenset({Svg})
+_ARCHIVE_HANDLERS = frozenset(
+    {
+        Zip,
+        Cbz,
+        EPub,
+        Rar,
+        Cbr,
+        SevenZip,
+        Cb7,
+        Tar,
+        TarGz,
+        TarBz,
+        TarXz,
+        Cbt,
+    }
 )
+_ALL_HANDLERS = frozenset(DEFAULT_HANDLERS | _NON_PIL_HANDLERS | _ARCHIVE_HANDLERS)
 ALL_FORMAT_STRS: frozenset[str] = (
     frozenset([cls.OUTPUT_FORMAT_STR for cls in _ALL_HANDLERS])
     | LOSSLESS_FORMAT_STRS
@@ -133,7 +158,6 @@ TIMESTAMPS_CONFIG_KEYS = {
 }
 # cwebp before this version only accepts PNG & WEBP
 MIN_CWEBP_VERSION = (1, 2, 3)
-_JPEG_PROGS = frozenset({"mozjpeg", "jpegtran"})
 
 
 ########################
@@ -196,6 +220,13 @@ _FORMAT_HANDLERS = MappingProxyType(
         Rar.INPUT_FILE_FORMAT: FileFormatHandlers(convert=(Rar,)),
         Cbr.INPUT_FILE_FORMAT: FileFormatHandlers(convert=(Cbr,)),
         EPub.OUTPUT_FILE_FORMAT: FileFormatHandlers(native=(EPub,)),
+        SevenZip.INPUT_FILE_FORMAT: FileFormatHandlers(convert=(SevenZip,)),
+        Cb7.INPUT_FILE_FORMAT: FileFormatHandlers(convert=(Cb7,)),
+        Tar.INPUT_FILE_FORMAT: FileFormatHandlers(convert=(Tar,)),
+        TarGz.INPUT_FILE_FORMAT: FileFormatHandlers(convert=(TarGz,)),
+        TarBz.INPUT_FILE_FORMAT: FileFormatHandlers(convert=(TarBz,)),
+        TarXz.INPUT_FILE_FORMAT: FileFormatHandlers(convert=(TarXz,)),
+        Cbt.INPUT_FILE_FORMAT: FileFormatHandlers(convert=(Cbt,)),
     }
 )
 

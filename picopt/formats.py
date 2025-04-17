@@ -87,9 +87,9 @@ _CONVERTABLE_PIL_IMAGE_FILES = (
     SunImageFile,
     XpmImageFile,
     QoiImageFile,
-    ###################
-    # Animated to not #
-    ###################
+    #####################
+    # Animated to still #
+    #####################
     MpoImageFile,
 )
 CONVERTIBLE_FORMAT_STRS: frozenset[str] = frozenset(

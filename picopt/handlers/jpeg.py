@@ -19,21 +19,12 @@ class Jpeg(ImageHandler):
     """JPEG format class."""
 
     OUTPUT_FORMAT_STR = str(JpegImageFile.format)
+    SUFFIXES = (".jpg", ".jpeg")
     OUTPUT_FILE_FORMAT = FileFormat(OUTPUT_FORMAT_STR, lossless=False, animated=False)
     INPUT_FILE_FORMATS = frozenset({OUTPUT_FILE_FORMAT})
     PROGRAMS = (("mozjpeg", "jpegtran", "pil2jpeg"),)
     _JPEGTRAN_ARGS_PREFIX = ("-optimize", "-progressive")
     # PIL Cannot save jpegs losslessly
-
-    @classmethod
-    def get_default_suffix(cls) -> str:
-        """Override default suffix for jpeg."""
-        return ".jpg"
-
-    @classmethod
-    def get_suffixes(cls, default_suffix: str) -> frozenset:
-        """Initialize suffix instance variables."""
-        return frozenset((default_suffix, "." + cls.OUTPUT_FORMAT_STR.lower()))
 
     def _jpegtran(self, exec_args: tuple[str, ...], input_buffer: BinaryIO) -> BytesIO:
         """Run the jpegtran type program."""

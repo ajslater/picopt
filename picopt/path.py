@@ -11,6 +11,7 @@ from confuse import AttrDict
 
 TMP_DIR = Path("__picopt_tmp")
 CONTAINER_PATH_DELIMETER = " - "
+_DOUBLE_SUFFIX = ".tar"
 
 
 class PathInfo:
@@ -165,7 +166,10 @@ class PathInfo:
     def suffix(self) -> str:
         """Return file suffix."""
         if self._suffix is None:
-            self._suffix = Path(self.name()).suffix
+            path = Path(self.name())
+            suffixes = path.suffixes
+            index = -2 if len(suffixes) > 1 and suffixes[-2] == _DOUBLE_SUFFIX else -1
+            self._suffix = "".join(suffixes[index:])
         return self._suffix
 
 
