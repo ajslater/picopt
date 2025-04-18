@@ -65,7 +65,6 @@ class TestContainersDir:
 
     def teardown_method(self) -> None:
         """Tear down method."""
-        return
         if TMP_ROOT.exists():
             shutil.rmtree(TMP_ROOT)
 
