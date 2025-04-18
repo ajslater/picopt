@@ -4,6 +4,8 @@ import shutil
 from types import MappingProxyType
 from zipfile import ZipFile
 
+import pytest
+
 from picopt import PROGRAM_NAME, cli
 from tests import CONTAINER_DIR, get_test_dir
 
@@ -13,16 +15,41 @@ SRC_CBZ = CONTAINER_DIR / "test_cbz.cbz"
 
 FNS = MappingProxyType(
     {
+        # filename       orig   no-convert     convert
         "test_cbz.cbz": (93408, 84544, ("cbz", 84544)),
         "test_cbr.cbr": (93725, 93725, ("cbz", 88048)),
         "test_rar.rar": (93675, 93675, ("zip", 88035)),
         "test_zip.zip": (7783, 7015, ("zip", 7015)),
         "igp-twss.epub": (292448, 285439, ("epub", 285439)),
+        "test_7z.7z": (7613, 7613, ("zip", 7015)),
+        "test_cb7.cb7": (7613, 7613, ("cbz", 7015)),
+        "test_tar.tar": (11264, 10240, ("zip", 7015)),
+        "test_tgz.tar.gz": (7620, 6793, ("zip", 7015)),
+        "test_tbz.tar.bz2": (8071, 7260, ("zip", 7015)),
+        "test_txz.tar.xz": (7612, 6836, ("zip", 7015)),
+        "test_cbt.cbt": (7612, 7612, ("cbz", 7015)),
     }
 )
 
 EPUB_FN = "igp-twss.epub"
 BMP_FN = "OPS/test_bmp.bmp"
+NOOP_ARGS = (PROGRAM_NAME, str(TMP_ROOT))
+ARGS = (
+    PROGRAM_NAME,
+    "-vvx",
+    "GIF,ZIP,CBZ,EPUB,RAR,CBR,7Z,CB7,TAR,TGZ,TBZ,TXZ,CBT",
+)
+NO_CONVERT_ARGS = (
+    *ARGS,
+    "-c WEBP",
+    str(TMP_ROOT),
+)
+CONVERT_TO_ZIP_ARGS = (
+    *ARGS,
+    "-c",
+    "ZIP,CBZ",
+    str(TMP_ROOT),
+)
 
 
 class TestContainersDir:
@@ -38,46 +65,42 @@ class TestContainersDir:
 
     def teardown_method(self) -> None:
         """Tear down method."""
+        return
         if TMP_ROOT.exists():
             shutil.rmtree(TMP_ROOT)
 
-    def test_containers_noop(self) -> None:
+    @pytest.mark.parametrize("fn", FNS)
+    def test_containers_noop(self, fn: str) -> None:
         """Test containers noop."""
-        args = (PROGRAM_NAME, "-r", str(TMP_ROOT))
+        path = TMP_ROOT / fn
+        args = (*NOOP_ARGS, str(path))
         cli.main(args)
-        for name, sizes in FNS.items():
-            if name == EPUB_FN:
-                path = TMP_ROOT / name
-                with ZipFile(path, "r") as zf:
-                    namelist = zf.namelist()
-                assert BMP_FN in namelist
-            path = TMP_ROOT / name
-            assert path.stat().st_size == sizes[0]
+        if fn == EPUB_FN:
+            with ZipFile(path, "r") as zf:
+                namelist = zf.namelist()
+            assert BMP_FN in namelist
+        sizes = FNS[fn]
+        assert path.stat().st_size == sizes[0]
 
-    def test_containers_no_convert(self) -> None:
+    @pytest.mark.parametrize("fn", FNS)
+    def test_containers_no_convert(self, fn: str) -> None:
         """Test containers no convert."""
-        args = (PROGRAM_NAME, "-rx", "GIF,CBZ,ZIP,EPUB", "-c WEBP", str(TMP_ROOT))
+        path = TMP_ROOT / fn
+        args = (*NO_CONVERT_ARGS, str(path))
         cli.main(args)
-        for name, sizes in FNS.items():
-            path = TMP_ROOT / name
-            if name == EPUB_FN:
-                with ZipFile(path, "r") as zf:
-                    namelist = zf.namelist()
-                assert BMP_FN in namelist
-            assert path.stat().st_size == sizes[1]
+        if fn == EPUB_FN:
+            with ZipFile(path, "r") as zf:
+                namelist = zf.namelist()
+            assert BMP_FN in namelist
+        size = FNS[fn][1]
+        assert path.stat().st_size == size
 
-    def test_containers_convert_to_zip(self) -> None:
+    @pytest.mark.parametrize("fn", FNS)
+    def test_containers_convert_to_zip(self, fn: str) -> None:
         """Test containers convert to zip."""
-        args = (
-            PROGRAM_NAME,
-            "-rx",
-            "ZIP,CBZ,RAR,CBR,EPUB",
-            "-c",
-            "ZIP,CBZ",
-            str(TMP_ROOT),
-        )
+        sizes = FNS[fn]
+        path = TMP_ROOT / fn
+        args = (*CONVERT_TO_ZIP_ARGS, str(path))
         cli.main(args)
-        for name, sizes in FNS.items():
-            print(name)
-            path = (TMP_ROOT / name).with_suffix("." + sizes[2][0])
-            assert path.stat().st_size == sizes[2][1]
+        convert_path = path.with_suffix("." + sizes[2][0])
+        assert convert_path.stat().st_size == sizes[2][1]

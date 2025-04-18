@@ -16,7 +16,7 @@ from picopt.handlers.container import ContainerHandler
 class SevenZip(Zip):
     """7Zip Container."""
 
-    INPUT_FORMAT_STR: str = "7ZIP"
+    INPUT_FORMAT_STR: str = "7Z"
     INPUT_FILE_FORMAT = FileFormat(INPUT_FORMAT_STR)
     INPUT_FILE_FORMATS = frozenset({INPUT_FILE_FORMAT})
     PROGRAMS = ((ContainerHandler.INTERNAL,),)

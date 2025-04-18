@@ -113,7 +113,13 @@ class Handler(ABC):
         self.output_suffix: str = (
             suffix if (suffix.lower() in self.SUFFIXES) else default_suffix
         )
-        self.final_path: Path = self.original_path.with_suffix(self.output_suffix)
+        # Handle replacing multiple suffixes
+        final_path = str(self.original_path)
+        for suffix in reversed(self.original_path.suffixes):
+            final_path = final_path.removesuffix(suffix)
+        final_path = Path(final_path)
+        final_path = final_path.with_suffix(self.output_suffix)
+        self.final_path: Path = final_path
         self.input_file_format: FileFormat = input_file_format
         self.info: dict[str, Any] = dict(info)
         if self.config.preserve:

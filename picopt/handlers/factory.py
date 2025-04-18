@@ -128,10 +128,8 @@ def _get_image_format(
 
 def _get_non_pil_format(path_info: PathInfo) -> FileFormat | None:
     """Get the container format by querying each handler."""
-    file_format = None
     for handler in _NON_PIL_HANDLERS:
-        file_format = handler.identify_format(path_info)
-        if file_format is not None:
+        if file_format := handler.identify_format(path_info):
             break
     else:
         file_format = None

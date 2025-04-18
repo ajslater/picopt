@@ -215,6 +215,7 @@ _FORMAT_HANDLERS = MappingProxyType(
             native=(WebPAnimatedLossless,)
         ),
         Svg.OUTPUT_FILE_FORMAT: FileFormatHandlers(native=(Svg,)),
+        # Archives
         Zip.OUTPUT_FILE_FORMAT: FileFormatHandlers(native=(Zip,)),
         Cbz.OUTPUT_FILE_FORMAT: FileFormatHandlers(native=(Cbz,)),
         Rar.INPUT_FILE_FORMAT: FileFormatHandlers(convert=(Rar,)),
@@ -222,11 +223,11 @@ _FORMAT_HANDLERS = MappingProxyType(
         EPub.OUTPUT_FILE_FORMAT: FileFormatHandlers(native=(EPub,)),
         SevenZip.INPUT_FILE_FORMAT: FileFormatHandlers(convert=(SevenZip,)),
         Cb7.INPUT_FILE_FORMAT: FileFormatHandlers(convert=(Cb7,)),
-        Tar.INPUT_FILE_FORMAT: FileFormatHandlers(convert=(Tar,)),
-        TarGz.INPUT_FILE_FORMAT: FileFormatHandlers(convert=(TarGz,)),
-        TarBz.INPUT_FILE_FORMAT: FileFormatHandlers(convert=(TarBz,)),
-        TarXz.INPUT_FILE_FORMAT: FileFormatHandlers(convert=(TarXz,)),
-        Cbt.INPUT_FILE_FORMAT: FileFormatHandlers(convert=(Cbt,)),
+        Tar.OUTPUT_FILE_FORMAT: FileFormatHandlers(native=(Tar,), convert=(Zip,)),
+        TarGz.OUTPUT_FILE_FORMAT: FileFormatHandlers(native=(TarGz,), convert=(Zip,)),
+        TarBz.OUTPUT_FILE_FORMAT: FileFormatHandlers(native=(TarBz,), convert=(Zip,)),
+        TarXz.OUTPUT_FILE_FORMAT: FileFormatHandlers(native=(TarXz,), convert=(Zip,)),
+        Cbt.INPUT_FILE_FORMAT: FileFormatHandlers(convert=(Cbz,)),
     }
 )
 
