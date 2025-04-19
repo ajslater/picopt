@@ -6,10 +6,10 @@ from pathlib import Path
 from rarfile import RarFile, RarInfo, is_rarfile
 
 from picopt.formats import FileFormat
-from picopt.handlers.archive.zip import Zip
+from picopt.handlers.archive.archive import ArchiveHandler
 
 
-class Rar(Zip):
+class Rar(ArchiveHandler):
     """RAR Container."""
 
     INPUT_FORMAT_STR: str = "RAR"
