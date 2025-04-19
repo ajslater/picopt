@@ -166,17 +166,17 @@ class PathInfo:
     def name(self) -> str:
         """Name."""
         if self._name is None:
-            if self.path:
-                self._name = str(self.path)
-            elif self.frame:
-                self._name = f"frame_#{self.frame:03d}.img"
-            elif self.archiveinfo:
+            if self.archiveinfo:
                 if isinstance(self.archiveinfo, ZipInfo | RarInfo | SevenZipInfo):
                     self._name = self.archiveinfo.filename
                 elif isinstance(self.archiveinfo, TarInfo):
                     self._name = self.archiveinfo.name
                 else:
                     self._raise_archiveinfo_type()
+            elif self.path:
+                self._name = str(self.path)
+            elif self.frame:
+                self._name = f"frame_#{self.frame:03d}.img"
             else:
                 self._name = "Unknown"
         return self._name
