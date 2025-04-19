@@ -10,7 +10,7 @@ from termcolor import cprint
 from treestamps import Grovestamps, GrovestampsConfig, Treestamps
 
 from picopt import PROGRAM_NAME
-from picopt.config import TIMESTAMPS_CONFIG_KEYS
+from picopt.config.consts import TIMESTAMPS_CONFIG_KEYS
 from picopt.exceptions import PicoptError
 from picopt.handlers.container import ContainerHandler
 from picopt.handlers.factory import create_handler

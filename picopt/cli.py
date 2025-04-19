@@ -8,7 +8,8 @@ from confuse.exceptions import ConfigError
 from termcolor import colored, cprint
 
 from picopt import PROGRAM_NAME, walk
-from picopt.config import ALL_FORMAT_STRS, DEFAULT_HANDLERS, get_config
+from picopt.config import get_config
+from picopt.config.consts import ALL_FORMAT_STRS, DEFAULT_HANDLERS
 from picopt.exceptions import PicoptError
 from picopt.handlers.archive.rar import Cbr, Rar
 from picopt.handlers.archive.seven_zip import SevenZip
