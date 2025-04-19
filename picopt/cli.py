@@ -14,8 +14,8 @@ from picopt.exceptions import PicoptError
 from picopt.handlers.archive.rar import Cbr, Rar
 from picopt.handlers.archive.seven_zip import SevenZip
 from picopt.handlers.archive.tar import Tar
-from picopt.handlers.png import Png
-from picopt.handlers.webp import WebPLossless
+from picopt.handlers.image.png import Png
+from picopt.handlers.image.webp import WebPLossless
 
 _DEFAULT_FORMAT_STRS = frozenset(
     [handler_cls.OUTPUT_FORMAT_STR for handler_cls in DEFAULT_HANDLERS]

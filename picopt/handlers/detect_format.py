@@ -33,9 +33,9 @@ from picopt.handlers.archive.zip import (
     EPub,
     Zip,
 )
+from picopt.handlers.image.svg import Svg
+from picopt.handlers.image.webp import WebPLossless
 from picopt.handlers.non_pil import NonPILIdentifier
-from picopt.handlers.svg import Svg
-from picopt.handlers.webp import WebPLossless
 from picopt.path import PathInfo
 from picopt.pillow.webp_lossless import is_lossless
 

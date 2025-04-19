@@ -14,8 +14,8 @@ from picopt.formats import (
     CONVERTIBLE_FORMAT_STRS,
     FileFormat,
 )
-from picopt.handlers.gif import Gif, GifAnimated
 from picopt.handlers.image import ImageHandler
+from picopt.handlers.image.gif import Gif, GifAnimated
 from picopt.pillow.png_bit_depth import png_bit_depth
 
 

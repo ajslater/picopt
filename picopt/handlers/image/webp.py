@@ -11,7 +11,8 @@ from PIL.WebPImagePlugin import WebPImageFile
 
 from picopt.formats import MODERN_CWEBP_FORMATS, FileFormat
 from picopt.handlers.image import ImageHandler
-from picopt.handlers.png import Png
+from picopt.handlers.image.animated import ImageAnimated
+from picopt.handlers.image.png import Png, PngAnimated
 from picopt.path import PathInfo
 
 if TYPE_CHECKING:
@@ -122,3 +123,29 @@ class WebPLossless(WebPBase):
         """Optimize using cwebp and with runtime optional arguments."""
         opts = self.NEAR_LOSSLESS_OPTS if self.config.near_lossless else None
         return super().cwebp(exec_args, input_buffer, opts=opts)
+
+
+class WebPAnimatedBase(ImageAnimated):
+    """Animated WebP container."""
+
+    OUTPUT_FORMAT_STR: str = WebPBase.OUTPUT_FORMAT_STR
+    PIL2_KWARGS = MappingProxyType({**WebPBase.PIL2_KWARGS, "minimize_size": True})
+    PIL2_FRAME_KWARGS = MappingProxyType({"format": WebPImageFile.format, "method": 0})
+
+
+class WebPAnimatedLossless(WebPAnimatedBase):
+    """Animated Lossless WebP Handler."""
+
+    OUTPUT_FILE_FORMAT = FileFormat(
+        WebPAnimatedBase.OUTPUT_FORMAT_STR, lossless=True, animated=True
+    )
+    INPUT_FILE_FORMATS = frozenset(
+        {*PngAnimated.INPUT_FILE_FORMATS, OUTPUT_FILE_FORMAT}
+    )
+    CONVERT_FROM_FORMAT_STRS = frozenset(
+        {*PngAnimated.CONVERT_FROM_FORMAT_STRS, PngAnimated.OUTPUT_FORMAT_STR}
+    )
+    PIL2_FRAME_KWARGS = MappingProxyType(
+        {**WebPAnimatedBase.PIL2_FRAME_KWARGS, "lossless": True, "quality": 0}
+    )
+    PIL2_KWARGS = MappingProxyType({**WebPAnimatedBase.PIL2_KWARGS, "lossless": True})

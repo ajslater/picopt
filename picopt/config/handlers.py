@@ -37,13 +37,12 @@ from picopt.handlers.archive.zip import (
     EPub,
     Zip,
 )
-from picopt.handlers.gif import Gif, GifAnimated
 from picopt.handlers.handler import Handler
-from picopt.handlers.jpeg import Jpeg
-from picopt.handlers.png import Png, PngAnimated
-from picopt.handlers.svg import Svg
-from picopt.handlers.webp import WebPLossless
-from picopt.handlers.webp_animated import WebPAnimatedLossless
+from picopt.handlers.image.gif import Gif, GifAnimated
+from picopt.handlers.image.jpeg import Jpeg
+from picopt.handlers.image.png import Png, PngAnimated
+from picopt.handlers.image.svg import Svg
+from picopt.handlers.image.webp import WebPAnimatedLossless, WebPLossless
 
 
 @dataclass

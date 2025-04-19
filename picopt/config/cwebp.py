@@ -3,7 +3,7 @@
 import subprocess
 
 from picopt.config.consts import MIN_CWEBP_VERSION
-from picopt.handlers.webp import WebPLossless
+from picopt.handlers.image.webp import WebPLossless
 
 
 def _get_cwebp_version(handler_stages: dict):
