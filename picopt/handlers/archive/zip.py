@@ -55,6 +55,7 @@ class Zip(ArchiveHandler):
             path_info.container_filename
             and path_info.container_filename != zipinfo.filename
         ):
+            # is this really neccissary?
             zipinfo.filename = path_info.container_filename
         if not self.config.keep_metadata and (
             not zipinfo.compress_type or zipinfo.compress_type == ZIP_STORED

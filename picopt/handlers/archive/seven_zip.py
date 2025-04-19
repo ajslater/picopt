@@ -69,7 +69,7 @@ class SevenZip(ArchiveHandler):
 
     def _pack_info_one_file(self, archive, path_info):
         """Add one file to the new archive."""
-        filename = path_info.archiveinfo.filename
+        filename = path_info.name()
         data = self._optimized_contents.pop(path_info)
         archive.writef(BytesIO(data), arcname=filename)
 

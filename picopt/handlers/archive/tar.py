@@ -72,7 +72,7 @@ class Tar(ArchiveHandler):
 
     def _pack_info_one_file(self, archive, path_info):
         """Add one file to the new archive."""
-        name = path_info.container_filename
+        name = path_info.name()
         data = self._optimized_contents.pop(path_info)
         tarinfo = TarInfo(name=name)
         tarinfo.type = REGTYPE
