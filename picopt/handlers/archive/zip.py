@@ -26,9 +26,9 @@ class Zip(ArchiveHandler):
     INFO_CLASS = ZipInfo
     ARCHIVEINFO_MAP = MappingProxyType(
         {
-            TarInfo: {},
+            TarInfo: {"filename": "name", "date_time": "mtime"},
             SevenZipInfo: {"filename": "filename", "date_time": "creationtime"},
-            RarInfo: {},
+            RarInfo: {"filename": "filename", "date_time": "date_time"},
         }
     )
     DTTM_ATTR = "date_time"
