@@ -92,7 +92,12 @@ class TestContainersDir:
                 namelist = zf.namelist()
             assert BMP_FN in namelist
         size = FNS[fn][1]
-        assert path.stat().st_size == size
+        path_size = path.stat().st_size
+        if fn.endswith(("7z", "cb7")):
+            # 7z varies its output size by a byte :o
+            assert abs(path_size - size) <= 1
+        else:
+            assert path_size == size
 
     @pytest.mark.parametrize("fn", FNS)
     def test_containers_convert_to_zip(self, fn: str) -> None:
