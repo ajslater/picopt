@@ -53,7 +53,7 @@ class SevenZip(ArchiveHandler):
     def _archive_readfile(self, archive, archiveinfo):
         """Read file into memory."""
         if archiveinfo.is_directory:
-            return None
+            return b""
         filename = archiveinfo.filename
         archive.reset()
         archive.extract(targets=[filename], factory=self._factory)
@@ -69,7 +69,7 @@ class SevenZip(ArchiveHandler):
 
     def _pack_info_one_file(self, archive, path_info):
         """Add one file to the new archive."""
-        filename = path_info.container_filename
+        filename = path_info.archiveinfo.filename
         data = self._optimized_contents.pop(path_info)
         archive.writef(BytesIO(data), arcname=filename)
 
