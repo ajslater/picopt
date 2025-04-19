@@ -1,4 +1,4 @@
-"""Optimize comic archives."""
+"""Container Handler for multiple images like animated images and archives."""
 
 from abc import ABCMeta, abstractmethod
 from collections.abc import Generator, Mapping
@@ -16,7 +16,7 @@ from picopt.stats import ReportStats
 
 
 class ContainerHandler(Handler, metaclass=ABCMeta):
-    """Comic format class."""
+    """Container handler for multiple images."""
 
     CONTAINER_DIR_SUFFIX: str = ".dir"
     CONVERT: bool = True
