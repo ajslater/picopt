@@ -21,6 +21,7 @@ class Rar(Zip):
     PROGRAMS = (("unrar",),)
     ARCHIVE_CLASS = RarFile
     INFO_CLASS = RarInfo
+    SUFFIXES = (".rar",)
 
     @classmethod
     def _is_archive(cls, path: Path | BytesIO) -> bool:
@@ -41,3 +42,4 @@ class Cbr(Rar):
     # RAR is nonfree and often unable to repack with available tools. Always convert to CBZ.
     OUTPUT_FORMAT_STR: str = "CBZ"
     OUTPUT_FILE_FORMAT: FileFormat = FileFormat(OUTPUT_FORMAT_STR)
+    SUFFIXES = (".cbr",)
