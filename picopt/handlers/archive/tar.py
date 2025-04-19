@@ -5,10 +5,11 @@ from pathlib import Path
 from tarfile import REGTYPE, TarFile, TarInfo, is_tarfile
 from tarfile import open as tar_open
 from types import MappingProxyType
-from zipfile import ZipFile
+from zipfile import ZipFile, ZipInfo
 
 import filetype
-from termcolor import cprint
+from py7zr.py7zr import FileInfo as SevenZipInfo
+from rarfile import RarInfo
 
 from picopt.formats import FileFormat
 from picopt.handlers.archive.archive import ArchiveHandler
@@ -25,7 +26,15 @@ class Tar(ArchiveHandler):
     OUTPUT_FILE_FORMAT = FileFormat(OUTPUT_FORMAT_STR)
     PROGRAMS = ((ContainerHandler.INTERNAL,),)
     ARCHIVE_CLASS = TarFile
-    ZIPINFO_MAP = MappingProxyType({"filename": "name", "date_time": "mtime"})
+    INFO_CLASS = TarInfo
+    ARCHIVEINFO_MAP = MappingProxyType(
+        {
+            RarInfo: {"name": "filename", "creationtime": "date_time"},
+            SevenZipInfo: {"name": "filename", "mtime": "creationtime"},
+            ZipInfo: {"name": "filename", "mtime": "date_time"},
+        }
+    )
+    DTTM_ATTR = "mtime"
     COMPRESSION_MIME = ""
     WRITE_MODE = "w"
     COMPRESS_KWARGS = MappingProxyType({})
@@ -53,8 +62,8 @@ class Tar(ArchiveHandler):
     def _archive_infolist(archive):
         return (tarinfo for tarinfo in archive.getmembers() if tarinfo.isfile())
 
-    def _archive_readfile(self, archive, filename: str):
-        return archive.extractfile(filename).read()
+    def _archive_readfile(self, archive, archiveinfo):
+        return archive.extractfile(archiveinfo).read()
 
     def _archive_for_write(self, output_buffer: BytesIO) -> TarFile:
         return tar_open(
@@ -70,8 +79,6 @@ class Tar(ArchiveHandler):
         tarinfo.size = len(data)
         buf = BytesIO(data)
         archive.addfile(tarinfo, buf)
-        if self.config.verbose:
-            cprint(".", end="")
 
 
 class TarGz(Tar):

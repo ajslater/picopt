@@ -2,9 +2,12 @@
 
 from io import BytesIO
 from pathlib import Path
-from zipfile import ZIP_DEFLATED, ZIP_STORED, ZipFile, is_zipfile
+from tarfile import TarInfo
+from types import MappingProxyType
+from zipfile import ZIP_DEFLATED, ZIP_STORED, ZipFile, ZipInfo, is_zipfile
 
-from termcolor import cprint
+from py7zr.py7zr import FileInfo as SevenZipInfo
+from rarfile import RarInfo
 
 from picopt.formats import FileFormat
 from picopt.handlers.archive.archive import ArchiveHandler
@@ -20,6 +23,15 @@ class Zip(ArchiveHandler):
     INPUT_FILE_FORMATS = frozenset({INPUT_FILE_FORMAT})
     PROGRAMS = ((ContainerHandler.INTERNAL,),)
     ARCHIVE_CLASS = ZipFile
+    INFO_CLASS = ZipInfo
+    ARCHIVEINFO_MAP = MappingProxyType(
+        {
+            TarInfo: {},
+            SevenZipInfo: {"filename": "filename", "date_time": "creationtime"},
+            RarInfo: {},
+        }
+    )
+    DTTM_ATTR = "date_time"
 
     @classmethod
     def _is_archive(cls, path: Path | BytesIO) -> bool:
@@ -36,7 +48,7 @@ class Zip(ArchiveHandler):
     def _pack_info_one_file(self, archive, path_info):
         """Add one file to the new archive."""
         data = self._optimized_contents.pop(path_info)
-        zipinfo = path_info.zipinfo
+        zipinfo: ZipInfo = self.to_nativeinfo(path_info.archiveinfo)  # type: ignore[reportAssignmentType]
         if not zipinfo:
             return
         if (
@@ -44,15 +56,11 @@ class Zip(ArchiveHandler):
             and path_info.container_filename != zipinfo.filename
         ):
             zipinfo.filename = path_info.container_filename
-        if (
-            not self.config.keep_metadata
-            and zipinfo
-            and zipinfo.compress_type == ZIP_STORED
+        if not self.config.keep_metadata and (
+            not zipinfo.compress_type or zipinfo.compress_type == ZIP_STORED
         ):
             zipinfo.compress_type = ZIP_DEFLATED
         archive.writestr(zipinfo, data)
-        if self.config.verbose:
-            cprint(".", end="")
 
 
 class Cbz(Zip):

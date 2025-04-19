@@ -2,9 +2,8 @@
 
 from io import BytesIO
 from pathlib import Path
-from types import MappingProxyType
 
-from rarfile import RarFile, is_rarfile
+from rarfile import RarFile, RarInfo, is_rarfile
 
 from picopt.formats import FileFormat
 from picopt.handlers.archive.zip import Zip
@@ -21,7 +20,7 @@ class Rar(Zip):
     OUTPUT_FILE_FORMAT: FileFormat = FileFormat(OUTPUT_FORMAT_STR)
     PROGRAMS = (("unrar",),)
     ARCHIVE_CLASS = RarFile
-    ZIPINFO_MAP = MappingProxyType({"filename": "filename", "date_time": "date_time"})
+    INFO_CLASS = RarInfo
 
     @classmethod
     def _is_archive(cls, path: Path | BytesIO) -> bool:

@@ -74,7 +74,7 @@ class Walk:
         attrs: list = ["dark"]
 
         # File types
-        if path_info.zipinfo and path_info.is_dir():
+        if path_info.archiveinfo and path_info.is_dir():
             reason = f"Skip archive directory {path_info.full_name()}"
         elif (
             not self._config.symlinks and path_info.path and path_info.path.is_symlink()
@@ -83,7 +83,9 @@ class Walk:
         elif path_info.name() in self.TIMESTAMPS_FILENAMES:
             legacy = "legacy " if path_info.name() == OLD_TIMESTAMPS_NAME else ""
             reason = f"Skip {legacy}timestamp {path_info.full_name()}"
-        elif not path_info.zipinfo and path_info.path and not path_info.path.exists():
+        elif (
+            not path_info.archiveinfo and path_info.path and not path_info.path.exists()
+        ):
             reason = f"WARNING: {path_info.full_name()} not found."
             color = "yellow"
             attrs = []

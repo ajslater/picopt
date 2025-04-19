@@ -221,8 +221,10 @@ _FORMAT_HANDLERS = MappingProxyType(
         Rar.INPUT_FILE_FORMAT: FileFormatHandlers(convert=(Rar,)),
         Cbr.INPUT_FILE_FORMAT: FileFormatHandlers(convert=(Cbr,)),
         EPub.OUTPUT_FILE_FORMAT: FileFormatHandlers(native=(EPub,)),
-        SevenZip.INPUT_FILE_FORMAT: FileFormatHandlers(convert=(SevenZip,)),
-        Cb7.INPUT_FILE_FORMAT: FileFormatHandlers(convert=(Cb7,)),
+        SevenZip.INPUT_FILE_FORMAT: FileFormatHandlers(
+            native=(SevenZip,), convert=(Zip,)
+        ),
+        Cb7.INPUT_FILE_FORMAT: FileFormatHandlers(native=(Cb7,), convert=(Cbz,)),
         Tar.OUTPUT_FILE_FORMAT: FileFormatHandlers(native=(Tar,), convert=(Zip,)),
         TarGz.OUTPUT_FILE_FORMAT: FileFormatHandlers(native=(TarGz,), convert=(Zip,)),
         TarBz.OUTPUT_FILE_FORMAT: FileFormatHandlers(native=(TarBz,), convert=(Zip,)),
