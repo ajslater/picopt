@@ -89,8 +89,7 @@ class ArchiveHandler(NonPILIdentifier, ContainerHandler, ABC):
             self._set_comment(archive)
             for archiveinfo in self._archive_infolist(archive):
                 data = self._archive_readfile(archive, archiveinfo)
-                if not data:
-                    # Skip directories mostly.
+                if data is None:
                     continue
                 path_info = PathInfo(
                     self.path_info.top_path,  # Change this when i do internal times?
