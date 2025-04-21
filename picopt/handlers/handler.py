@@ -96,6 +96,7 @@ class Handler(ABC):
         self,
         config: AttrDict,
         path_info: PathInfo,
+        # TODO move these params to image handler.
         input_file_format: FileFormat,
         info: Mapping[str, Any],
     ):
@@ -120,11 +121,14 @@ class Handler(ABC):
         final_path = Path(final_path)
         final_path = final_path.with_suffix(self.output_suffix)
         self.final_path: Path = final_path
-        self.input_file_format: FileFormat = input_file_format
-        self.info: dict[str, Any] = dict(info)
         if self.config.preserve:
             self.path_info.stat()
+        # TODO move to images
+        # Only for older cwebp which only accepts some formats
+        self.input_file_format: FileFormat = input_file_format
         self._input_file_formats = self.INPUT_FILE_FORMATS
+        # Only for image metadata preservation
+        self.info: dict[str, Any] = dict(info)
 
     def _prepare_info_webp(self):
         """Transform info for webp."""
