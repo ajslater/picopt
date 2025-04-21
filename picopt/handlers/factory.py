@@ -37,30 +37,6 @@ def _create_handler_get_handler_class(
     return handler_cls
 
 
-def create_handler_no_handler_class(
-    config: AttrDict, path_info: PathInfo, file_format: FileFormat | None
-) -> None:
-    """Warn about no handler for file."""
-    if config.verbose > 1 and not config.list_only:
-        if file_format:
-            fmt = file_format.format_str
-            if file_format.lossless:
-                fmt += " lossless"
-            else:
-                fmt += " lossy"
-            if file_format.animated:
-                fmt += " animated"
-        else:
-            fmt = "unknown"
-        cprint(
-            f"Skipped {path_info.full_name()}: ({fmt}) is not an enabled image or container.",
-            "white",
-            attrs=["dark"],
-        )
-    else:
-        cprint(".", "white", attrs=["dark"], end="")
-
-
 def create_handler(config: AttrDict, path_info: PathInfo) -> Handler | None:
     """Return a handler for the image format."""
     # This is the consumer of config._format_handlers
@@ -81,7 +57,7 @@ def create_handler(config: AttrDict, path_info: PathInfo) -> Handler | None:
     if handler_cls and file_format is not None:
         handler = handler_cls(config, path_info, file_format, info)
     else:
-        handler = create_handler_no_handler_class(config, path_info, file_format)
+        handler = None
     return handler
 
 

@@ -33,6 +33,20 @@ class FileFormat:
     animated: bool = False
     archive: bool = False
 
+    def __repr__(self):
+        """Represent format as a string."""
+        parts = [self.format_str]
+        if self.archive:
+            parts.append("archive")
+        else:
+            if self.lossless:
+                parts.append("lossless")
+            else:
+                parts.append("lossy")
+            if self.animated:
+                parts.append("animated")
+        return " ".join(parts)
+
 
 MPO_FILE_FORMAT = FileFormat(str(MpoImageFile.format), lossless=False, animated=True)
 SVG_FORMAT_STR = "SVG"

@@ -15,7 +15,6 @@ from picopt.exceptions import PicoptError
 from picopt.handlers.container import ContainerHandler
 from picopt.handlers.factory import (
     create_handler,
-    create_handler_no_handler_class,
     create_repack_handler,
     get_repack_handler_class,
 )
@@ -209,6 +208,20 @@ class Walk:
             timestamps = self._timestamps[path_info.top_path]
             timestamps.set(dir_path, compact=True)
 
+    def _skip_no_repack_handler(self, unpack_handler: ContainerHandler) -> None:
+        """Warn about no repack handler for file."""
+        if self._config.verbose > 1 and not self._config.list_only:
+            full_name = unpack_handler.path_info.full_name()
+            file_format = unpack_handler.input_file_format
+            fmt = str(file_format) if file_format else "unknown"
+            cprint(
+                f"Skipped {full_name}: ({fmt}) is not an enabled image or container.",
+                "white",
+                attrs=["dark"],
+            )
+        else:
+            cprint(".", "white", attrs=["dark"], end="")
+
     def _walk_container(self, unpack_handler: ContainerHandler) -> ApplyResult | None:
         """Optimize a container."""
         result: ApplyResult | None
@@ -217,11 +230,7 @@ class Walk:
                 self._config, unpack_handler
             )
             if not repack_handler_class:
-                # TODO SKIP verbosity
-                path_info = unpack_handler.path_info
-                file_format = unpack_handler.input_file_format
-                create_handler_no_handler_class(self._config, path_info, file_format)
-                return None
+                return self._skip_no_repack_handler(unpack_handler)
             for path_info in unpack_handler.unpack():
                 container_result = self.walk_file(path_info)
                 unpack_handler.set_task(path_info, container_result)
@@ -230,8 +239,7 @@ class Walk:
                 self._config, unpack_handler, repack_handler_class
             )
             if not repack_handler:
-                # TODO SKIP verbosity
-                return None
+                return self._skip_no_repack_handler(unpack_handler)
             try:
                 # at this point handler_final_result array contains buffers not mp-results
                 result = self._pool.apply_async(repack_handler.repack)
