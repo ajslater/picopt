@@ -70,7 +70,6 @@ class ContainerHandler(Handler, metaclass=ABCMeta):
             data = report.data if report.data else path_info.data()
             # Clearing has to happen AFTER mp_results.get() or we risk not passing the data
             path_info.data_clear()
-            path_info.container_filename = str(report.path)
             self.optimized_contents[path_info] = data
 
     def optimize(self) -> BinaryIO:
