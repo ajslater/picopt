@@ -11,7 +11,7 @@ from confuse import AttrDict
 from py7zr.py7zr import FileInfo as SevenZipInfo
 from rarfile import RarInfo
 
-from picopt.archiveinfo import ArchiveInfo
+from picopt.handlers.archive.archiveinfo import ArchiveInfo
 
 TMP_DIR = Path("__picopt_tmp")
 CONTAINER_PATH_DELIMETER = " - "
