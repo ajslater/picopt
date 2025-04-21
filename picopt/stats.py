@@ -74,7 +74,7 @@ class ReportStats(ReportStatBase):
 
     def _report_error(self) -> str:
         """Return the error report string."""
-        report = f"ERROR: {self._get_full_path()}"
+        report = f"\nERROR: {self._get_full_path()}\n"
         if isinstance(self.exc, CalledProcessError):
             report += f"\n{self._TAB}retcode: {self.exc.returncode}"
             if self.exc.cmd:
