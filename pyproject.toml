@@ -152,7 +152,7 @@ extend-select = [
   "FA",
   # "FAST",
   "FBT",
-  "FIX",
+  # "FIX",
   "FLY",
   # "FURB",
   # "G",
