@@ -2,42 +2,32 @@
 
 from io import BytesIO
 from pathlib import Path
-from tarfile import REGTYPE, TarFile, TarInfo, is_tarfile
+from tarfile import TarFile, TarInfo, is_tarfile
 from tarfile import open as tar_open
 from types import MappingProxyType
-from zipfile import ZipFile, ZipInfo
 
 import filetype
-from py7zr.py7zr import FileInfo as SevenZipInfo
-from rarfile import RarInfo
+from termcolor import cprint
 
 from picopt.formats import FileFormat
-from picopt.handlers.archive.archive import ArchiveHandler
-from picopt.handlers.container import ContainerHandler
+from picopt.handlers.archive.archive import ArchiveHandler, PackingArchiveHandler
 
 
-class Tar(ArchiveHandler):
+class Tar(PackingArchiveHandler):
     """Tarball Container."""
 
     INPUT_FORMAT_STR: str = "TAR"
-    INPUT_FILE_FORMAT = FileFormat(INPUT_FORMAT_STR)
+    SUFFIXES = (".tar",)
+    INPUT_FILE_FORMAT = FileFormat(INPUT_FORMAT_STR, archive=True)
     INPUT_FILE_FORMATS = frozenset({INPUT_FILE_FORMAT})
     OUTPUT_FORMAT_STR: str = INPUT_FORMAT_STR
-    OUTPUT_FILE_FORMAT = FileFormat(OUTPUT_FORMAT_STR)
-    PROGRAMS = ((ContainerHandler.INTERNAL,),)
+    OUTPUT_FILE_FORMAT = FileFormat(OUTPUT_FORMAT_STR, archive=True)
+    PROGRAMS = ((ArchiveHandler.INTERNAL,),)
     ARCHIVE_CLASS = TarFile
     INFO_CLASS = TarInfo
-    ARCHIVEINFO_MAP = MappingProxyType(
-        {
-            RarInfo: {"name": "filename", "creationtime": "date_time"},
-            SevenZipInfo: {"name": "filename", "mtime": "creationtime"},
-            ZipInfo: {"name": "filename", "mtime": "date_time"},
-        }
-    )
-    DTTM_ATTR = "mtime"
-    COMPRESSION_MIME = ""
     WRITE_MODE = "w"
     COMPRESS_KWARGS = MappingProxyType({})
+    COMPRESSION_MIME = ""
 
     @classmethod
     def _is_archive(cls, path: Path | BytesIO) -> bool:
@@ -55,7 +45,7 @@ class Tar(ArchiveHandler):
             raise ValueError(msg)
         return archive
 
-    def _set_comment(self, _archive: ZipFile) -> None:  # type: ignore[reportIncompatibleMethodOverride]
+    def _set_comment(self, archive: TarFile) -> None:  # type: ignore[reportIncompatibleMethodOverride]
         """NoOp until inherit from ArchiveHandler."""
 
     @staticmethod
@@ -72,10 +62,11 @@ class Tar(ArchiveHandler):
 
     def _pack_info_one_file(self, archive, path_info):
         """Add one file to the new archive."""
-        name = path_info.name()
-        data = self._optimized_contents.pop(path_info)
-        tarinfo = TarInfo(name=name)
-        tarinfo.type = REGTYPE
+        data = self.optimized_contents.pop(path_info)
+        if not path_info.archiveinfo:
+            cprint("WARNING: No archiveinfo to write.", "yellow")
+            return
+        tarinfo = path_info.archiveinfo.to_tarinfo()
         tarinfo.size = len(data)
         buf = BytesIO(data)
         archive.addfile(tarinfo, buf)
@@ -84,12 +75,12 @@ class Tar(ArchiveHandler):
 class TarGz(Tar):
     """GZipped Tarball Container."""
 
-    INPUT_FORMAT_STR: str = "TGZ"
+    INPUT_FORMAT_STR = "TGZ"
     SUFFIXES = (".tar.gz", ".tgz")
-    INPUT_FILE_FORMAT = FileFormat(INPUT_FORMAT_STR)
+    INPUT_FILE_FORMAT = FileFormat(INPUT_FORMAT_STR, archive=True)
     INPUT_FILE_FORMATS = frozenset({INPUT_FILE_FORMAT})
-    OUTPUT_FORMAT_STR: str = INPUT_FORMAT_STR
-    OUTPUT_FILE_FORMAT = FileFormat(OUTPUT_FORMAT_STR)
+    OUTPUT_FORMAT_STR = INPUT_FORMAT_STR
+    OUTPUT_FILE_FORMAT = FileFormat(OUTPUT_FORMAT_STR, archive=True)
     COMPRESSION_MIME = "application/gzip"
     WRITE_MODE = "w:gz"
     COMPRESS_KWARGS = MappingProxyType({"compresslevel": 9})
@@ -98,12 +89,12 @@ class TarGz(Tar):
 class TarBz(Tar):
     """BZipp2ed Tarball Container."""
 
-    INPUT_FORMAT_STR: str = "TBZ"
+    INPUT_FORMAT_STR = "TBZ"
     SUFFIXES = (".tar.bz2", ".tbz")
-    INPUT_FILE_FORMAT = FileFormat(INPUT_FORMAT_STR)
+    INPUT_FILE_FORMAT = FileFormat(INPUT_FORMAT_STR, archive=True)
     INPUT_FILE_FORMATS = frozenset({INPUT_FILE_FORMAT})
-    OUTPUT_FORMAT_STR: str = INPUT_FORMAT_STR
-    OUTPUT_FILE_FORMAT = FileFormat(OUTPUT_FORMAT_STR)
+    OUTPUT_FORMAT_STR = INPUT_FORMAT_STR
+    OUTPUT_FILE_FORMAT = FileFormat(OUTPUT_FORMAT_STR, archive=True)
     COMPRESSION_MIME = "application/x-bzip2"
     WRITE_MODE = "w:bz2"
     COMPRESS_KWARGS = MappingProxyType({"compresslevel": 9})
@@ -112,12 +103,12 @@ class TarBz(Tar):
 class TarXz(Tar):
     """LZMAed Tarball Container."""
 
-    INPUT_FORMAT_STR: str = "TXZ"
+    INPUT_FORMAT_STR = "TXZ"
     SUFFIXES = (".tar.xz", ".txz")
-    INPUT_FILE_FORMAT = FileFormat(INPUT_FORMAT_STR)
+    INPUT_FILE_FORMAT = FileFormat(INPUT_FORMAT_STR, archive=True)
     INPUT_FILE_FORMATS = frozenset({INPUT_FILE_FORMAT})
-    OUTPUT_FORMAT_STR: str = INPUT_FORMAT_STR
-    OUTPUT_FILE_FORMAT = FileFormat(OUTPUT_FORMAT_STR)
+    OUTPUT_FORMAT_STR = INPUT_FORMAT_STR
+    OUTPUT_FILE_FORMAT = FileFormat(OUTPUT_FORMAT_STR, archive=True)
     COMPRESSION_MIME = "application/x-xz"
     WRITE_MODE = "w:xz"
     COMPRESS_KWARGS = MappingProxyType({"preset": 9})
@@ -126,10 +117,7 @@ class TarXz(Tar):
 class Cbt(Tar):
     """CBT Container."""
 
-    INPUT_FORMAT_STR: str = "CBT"
-    INPUT_SUFFIX: str = "." + INPUT_FORMAT_STR.lower()
-    INPUT_FILE_FORMAT = FileFormat(INPUT_FORMAT_STR)
+    INPUT_FORMAT_STR = "CBT"
+    SUFFIXES = (".cbt",)
+    INPUT_FILE_FORMAT = FileFormat(INPUT_FORMAT_STR, archive=True)
     INPUT_FILE_FORMATS = frozenset({INPUT_FILE_FORMAT})
-    # CBT is an abomination. Always convert to CBZ
-    OUTPUT_FORMAT_STR: str = "CBZ"
-    OUTPUT_FILE_FORMAT: FileFormat = FileFormat(OUTPUT_FORMAT_STR)

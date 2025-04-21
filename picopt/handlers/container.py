@@ -1,12 +1,11 @@
 """Container Handler for multiple images like animated images and archives."""
 
 from abc import ABCMeta, abstractmethod
-from collections.abc import Generator, Mapping
+from collections.abc import Generator
 from io import BytesIO
 from multiprocessing.pool import ApplyResult
 from typing import BinaryIO
 
-from confuse.templates import AttrDict
 from termcolor import cprint
 
 from picopt.formats import FileFormat
@@ -16,7 +15,7 @@ from picopt.stats import ReportStats
 
 
 class ContainerHandler(Handler, metaclass=ABCMeta):
-    """Container handler for multiple images."""
+    """Container handler for unpacking multiple images and archives."""
 
     CONTAINER_DIR_SUFFIX: str = ".dir"
     CONVERT: bool = True
@@ -30,27 +29,12 @@ class ContainerHandler(Handler, metaclass=ABCMeta):
     def unpack_into(self) -> Generator[PathInfo, None, None]:
         """Unpack a container into a tmp dir to work on it's contents."""
 
-    @abstractmethod
-    def pack_into(self) -> BytesIO:
-        """Create a container from a tmp dir's contents."""
-
-    def __init__(
-        self,
-        config: AttrDict,
-        path_info: PathInfo,
-        file_format: FileFormat,
-        info: Mapping,
-    ):
-        """Unpack a container with a subclass's unpacker."""
-        super().__init__(
-            config,
-            path_info,
-            file_format,
-            info,
-        )
+    def __init__(self, *args, **kwargs):
+        """Initialize unpack tasks and ."""
+        super().__init__(*args, **kwargs)
         self.comment: bytes | None = None
         self._tasks: dict[PathInfo, ApplyResult] = {}
-        self._optimized_contents: dict[PathInfo, bytes] = {}
+        self.optimized_contents: dict[PathInfo, bytes] = {}
 
     def get_container_paths(self) -> tuple[str, ...]:
         """Create a container path for output."""
@@ -70,9 +54,13 @@ class ContainerHandler(Handler, metaclass=ABCMeta):
         """Store the mutiprocessing task."""
         if mp_result is None:
             # if not handled by picopt, place it in the results.
-            self._optimized_contents[path_info] = path_info.data()
+            self.optimized_contents[path_info] = path_info.data()
         else:
             self._tasks[path_info] = mp_result
+
+    def get_tasks(self) -> dict[PathInfo, ApplyResult]:
+        """Return tasks."""
+        return self._tasks
 
     def optimize_contents(self) -> None:
         """Store results from mutiprocessing task."""
@@ -83,7 +71,34 @@ class ContainerHandler(Handler, metaclass=ABCMeta):
             # Clearing has to happen AFTER mp_results.get() or we risk not passing the data
             path_info.data_clear()
             path_info.container_filename = str(report.path)
-            self._optimized_contents[path_info] = data
+            self.optimized_contents[path_info] = data
+
+    def optimize(self) -> BinaryIO:
+        """NoOp."""
+        # TODO remove
+        return BytesIO()
+
+
+class PackingContainerHandler(ContainerHandler, metaclass=ABCMeta):
+    """Container handler for unpacking and packing multiple images and archives."""
+
+    @abstractmethod
+    def pack_into(self) -> BytesIO:
+        """Create a container from unpacked contents."""
+
+    def __init__(
+        self,
+        *args,
+        comment: bytes | None = None,
+        optimized_contents: dict[PathInfo, bytes] | None = None,
+        **kwargs,
+    ):
+        """Iinitialize optimized contents."""
+        super().__init__(*args, **kwargs)
+        if comment:
+            self.comment = comment
+        if optimized_contents:
+            self.optimized_contents = optimized_contents
 
     def optimize(self) -> BinaryIO:
         """Run pack_into."""

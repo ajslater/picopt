@@ -4,6 +4,7 @@ from confuse.templates import AttrDict
 from termcolor import cprint
 
 from picopt.formats import FileFormat
+from picopt.handlers.container import ContainerHandler, PackingContainerHandler
 from picopt.handlers.detect_format import detect_format
 from picopt.handlers.handler import Handler
 from picopt.path import PathInfo
@@ -17,20 +18,29 @@ def _get_handler_class(
 
 
 def _create_handler_get_handler_class(
-    config: AttrDict, convert: bool, file_format: FileFormat | None
+    config: AttrDict,
+    convert: bool,
+    file_format: FileFormat | None,
+    repack: bool = False,  # noqa: FBT002
 ) -> type[Handler] | None:
     handler_cls: type[Handler] | None = None
     if file_format and file_format.format_str in config.formats:
-        if convert:
+        if convert and (not file_format.archive or repack):
+            # For archives, conversion is done later with a different handler.
+            # For images it's often faster to use the optimizer's binary to convert
+            # instead of translating first with PIL.
             handler_cls = _get_handler_class(config, file_format, "convert_handlers")
         if not handler_cls:
             handler_cls = _get_handler_class(config, file_format, "native_handlers")
+    if repack and handler_cls and not issubclass(handler_cls, PackingContainerHandler):
+        handler_cls = None
     return handler_cls
 
 
-def _create_handler_no_handler_class(
+def create_handler_no_handler_class(
     config: AttrDict, path_info: PathInfo, file_format: FileFormat | None
 ) -> None:
+    """Warn about no handler for file."""
     if config.verbose > 1 and not config.list_only:
         if file_format:
             fmt = file_format.format_str
@@ -52,7 +62,7 @@ def _create_handler_no_handler_class(
 
 
 def create_handler(config: AttrDict, path_info: PathInfo) -> Handler | None:
-    """Get the image format."""
+    """Return a handler for the image format."""
     # This is the consumer of config._format_handlers
     handler_cls: type[Handler] | None = None
     try:
@@ -71,5 +81,53 @@ def create_handler(config: AttrDict, path_info: PathInfo) -> Handler | None:
     if handler_cls and file_format is not None:
         handler = handler_cls(config, path_info, file_format, info)
     else:
-        handler = _create_handler_no_handler_class(config, path_info, file_format)
+        handler = create_handler_no_handler_class(config, path_info, file_format)
+    return handler
+
+
+##########
+# Repack #
+##########
+
+
+def get_repack_handler_class(
+    config: AttrDict, unpack_handler: ContainerHandler
+) -> type[PackingContainerHandler] | None:
+    """Get the repack handler class or none if not configured."""
+    repack_handler_class: type[PackingContainerHandler] | None = None
+    try:
+        file_format = unpack_handler.input_file_format
+        repack_handler_class: type[PackingContainerHandler] | None = (  # type: ignore[reportAssignmentType]
+            _create_handler_get_handler_class(
+                config, unpack_handler.path_info.convert, file_format, repack=True
+            )
+        )
+    except OSError as exc:
+        cprint(f"WARNING: getting repack container handler {exc}", "yellow")
+        from traceback import print_exc
+
+        print_exc()
+    return repack_handler_class
+
+
+def create_repack_handler(
+    config: AttrDict,
+    unpack_handler: ContainerHandler,
+    repack_handler_class: type[PackingContainerHandler],
+) -> PackingContainerHandler | None:
+    """Return a handler to repack the container."""
+    # handler input_file_format is only for images so it doesn't matter what this is.
+    if unpack_handler.__class__ == repack_handler_class and isinstance(
+        unpack_handler, PackingContainerHandler
+    ):
+        handler = unpack_handler
+    else:
+        handler = repack_handler_class(
+            config,
+            unpack_handler.path_info,
+            repack_handler_class.OUTPUT_FILE_FORMAT,
+            info=unpack_handler.info,
+            comment=unpack_handler.comment,
+            optimized_contents=unpack_handler.optimized_contents,
+        )
     return handler

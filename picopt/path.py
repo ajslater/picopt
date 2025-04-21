@@ -1,16 +1,17 @@
 """Data classes."""
 
 from collections.abc import Sequence
-from datetime import datetime, timezone
 from io import BufferedReader, BytesIO
 from os import stat_result
 from pathlib import Path
-from tarfile import DIRTYPE, TarInfo
+from tarfile import TarInfo
 from zipfile import ZipInfo
 
 from confuse import AttrDict
 from py7zr.py7zr import FileInfo as SevenZipInfo
 from rarfile import RarInfo
+
+from picopt.archiveinfo import ArchiveInfo
 
 TMP_DIR = Path("__picopt_tmp")
 CONTAINER_PATH_DELIMETER = " - "
@@ -28,7 +29,7 @@ class PathInfo:
         is_case_sensitive: bool,
         path: Path | None = None,
         frame: int | None = None,
-        archiveinfo: ZipInfo | TarInfo | SevenZipInfo | None = None,
+        archiveinfo: ZipInfo | RarInfo | TarInfo | SevenZipInfo | None = None,
         data: bytes | None = None,
         container_paths: Sequence[str] | None = None,
     ):
@@ -45,7 +46,8 @@ class PathInfo:
         # An animated image frame (in a container)
         self.frame = frame
         # An archived file (in a container)
-        self.archiveinfo = archiveinfo
+        archiveinfo_obj = ArchiveInfo(archiveinfo) if archiveinfo else None
+        self.archiveinfo = archiveinfo_obj
         # The history of parent container names
         self.container_paths: tuple[str, ...] = (
             tuple(container_paths) if container_paths else ()
@@ -64,22 +66,11 @@ class PathInfo:
         self._suffix: str | None = None
         self._is_container_child: bool | None = None
 
-    def _raise_archiveinfo_type(self):
-        reason = f"archiveinfo bad type {type(self.archiveinfo)}"
-        raise TypeError(reason)
-
     def is_dir(self) -> bool:
         """Is the file a directory."""
         if self._is_dir is None:
             if self.archiveinfo:
-                if isinstance(self.archiveinfo, ZipInfo | RarInfo):
-                    self._is_dir = bool(self.archiveinfo.is_dir())
-                elif isinstance(self.archiveinfo, TarInfo):
-                    self._is_dir = self.archiveinfo.type == DIRTYPE
-                elif isinstance(self.archiveinfo, SevenZipInfo):
-                    self._is_dir = bool(self.archiveinfo.is_directory)
-                else:
-                    self._raise_archiveinfo_type()
+                self._is_dir = self.archiveinfo.is_dir()
             elif self.path:
                 self._is_dir = self.path.is_dir()
             else:
@@ -143,16 +134,10 @@ class PathInfo:
         """Choose an mtime."""
         if self._mtime is None:
             if self.archiveinfo:
-                if isinstance(self.archiveinfo, ZipInfo | RarInfo):
-                    self._mtime = datetime(
-                        *self.archiveinfo.date_time, tzinfo=timezone.utc
-                    ).timestamp()
-                elif isinstance(self.archiveinfo, TarInfo):
-                    self._mtime = self.archiveinfo.mtime
-                elif isinstance(self.archiveinfo, SevenZipInfo):
-                    self._mtime = float(self.archiveinfo.creationtime.totimestamp())
-                else:
-                    self._raise_archiveinfo_type()
+                mtime = self.archiveinfo.mtime()
+                if mtime is None:
+                    mtime = 0.0
+                self._mtime = mtime
             elif self.container_mtime:
                 self._mtime = self.container_mtime
             else:
@@ -167,12 +152,7 @@ class PathInfo:
         """Name."""
         if self._name is None:
             if self.archiveinfo:
-                if isinstance(self.archiveinfo, ZipInfo | RarInfo | SevenZipInfo):
-                    self._name = self.archiveinfo.filename
-                elif isinstance(self.archiveinfo, TarInfo):
-                    self._name = self.archiveinfo.name
-                else:
-                    self._raise_archiveinfo_type()
+                self._name = self.archiveinfo.filename()
             elif self.path:
                 self._name = str(self.path)
             elif self.frame:

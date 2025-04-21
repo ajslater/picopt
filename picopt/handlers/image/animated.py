@@ -11,13 +11,13 @@ from PIL.PngImagePlugin import PngImageFile
 from termcolor import cprint
 
 from picopt.formats import FileFormat
-from picopt.handlers.container import ContainerHandler
+from picopt.handlers.container import PackingContainerHandler
 from picopt.path import PathInfo
 
 ANIMATED_INFO_KEYS = ("bbox", "blend", "disposal", "duration")
 
 
-class ImageAnimated(ContainerHandler, ABC):
+class ImageAnimated(PackingContainerHandler, ABC):
     """Animated image container."""
 
     PROGRAMS = (("pil2native",),)
@@ -79,7 +79,7 @@ class ImageAnimated(ContainerHandler, ABC):
     def pack_into(self) -> BytesIO:
         """Remux the optimized frames into an animated webp."""
         sorted_pairs = sorted(
-            self._optimized_contents.items(),
+            self.optimized_contents.items(),
             key=lambda pair: 0 if pair[0].frame is None else pair[0].frame,
         )
         head_image_data = sorted_pairs.pop()[1]

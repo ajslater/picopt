@@ -2,40 +2,34 @@
 
 from io import BytesIO
 from pathlib import Path
-from tarfile import TarInfo
-from types import MappingProxyType
-from zipfile import ZIP_DEFLATED, ZIP_STORED, ZipFile, ZipInfo, is_zipfile
+from zipfile import ZIP_DEFLATED, ZIP_STORED, ZipFile, is_zipfile
 
-from py7zr.py7zr import FileInfo as SevenZipInfo
-from rarfile import RarInfo
+from termcolor import cprint
 
 from picopt.formats import FileFormat
-from picopt.handlers.archive.archive import ArchiveHandler
-from picopt.handlers.container import ContainerHandler
+from picopt.handlers.archive.archive import PackingArchiveHandler
 
 
-class Zip(ArchiveHandler):
+class Zip(PackingArchiveHandler):
     """Ziplike container."""
 
     OUTPUT_FORMAT_STR: str = "ZIP"
-    OUTPUT_FILE_FORMAT: FileFormat = FileFormat(OUTPUT_FORMAT_STR)
+    OUTPUT_FILE_FORMAT = FileFormat(OUTPUT_FORMAT_STR, archive=True)
     INPUT_FILE_FORMAT = OUTPUT_FILE_FORMAT
     INPUT_FILE_FORMATS = frozenset({INPUT_FILE_FORMAT})
-    PROGRAMS = ((ContainerHandler.INTERNAL,),)
+    PROGRAMS = ((PackingArchiveHandler.INTERNAL,),)
     ARCHIVE_CLASS = ZipFile
-    INFO_CLASS = ZipInfo
-    ARCHIVEINFO_MAP = MappingProxyType(
-        {
-            TarInfo: {"filename": "name", "date_time": "mtime"},
-            SevenZipInfo: {"filename": "filename", "date_time": "creationtime"},
-            RarInfo: {"filename": "filename", "date_time": "date_time"},
-        }
-    )
-    DTTM_ATTR = "date_time"
 
     @classmethod
     def _is_archive(cls, path: Path | BytesIO) -> bool:
         return is_zipfile(path)
+
+    @staticmethod
+    def _archive_infolist(archive):
+        return archive.infolist()
+
+    def _archive_readfile(self, archive, archiveinfo):
+        return archive.read(archiveinfo.filename)
 
     def _set_comment(self, archive: ZipFile) -> None:  # type: ignore[reportIncompatibleMethodOverride]
         """Set the comment from the archive."""
@@ -47,15 +41,16 @@ class Zip(ArchiveHandler):
 
     def _pack_info_one_file(self, archive, path_info):
         """Add one file to the new archive."""
-        data = self._optimized_contents.pop(path_info)
-        zipinfo: ZipInfo = self.to_nativeinfo(path_info.archiveinfo)  # type: ignore[reportAssignmentType]
-        if not zipinfo:
+        data = self.optimized_contents.pop(path_info)
+        if not path_info.archiveinfo:
+            cprint("WARNING: No archiveinfo to write.", "yellow")
             return
+        zipinfo = path_info.archiveinfo.to_zipinfo()
         if (
             path_info.container_filename
             and path_info.container_filename != zipinfo.filename
         ):
-            # is this really neccissary?
+            # TODO  remove
             zipinfo.filename = path_info.container_filename
         if not self.config.keep_metadata and (
             not zipinfo.compress_type or zipinfo.compress_type == ZIP_STORED
@@ -68,9 +63,9 @@ class Cbz(Zip):
     """CBZ Container."""
 
     OUTPUT_FORMAT_STR: str = "CBZ"
-    OUTPUT_FILE_FORMAT: FileFormat = FileFormat(OUTPUT_FORMAT_STR)
-    INPUT_FILE_FORMAT = OUTPUT_FILE_FORMAT
+    INPUT_FILE_FORMAT = FileFormat(OUTPUT_FORMAT_STR, archive=True)
     INPUT_FILE_FORMATS = frozenset({INPUT_FILE_FORMAT})
+    OUTPUT_FILE_FORMAT = INPUT_FILE_FORMAT
 
 
 class EPub(Zip):
@@ -79,6 +74,6 @@ class EPub(Zip):
     # never convert inside epubs, breaks src links.
     CONVERT: bool = False
     OUTPUT_FORMAT_STR: str = "EPUB"
-    OUTPUT_FILE_FORMAT: FileFormat = FileFormat(OUTPUT_FORMAT_STR)
+    OUTPUT_FILE_FORMAT = FileFormat(OUTPUT_FORMAT_STR, archive=True)
     INPUT_FILE_FORMAT = OUTPUT_FILE_FORMAT
     INPUT_FILE_FORMATS = frozenset({INPUT_FILE_FORMAT})

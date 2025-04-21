@@ -1,13 +1,10 @@
 """Archive Base Handler."""
 
 from abc import ABC, abstractmethod
-from collections.abc import Generator, Mapping
-from datetime import datetime, timezone
+from collections.abc import Generator
 from io import BytesIO
-from operator import attrgetter
 from pathlib import Path
 from tarfile import TarFile, TarInfo
-from types import MappingProxyType
 from zipfile import ZipFile, ZipInfo
 
 from py7zr import SevenZipFile
@@ -16,25 +13,19 @@ from rarfile import RarFile, RarInfo
 from termcolor import cprint
 
 from picopt.formats import FileFormat
-from picopt.handlers.container import ContainerHandler
+from picopt.handlers.container import ContainerHandler, PackingContainerHandler
 from picopt.handlers.non_pil import NonPILIdentifier
 from picopt.path import PathInfo
 
-_DATETIME_ATTRGETTER = attrgetter(
-    "year", "month", "day", "hour", "minute", "second", "microsecond"
-)
-
 
 class ArchiveHandler(NonPILIdentifier, ContainerHandler, ABC):
-    """Compressed Archive."""
+    """Compressed Archive that must be converted with another handler."""
 
     ARCHIVE_CLASS: type[ZipFile | TarFile | SevenZipFile | RarFile] = ZipFile
-    ZIPINFO_MAP = MappingProxyType({})
-    INFO_CLASS: type[ZipInfo | TarInfo | SevenZipInfo | RarInfo] = ZipInfo
-    ARCHIVEINFO_MAP: MappingProxyType[
-        type[ZipInfo | TarInfo | SevenZipInfo | RarInfo], Mapping[str, str]
-    ] = MappingProxyType({})
-    DTTM_ATTR = ""
+    INPUT_FORMAT_STR = "Unimplemented"
+    INPUT_FILE_FORMAT = FileFormat(INPUT_FORMAT_STR)
+    INPUT_FILE_FORMATS = frozenset({INPUT_FILE_FORMAT})
+    SUFFIXES = ()
 
     @classmethod
     @abstractmethod
@@ -44,9 +35,10 @@ class ArchiveHandler(NonPILIdentifier, ContainerHandler, ABC):
     @classmethod
     def identify_format(cls, path_info: PathInfo) -> FileFormat | None:
         """Return the format if this handler can handle this path."""
+        fmt = None
         if cls._is_archive(path_info.path_or_buffer()):
-            return super().identify_format(path_info)
-        return None
+            fmt = super().identify_format(path_info)
+        return fmt
 
     def _get_archive(self):
         """Use the handler's archive class for this archive."""
@@ -60,28 +52,13 @@ class ArchiveHandler(NonPILIdentifier, ContainerHandler, ABC):
         """NoOp for many archive formats."""
 
     @staticmethod
+    @abstractmethod
     def _archive_infolist(archive):
-        return archive.infolist()
+        raise NotImplementedError
 
+    @abstractmethod
     def _archive_readfile(self, archive, archiveinfo):
-        return archive.read(archiveinfo)
-
-    @classmethod
-    def to_nativeinfo(cls, archive_info) -> ZipInfo | TarInfo | SevenZipInfo | RarInfo:
-        """Convert other archive FileInfos to ZipInfo."""
-        if isinstance(archive_info, cls.INFO_CLASS):
-            return archive_info
-        attr_map = cls.ARCHIVEINFO_MAP[type(archive_info)]
-        native_kwargs = {}
-        for native_attr, info_attr in attr_map.items():
-            value = getattr(archive_info, info_attr, None)
-            if value is None:
-                continue
-            if native_attr == cls.DTTM_ATTR and isinstance(value, int | float):
-                value = datetime.fromtimestamp(value, tz=timezone.utc)
-                value = _DATETIME_ATTRGETTER(value)
-            native_kwargs[native_attr] = value
-        return cls.INFO_CLASS(**native_kwargs)
+        raise NotImplementedError
 
     def unpack_into(self) -> Generator[PathInfo, None, None]:
         """Uncompress archive."""
@@ -104,6 +81,14 @@ class ArchiveHandler(NonPILIdentifier, ContainerHandler, ABC):
                 if self.config.verbose:
                     cprint(".", end="")
 
+
+class PackingArchiveHandler(ArchiveHandler, PackingContainerHandler, ABC):
+    """Compressed Archive."""
+
+    OUTPUT_FORMAT_STR = ArchiveHandler.INPUT_FORMAT_STR
+    OUTPUT_FILE_FORMAT = FileFormat(OUTPUT_FORMAT_STR)
+    INFO_CLASS: type[ZipInfo | TarInfo | SevenZipInfo | RarInfo] = ZipInfo
+
     @abstractmethod
     def _archive_for_write(self, output_buffer: BytesIO):
         raise NotImplementedError
@@ -117,7 +102,7 @@ class ArchiveHandler(NonPILIdentifier, ContainerHandler, ABC):
         output_buffer = BytesIO()
         archive = self._archive_for_write(output_buffer)
         with archive:
-            for path_info in tuple(self._optimized_contents):
+            for path_info in tuple(self.optimized_contents):
                 self._pack_info_one_file(archive, path_info)
                 if self.config.verbose:
                     cprint(".", end="")

@@ -20,14 +20,14 @@ FNS = MappingProxyType(
         "test_cbr.cbr": (93725, 93725, ("cbz", 88048)),
         "test_rar.rar": (93675, 93675, ("zip", 88035)),
         "test_zip.zip": (7783, 7015, ("zip", 7015)),
-        "igp-twss.epub": (292448, 285999, ("epub", 285439)),
-        "test_7z.7z": (7613, 6836, ("zip", 7015)),
-        "test_cb7.cb7": (7613, 6836, ("cbz", 7015)),
-        "test_tar.tar": (11264, 10240, ("zip", 7015)),
-        "test_tgz.tar.gz": (7620, 6805, ("zip", 7015)),
-        "test_tbz.tar.bz2": (8071, 7273, ("zip", 7015)),
-        "test_txz.tar.xz": (7612, 6844, ("zip", 7015)),
-        "test_cbt.cbt": (7612, 7612, ("cbz", 7015)),
+        "igp-twss.epub": (292448, 285999, ("epub", 285999)),
+        "test_7z.7z": (7613, 6836, ("zip", 6996)),
+        "test_cb7.cb7": (7613, 6836, ("cbz", 6996)),
+        "test_tar.tar": (11264, 10240, ("zip", 6908)),
+        "test_tgz.tar.gz": (7620, 6841, ("zip", 6908)),
+        "test_tbz.tar.bz2": (8071, 7309, ("zip", 6908)),
+        "test_txz.tar.xz": (7612, 6872, ("zip", 6908)),
+        "test_cbt.cbt": (7612, 7612, ("cbz", 6908)),
     }
 )
 
@@ -106,5 +106,10 @@ class TestContainersDir:
         path = TMP_ROOT / fn
         args = (*CONVERT_TO_ZIP_ARGS, str(path))
         cli.main(args)
+        suffix = path.suffix
+        while suffix:
+            # strip tar suffixes
+            path = path.with_suffix("")
+            suffix = path.suffix
         convert_path = path.with_suffix("." + sizes[2][0])
         assert convert_path.stat().st_size == sizes[2][1]

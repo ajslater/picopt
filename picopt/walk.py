@@ -13,7 +13,12 @@ from picopt import PROGRAM_NAME
 from picopt.config.consts import TIMESTAMPS_CONFIG_KEYS
 from picopt.exceptions import PicoptError
 from picopt.handlers.container import ContainerHandler
-from picopt.handlers.factory import create_handler
+from picopt.handlers.factory import (
+    create_handler,
+    create_handler_no_handler_class,
+    create_repack_handler,
+    get_repack_handler_class,
+)
 from picopt.handlers.handler import Handler
 from picopt.handlers.image import ImageHandler
 from picopt.old_timestamps import OLD_TIMESTAMPS_NAME, OldTimestamps
@@ -204,22 +209,40 @@ class Walk:
             timestamps = self._timestamps[path_info.top_path]
             timestamps.set(dir_path, compact=True)
 
-    def _walk_container(self, handler: ContainerHandler) -> ApplyResult:
+    def _walk_container(self, unpack_handler: ContainerHandler) -> ApplyResult | None:
         """Optimize a container."""
-        result: ApplyResult
+        result: ApplyResult | None
         try:
-            for path_info in handler.unpack():
+            repack_handler_class = get_repack_handler_class(
+                self._config, unpack_handler
+            )
+            if not repack_handler_class:
+                # TODO SKIP verbosity
+                path_info = unpack_handler.path_info
+                file_format = unpack_handler.input_file_format
+                create_handler_no_handler_class(self._config, path_info, file_format)
+                return None
+            for path_info in unpack_handler.unpack():
                 container_result = self.walk_file(path_info)
-                handler.set_task(path_info, container_result)
-
-            handler.optimize_contents()
-
-            # at this point handler_final_result array contains buffers not mp-results
-            result = self._pool.apply_async(handler.repack)
+                unpack_handler.set_task(path_info, container_result)
+            unpack_handler.optimize_contents()
+            repack_handler = create_repack_handler(
+                self._config, unpack_handler, repack_handler_class
+            )
+            if not repack_handler:
+                # TODO SKIP verbosity
+                return None
+            try:
+                # at this point handler_final_result array contains buffers not mp-results
+                result = self._pool.apply_async(repack_handler.repack)
+            except Exception as exc:
+                traceback.print_exc()
+                args = (exc,)
+                result = self._pool.apply_async(repack_handler.error, args=args)
         except Exception as exc:
             traceback.print_exc()
             args = (exc,)
-            result = self._pool.apply_async(handler.error, args=args)
+            result = self._pool.apply_async(unpack_handler.error, args=args)
         return result
 
     def _skip_older_than_timestamp(self, path) -> None:

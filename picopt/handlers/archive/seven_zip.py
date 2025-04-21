@@ -3,39 +3,28 @@
 from io import BytesIO
 from pathlib import Path
 from sys import maxsize
-from tarfile import TarInfo
-from types import MappingProxyType
-from zipfile import ZipInfo
 
 from py7zr import SevenZipFile, is_7zfile
 from py7zr.io import BytesIOFactory
 from py7zr.py7zr import FileInfo as SevenZipInfo
-from rarfile import RarInfo
+from termcolor import cprint
 
 from picopt.formats import FileFormat
-from picopt.handlers.archive.archive import ArchiveHandler
-from picopt.handlers.container import ContainerHandler
+from picopt.handlers.archive.archive import PackingArchiveHandler
 
 
-class SevenZip(ArchiveHandler):
+class SevenZip(PackingArchiveHandler):
     """7Zip Container."""
 
     INPUT_FORMAT_STR: str = "7Z"
-    INPUT_FILE_FORMAT = FileFormat(INPUT_FORMAT_STR)
+    SUFFIXES = (".7z",)
+    INPUT_FILE_FORMAT = FileFormat(INPUT_FORMAT_STR, archive=True)
     INPUT_FILE_FORMATS = frozenset({INPUT_FILE_FORMAT})
     OUTPUT_FORMAT_STR = INPUT_FORMAT_STR
     OUTPUT_FILE_FORMAT = INPUT_FILE_FORMAT
-    PROGRAMS = ((ContainerHandler.INTERNAL,),)
+    PROGRAMS = ((PackingArchiveHandler.INTERNAL,),)
     ARCHIVE_CLASS = SevenZipFile
     INFO_CLASS = SevenZipInfo
-    ARHIVEINFO_MAP = MappingProxyType(
-        {
-            RarInfo: {"filename": "filename", "creationtime": "date_time"},
-            TarInfo: {"filename": "name", "creationtime": "mtime"},
-            ZipInfo: {"filename": "filename", "creationtime": "date_time"},
-        }
-    )
-    DTTM_ATTR = "creationtime"
 
     def __init__(self, *args, **kwargs):
         """Add a py7zr factory for reading from RAM."""
@@ -52,9 +41,10 @@ class SevenZip(ArchiveHandler):
 
     def _archive_readfile(self, archive, archiveinfo):
         """Read file into memory."""
-        if archiveinfo.is_directory:
+        sevenzipinfo = archiveinfo
+        if sevenzipinfo.is_directory:
             return b""
-        filename = archiveinfo.filename
+        filename = sevenzipinfo.filename
         archive.reset()
         archive.extract(targets=[filename], factory=self._factory)
         data = self._factory.products.get(filename)
@@ -69,16 +59,20 @@ class SevenZip(ArchiveHandler):
 
     def _pack_info_one_file(self, archive, path_info):
         """Add one file to the new archive."""
-        filename = path_info.name()
-        data = self._optimized_contents.pop(path_info)
-        archive.writef(BytesIO(data), arcname=filename)
+        data = self.optimized_contents.pop(path_info)
+        if not path_info.archiveinfo:
+            cprint("WARNING: No archiveinfo to write.", "yellow")
+            return
+        arcname = path_info.archiveinfo.filename()
+        archive.writef(BytesIO(data), arcname=arcname)
 
 
 class Cb7(SevenZip):
     """CB7 Container."""
 
     INPUT_FORMAT_STR: str = "CB7"
-    INPUT_FILE_FORMAT = FileFormat(INPUT_FORMAT_STR)
+    SUFFIXES = (".cb7",)
+    INPUT_FILE_FORMAT = FileFormat(INPUT_FORMAT_STR, archive=True)
     INPUT_FILE_FORMATS = frozenset({INPUT_FILE_FORMAT})
     OUTPUT_FORMAT_STR = INPUT_FORMAT_STR
     OUTPUT_FILE_FORMAT = INPUT_FILE_FORMAT

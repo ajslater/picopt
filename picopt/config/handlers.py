@@ -111,7 +111,7 @@ _FORMAT_HANDLERS = MappingProxyType(
         TarGz.OUTPUT_FILE_FORMAT: FileFormatHandlers(native=(TarGz,), convert=(Zip,)),
         TarBz.OUTPUT_FILE_FORMAT: FileFormatHandlers(native=(TarBz,), convert=(Zip,)),
         TarXz.OUTPUT_FILE_FORMAT: FileFormatHandlers(native=(TarXz,), convert=(Zip,)),
-        Cbt.INPUT_FILE_FORMAT: FileFormatHandlers(convert=(Cbz,)),
+        Cbt.INPUT_FILE_FORMAT: FileFormatHandlers(native=(Cbt,), convert=(Cbz,)),
     }
 )
 
@@ -274,8 +274,6 @@ def set_format_handler_map(config: Subview) -> None:
                     break
 
     is_modern_cwebp, cwebp_version = is_cwebp_modern(handler_stages)
-
-    convert_handlers = native_handlers | convert_handlers
 
     config["computed"]["native_handlers"].set(native_handlers)
     config["computed"]["convert_handlers"].set(convert_handlers)
