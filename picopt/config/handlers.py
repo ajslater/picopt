@@ -153,31 +153,36 @@ def _get_config_set(config: Subview, *keys: str) -> frozenset[str]:
     return frozenset(val.upper() for val in val_list)
 
 
-def _get_handler_stage(disabled_programs, program):
+def _get_handler_stage_npx(program) -> tuple:
+    bin_path = shutil.which("npx")
+    exec_args = ()
+    if not bin_path:
+        return exec_args
+    exec_args_attempt = (bin_path, "--no", *program.split("_")[1:])
+    # Sucks but easiest way to determine if an npx prog exists is
+    # running it.
+    try:
+        subprocess.run(  # noqa: S603
+            exec_args_attempt,
+            check=True,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+        )
+        exec_args = exec_args_attempt
+    except (subprocess.CalledProcessError, FileNotFoundError, OSError):
+        pass
+    return exec_args
+
+
+def _get_handler_stage(disabled_programs, program) -> tuple | None:
+    exec_args = None
     if program in disabled_programs:
-        return None
-    if program.startswith(("pil2", Handler.INTERNAL)):
-        exec_args = None
+        pass
+    elif program.startswith(("pil2", Handler.INTERNAL)):
+        exec_args = ()
     elif program.startswith("npx_"):
-        bin_path = shutil.which("npx")
-        if not bin_path:
-            return None
-        exec_args = (bin_path, "--no", *program.split("_")[1:])
-        # Sucks but easiest way to determine if an npx prog exists is
-        # running it.
-        try:
-            subprocess.run(  # noqa: S603
-                exec_args,
-                check=True,
-                stdout=subprocess.DEVNULL,
-                stderr=subprocess.DEVNULL,
-            )
-        except (subprocess.CalledProcessError, FileNotFoundError, OSError):
-            return None
-    else:
-        bin_path = shutil.which(program)
-        if not bin_path:
-            return None
+        exec_args = _get_handler_stage_npx(program)
+    elif bin_path := shutil.which(program):
         exec_args = (bin_path,)
     return exec_args
 
@@ -189,8 +194,10 @@ def _get_handler_stages(
     stages = {}
     for program_priority_list in handler_class.PROGRAMS:
         for program in program_priority_list:
-            stages[program] = _get_handler_stage(disabled_programs, program)
-            break
+            stage = _get_handler_stage(disabled_programs, program)
+            if stage is not None:
+                stages[program] = stage
+                break
     return stages
 
 
@@ -246,7 +253,9 @@ def set_format_handler_map(config: Subview) -> None:
 
     handled_format_strs = set()
     convert_format_strs = {}
-    disabled_programs: list | frozenset = config["disable_programs"].get(list)  # type: ignore[reportAssignmentType]
+    disabled_programs: list | tuple | set | frozenset = config["disable_programs"].get(
+        list
+    )  # type: ignore[reportAssignmentType]
     disabled_programs = (
         frozenset(disabled_programs) if disabled_programs else frozenset()
     )
