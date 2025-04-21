@@ -73,8 +73,7 @@ class ContainerHandler(Handler, metaclass=ABCMeta):
             self.optimized_contents[path_info] = data
 
     def optimize(self) -> BinaryIO:
-        """NoOp."""
-        # TODO remove
+        """NoOp for non packing containers."""
         return BytesIO()
 
 
