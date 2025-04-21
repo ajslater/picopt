@@ -31,6 +31,7 @@ class FileFormat:
     format_str: str
     lossless: bool = True
     animated: bool = False
+    archive: bool = False
 
 
 MPO_FILE_FORMAT = FileFormat(str(MpoImageFile.format), lossless=False, animated=True)
@@ -116,7 +117,7 @@ CONVERTIBLE_ANIMATED_FORMAT_STRS: frozenset[str] = frozenset(
 )
 CONVERTIBLE_ANIMATED_FILE_FORMATS = frozenset(
     {
-        FileFormat(str(format_str), lossless=True, animated=True)
+        FileFormat(format_str, lossless=True, animated=True)
         for format_str in CONVERTIBLE_ANIMATED_FORMAT_STRS
     }
 )
