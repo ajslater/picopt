@@ -48,8 +48,8 @@ class TestMPO(BaseTestImagesDir):
             path = (self.TMP_ROOT / name).with_suffix("." + sizes[2][0])
             assert path.stat().st_size == sizes[2][1]
 
-    def test_convert_to_jpeg_no_local(self) -> None:
-        """Test convert to PNG."""
+    def test_convert_to_jpeg_disable_external(self) -> None:
+        """Test convert to Jpeg from MPO."""
         args = (
             PROGRAM_NAME,
             "-rvvvx",
