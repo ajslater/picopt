@@ -307,6 +307,9 @@ class Handler(ABC):
             buffer = self.optimize()
             report_stats = self._cleanup_after_optimize(buffer)
         except Exception as exc:
+            import traceback
+
+            traceback.print_exc()
             report_stats = self.error(exc)
         if self.config.verbose:
             report_stats.report()

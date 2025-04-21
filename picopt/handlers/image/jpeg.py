@@ -19,7 +19,7 @@ class Jpeg(ImageHandler):
     """JPEG format class."""
 
     OUTPUT_FORMAT_STR = str(JpegImageFile.format)
-    SUFFIXES = (".jpg", ".jpeg")
+    SUFFIXES = (".jpg", ".jpeg", ".mpo")
     OUTPUT_FILE_FORMAT = FileFormat(OUTPUT_FORMAT_STR, lossless=False, animated=False)
     INPUT_FILE_FORMATS = frozenset({OUTPUT_FILE_FORMAT})
     PROGRAMS = (("mozjpeg", "jpegtran", "pil2jpeg"),)
