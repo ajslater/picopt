@@ -1,6 +1,6 @@
 """FileFormat Superclass."""
 
-from abc import ABCMeta
+from abc import ABC
 from collections.abc import Mapping
 from io import BufferedReader, BytesIO
 from types import MappingProxyType
@@ -14,7 +14,7 @@ from picopt.handlers.handler import Handler
 from picopt.handlers.metadata import PrepareInfoMixin
 
 
-class ImageHandler(PrepareInfoMixin, Handler, metaclass=ABCMeta):
+class ImageHandler(PrepareInfoMixin, Handler, ABC):
     """Image Handler superclass."""
 
     PIL2_KWARGS: MappingProxyType[str, Any] = MappingProxyType({})

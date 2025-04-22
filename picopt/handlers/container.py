@@ -1,6 +1,6 @@
 """Container Handler for multiple images like animated images and archives."""
 
-from abc import ABCMeta, abstractmethod
+from abc import ABC, abstractmethod
 from collections.abc import Generator
 from io import BytesIO
 from multiprocessing.pool import ApplyResult
@@ -14,7 +14,7 @@ from picopt.path import PathInfo
 from picopt.stats import ReportStats
 
 
-class ContainerHandler(Handler, metaclass=ABCMeta):
+class ContainerHandler(Handler, ABC):
     """Container handler for unpacking multiple images and archives."""
 
     @classmethod
@@ -75,7 +75,7 @@ class ContainerHandler(Handler, metaclass=ABCMeta):
         return BytesIO()
 
 
-class PackingContainerHandler(ContainerHandler, metaclass=ABCMeta):
+class PackingContainerHandler(ContainerHandler, ABC):
     """Container handler for unpacking and packing multiple images and archives."""
 
     @abstractmethod
