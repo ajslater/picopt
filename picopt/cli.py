@@ -9,13 +9,15 @@ from termcolor import colored, cprint
 
 from picopt import PROGRAM_NAME, walk
 from picopt.config import get_config
-from picopt.config.consts import ALL_FORMAT_STRS, DEFAULT_HANDLERS
+from picopt.config.consts import (
+    ALL_FORMAT_STRS,
+    ARCHIVE_CONVERT_FROM_FORMAT_STRS,
+    CB_CONVERT_FROM_FORMAT_STRS,
+    DEFAULT_HANDLERS,
+    IMAGE_CONVERT_TO_FORMAT_STRS,
+)
 from picopt.exceptions import PicoptError
-from picopt.handlers.archive.rar import Cbr, Rar
-from picopt.handlers.archive.seven_zip import SevenZip
-from picopt.handlers.archive.tar import Tar
-from picopt.handlers.image.png import Png
-from picopt.handlers.image.webp import WebPLossless
+from picopt.handlers.archive.zip import Cbz, Zip
 
 _DEFAULT_FORMAT_STRS = frozenset(
     [handler_cls.OUTPUT_FORMAT_STR for handler_cls in DEFAULT_HANDLERS]
@@ -37,9 +39,27 @@ class SplitArgsAction(Action):
         setattr(namespace, self.dest, values)
 
 
-def _comma_join(formats: frozenset[str]) -> str:
+def _comma_join(
+    formats: frozenset[str] | tuple[str, ...],
+    space=True,  # noqa: FBT002
+    final_and=False,  # noqa: FBT002
+) -> str:
     """Sort and join a sequence into a human readable string."""
-    return ", ".join(sorted(formats))
+    formats = tuple(sorted(formats))
+    if len(formats) == 2:  # noqa: PLR2004
+        return " or ".join(formats)
+    if final_and:
+        final = formats[-1]
+        formats = formats[:-1]
+    else:
+        final = ""
+    delimiter = ","
+    if space:
+        delimiter += " "
+    result = delimiter.join(formats)
+    if final:
+        result += f"{delimiter} and {final}"
+    return result
 
 
 def get_arguments(params: tuple[str, ...] | None = None) -> Namespace:
@@ -94,7 +114,7 @@ def get_arguments(params: tuple[str, ...] | None = None) -> Namespace:
         dest="formats",
         help="Only optimize images of the specified "
         f"comma delimited formats from: {_comma_join(ALL_FORMAT_STRS)}. "
-        f"Defaults to {_comma_join(_DEFAULT_FORMAT_STRS)}",
+        f"Defaults to {_comma_join(_DEFAULT_FORMAT_STRS, space=False)}",
     )
     parser.add_argument(
         "-x",
@@ -108,11 +128,12 @@ def get_arguments(params: tuple[str, ...] | None = None) -> Namespace:
         "--convert-to",
         action=SplitArgsAction,
         dest="convert_to",
-        help="A list of formats to convert to. Lossless images may convert to"
-        f" {Png.OUTPUT_FORMAT_STR} or {WebPLossless.OUTPUT_FORMAT_STR}."
-        f" {Rar.INPUT_FORMAT_STR}, {SevenZip.INPUT_FORMAT_STR}, and {Tar.INPUT_FORMAT_STR}* archives"
-        f" may convert to {Rar.OUTPUT_FORMAT_STR} or {Cbr.OUTPUT_FORMAT_STR}."
-        " By default formats are not converted to other formats.",
+        help="A list of formats to convert to. "
+        "By default formats are not converted to other formats. "
+        f"Lossless images may convert to {_comma_join(IMAGE_CONVERT_TO_FORMAT_STRS)}.\n"
+        f"{_comma_join(ARCHIVE_CONVERT_FROM_FORMAT_STRS, final_and=True)} archives "
+        f"may convert to {Zip.OUTPUT_FORMAT_STR}.\n"
+        f"{_comma_join(CB_CONVERT_FROM_FORMAT_STRS, final_and=True)} may convert to {Cbz.OUTPUT_FORMAT_STR}.",
     )
     parser.add_argument(
         "-n",
