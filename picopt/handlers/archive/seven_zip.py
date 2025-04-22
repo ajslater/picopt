@@ -11,6 +11,7 @@ from termcolor import cprint
 
 from picopt.formats import FileFormat
 from picopt.handlers.archive.archive import PackingArchiveHandler
+from picopt.handlers.handler import INTERNAL
 
 
 class SevenZip(PackingArchiveHandler):
@@ -22,7 +23,7 @@ class SevenZip(PackingArchiveHandler):
     INPUT_FILE_FORMATS = frozenset({INPUT_FILE_FORMAT})
     OUTPUT_FORMAT_STR = INPUT_FORMAT_STR
     OUTPUT_FILE_FORMAT = INPUT_FILE_FORMAT
-    PROGRAMS = ((PackingArchiveHandler.INTERNAL,),)
+    PROGRAMS = ((INTERNAL,),)
     ARCHIVE_CLASS = SevenZipFile
     INFO_CLASS = SevenZipInfo
 

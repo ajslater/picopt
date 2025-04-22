@@ -8,6 +8,7 @@ from termcolor import cprint
 
 from picopt.formats import FileFormat
 from picopt.handlers.archive.archive import PackingArchiveHandler
+from picopt.handlers.handler import INTERNAL
 
 
 class Zip(PackingArchiveHandler):
@@ -17,7 +18,7 @@ class Zip(PackingArchiveHandler):
     OUTPUT_FILE_FORMAT = FileFormat(OUTPUT_FORMAT_STR, archive=True)
     INPUT_FILE_FORMAT = OUTPUT_FILE_FORMAT
     INPUT_FILE_FORMATS = frozenset({INPUT_FILE_FORMAT})
-    PROGRAMS = ((PackingArchiveHandler.INTERNAL,),)
+    PROGRAMS = ((INTERNAL,),)
     ARCHIVE_CLASS = ZipFile
 
     @classmethod
@@ -66,7 +67,6 @@ class EPub(Zip):
     """Epub Container."""
 
     # never convert inside epubs, breaks src links.
-    CONVERT: bool = False
     OUTPUT_FORMAT_STR: str = "EPUB"
     OUTPUT_FILE_FORMAT = FileFormat(OUTPUT_FORMAT_STR, archive=True)
     INPUT_FILE_FORMAT = OUTPUT_FILE_FORMAT

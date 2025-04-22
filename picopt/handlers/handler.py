@@ -16,6 +16,7 @@ from picopt.path import PathInfo
 from picopt.stats import ReportStats
 
 WORKING_PATH_TRANS_TABLE = str.maketrans(dict.fromkeys(" /", "_"))
+INTERNAL: str = "internal"
 
 
 class Handler(ABC):
@@ -28,7 +29,6 @@ class Handler(ABC):
         OUTPUT_FORMAT_STR, lossless=False, animated=False
     )
     INPUT_FILE_FORMATS: frozenset[FileFormat] = frozenset({OUTPUT_FILE_FORMAT})
-    INTERNAL: str = "internal"
     PROGRAMS: tuple[tuple[str, ...], ...] = ()
     WORKING_SUFFIX: str = f"{PROGRAM_NAME}-tmp"
 

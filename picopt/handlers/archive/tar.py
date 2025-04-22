@@ -10,7 +10,8 @@ import filetype
 from termcolor import cprint
 
 from picopt.formats import FileFormat
-from picopt.handlers.archive.archive import ArchiveHandler, PackingArchiveHandler
+from picopt.handlers.archive.archive import PackingArchiveHandler
+from picopt.handlers.handler import INTERNAL
 
 
 class Tar(PackingArchiveHandler):
@@ -22,7 +23,7 @@ class Tar(PackingArchiveHandler):
     INPUT_FILE_FORMATS = frozenset({INPUT_FILE_FORMAT})
     OUTPUT_FORMAT_STR: str = INPUT_FORMAT_STR
     OUTPUT_FILE_FORMAT = FileFormat(OUTPUT_FORMAT_STR, archive=True)
-    PROGRAMS = ((ArchiveHandler.INTERNAL,),)
+    PROGRAMS = ((INTERNAL,),)
     ARCHIVE_CLASS = TarFile
     INFO_CLASS = TarInfo
     WRITE_MODE = "w"

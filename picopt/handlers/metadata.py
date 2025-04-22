@@ -10,7 +10,7 @@ from PIL.WebPImagePlugin import WebPImageFile
 from picopt.formats import PNGINFO_XMP_KEY
 from picopt.handlers.handler import Handler
 
-SAVE_INFO_KEYS: frozenset[str] = frozenset(
+_SAVE_INFO_KEYS: frozenset[str] = frozenset(
     {"n_frames", "loop", "duration", "background"}
 )
 
@@ -68,6 +68,6 @@ class PrepareInfoMixin(Handler):
         else:
             info = {}
             for key, val in self.info:
-                if key in SAVE_INFO_KEYS:
+                if key in _SAVE_INFO_KEYS:
                     info[key] = val
         return MappingProxyType(info)

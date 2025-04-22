@@ -17,9 +17,6 @@ from picopt.stats import ReportStats
 class ContainerHandler(Handler, metaclass=ABCMeta):
     """Container handler for unpacking multiple images and archives."""
 
-    CONTAINER_DIR_SUFFIX: str = ".dir"
-    CONVERT: bool = True
-
     @classmethod
     @abstractmethod
     def identify_format(cls, path_info: PathInfo) -> FileFormat | None:

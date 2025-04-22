@@ -37,7 +37,7 @@ from picopt.handlers.archive.zip import (
     EPub,
     Zip,
 )
-from picopt.handlers.handler import Handler
+from picopt.handlers.handler import INTERNAL, Handler
 from picopt.handlers.image.gif import Gif, GifAnimated
 from picopt.handlers.image.jpeg import Jpeg
 from picopt.handlers.image.png import Png, PngAnimated
@@ -178,7 +178,7 @@ def _get_handler_stage(disabled_programs, program) -> tuple | None:
     exec_args = None
     if program in disabled_programs:
         pass
-    elif program.startswith(("pil2", Handler.INTERNAL)):
+    elif program.startswith(("pil2", INTERNAL)):
         exec_args = ()
     elif program.startswith("npx_"):
         exec_args = _get_handler_stage_npx(program)
