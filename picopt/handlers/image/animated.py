@@ -65,10 +65,10 @@ class ImageAnimated(PrepareInfoMixin, PackingContainerHandler, ABC):
                     frame_path_info = PathInfo(
                         self.path_info.top_path,
                         self.path_info.convert,
-                        self.path_info.is_case_sensitive,
                         frame=frame_index,
                         data=frame_buffer.read(),
                         container_paths=self.get_container_paths(),
+                        is_case_sensitive=self.path_info.is_case_sensitive,
                     )
                 if self.config.verbose:
                     cprint(".", end="")

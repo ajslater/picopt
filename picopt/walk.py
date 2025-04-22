@@ -172,9 +172,9 @@ class Walk:
                 path_info = PathInfo(
                     path_info.top_path,
                     path_info.convert,
-                    path_info.is_case_sensitive,
                     path=entry_path,
                     in_container=path_info.in_container,
+                    is_case_sensitive=path_info.is_case_sensitive,
                 )
                 self.walk_file(path_info)
             else:
@@ -184,9 +184,9 @@ class Walk:
             path_info = PathInfo(
                 path_info.top_path,
                 path_info.convert,
-                path_info.is_case_sensitive,
                 path=entry_path,
                 in_container=path_info.in_container,
+                is_case_sensitive=path_info.is_case_sensitive,
             )
             if result := self.walk_file(path_info):
                 results.append(result)
@@ -349,7 +349,6 @@ class Walk:
             path_info = PathInfo(
                 dirpath,
                 convert=True,
-                test_case_sensitivity=True,
                 path=top_path,
             )
             result = self.walk_file(path_info)

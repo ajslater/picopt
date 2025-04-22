@@ -38,20 +38,19 @@ class PathInfo:
         self,
         top_path: Path,
         convert: bool,
-        is_case_sensitive: bool,
         path: Path | None = None,
         frame: int | None = None,
         archiveinfo: ZipInfo | RarInfo | TarInfo | SevenZipInfo | None = None,
         data: bytes | None = None,
         container_paths: tuple[str, ...] | None = None,
         in_container: bool = False,  # noqa: FBT002
-        test_case_sensitivity: bool = False,  # noqa: FBT002
+        is_case_sensitive: bool | None = None,
     ):
         """Initialize."""
         self.top_path: Path = top_path
         self.convert: bool = convert
         self.is_case_sensitive: bool = is_case_sensitive or bool(
-            test_case_sensitivity and _is_case_sensitive(top_path)
+            is_case_sensitive is None and _is_case_sensitive(top_path)
         )
 
         # A filesystem path
