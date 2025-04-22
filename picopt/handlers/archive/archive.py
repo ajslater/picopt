@@ -21,11 +21,10 @@ from picopt.path import PathInfo
 class ArchiveHandler(NonPILIdentifier, ContainerHandler, ABC):
     """Compressed Archive that must be converted with another handler."""
 
-    ARCHIVE_CLASS: type[ZipFile | TarFile | SevenZipFile | RarFile] = ZipFile
-    INPUT_FORMAT_STR = "Unimplemented"
+    INPUT_FORMAT_STR = "UNINMPLEMENTED"
     INPUT_FILE_FORMAT = FileFormat(INPUT_FORMAT_STR)
     INPUT_FILE_FORMATS = frozenset({INPUT_FILE_FORMAT})
-    SUFFIXES = ()
+    ARCHIVE_CLASS: type[ZipFile | TarFile | SevenZipFile | RarFile] = ZipFile
 
     @classmethod
     @abstractmethod
