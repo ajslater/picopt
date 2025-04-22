@@ -28,7 +28,7 @@ from picopt.stats import ReportStats, Totals
 class Walk:
     """Walk object for storing state of a walk run."""
 
-    TIMESTAMPS_FILENAMES = frozenset(
+    _TIMESTAMPS_FILENAMES = frozenset(
         {*Treestamps.get_filenames(PROGRAM_NAME), OLD_TIMESTAMPS_NAME}
     )
 
@@ -82,7 +82,7 @@ class Walk:
             not self._config.symlinks and path_info.path and path_info.path.is_symlink()
         ):
             reason = f"Skip symlink {path_info.full_name()}"
-        elif path_info.name() in self.TIMESTAMPS_FILENAMES:
+        elif path_info.name() in self._TIMESTAMPS_FILENAMES:
             legacy = "legacy " if path_info.name() == OLD_TIMESTAMPS_NAME else ""
             reason = f"Skip {legacy}timestamp {path_info.full_name()}"
         elif (
