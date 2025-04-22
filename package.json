@@ -21,6 +21,14 @@
         "options": {
           "proseWrap": "always"
         }
+      },
+      {
+        "files": [
+          "**/*Dockerfile"
+        ],
+        "options": {
+          "parser": "sh"
+        }
       }
     ]
   },
