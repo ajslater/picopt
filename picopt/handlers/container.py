@@ -26,12 +26,13 @@ class ContainerHandler(Handler, ABC):
     def unpack_into(self) -> Generator[PathInfo, None, None]:
         """Unpack a container into a tmp dir to work on it's contents."""
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, repack_handler_class: Handler | None = None, **kwargs):
         """Initialize unpack tasks and ."""
         super().__init__(*args, **kwargs)
         self.comment: bytes | None = None
         self._tasks: dict[PathInfo, ApplyResult] = {}
         self.optimized_contents: dict[PathInfo, bytes] = {}
+        self.repack_handler_class = repack_handler_class
 
     def get_container_paths(self) -> tuple[str, ...]:
         """Create a container path for output and cwebp tmpfile usage."""

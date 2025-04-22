@@ -7,7 +7,6 @@ from termcolor import cprint
 from treestamps import Treestamps
 
 from picopt import PROGRAM_NAME
-from picopt.handlers.container import ContainerHandler
 from picopt.handlers.handler import Handler
 from picopt.old_timestamps import OLD_TIMESTAMPS_NAME
 from picopt.path import PathInfo, is_path_ignored
@@ -107,17 +106,3 @@ class WalkSkippers(WalkInit):
                 cprint(".", "yellow", end="")
             return True
         return False
-
-    def _skip_no_repack_handler(self, unpack_handler: ContainerHandler) -> None:
-        """Warn about no repack handler for file."""
-        if self._config.verbose > 1 and not self._config.list_only:
-            full_name = unpack_handler.path_info.full_name()
-            file_format = unpack_handler.input_file_format
-            fmt = str(file_format) if file_format else "unknown"
-            cprint(
-                f"Skipped {full_name}: ({fmt}) is not an enabled image or container.",
-                "white",
-                attrs=["dark"],
-            )
-        else:
-            cprint(".", "white", attrs=["dark"], end="")

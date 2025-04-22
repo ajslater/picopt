@@ -8,7 +8,6 @@ from picopt.handlers.container import ContainerHandler
 from picopt.handlers.factory import (
     create_handler,
     create_repack_handler,
-    get_repack_handler_class,
 )
 from picopt.handlers.image import ImageHandler
 from picopt.path import PathInfo
@@ -91,32 +90,20 @@ class WalkWalkers(WalkSkippers):
     def _walk_container(self, unpack_handler: ContainerHandler) -> ApplyResult | None:
         """Optimize a container."""
         result: ApplyResult | None
+        error_handler = unpack_handler
         try:
-            repack_handler_class = get_repack_handler_class(
-                self._config, unpack_handler
-            )
-            if not repack_handler_class:
-                return self._skip_no_repack_handler(unpack_handler)
             for path_info in unpack_handler.unpack():
                 container_result = self.walk_file(path_info)
                 unpack_handler.set_task(path_info, container_result)
             unpack_handler.optimize_contents()
-            repack_handler = create_repack_handler(
-                self._config, unpack_handler, repack_handler_class
-            )
-            if not repack_handler:
-                return self._skip_no_repack_handler(unpack_handler)
-            try:
-                # at this point handler_final_result array contains buffers not mp-results
-                result = self._pool.apply_async(repack_handler.repack)
-            except Exception as exc:
-                traceback.print_exc()
-                args = (exc,)
-                result = self._pool.apply_async(repack_handler.error, args=args)
+            repack_handler = create_repack_handler(self._config, unpack_handler)
+            error_handler = repack_handler
+            # at this point handler_final_result array contains buffers not mp-results
+            result = self._pool.apply_async(repack_handler.repack)
         except Exception as exc:
             traceback.print_exc()
             args = (exc,)
-            result = self._pool.apply_async(unpack_handler.error, args=args)
+            result = self._pool.apply_async(error_handler.error, args=args)
         return result
 
     def _handle_file(self, handler):

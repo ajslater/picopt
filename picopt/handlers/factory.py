@@ -37,6 +37,39 @@ def _create_handler_get_handler_class(
     return handler_cls
 
 
+def _get_repack_handler_class(
+    config: AttrDict,
+    path_info: PathInfo,
+    file_format: FileFormat,
+) -> type[PackingContainerHandler] | None:
+    """Get the repack handler class or none if not configured."""
+    repack_handler_class: type[PackingContainerHandler] | None = None
+    try:
+        repack_handler_class: type[PackingContainerHandler] | None = (  # type: ignore[reportAssignmentType]
+            _create_handler_get_handler_class(
+                config,
+                path_info.convert,
+                file_format,
+                repack=True,
+            )
+        )
+    except OSError as exc:
+        cprint(f"WARNING: getting repack container handler {exc}", "yellow")
+        from traceback import print_exc
+
+        print_exc()
+    if not repack_handler_class and config.verbose > 1 and not config.list_only:
+        full_name = path_info.full_name()
+        fmt = str(file_format) if file_format else "unknown"
+        cprint(
+            f"Skipped {full_name}: ({fmt}) is not an enabled image or container.",
+            "white",
+            attrs=["dark"],
+        )
+
+    return repack_handler_class
+
+
 def create_handler(config: AttrDict, path_info: PathInfo) -> Handler | None:
     """Return a handler for the image format."""
     # This is the consumer of config._format_handlers
@@ -54,50 +87,33 @@ def create_handler(config: AttrDict, path_info: PathInfo) -> Handler | None:
         file_format = None
         info = {}
 
+    handler = None
     if handler_cls and file_format:
-        handler = handler_cls(
-            config, path_info, input_file_format=file_format, info=info
-        )
-    else:
-        handler = None
-    return handler
-
-
-##########
-# Repack #
-##########
-
-
-def get_repack_handler_class(
-    config: AttrDict, unpack_handler: ContainerHandler
-) -> type[PackingContainerHandler] | None:
-    """Get the repack handler class or none if not configured."""
-    repack_handler_class: type[PackingContainerHandler] | None = None
-    try:
-        file_format = unpack_handler.input_file_format
-        repack_handler_class: type[PackingContainerHandler] | None = (  # type: ignore[reportAssignmentType]
-            _create_handler_get_handler_class(
-                config,
-                unpack_handler.path_info.convert,
-                file_format,
-                repack=True,
+        kwargs = {}
+        if issubclass(handler_cls, ContainerHandler):
+            repack_handler_class = _get_repack_handler_class(
+                config, path_info, file_format
             )
-        )
-    except OSError as exc:
-        cprint(f"WARNING: getting repack container handler {exc}", "yellow")
-        from traceback import print_exc
-
-        print_exc()
-    return repack_handler_class
+            if repack_handler_class:
+                kwargs["repack_handler_class"] = repack_handler_class
+            else:
+                handler_cls = None
+        if handler_cls:
+            handler = handler_cls(
+                config, path_info, input_file_format=file_format, info=info, **kwargs
+            )
+    return handler
 
 
 def create_repack_handler(
     config: AttrDict,
     unpack_handler: ContainerHandler,
-    repack_handler_class: type[PackingContainerHandler],
-) -> PackingContainerHandler | None:
-    """Return a handler to repack the container."""
+) -> PackingContainerHandler:
+    """Return a handler to repack the container using optimized contents of the unpack handler."""
     # handler input_file_format is only for images so it doesn't matter what this is.
+    repack_handler_class: type[PackingContainerHandler] = (
+        unpack_handler.repack_handler_class
+    )  # type: ignore[reportAssignmentType]
     if unpack_handler.__class__ == repack_handler_class and isinstance(
         unpack_handler, PackingContainerHandler
     ):
