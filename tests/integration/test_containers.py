@@ -1,6 +1,5 @@
 """Test comic format."""
 
-import shutil
 from types import MappingProxyType
 from zipfile import ZipFile
 
@@ -8,6 +7,7 @@ import pytest
 
 from picopt import PROGRAM_NAME, cli
 from tests import CONTAINER_DIR, get_test_dir
+from tests.integration.base import BaseTest
 
 __all__ = ()
 TMP_ROOT = get_test_dir()
@@ -52,23 +52,14 @@ CONVERT_TO_ZIP_ARGS = (
 )
 
 
-class TestContainersDir:
+@pytest.mark.parametrize("fn", FNS)
+class TestContainersDir(BaseTest):
     """Test containers dirs."""
 
-    def setup_method(self) -> None:
-        """Set up method."""
-        self.teardown_method()
-        shutil.copytree(CONTAINER_DIR, TMP_ROOT)
-        for name, sizes in FNS.items():
-            path = TMP_ROOT / name
-            assert path.stat().st_size == sizes[0]
+    TMP_ROOT = TMP_ROOT
+    SOURCE_DIR = CONTAINER_DIR
+    FNS = FNS
 
-    def teardown_method(self) -> None:
-        """Tear down method."""
-        if TMP_ROOT.exists():
-            shutil.rmtree(TMP_ROOT)
-
-    @pytest.mark.parametrize("fn", FNS)
     def test_containers_noop(self, fn: str) -> None:
         """Test containers noop."""
         path = TMP_ROOT / fn
@@ -81,7 +72,7 @@ class TestContainersDir:
         sizes = FNS[fn]
         assert path.stat().st_size == sizes[0]
 
-    @pytest.mark.parametrize("fn", FNS)
+    # @pytest.mark.parametrize("fn", FNS)
     def test_containers_no_convert(self, fn: str) -> None:
         """Test containers no convert."""
         path = TMP_ROOT / fn
@@ -99,7 +90,7 @@ class TestContainersDir:
         else:
             assert path_size == size
 
-    @pytest.mark.parametrize("fn", FNS)
+    # @pytest.mark.parametrize("fn", FNS)
     def test_containers_convert_to_zip(self, fn: str) -> None:
         """Test containers convert to zip."""
         sizes = FNS[fn]

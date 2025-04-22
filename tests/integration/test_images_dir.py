@@ -6,8 +6,8 @@ from types import MappingProxyType
 import pytest
 
 from picopt import PROGRAM_NAME, cli
-from tests import get_test_dir
-from tests.integration.base_test_images import BaseTestImagesDir
+from tests import IMAGES_DIR, get_test_dir
+from tests.integration.base import BaseTest
 
 __all__ = ()
 FNS = {
@@ -82,13 +82,14 @@ NEAR_LOSSLESS_FNS = MappingProxyType(
 )
 
 
-class TestImagesDir(BaseTestImagesDir):
+@pytest.mark.parametrize("fn", FNS)
+class TestImagesDir(BaseTest):
     """Test images dir."""
 
-    FNS = FNS
     TMP_ROOT = get_test_dir()
+    SOURCE_DIR = IMAGES_DIR
+    FNS = FNS
 
-    @pytest.mark.parametrize("fn", FNS)
     def test_no_convert(self, fn: str) -> None:
         """Test no convert."""
         args = (PROGRAM_NAME, "-rvvx SVG", str(self.TMP_ROOT))
@@ -97,7 +98,6 @@ class TestImagesDir(BaseTestImagesDir):
         size = FNS[fn][1]
         assert path.stat().st_size == size
 
-    @pytest.mark.parametrize("fn", FNS)
     def test_convert_to_png(self, fn: str) -> None:
         """Test convert to PNG."""
         args = (
@@ -113,7 +113,6 @@ class TestImagesDir(BaseTestImagesDir):
         path = (self.TMP_ROOT / fn).with_suffix("." + suffix)
         assert path.stat().st_size == size
 
-    @pytest.mark.parametrize("fn", FNS)
     def test_convert_to_webp(self, fn: str) -> None:
         """Test convert to WEBP."""
         args = (
@@ -130,10 +129,12 @@ class TestImagesDir(BaseTestImagesDir):
         assert path.stat().st_size == size
 
 
-class TestNearLosslessImageDir(BaseTestImagesDir):
+@pytest.mark.parametrize("fn", NEAR_LOSSLESS_FNS)
+class TestNearLosslessImageDir(BaseTest):
+    TMP_ROOT = get_test_dir()
+    SOURCE_DIR = IMAGES_DIR
     FNS = NEAR_LOSSLESS_FNS
 
-    @pytest.mark.parametrize("fn", FNS)
     def test_convert_to_webp_near_lossless(self, fn: str) -> None:
         """Test convert to WEBP."""
         args = (
@@ -143,6 +144,6 @@ class TestNearLosslessImageDir(BaseTestImagesDir):
             str(self.TMP_ROOT),
         )
         cli.main(args)
-        suffix, size = FNS[fn][3]
+        suffix, size = self.FNS[fn][3]
         path = (self.TMP_ROOT / fn).with_suffix("." + suffix)
         assert path.stat().st_size == size

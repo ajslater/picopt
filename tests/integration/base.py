@@ -5,24 +5,30 @@ from collections.abc import Mapping
 from pathlib import Path
 from types import MappingProxyType
 
+import pytest
+
 from tests import IMAGES_DIR, get_test_dir
 
 
-class BaseTestImagesDir:
+class BaseTest:
     """Test images dir."""
 
-    FNS: Mapping = MappingProxyType({})
     TMP_ROOT: Path = get_test_dir()
+    SOURCE_DIR: Path = IMAGES_DIR
+    FNS: Mapping = MappingProxyType({})
 
-    def setup_method(self) -> None:
+    @pytest.fixture(autouse=True)
+    def setup_and_teardown(self, fn: str):
         """Set up method."""
         self.teardown_method()
         self.TMP_ROOT.mkdir(parents=True)
-        for fn, sizes in self.FNS.items():
-            src = IMAGES_DIR / fn
-            dest = self.TMP_ROOT / fn
-            shutil.copy(src, dest)
-            assert dest.stat().st_size == sizes[0]
+        src = self.SOURCE_DIR / fn
+        dest = self.TMP_ROOT / fn
+        shutil.copy(src, dest)
+        size = self.FNS[fn][0]
+        assert dest.stat().st_size == size
+        yield
+        self.teardown_method()
 
     def teardown_method(self) -> None:
         """Tear down method."""
