@@ -1,15 +1,5 @@
 """Contst and Confuse Config template."""
 
-from confuse.templates import (
-    Choice,
-    Integer,
-    MappingTemplate,
-    Optional,
-    Sequence,
-)
-from confuse.templates import Path as ConfusePath
-
-from picopt import PROGRAM_NAME
 from picopt.formats import (
     LOSSLESS_FORMAT_STRS,
     MPO_FILE_FORMAT,
@@ -40,7 +30,7 @@ from picopt.handlers.image.png import Png, PngAnimated
 from picopt.handlers.image.svg import Svg
 from picopt.handlers.image.webp import WebPAnimatedLossless, WebPLossless
 
-_CONVERT_TO_FORMAT_STRS = frozenset(
+CONVERT_TO_FORMAT_STRS = frozenset(
     {
         cls.OUTPUT_FORMAT_STR
         for cls in (
@@ -86,44 +76,6 @@ ALL_FORMAT_STRS: frozenset[str] = (
     | _CONTAINER_CONVERTIBLE_FORMAT_STRS
     | {str(MPO_FILE_FORMAT.format_str)}
 )
-TEMPLATE = MappingTemplate(
-    {
-        PROGRAM_NAME: MappingTemplate(
-            {
-                "after": Optional(float),
-                "bigger": bool,
-                "convert_to": Optional(Sequence(Choice(_CONVERT_TO_FORMAT_STRS))),
-                "disable_programs": Sequence(str),
-                "dry_run": bool,
-                "extra_formats": Optional(Sequence(Choice(ALL_FORMAT_STRS))),
-                "formats": Sequence(Choice(ALL_FORMAT_STRS)),
-                "ignore": Sequence(str),
-                "jobs": Integer(),
-                "keep_metadata": bool,
-                "list_only": bool,
-                "near_lossless": bool,
-                "paths": Sequence(ConfusePath()),
-                "png_max": bool,
-                "preserve": bool,
-                "recurse": bool,
-                "symlinks": bool,
-                "timestamps": bool,
-                "timestamps_check_config": bool,
-                "verbose": Integer(),
-                "computed": Optional(
-                    MappingTemplate(
-                        {
-                            "native_handlers": dict,
-                            "convert_handlers": dict,
-                            "handler_stages": dict,
-                            "is_modern_cwebp": bool,
-                        }
-                    )
-                ),
-            }
-        )
-    }
-)
 TIMESTAMPS_CONFIG_KEYS = {
     "bigger",
     "convert_to",
@@ -134,5 +86,3 @@ TIMESTAMPS_CONFIG_KEYS = {
     "recurse",
     "symlinks",
 }
-# cwebp before this version only accepts PNG & WEBP
-MIN_CWEBP_VERSION = (1, 2, 3)

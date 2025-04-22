@@ -5,17 +5,65 @@ from argparse import Namespace
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-from confuse import Configuration, Subview
-from confuse.templates import AttrDict
+from confuse import Configuration, MappingTemplate, Subview
+from confuse.templates import (
+    AttrDict,
+    Choice,
+    Integer,
+    Optional,
+    Sequence,
+)
+from confuse.templates import (
+    Path as ConfusePath,
+)
 from dateutil.parser import parse
 from termcolor import cprint
 
 from picopt import PROGRAM_NAME
-from picopt.config.consts import TEMPLATE
+from picopt.config.consts import ALL_FORMAT_STRS, CONVERT_TO_FORMAT_STRS
 from picopt.config.handlers import set_format_handler_map
 
 if TYPE_CHECKING:
     from collections.abc import Iterable
+
+_TEMPLATE = MappingTemplate(
+    {
+        PROGRAM_NAME: MappingTemplate(
+            {
+                "after": Optional(float),
+                "bigger": bool,
+                "convert_to": Optional(Sequence(Choice(CONVERT_TO_FORMAT_STRS))),
+                "disable_programs": Sequence(str),
+                "dry_run": bool,
+                "extra_formats": Optional(Sequence(Choice(ALL_FORMAT_STRS))),
+                "formats": Sequence(Choice(ALL_FORMAT_STRS)),
+                "ignore": Sequence(str),
+                "jobs": Integer(),
+                "keep_metadata": bool,
+                "list_only": bool,
+                "near_lossless": bool,
+                "paths": Sequence(ConfusePath()),
+                "png_max": bool,
+                "preserve": bool,
+                "recurse": bool,
+                "symlinks": bool,
+                "timestamps": bool,
+                "timestamps_check_config": bool,
+                "verbose": Integer(),
+                "computed": Optional(
+                    MappingTemplate(
+                        {
+                            "native_handlers": dict,
+                            "convert_handlers": dict,
+                            "handler_stages": dict,
+                            "is_modern_cwebp": bool,
+                        }
+                    )
+                ),
+            }
+        )
+    }
+)
 
 
 def _set_after(config: Subview) -> None:
@@ -87,7 +135,7 @@ def get_config(args: Namespace | None = None, modname=PROGRAM_NAME) -> AttrDict:
     _set_after(config_program)
     _set_ignore(config_program)
     _set_timestamps(config_program)
-    ad = config.get(TEMPLATE)
+    ad = config.get(_TEMPLATE)
     if not isinstance(ad, AttrDict):
         msg = "Not a valid config"
         raise TypeError(msg)

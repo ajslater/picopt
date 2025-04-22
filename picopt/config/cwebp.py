@@ -2,8 +2,10 @@
 
 import subprocess
 
-from picopt.config.consts import MIN_CWEBP_VERSION
 from picopt.handlers.image.webp import WebPLossless
+
+# cwebp before this version only accepts PNG & WEBP
+MIN_CWEBP_VERSION = (1, 2, 3)
 
 
 def _get_cwebp_version(handler_stages: dict):
