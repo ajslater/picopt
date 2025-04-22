@@ -44,9 +44,11 @@ CONVERT_TO_FORMAT_STRS = frozenset(
         )
     }
 )
-_TEMPORARILY_CONVERT_ONLY = (SevenZip, Cb7, Tar, TarGz, TarBz, TarXz)
 _CONTAINER_CONVERTIBLE_FORMAT_STRS = frozenset(
-    {cls.INPUT_FORMAT_STR for cls in (Rar, Cbr, Cbt, *_TEMPORARILY_CONVERT_ONLY)}
+    {
+        cls.INPUT_FORMAT_STR
+        for cls in (Rar, Cbr, SevenZip, Cb7, Tar, TarGz, TarBz, TarXz, Cbt)
+    }
 )
 
 DEFAULT_HANDLERS = frozenset(
