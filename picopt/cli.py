@@ -14,7 +14,7 @@ from picopt.config.consts import (
     ARCHIVE_CONVERT_FROM_FORMAT_STRS,
     CB_CONVERT_FROM_FORMAT_STRS,
     DEFAULT_HANDLERS,
-    IMAGE_CONVERT_TO_FORMAT_STRS,
+    LOSSLESS_IMAGE_CONVERT_TO_FORMAT_STRS,
 )
 from picopt.exceptions import PicoptError
 from picopt.handlers.archive.zip import Cbz, Zip
@@ -130,7 +130,7 @@ def get_arguments(params: tuple[str, ...] | None = None) -> Namespace:
         dest="convert_to",
         help="A list of formats to convert to. "
         "By default formats are not converted to other formats. "
-        f"Lossless images may convert to {_comma_join(IMAGE_CONVERT_TO_FORMAT_STRS)}.\n"
+        f"Lossless images may convert to {_comma_join(LOSSLESS_IMAGE_CONVERT_TO_FORMAT_STRS)}.\n"
         f"{_comma_join(ARCHIVE_CONVERT_FROM_FORMAT_STRS, final_and=True)} archives "
         f"may convert to {Zip.OUTPUT_FORMAT_STR}.\n"
         f"{_comma_join(CB_CONVERT_FROM_FORMAT_STRS, final_and=True)} may convert to {Cbz.OUTPUT_FORMAT_STR}.",

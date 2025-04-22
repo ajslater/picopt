@@ -30,31 +30,27 @@ from picopt.handlers.image.png import Png, PngAnimated
 from picopt.handlers.image.svg import Svg
 from picopt.handlers.image.webp import WebPAnimatedLossless, WebPLossless
 
-IMAGE_CONVERT_TO_FORMAT_STRS = tuple(
-    sorted(
-        {
-            cls.OUTPUT_FORMAT_STR
-            for cls in (
-                Png,
-                PngAnimated,
-                WebPLossless,
-                WebPAnimatedLossless,
-            )
-        }
-    )
+_LOSSLESS_IMAGE_CONVERT_TO_HANDLERS = (
+    Png,
+    PngAnimated,
+    WebPLossless,
+    WebPAnimatedLossless,
 )
+
+LOSSLESS_IMAGE_CONVERT_TO_FORMAT_STRS = frozenset(
+    {cls.OUTPUT_FORMAT_STR for cls in _LOSSLESS_IMAGE_CONVERT_TO_HANDLERS}
+)
+_OTHER_CONVERT_TO_HANDLERS = (
+    Zip,
+    Cbz,
+    Jpeg,
+)
+
 CONVERT_TO_FORMAT_STRS = frozenset(
     {
-        tuple(
-            cls.OUTPUT_FORMAT_STR
-            for cls in (
-                Zip,
-                Cbz,
-                Jpeg,
-            )
-        )
-        + IMAGE_CONVERT_TO_FORMAT_STRS
+        (cls.OUTPUT_FORMAT_STR for cls in _OTHER_CONVERT_TO_HANDLERS),
     }
+    | LOSSLESS_IMAGE_CONVERT_TO_FORMAT_STRS
 )
 ARCHIVE_CONVERT_FROM_FORMAT_STRS = tuple(
     sorted({cls.INPUT_FORMAT_STR for cls in (Rar, SevenZip, Tar, TarGz, TarBz, TarXz)})
@@ -89,8 +85,11 @@ _ARCHIVE_HANDLERS = frozenset(
 )
 _ALL_HANDLERS = frozenset(DEFAULT_HANDLERS | _NON_PIL_HANDLERS | _ARCHIVE_HANDLERS)
 _INPUT_ONLY_HANDLERS = frozenset({Rar, Cbr})
+_HANDLER_OUTPUT_FORMAT_STRS = frozenset(
+    [cls.OUTPUT_FORMAT_STR for cls in _ALL_HANDLERS - _INPUT_ONLY_HANDLERS]
+)
 ALL_FORMAT_STRS: frozenset[str] = (
-    frozenset([cls.OUTPUT_FORMAT_STR for cls in _ALL_HANDLERS - _INPUT_ONLY_HANDLERS])
+    _HANDLER_OUTPUT_FORMAT_STRS
     | _ARCHIVE_CONVERTIBLE_FORMAT_STRS
     | LOSSLESS_FORMAT_STRS
     | {MPO_FILE_FORMAT.format_str}
