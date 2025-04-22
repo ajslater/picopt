@@ -9,8 +9,8 @@ from PIL import ImageCms
 from PIL.JpegImagePlugin import JpegImageFile
 from termcolor import cprint
 
-APP1_SECTION_DELIMETER = b"\x00"
-XAP_MARKER = b"http://ns.adobe.com/xap/1.0/"
+_APP1_SECTION_DELIMETER = b"\x00"
+_XAP_MARKER = b"http://ns.adobe.com/xap/1.0/"
 
 
 def _get_xmp(info, image, path_name):
@@ -80,9 +80,9 @@ def get_jpeg_xmp(image: JpegImageFile) -> str | None:
     # Copied from PIL JpegImageFile
     for segment, content in image.applist:
         if segment == "APP1":
-            sections = content.split(APP1_SECTION_DELIMETER)
+            sections = content.split(_APP1_SECTION_DELIMETER)
             marker, xmp_tags = sections[:2]
-            if marker == XAP_MARKER:
+            if marker == _XAP_MARKER:
                 xmp = xmp_tags.decode()
                 break
     return xmp
