@@ -55,6 +55,8 @@ class SevenZip(PackingArchiveHandler):
     def _archive_for_write(self, output_buffer: BytesIO):
         # w flushes the writes on close. x does not.
         # https://github.com/miurahr/py7zr/blob/b05ef454e65db9fa1d2da03378c915df913bf89d/py7zr/py7zr.py#L1152
+        # It seems onerous with py7zr to extract the compression filters used to make
+        # the archive, so remembering it will not be supported until py7zr makes it easy.
         return SevenZipFile(output_buffer, mode="w")
 
     def _pack_info_one_file(self, archive, path_info):
