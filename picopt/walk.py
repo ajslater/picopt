@@ -160,11 +160,7 @@ class Walk:
 
     def walk_dir(self, path_info: PathInfo) -> None:
         """Recursively optimize a directory."""
-        if (
-            not self._config.recurse
-            or path_info.is_container_child()
-            or not path_info.is_dir()
-        ):
+        if not self._config.recurse or path_info.in_container or not path_info.is_dir():
             # Skip
             return
 

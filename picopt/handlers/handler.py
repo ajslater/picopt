@@ -51,19 +51,21 @@ class Handler(ABC):
         )
         return BytesIO(result.stdout)
 
-    def get_working_path(self, identifier: str) -> Path:
+    def get_working_path(self, identifier_suffix: str) -> Path:
         """Return a working path with a custom suffix."""
-        # Used by cwebp
+        # Only used by cwebp because it needs to use disk
         if cps := self.path_info.container_paths:
+            path_head = cps[0]
             path_tail = "__".join((*cps[1:], str(self.original_path)))
             path_tail = path_tail.translate(WORKING_PATH_TRANS_TABLE)
-            path = Path(cps[0] + "__" + path_tail)
+            path_str = f"{path_head}__{path_tail}"
+            path = Path(path_str)
         else:
             path = self.original_path
 
         suffixes = [self.original_path.suffix, self.WORKING_SUFFIX]
-        if identifier:
-            suffixes += [identifier]
+        if identifier_suffix:
+            suffixes += [identifier_suffix]
         suffix = ".".join(suffixes)
         suffix += self.output_suffix
         return path.with_suffix(suffix)
@@ -191,10 +193,7 @@ class Handler(ABC):
     def _cleanup_after_optimize_save_new(self, final_data_buffer: BinaryIO) -> bytes:
         """Save new data."""
         return_data = b""
-        if (
-            isinstance(final_data_buffer, BytesIO)
-            or self.path_info.is_container_child()
-        ):
+        if isinstance(final_data_buffer, BytesIO) or self.path_info.in_container:
             # only return the data in the report for containers.
             final_data_buffer.seek(0)
             return_data = final_data_buffer.read()

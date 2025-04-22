@@ -37,7 +37,8 @@ class ContainerHandler(Handler, metaclass=ABCMeta):
         self.optimized_contents: dict[PathInfo, bytes] = {}
 
     def get_container_paths(self) -> tuple[str, ...]:
-        """Create a container path for output."""
+        """Create a container path for output and cwebp tmpfile usage."""
+        # Potentially build ever longer paths with container nesting.
         return (*self.path_info.container_paths, str(self.original_path))
 
     def unpack(self) -> Generator[PathInfo, None, None]:

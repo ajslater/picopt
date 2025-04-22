@@ -69,7 +69,6 @@ class ImageAnimated(PrepareInfoMixin, PackingContainerHandler, ABC):
                         frame=frame_index,
                         data=frame_buffer.read(),
                         container_paths=self.get_container_paths(),
-                        in_container=True,
                     )
                 if self.config.verbose:
                     cprint(".", end="")

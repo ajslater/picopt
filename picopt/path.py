@@ -1,6 +1,5 @@
 """Data classes."""
 
-from collections.abc import Sequence
 from io import BufferedReader, BytesIO
 from os import stat_result
 from pathlib import Path
@@ -30,23 +29,23 @@ class PathInfo:
         frame: int | None = None,
         archiveinfo: ZipInfo | RarInfo | TarInfo | SevenZipInfo | None = None,
         data: bytes | None = None,
+        container_paths: tuple[str, ...] | None = None,
         in_container: bool = False,  # noqa: FBT002
-        container_paths: Sequence[str] | None = None,
     ):
         """Initialize."""
         self.top_path: Path = top_path
         self.convert: bool = convert
         self.is_case_sensitive: bool = is_case_sensitive
-        self.in_container = in_container
 
-        # type
         # A filesystem path
         self.path = path
         # An animated image frame (in a container)
         self.frame = frame
         # An archived file (in a container)
-        archiveinfo_obj = ArchiveInfo(archiveinfo) if archiveinfo else None
-        self.archiveinfo = archiveinfo_obj
+        self.archiveinfo = ArchiveInfo(archiveinfo) if archiveinfo else None
+        self.in_container = (
+            in_container or self.archiveinfo is not None or self.frame is not None
+        )
         # The history of parent container names
         self.container_paths: tuple[str, ...] = (
             tuple(container_paths) if container_paths else ()
@@ -63,7 +62,6 @@ class PathInfo:
         self._name: str | None = None
         self._full_name: str | None = None
         self._suffix: str | None = None
-        self._is_container_child: bool | None = None
 
     def is_dir(self) -> bool:
         """Is the file a directory."""
@@ -76,12 +74,6 @@ class PathInfo:
                 self._is_dir = False
 
         return self._is_dir
-
-    def is_container_child(self) -> bool:
-        """Is this path inside a container."""
-        if self._is_container_child is None:
-            self._is_container_child = self.frame is not None or self.in_container
-        return self._is_container_child
 
     def stat(self) -> stat_result | bool:
         """Return fs_stat if possible."""

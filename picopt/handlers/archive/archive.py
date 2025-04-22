@@ -75,7 +75,6 @@ class ArchiveHandler(NonPILIdentifier, ContainerHandler, ABC):
                     archiveinfo=archiveinfo,
                     data=data,
                     container_paths=self.get_container_paths(),
-                    in_container=True,
                 )
                 yield path_info
                 if self.config.verbose:
