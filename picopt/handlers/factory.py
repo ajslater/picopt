@@ -54,8 +54,10 @@ def create_handler(config: AttrDict, path_info: PathInfo) -> Handler | None:
         file_format = None
         info = {}
 
-    if handler_cls and file_format is not None:
-        handler = handler_cls(config, path_info, file_format, info)
+    if handler_cls and file_format:
+        handler = handler_cls(
+            config, path_info, input_file_format=file_format, info=info
+        )
     else:
         handler = None
     return handler
@@ -75,7 +77,10 @@ def get_repack_handler_class(
         file_format = unpack_handler.input_file_format
         repack_handler_class: type[PackingContainerHandler] | None = (  # type: ignore[reportAssignmentType]
             _create_handler_get_handler_class(
-                config, unpack_handler.path_info.convert, file_format, repack=True
+                config,
+                unpack_handler.path_info.convert,
+                file_format,
+                repack=True,
             )
         )
     except OSError as exc:
@@ -101,8 +106,7 @@ def create_repack_handler(
         handler = repack_handler_class(
             config,
             unpack_handler.path_info,
-            repack_handler_class.OUTPUT_FILE_FORMAT,
-            info=unpack_handler.info,
+            input_file_format=repack_handler_class.OUTPUT_FILE_FORMAT,
             comment=unpack_handler.comment,
             optimized_contents=unpack_handler.optimized_contents,
         )

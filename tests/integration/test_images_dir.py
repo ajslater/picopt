@@ -3,6 +3,8 @@
 import platform
 from types import MappingProxyType
 
+import pytest
+
 from picopt import PROGRAM_NAME, cli
 from tests import get_test_dir
 from tests.integration.base_test_images import BaseTestImagesDir
@@ -86,15 +88,17 @@ class TestImagesDir(BaseTestImagesDir):
     FNS = FNS
     TMP_ROOT = get_test_dir()
 
-    def test_no_convert(self) -> None:
+    @pytest.mark.parametrize("fn", FNS)
+    def test_no_convert(self, fn: str) -> None:
         """Test no convert."""
         args = (PROGRAM_NAME, "-rvvx SVG", str(self.TMP_ROOT))
         cli.main(args)
-        for name, sizes in self.FNS.items():
-            path = self.TMP_ROOT / name
-            assert path.stat().st_size == sizes[1]
+        path = self.TMP_ROOT / fn
+        size = FNS[fn][1]
+        assert path.stat().st_size == size
 
-    def test_convert_to_png(self) -> None:
+    @pytest.mark.parametrize("fn", FNS)
+    def test_convert_to_png(self, fn: str) -> None:
         """Test convert to PNG."""
         args = (
             PROGRAM_NAME,
@@ -105,11 +109,12 @@ class TestImagesDir(BaseTestImagesDir):
             str(self.TMP_ROOT),
         )
         cli.main(args)
-        for name, sizes in self.FNS.items():
-            path = (self.TMP_ROOT / name).with_suffix("." + sizes[2][0])
-            assert path.stat().st_size == sizes[2][1]
+        suffix, size = FNS[fn][2]
+        path = (self.TMP_ROOT / fn).with_suffix("." + suffix)
+        assert path.stat().st_size == size
 
-    def test_convert_to_webp(self) -> None:
+    @pytest.mark.parametrize("fn", FNS)
+    def test_convert_to_webp(self, fn: str) -> None:
         """Test convert to WEBP."""
         args = (
             PROGRAM_NAME,
@@ -120,15 +125,16 @@ class TestImagesDir(BaseTestImagesDir):
             str(self.TMP_ROOT),
         )
         cli.main(args)
-        for name, sizes in self.FNS.items():
-            path = (self.TMP_ROOT / name).with_suffix("." + sizes[3][0])
-            assert path.stat().st_size == sizes[3][1]
+        suffix, size = FNS[fn][3]
+        path = (self.TMP_ROOT / fn).with_suffix("." + suffix)
+        assert path.stat().st_size == size
 
 
 class TestNearLosslessImageDir(BaseTestImagesDir):
     FNS = NEAR_LOSSLESS_FNS
 
-    def test_convert_to_webp_near_lossless(self) -> None:
+    @pytest.mark.parametrize("fn", FNS)
+    def test_convert_to_webp_near_lossless(self, fn: str) -> None:
         """Test convert to WEBP."""
         args = (
             PROGRAM_NAME,
@@ -137,6 +143,6 @@ class TestNearLosslessImageDir(BaseTestImagesDir):
             str(self.TMP_ROOT),
         )
         cli.main(args)
-        for name, sizes in self.FNS.items():
-            path = (self.TMP_ROOT / name).with_suffix("." + sizes[3][0])
-            assert path.stat().st_size == sizes[3][1]
+        suffix, size = FNS[fn][3]
+        path = (self.TMP_ROOT / fn).with_suffix("." + suffix)
+        assert path.stat().st_size == size

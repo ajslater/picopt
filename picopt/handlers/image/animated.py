@@ -1,7 +1,7 @@
 """Animated images are treated like containers."""
 
 from abc import ABC
-from collections.abc import Generator
+from collections.abc import Generator, Mapping
 from io import BytesIO
 from types import MappingProxyType
 from typing import Any
@@ -12,12 +12,13 @@ from termcolor import cprint
 
 from picopt.formats import FileFormat
 from picopt.handlers.container import PackingContainerHandler
+from picopt.handlers.metadata import PrepareInfoMixin
 from picopt.path import PathInfo
 
 ANIMATED_INFO_KEYS = ("bbox", "blend", "disposal", "duration")
 
 
-class ImageAnimated(PackingContainerHandler, ABC):
+class ImageAnimated(PrepareInfoMixin, PackingContainerHandler, ABC):
     """Animated image container."""
 
     PROGRAMS = (("pil2native",),)
@@ -25,6 +26,11 @@ class ImageAnimated(PackingContainerHandler, ABC):
         {"format": str(PngImageFile.format), "compress_level": 0}
     )
     PIL2_KWARGS: MappingProxyType[str, Any] = MappingProxyType({})
+
+    def __init__(self, *args, info: Mapping[str, Any], **kwargs):
+        """Set image metadata."""
+        super().__init__(*args, **kwargs)
+        self.set_info(info)
 
     @classmethod
     def identify_format(cls, path_info: PathInfo) -> FileFormat | None:  # noqa: ARG003

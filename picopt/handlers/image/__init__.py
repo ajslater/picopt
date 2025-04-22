@@ -11,14 +11,21 @@ from PIL.PngImagePlugin import PngImageFile
 from termcolor import cprint
 
 from picopt.handlers.handler import Handler
+from picopt.handlers.metadata import PrepareInfoMixin
 
 
-class ImageHandler(Handler, metaclass=ABCMeta):
+class ImageHandler(PrepareInfoMixin, Handler, metaclass=ABCMeta):
     """Image Handler superclass."""
 
     PIL2_KWARGS: MappingProxyType[str, Any] = MappingProxyType({})
     PIL2PNG_KWARGS: MappingProxyType[str, Any] = MappingProxyType({"compress_level": 0})
     EMPTY_EXEC_ARGS: tuple[str, tuple[str, ...]] = ("", ())
+
+    def __init__(self, *args, info: Mapping[str, Any], **kwargs):
+        """Save image info metadata."""
+        super().__init__(*args, **kwargs)
+        # For image metadata preservation
+        self.set_info(info)
 
     def optimize(self) -> BinaryIO:
         """
