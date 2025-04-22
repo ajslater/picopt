@@ -66,8 +66,9 @@ class Cbz(Zip):
 class EPub(Zip):
     """Epub Container."""
 
-    # never convert inside epubs, breaks src links.
     OUTPUT_FORMAT_STR: str = "EPUB"
     OUTPUT_FILE_FORMAT = FileFormat(OUTPUT_FORMAT_STR, archive=True)
     INPUT_FILE_FORMAT = OUTPUT_FILE_FORMAT
     INPUT_FILE_FORMATS = frozenset({INPUT_FILE_FORMAT})
+    # never convert inside epubs, breaks src links.
+    CONVERT_CHILDREN = False

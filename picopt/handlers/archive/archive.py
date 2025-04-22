@@ -25,6 +25,7 @@ class ArchiveHandler(NonPILIdentifier, ContainerHandler, ABC):
     INPUT_FILE_FORMAT = FileFormat(INPUT_FORMAT_STR)
     INPUT_FILE_FORMATS = frozenset({INPUT_FILE_FORMAT})
     ARCHIVE_CLASS: type[ZipFile | TarFile | SevenZipFile | RarFile] = ZipFile
+    CONVERT_CHILDREN: bool = True
 
     @classmethod
     @abstractmethod
@@ -69,7 +70,7 @@ class ArchiveHandler(NonPILIdentifier, ContainerHandler, ABC):
                     continue
                 path_info = PathInfo(
                     self.path_info.top_path,  # Change this when i do internal times?
-                    self.path_info.convert,
+                    self.path_info.convert and self.CONVERT_CHILDREN,
                     archiveinfo=archiveinfo,
                     data=data,
                     container_paths=self.get_container_paths(),
