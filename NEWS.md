@@ -2,6 +2,7 @@
 
 ## v4.1.0
 
+- Picopt learned to optimize 7-Zip and Tar Archives.
 - -T --test option becomes -d --dry-run
 - Fix tif & animated gifs not converted to pngs when asked.
 - animated pngs better optimized with oxipng
