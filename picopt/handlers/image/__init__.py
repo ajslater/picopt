@@ -18,8 +18,8 @@ class ImageHandler(PrepareInfoMixin, Handler, metaclass=ABCMeta):
     """Image Handler superclass."""
 
     PIL2_KWARGS: MappingProxyType[str, Any] = MappingProxyType({})
-    PIL2PNG_KWARGS: MappingProxyType[str, Any] = MappingProxyType({"compress_level": 0})
-    EMPTY_EXEC_ARGS: tuple[str, tuple[str, ...]] = ("", ())
+    _PIL2PNG_KWARGS: MappingProxyType[str, Any] = MappingProxyType({"compress_level": 0})
+    _EMPTY_EXEC_ARGS: tuple[str, tuple[str, ...]] = ("", ())
 
     def __init__(self, *args, info: Mapping[str, Any], **kwargs):
         """Save image info metadata."""
@@ -89,8 +89,8 @@ class ImageHandler(PrepareInfoMixin, Handler, metaclass=ABCMeta):
     ) -> BytesIO | BufferedReader:
         """Internally convert unhandled formats to uncompressed png for cwebp."""
         return self.pil2native(
-            self.EMPTY_EXEC_ARGS,
+            self._EMPTY_EXEC_ARGS,
             input_buffer,
             format_str=PngImageFile.format,
-            opts=self.PIL2PNG_KWARGS,
+            opts=self._PIL2PNG_KWARGS,
         )

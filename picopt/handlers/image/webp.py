@@ -95,7 +95,7 @@ class WebPLossless(WebPBase):
     )
     PIL2_KWARGS = MappingProxyType({**WebPBase.PIL2_KWARGS, "lossless": True})
     PROGRAMS = (("pil2png",), ("cwebp", "pil2native"))
-    NEAR_LOSSLESS_OPTS: tuple[str, ...] = ("-near_lossless", "0")
+    _NEAR_LOSSLESS_OPTS: tuple[str, ...] = ("-near_lossless", "0")
 
     def __init__(self, config: AttrDict, *args, **kwargs):
         """Initialize extra input formats."""
@@ -110,7 +110,7 @@ class WebPLossless(WebPBase):
         opts: tuple[str, ...] | None = None,
     ) -> BinaryIO:
         """Optimize using cwebp and with runtime optional arguments."""
-        opts = self.NEAR_LOSSLESS_OPTS if self.config.near_lossless else None
+        opts = self._NEAR_LOSSLESS_OPTS if self.config.near_lossless else None
         return super().cwebp(exec_args, input_buffer, opts=opts)
 
 
