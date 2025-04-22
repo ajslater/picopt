@@ -14,6 +14,21 @@ from picopt.handlers.archive.archiveinfo import ArchiveInfo
 
 _CONTAINER_PATH_DELIMETER = " - "
 _DOUBLE_SUFFIX = ".tar"
+_LOWERCASE_TESTNAME = ".picopt_case_sensitive_test"
+_UPPERCASE_TESTNAME = _LOWERCASE_TESTNAME.upper()
+
+
+def _is_case_sensitive(dirpath: Path) -> bool:
+    """Determine if a path is on a case sensitive filesystem."""
+    lowercase_path = dirpath / _LOWERCASE_TESTNAME
+    result = False
+    try:
+        lowercase_path.touch()
+        uppercase_path = dirpath / _UPPERCASE_TESTNAME
+        result = not uppercase_path.exists()
+    finally:
+        lowercase_path.unlink(missing_ok=True)
+    return result
 
 
 class PathInfo:
@@ -30,11 +45,14 @@ class PathInfo:
         data: bytes | None = None,
         container_paths: tuple[str, ...] | None = None,
         in_container: bool = False,  # noqa: FBT002
+        test_case_sensitivity: bool = False,  # noqa: FBT002
     ):
         """Initialize."""
         self.top_path: Path = top_path
         self.convert: bool = convert
-        self.is_case_sensitive: bool = is_case_sensitive
+        self.is_case_sensitive: bool = is_case_sensitive or bool(
+            test_case_sensitivity and _is_case_sensitive(top_path)
+        )
 
         # A filesystem path
         self.path = path

@@ -31,8 +31,6 @@ class Walk:
     TIMESTAMPS_FILENAMES = frozenset(
         {*Treestamps.get_filenames(PROGRAM_NAME), OLD_TIMESTAMPS_NAME}
     )
-    LOWERCASE_TESTNAME = ".picopt_case_sensitive_test"
-    UPPERCASE_TESTNAME = LOWERCASE_TESTNAME.upper()
 
     ########
     # Init #
@@ -340,19 +338,6 @@ class Walk:
         else:
             self._pool = Pool()
 
-    @classmethod
-    def _is_case_sensitive(cls, dirpath: Path) -> bool:
-        """Determine if a path is on a case sensitive filesystem."""
-        lowercase_path = dirpath / cls.LOWERCASE_TESTNAME
-        result = False
-        try:
-            lowercase_path.touch()
-            uppercase_path = dirpath / cls.UPPERCASE_TESTNAME
-            result = not uppercase_path.exists()
-        finally:
-            lowercase_path.unlink(missing_ok=True)
-        return result
-
     def run(self) -> Totals:
         """Optimize all configured files."""
         self._init_run()
@@ -361,11 +346,10 @@ class Walk:
         top_results = {}
         for top_path in self._top_paths:
             dirpath = Treestamps.get_dir(top_path)
-            is_case_sensitive = self._is_case_sensitive(dirpath)
             path_info = PathInfo(
                 dirpath,
                 convert=True,
-                is_case_sensitive=is_case_sensitive,
+                test_case_sensitivity=True,
                 path=top_path,
             )
             result = self.walk_file(path_info)
