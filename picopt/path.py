@@ -12,8 +12,7 @@ from rarfile import RarInfo
 
 from picopt.handlers.archive.archiveinfo import ArchiveInfo
 
-TMP_DIR = Path("__picopt_tmp")
-CONTAINER_PATH_DELIMETER = " - "
+_CONTAINER_PATH_DELIMETER = " - "
 _DOUBLE_SUFFIX = ".tar"
 
 
@@ -151,7 +150,7 @@ class PathInfo:
     def full_name(self) -> str:
         """Full name."""
         if self._full_name is None:
-            self._full_name = CONTAINER_PATH_DELIMETER.join(
+            self._full_name = _CONTAINER_PATH_DELIMETER.join(
                 (*self.container_paths, self.name())
             )
         return self._full_name
