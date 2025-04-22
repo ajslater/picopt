@@ -138,8 +138,8 @@ class Walk:
     def _finish_results(
         self,
         results: list[ApplyResult],
-        container_mtime: float | None,
         top_path: Path,
+        in_container: bool,
     ) -> None:
         """Get the async results and total them."""
         for result in results:
@@ -154,7 +154,7 @@ class Walk:
                     self._totals.bytes_out += final_result.bytes_out
                 else:
                     self._totals.bytes_out += final_result.bytes_in
-            if self._config.timestamps and not container_mtime:
+            if self._config.timestamps and not in_container:
                 timestamps = self._timestamps[top_path]
                 timestamps.set(final_result.path)
 
@@ -177,10 +177,10 @@ class Walk:
             if entry_path.is_dir():
                 path_info = PathInfo(
                     path_info.top_path,
-                    path_info.container_mtime,
                     path_info.convert,
                     path_info.is_case_sensitive,
                     path=entry_path,
+                    in_container=path_info.in_container,
                 )
                 self.walk_file(path_info)
             else:
@@ -189,18 +189,18 @@ class Walk:
         for entry_path in sorted(files):
             path_info = PathInfo(
                 path_info.top_path,
-                path_info.container_mtime,
                 path_info.convert,
                 path_info.is_case_sensitive,
                 path=entry_path,
+                in_container=path_info.in_container,
             )
             if result := self.walk_file(path_info):
                 results.append(result)
 
         self._finish_results(
             results,
-            path_info.container_mtime,
             path_info.top_path,
+            path_info.in_container,
         )
 
         if self._config.timestamps:
@@ -368,7 +368,6 @@ class Walk:
             is_case_sensitive = self._is_case_sensitive(dirpath)
             path_info = PathInfo(
                 dirpath,
-                0.0,
                 convert=True,
                 is_case_sensitive=is_case_sensitive,
                 path=top_path,
@@ -382,7 +381,7 @@ class Walk:
 
         # Finish
         for dirpath, results in top_results.items():
-            self._finish_results(results, None, dirpath)
+            self._finish_results(results, dirpath, in_container=False)
 
         # Shut down multiprocessing
         self._pool.close()

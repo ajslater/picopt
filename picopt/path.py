@@ -24,20 +24,20 @@ class PathInfo:
     def __init__(  # noqa: PLR0913
         self,
         top_path: Path,
-        container_mtime: float,
         convert: bool,
         is_case_sensitive: bool,
         path: Path | None = None,
         frame: int | None = None,
         archiveinfo: ZipInfo | RarInfo | TarInfo | SevenZipInfo | None = None,
         data: bytes | None = None,
+        in_container: bool = False,  # noqa: FBT002
         container_paths: Sequence[str] | None = None,
     ):
         """Initialize."""
         self.top_path: Path = top_path
-        self.container_mtime: float = container_mtime
         self.convert: bool = convert
         self.is_case_sensitive: bool = is_case_sensitive
+        self.in_container = in_container
 
         # type
         # A filesystem path
@@ -80,9 +80,7 @@ class PathInfo:
     def is_container_child(self) -> bool:
         """Is this path inside a container."""
         if self._is_container_child is None:
-            self._is_container_child = self.frame is not None or bool(
-                self.container_mtime
-            )
+            self._is_container_child = self.frame is not None or self.in_container
         return self._is_container_child
 
     def stat(self) -> stat_result | bool:
@@ -137,8 +135,6 @@ class PathInfo:
                 if mtime is None:
                     mtime = 0.0
                 self._mtime = mtime
-            elif self.container_mtime:
-                self._mtime = self.container_mtime
             else:
                 stat = self.stat()
                 if stat and stat is not True:

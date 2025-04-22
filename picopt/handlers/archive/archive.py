@@ -70,12 +70,12 @@ class ArchiveHandler(NonPILIdentifier, ContainerHandler, ABC):
                     continue
                 path_info = PathInfo(
                     self.path_info.top_path,  # Change this when i do internal times?
-                    self.path_info.mtime(),  # Change this when I do internal times.
                     self.path_info.convert,
                     self.path_info.is_case_sensitive,
                     archiveinfo=archiveinfo,
                     data=data,
                     container_paths=self.get_container_paths(),
+                    in_container=True,
                 )
                 yield path_info
                 if self.config.verbose:
