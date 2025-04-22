@@ -18,7 +18,9 @@ class ImageHandler(PrepareInfoMixin, Handler, metaclass=ABCMeta):
     """Image Handler superclass."""
 
     PIL2_KWARGS: MappingProxyType[str, Any] = MappingProxyType({})
-    _PIL2PNG_KWARGS: MappingProxyType[str, Any] = MappingProxyType({"compress_level": 0})
+    _PIL2PNG_KWARGS: MappingProxyType[str, Any] = MappingProxyType(
+        {"compress_level": 0}
+    )
     _EMPTY_EXEC_ARGS: tuple[str, tuple[str, ...]] = ("", ())
 
     def __init__(self, *args, info: Mapping[str, Any], **kwargs):
