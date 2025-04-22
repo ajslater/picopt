@@ -88,9 +88,6 @@ class WebPLossless(WebPBase):
         WebPBase.OUTPUT_FORMAT_STR, lossless=True, animated=False
     )
     INPUT_FILE_FORMATS = frozenset({OUTPUT_FILE_FORMAT, Png.OUTPUT_FILE_FORMAT})
-    CONVERT_FROM_FORMAT_STRS = frozenset(
-        Png.CONVERT_FROM_FORMAT_STRS | {Png.OUTPUT_FORMAT_STR}
-    )
     CWEBP_ARGS_PREFIX = (
         # https://groups.google.com/a/webmproject.org/g/webp-discuss/c/0GmxDmlexek
         "-lossless",
@@ -133,9 +130,6 @@ class WebPAnimatedLossless(WebPAnimatedBase):
     )
     INPUT_FILE_FORMATS = frozenset(
         {*PngAnimated.INPUT_FILE_FORMATS, OUTPUT_FILE_FORMAT}
-    )
-    CONVERT_FROM_FORMAT_STRS = frozenset(
-        {*PngAnimated.CONVERT_FROM_FORMAT_STRS, PngAnimated.OUTPUT_FORMAT_STR}
     )
     PIL2_FRAME_KWARGS = MappingProxyType(
         {**WebPAnimatedBase.PIL2_FRAME_KWARGS, "lossless": True, "quality": 0}

@@ -9,13 +9,8 @@ import oxipng
 from PIL.PngImagePlugin import PngImageFile
 from termcolor import cprint
 
-from picopt.formats import (
-    CONVERTIBLE_ANIMATED_FORMAT_STRS,
-    CONVERTIBLE_FORMAT_STRS,
-    FileFormat,
-)
+from picopt.formats import FileFormat
 from picopt.handlers.image import ImageHandler
-from picopt.handlers.image.gif import Gif, GifAnimated
 from picopt.pillow.png_bit_depth import png_bit_depth
 
 
@@ -62,9 +57,6 @@ class Png(PngBase):
     OUTPUT_FORMAT_STR = str(PngImageFile.format)
     OUTPUT_FILE_FORMAT = FileFormat(OUTPUT_FORMAT_STR, lossless=True, animated=False)
     INPUT_FILE_FORMATS = frozenset({OUTPUT_FILE_FORMAT})
-    CONVERT_FROM_FORMAT_STRS = frozenset(
-        CONVERTIBLE_FORMAT_STRS | {Gif.OUTPUT_FORMAT_STR}
-    )
     PROGRAMS = (
         *PngBase.PROGRAMS,
         ("pngout",),
@@ -97,6 +89,3 @@ class PngAnimated(PngBase):
     OUTPUT_FORMAT_STR: str = Png.OUTPUT_FORMAT_STR
     OUTPUT_FILE_FORMAT = FileFormat(OUTPUT_FORMAT_STR, lossless=True, animated=True)
     INPUT_FILE_FORMATS = frozenset({OUTPUT_FILE_FORMAT})
-    CONVERT_FROM_FORMAT_STRS = frozenset(
-        CONVERTIBLE_ANIMATED_FORMAT_STRS | {GifAnimated.OUTPUT_FORMAT_STR}
-    )

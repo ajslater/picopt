@@ -107,14 +107,14 @@ _CONVERTABLE_PIL_IMAGE_FILES = (
     #####################
     MpoImageFile,
 )
-CONVERTIBLE_FORMAT_STRS: frozenset[str] = frozenset(
+_CONVERTIBLE_PIL_FORMAT_STRS: frozenset[str] = frozenset(
     {str(img_file.format) for img_file in _CONVERTABLE_PIL_IMAGE_FILES}
 )
 
-CONVERTIBLE_FILE_FORMATS: frozenset[FileFormat] = frozenset(
+CONVERTIBLE_PIL_FILE_FORMATS: frozenset[FileFormat] = frozenset(
     {
         FileFormat(str(format_str), lossless=True, animated=False)
-        for format_str in CONVERTIBLE_FORMAT_STRS
+        for format_str in _CONVERTIBLE_PIL_FORMAT_STRS
     }
 )
 _CONVERTABLE_PIL_ANIMATED_IMAGE_FILES = (
@@ -126,18 +126,18 @@ _CONVERTABLE_PIL_ANIMATED_IMAGE_FILES = (
     # PngImageFile,
     TiffImageFile,
 )
-CONVERTIBLE_ANIMATED_FORMAT_STRS: frozenset[str] = frozenset(
+_CONVERTIBLE_PIL_ANIMATED_FORMAT_STRS: frozenset[str] = frozenset(
     {str(img_file.format) for img_file in _CONVERTABLE_PIL_ANIMATED_IMAGE_FILES}
 )
-CONVERTIBLE_ANIMATED_FILE_FORMATS = frozenset(
+CONVERTIBLE_PIL_ANIMATED_FILE_FORMATS = frozenset(
     {
         FileFormat(format_str, lossless=True, animated=True)
-        for format_str in CONVERTIBLE_ANIMATED_FORMAT_STRS
+        for format_str in _CONVERTIBLE_PIL_ANIMATED_FORMAT_STRS
     }
 )
 
 LOSSLESS_FORMAT_STRS: frozenset[str] = frozenset(
-    CONVERTIBLE_FORMAT_STRS - {str(MpoImageFile.format)}
-    | CONVERTIBLE_ANIMATED_FORMAT_STRS
+    _CONVERTIBLE_PIL_FORMAT_STRS - {str(MpoImageFile.format)}
+    | _CONVERTIBLE_PIL_ANIMATED_FORMAT_STRS
     | {str(GifImageFile.format), str(PngImageFile.format), SVG_FORMAT_STR}
 )

@@ -11,8 +11,8 @@ from termcolor import cprint
 
 from picopt.config.cwebp import is_cwebp_modern
 from picopt.formats import (
-    CONVERTIBLE_ANIMATED_FILE_FORMATS,
-    CONVERTIBLE_FILE_FORMATS,
+    CONVERTIBLE_PIL_ANIMATED_FILE_FORMATS,
+    CONVERTIBLE_PIL_FILE_FORMATS,
     MODERN_CWEBP_FORMAT_STRS,
     MPO_FILE_FORMAT,
     FileFormat,
@@ -63,13 +63,13 @@ class FileFormatHandlers:
 _LOSSLESS_CONVERTIBLE_FORMAT_HANDLERS = MappingProxyType(
     {
         ffmt: FileFormatHandlers(convert=(WebPLossless, Png))
-        for ffmt in CONVERTIBLE_FILE_FORMATS
+        for ffmt in CONVERTIBLE_PIL_FILE_FORMATS
     }
 )
 _LOSSLESS_CONVERTIBLE_ANIMATED_FORMAT_HANDLERS = MappingProxyType(
     {
         ffmt: FileFormatHandlers(convert=(WebPAnimatedLossless, PngAnimated))
-        for ffmt in CONVERTIBLE_ANIMATED_FILE_FORMATS
+        for ffmt in CONVERTIBLE_PIL_ANIMATED_FILE_FORMATS
     }
 )
 _FORMAT_HANDLERS = MappingProxyType(
