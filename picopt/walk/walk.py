@@ -1,10 +1,11 @@
-"""Methods for walking the tree and handling files."""
+"""Walk the directory trees and files and call the optimizers."""
 
 import traceback
 from multiprocessing.pool import ApplyResult
 from pathlib import Path
 
 from termcolor import cprint
+from treestamps import Treestamps
 
 from picopt.handlers.archive.archive import ArchiveHandler
 from picopt.handlers.container import ContainerHandler
@@ -15,11 +16,11 @@ from picopt.handlers.factory import (
 from picopt.handlers.handler import Handler
 from picopt.handlers.image import ImageHandler
 from picopt.path import PathInfo
-from picopt.stats import ReportStats
+from picopt.stats import ReportStats, Totals
 from picopt.walk.init import WalkInit
 
 
-class WalkWalkers(WalkInit):
+class Walk(WalkInit):
     """Methods for walking the tree and handling files."""
 
     def _finish_results(
@@ -215,3 +216,36 @@ class WalkWalkers(WalkInit):
             }
             result = self._pool.apply_async(ReportStats, (), apply_kwargs)
         return result
+
+    def walk(self) -> Totals:
+        """Optimize all configured files."""
+        self._init_timestamps()
+
+        # Walk each top file
+        top_results = {}
+        for top_path in self._top_paths:
+            dirpath = Treestamps.get_dir(top_path)
+            path_info = PathInfo(
+                dirpath, convert=True, path=top_path, is_case_sensitive=None
+            )
+            result = self.walk_file(path_info)
+            if not result:
+                continue
+            if dirpath not in top_results:
+                top_results[dirpath] = []
+            top_results[dirpath].append(result)
+
+        # Finish
+        for dirpath, results in top_results.items():
+            self._finish_results(results, dirpath, in_container=False)
+
+        # Shut down multiprocessing
+        self._pool.close()
+        self._pool.join()
+
+        cprint("done.")
+
+        if self._timestamps:
+            self._timestamps.dumpf()
+
+        return self._totals

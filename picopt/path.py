@@ -45,13 +45,13 @@ class PathInfo:
         self,
         top_path: Path,
         convert: bool,
+        is_case_sensitive: bool | None,
         path: Path | None = None,
         frame: int | None = None,
         archiveinfo: ZipInfo | RarInfo | TarInfo | SevenZipInfo | None = None,
         data: bytes | None = None,
         container_parents: tuple[str, ...] | None = None,
         in_container: bool = False,  # noqa: FBT002
-        is_case_sensitive: bool | None = None,
     ):
         """Initialize."""
         self.top_path: Path = top_path

@@ -18,7 +18,7 @@ from picopt.config.consts import (
 )
 from picopt.exceptions import PicoptError
 from picopt.handlers.archive.zip import Cbz, Zip
-from picopt.walk.run import Walk
+from picopt.walk.walk import Walk
 
 _DEFAULT_FORMAT_STRS = frozenset(
     [handler_cls.OUTPUT_FORMAT_STR for handler_cls in DEFAULT_HANDLERS]
@@ -290,8 +290,8 @@ def main(args: tuple[str, ...] | None = None):
         arguments = get_arguments(args)
 
         config = get_config(arguments)
-        wob = Walk(config)
-        totals = wob.run()
+        walker = Walk(config)
+        totals = walker.walk()
         totals.report()
     except ConfigError as err:
         cprint(f"ERROR: {err}", "red")
