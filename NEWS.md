@@ -3,6 +3,8 @@
 ## v4.1.0
 
 - Picopt learned to optimize 7-Zip and Tar Archives.
+- Fix --ignore option wildcards and performance.
+- Ignore dotfiles by default. Disable with -I.
 - -T --test option becomes -d --dry-run
 - Fix tif & animated gifs not converted to pngs when asked.
 - Archives skipped without unpacking anything if all contents are skippable.
