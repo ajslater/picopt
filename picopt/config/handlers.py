@@ -244,7 +244,7 @@ def _set_format_handler_map_entry(  # noqa: PLR0913
 def set_format_handler_map(config: Subview) -> None:
     """Create a format to handler map from config."""
     all_format_strs = _get_config_set(config, "formats", "extra_formats")
-    config["formats"] = tuple(sorted(all_format_strs))
+    config["formats"].set(tuple(sorted(all_format_strs)))
     convert_to = _get_config_set(config, "convert_to")
 
     native_handlers: dict[FileFormat, type[Handler]] = {}
