@@ -51,10 +51,12 @@ class Tar(PackingArchiveHandler):
 
     @staticmethod
     def _archive_infolist(archive):
-        return (tarinfo for tarinfo in archive.getmembers() if tarinfo.isfile())
+        return archive.getmembers()
 
     def _archive_readfile(self, archive, archiveinfo):
-        return archive.extractfile(archiveinfo).read()
+        if buf := archive.extractfile(archiveinfo):
+            return buf.read()
+        return b""
 
     def _archive_for_write(self, output_buffer: BytesIO) -> TarFile:
         return tar_open(

@@ -12,13 +12,13 @@ from rarfile import RarInfo
 
 from picopt.handlers.archive.archiveinfo import ArchiveInfo
 
-_CONTAINER_PATH_DELIMETER = " - "
+_CONTAINER_PATH_DELIMETER = ":"
 _DOUBLE_SUFFIX = ".tar"
 _LOWERCASE_TESTNAME = ".picopt_case_sensitive_test"
 _UPPERCASE_TESTNAME = _LOWERCASE_TESTNAME.upper()
 
 
-def _is_case_sensitive(dirpath: Path) -> bool:
+def is_path_case_sensitive(dirpath: Path) -> bool:
     """Determine if a path is on a case sensitive filesystem."""
     lowercase_path = dirpath / _LOWERCASE_TESTNAME
     result = False
@@ -29,6 +29,13 @@ def _is_case_sensitive(dirpath: Path) -> bool:
     finally:
         lowercase_path.unlink(missing_ok=True)
     return result
+
+
+def is_path_ignored(config: AttrDict, path: str | Path, ignore_case: bool):
+    """Match path against the ignore regexp."""
+    ignore = config.computed.ignore
+    ignore = ignore.ignore_case if ignore_case else ignore.case
+    return ignore and bool(ignore.search(str(path)))
 
 
 class PathInfo:
@@ -42,7 +49,7 @@ class PathInfo:
         frame: int | None = None,
         archiveinfo: ZipInfo | RarInfo | TarInfo | SevenZipInfo | None = None,
         data: bytes | None = None,
-        container_paths: tuple[str, ...] | None = None,
+        container_parents: tuple[str, ...] | None = None,
         in_container: bool = False,  # noqa: FBT002
         is_case_sensitive: bool | None = None,
     ):
@@ -50,7 +57,7 @@ class PathInfo:
         self.top_path: Path = top_path
         self.convert: bool = convert
         self.is_case_sensitive: bool = is_case_sensitive or bool(
-            is_case_sensitive is None and _is_case_sensitive(top_path)
+            is_case_sensitive is None and is_path_case_sensitive(top_path)
         )
 
         # A filesystem path
@@ -63,8 +70,8 @@ class PathInfo:
             in_container or self.archiveinfo is not None or self.frame is not None
         )
         # The history of parent container names
-        self.container_paths: tuple[str, ...] = (
-            tuple(container_paths) if container_paths else ()
+        self.container_parents: tuple[str, ...] = (
+            container_parents if container_parents else ()
         )
 
         # optionally computed
@@ -76,8 +83,10 @@ class PathInfo:
         self._bytes_in: int | None = None
         self._mtime: float | None = None
         self._name: str | None = None
-        self._full_name: str | None = None
+        self._archive_pretty_name: str | None = None
+        self._archive_psuedo_path: Path | None = None
         self._suffix: str | None = None
+        self._container_path_history: tuple[str, ...] | None = None
 
     def is_dir(self) -> bool:
         """Is the file a directory."""
@@ -168,13 +177,28 @@ class PathInfo:
                 self._name = "Unknown"
         return self._name
 
-    def full_name(self) -> str:
-        """Full name."""
-        if self._full_name is None:
-            self._full_name = _CONTAINER_PATH_DELIMETER.join(
-                (*self.container_paths, self.name())
+    def container_path_history(self) -> tuple[str, ...]:
+        """Collect container parents plus this path's name."""
+        if self._container_path_history is None:
+            self._container_path_history = (*self.container_parents, self.name())
+        return self._container_path_history
+
+    def full_output_name(self) -> str:
+        """Full path string for output."""
+        if self._archive_pretty_name is None:
+            self._archive_pretty_name = _CONTAINER_PATH_DELIMETER.join(
+                self.container_path_history()
             )
-        return self._full_name
+        return self._archive_pretty_name
+
+    def archive_psuedo_path(self) -> Path:
+        """Return a psudeo path of container history for skipping inside archives."""
+        if self._archive_psuedo_path is None:
+            path = Path()
+            for child in self.container_path_history():
+                path = path / child
+            self._archive_psuedo_path = path
+        return self._archive_psuedo_path
 
     def suffix(self) -> str:
         """Return file suffix."""
@@ -184,9 +208,3 @@ class PathInfo:
             index = -2 if len(suffixes) > 1 and suffixes[-2] == _DOUBLE_SUFFIX else -1
             self._suffix = "".join(suffixes[index:])
         return self._suffix
-
-
-def is_path_ignored(config: AttrDict, path: Path):
-    """Match path against the ignore regexp."""
-    ignore = config.computed.ignore
-    return ignore and bool(ignore.search(str(path)))

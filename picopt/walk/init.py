@@ -7,9 +7,12 @@ from confuse.templates import AttrDict
 
 from picopt.exceptions import PicoptError
 from picopt.stats import Totals
+from picopt.walk.skip import WalkSkipper
 
 if TYPE_CHECKING:
     from pathlib import Path
+
+    from treestamps import Grovestamps
 
 
 class WalkInit:
@@ -42,4 +45,5 @@ class WalkInit:
             self._pool = Pool(self._config.jobs)
         else:
             self._pool = Pool()
-        self._timestamps = {}  # reassigned at start of run
+        self._timestamps: Grovestamps | None = None  # reassigned at start of run
+        self._skipper = WalkSkipper(config)

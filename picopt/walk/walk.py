@@ -4,18 +4,22 @@ import traceback
 from multiprocessing.pool import ApplyResult
 from pathlib import Path
 
+from termcolor import cprint
+
+from picopt.handlers.archive.archive import ArchiveHandler
 from picopt.handlers.container import ContainerHandler
 from picopt.handlers.factory import (
     create_handler,
     create_repack_handler,
 )
+from picopt.handlers.handler import Handler
 from picopt.handlers.image import ImageHandler
 from picopt.path import PathInfo
 from picopt.stats import ReportStats
-from picopt.walk.skippers import WalkSkippers
+from picopt.walk.init import WalkInit
 
 
-class WalkWalkers(WalkSkippers):
+class WalkWalkers(WalkInit):
     """Methods for walking the tree and handling files."""
 
     def _finish_results(
@@ -37,7 +41,7 @@ class WalkWalkers(WalkSkippers):
                     self._totals.bytes_out += final_result.bytes_out
                 else:
                     self._totals.bytes_out += final_result.bytes_in
-            if self._config.timestamps and not in_container:
+            if self._timestamps and not in_container:
                 timestamps = self._timestamps[top_path]
                 timestamps.set(final_result.path)
 
@@ -82,23 +86,75 @@ class WalkWalkers(WalkSkippers):
             path_info.in_container,
         )
 
-        if self._config.timestamps:
+        if self._timestamps:
             # Compact timestamps after every directory completes
             timestamps = self._timestamps[path_info.top_path]
             timestamps.set(dir_path, compact=True)
 
-    def _walk_container(self, unpack_handler: ContainerHandler) -> ApplyResult | None:
+    def _walk_archive(self, unpack_handler: ArchiveHandler):
+        """Try to skip archive contents before unpacking them."""
+        processed_any_file = False
+        skipped_paths = []
+        for path_info, skip in unpack_handler.walk():
+            container_result = None
+            if skip:
+                skipped_paths.append(path_info)
+            else:
+                if handler := self._walk_file_get_handler(path_info):
+                    container_result = self._handle_file(handler)
+                    processed_any_file = (
+                        processed_any_file or container_result is not None
+                    )
+                unpack_handler.set_task(path_info, container_result)
+            if self._config.verbose and container_result:
+                cprint(".", end="")
+        if processed_any_file:
+            unpack_handler.copy_skipped_files(skipped_paths)
+            if self._config.verbose:
+                cprint("done.")
+        else:
+            self._skipper.skip_container("Archive", str(unpack_handler.path_info.path))
+        return processed_any_file
+
+    def _walk_container_unpack(self, unpack_handler: ContainerHandler):
+        """Non archive containers always unpack everything."""
+        processed_any_file = False
+        for path_info, _ in unpack_handler.walk():
+            handler = self._create_handler(path_info)
+            container_result = self._handle_file(handler)
+            processed_any_file = processed_any_file or container_result is not None
+            attrs = [] if container_result else ["dark"]
+            if self._config.verbose:
+                cprint(".", attrs=attrs, end="")
+            unpack_handler.set_task(path_info, container_result)
+        if not processed_any_file:
+            self._skipper.skip_container(
+                "Animated Image", str(unpack_handler.path_info.path)
+            )
+        return processed_any_file
+
+    def _handle_container_unpack(self, unpack_handler: ContainerHandler):
+        """Walk, unpack and optimize. Or Skip."""
+        if isinstance(unpack_handler, ArchiveHandler):
+            do_repack = self._walk_archive(unpack_handler)
+        else:
+            do_repack = self._walk_container_unpack(unpack_handler)
+        return do_repack
+
+    def _handle_container(self, unpack_handler: ContainerHandler) -> ApplyResult | None:
         """Optimize a container."""
-        result: ApplyResult | None
+        result: ApplyResult | None = None
         error_handler = unpack_handler
         try:
-            for path_info in unpack_handler.unpack():
-                container_result = self.walk_file(path_info)
-                unpack_handler.set_task(path_info, container_result)
+            # Unpack
+            do_repack = self._handle_container_unpack(unpack_handler)
+            if not do_repack:
+                return result
+            # Optimize
             unpack_handler.optimize_contents()
+            # Repack
             repack_handler = create_repack_handler(self._config, unpack_handler)
             error_handler = repack_handler
-            # at this point handler_final_result array contains buffers not mp-results
             result = self._pool.apply_async(repack_handler.repack)
         except Exception as exc:
             traceback.print_exc()
@@ -108,9 +164,11 @@ class WalkWalkers(WalkSkippers):
 
     def _handle_file(self, handler):
         """Call the correct walk or pool apply for the handler."""
+        if not handler:
+            return None
         if isinstance(handler, ContainerHandler):
             # Unpack inline, not in the pool, and walk immediately like dirs.
-            result = self._walk_container(handler)
+            result = self._handle_container(handler)
         elif isinstance(handler, ImageHandler):
             result = self._pool.apply_async(handler.optimize_wrapper)
         else:
@@ -118,27 +176,33 @@ class WalkWalkers(WalkSkippers):
             raise TypeError(msg)
         return result
 
+    def _create_handler(self, path_info: PathInfo):
+        handler = create_handler(self._config, path_info, self._timestamps)
+        if handler is None:
+            return None
+
+        if self._config.list_only:
+            return None
+
+        return handler
+
+    def _walk_file_get_handler(self, path_info: PathInfo) -> Handler | None:
+        if path_info.frame is None:
+            if self._skipper.is_walk_file_skip(path_info):
+                return None
+
+            if path_info.is_dir():
+                return self.walk_dir(path_info)
+
+            if self._skipper.is_older_than_timestamp(path_info):
+                return None
+
+        return self._create_handler(path_info)
+
     def walk_file(self, path_info: PathInfo) -> ApplyResult | None:
         """Optimize an individual file."""
         try:
-            if path_info.frame is None:
-                if self._is_walk_file_skip(path_info):
-                    return None
-
-                if path_info.is_dir():
-                    return self.walk_dir(path_info)
-
-                if self._is_older_than_timestamp(path_info):
-                    self._skip_older_than_timestamp(path_info)
-                    return None
-
-            handler = create_handler(self._config, path_info)
-            if handler is None:
-                return None
-
-            if self._config.list_only:
-                return None
-
+            handler = self._walk_file_get_handler(path_info)
             result = self._handle_file(handler)
         except Exception as exc:
             traceback.print_exc()

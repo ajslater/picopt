@@ -37,49 +37,58 @@ class ImageAnimated(PrepareInfoMixin, PackingContainerHandler, ABC):
         """Return the format if this handler can handle this path."""
         return cls.OUTPUT_FILE_FORMAT
 
-    def unpack_into(self) -> Generator[PathInfo, None, None]:
-        """Unpack webp into temp dir."""
+    def _unpack_frame(self, frame, frame_index: int, frame_info: dict) -> PathInfo:
+        """
+        Save the frame as quickly as possible with the correct lossless format.
+
+        Real optimization happens later with the specific handler.
+        It would be better to do what i do for mpo and read the bytes directly
+        because this shows bad numbers for compressing uncompressed frames. But
+        Pillow doesn't have raw access to frames.
+        """
+        with BytesIO() as frame_buffer:
+            frame.save(
+                frame_buffer,
+                **self.PIL2_FRAME_KWARGS,  # type: ignore[reportArgumentType]
+            )
+            for key in ANIMATED_INFO_KEYS:
+                value = frame.info.get(key)
+                if value is not None:
+                    if key not in frame_info:
+                        frame_info[key] = []
+                    frame_info[key].append(value)
+            frame_buffer.seek(0)
+            return PathInfo(
+                self.path_info.top_path,
+                self.path_info.convert,
+                frame=frame_index,
+                data=frame_buffer.read(),
+                container_parents=self.path_info.container_path_history(),
+                is_case_sensitive=self.path_info.is_case_sensitive,
+            )
+
+    def walk(self) -> Generator[tuple[PathInfo, bool]]:
+        """Unpack animated image frames with PIL."""
+        if self.config.verbose:
+            cprint(f"Unpacking {self.original_path}...", end="")
+
         frame_index = 1
         frame_info = {}
         with Image.open(self.original_path) as image:
             for frame in ImageSequence.Iterator(image):
-                # Save the frame as quickly as possible with the correct
-                #   lossless format. Real optimization happens later with
-                #   the specific handler.
-                # It would be better to do what i do for mpo and read
-                #   the bytes directly because this shows bad numbers for
-                #   compressing uncompressed frames. But Pillow doesn't have
-                #   raw access to frames.
-                with BytesIO() as frame_buffer:
-                    frame.save(
-                        frame_buffer,
-                        **self.PIL2_FRAME_KWARGS,  # type: ignore[reportArgumentType]
-                    )
-                    for key in ANIMATED_INFO_KEYS:
-                        value = frame.info.get(key)
-                        if value is not None:
-                            if key not in frame_info:
-                                frame_info[key] = []
-                            frame_info[key].append(value)
-                    frame_buffer.seek(0)
-                    frame_path_info = PathInfo(
-                        self.path_info.top_path,
-                        self.path_info.convert,
-                        frame=frame_index,
-                        data=frame_buffer.read(),
-                        container_paths=self.get_container_paths(),
-                        is_case_sensitive=self.path_info.is_case_sensitive,
-                    )
-                if self.config.verbose:
-                    cprint(".", end="")
-                yield frame_path_info
+                frame_path_info = self._unpack_frame(frame, frame_index, frame_info)
+                yield frame_path_info, False
                 frame_index += 1
+        # Animated images need a double close because of some PIL bug.
         image.close()
         for key in tuple(frame_info):
             value = frame_info[key]
             if value is not None:
                 frame_info[key] = tuple(value)
         self.frame_info = frame_info
+
+        if self.config.verbose:
+            cprint("done")
 
     def pack_into(self) -> BytesIO:
         """Remux the optimized frames into an animated webp."""

@@ -44,7 +44,7 @@ def extract_info_for_webp(keep_metadata, info, image, path_info):
     """Extract info manually for webp later in handler."""
     if not keep_metadata:
         return
-    full_name = path_info.full_name()
+    full_name = path_info.full_output_name()
     _get_xmp(info, image, full_name)
     _get_exif_bytes(info, image, full_name)
 

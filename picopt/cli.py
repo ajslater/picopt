@@ -7,7 +7,7 @@ from importlib.metadata import PackageNotFoundError, version
 from confuse.exceptions import ConfigError
 from termcolor import colored, cprint
 
-from picopt import PROGRAM_NAME, walk
+from picopt import PROGRAM_NAME
 from picopt.config import get_config
 from picopt.config.consts import (
     ALL_FORMAT_STRS,
@@ -18,6 +18,7 @@ from picopt.config.consts import (
 )
 from picopt.exceptions import PicoptError
 from picopt.handlers.archive.zip import Cbz, Zip
+from picopt.walk.run import Walk
 
 _DEFAULT_FORMAT_STRS = frozenset(
     [handler_cls.OUTPUT_FORMAT_STR for handler_cls in DEFAULT_HANDLERS]
@@ -289,7 +290,7 @@ def main(args: tuple[str, ...] | None = None):
         arguments = get_arguments(args)
 
         config = get_config(arguments)
-        wob = walk.Walk(config)
+        wob = Walk(config)
         totals = wob.run()
         totals.report()
     except ConfigError as err:

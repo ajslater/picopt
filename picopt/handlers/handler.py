@@ -53,9 +53,11 @@ class Handler(ABC):
     def get_working_path(self, identifier_suffix: str) -> Path:
         """Return a working path with a custom suffix."""
         # Only used by cwebp because it needs to use disk
-        if cps := self.path_info.container_paths:
-            path_head = cps[0]
-            path_tail = "__".join((*cps[1:], str(self.original_path)))
+        if container_parents := self.path_info.container_parents:
+            # The first entry is a real file on disk.
+            path_head = container_parents[0]
+            # The rest are containers inside containers.
+            path_tail = "__".join((*container_parents[1:], str(self.original_path)))
             path_tail = path_tail.translate(WORKING_PATH_TRANS_TABLE)
             path_str = f"{path_head}__{path_tail}"
             path = Path(path_str)

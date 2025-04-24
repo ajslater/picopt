@@ -23,8 +23,8 @@ class ContainerHandler(Handler, ABC):
         """Return the format if this handler can handle this path."""
 
     @abstractmethod
-    def unpack_into(self) -> Generator[PathInfo, None, None]:
-        """Unpack a container into a tmp dir to work on it's contents."""
+    def walk(self) -> Generator[tuple[PathInfo, bool]]:
+        """Walk the container."""
 
     def __init__(self, *args, repack_handler_class: Handler | None = None, **kwargs):
         """Initialize unpack tasks and ."""
@@ -33,21 +33,11 @@ class ContainerHandler(Handler, ABC):
         self._tasks: dict[PathInfo, ApplyResult] = {}
         self.optimized_contents: dict[PathInfo, bytes] = {}
         self.repack_handler_class = repack_handler_class
-
-    def get_container_paths(self) -> tuple[str, ...]:
-        """Create a container path for output and cwebp tmpfile usage."""
         # Potentially build ever longer paths with container nesting.
-        return (*self.path_info.container_paths, str(self.original_path))
-
-    def unpack(self) -> Generator[PathInfo, None, None]:
-        """Create directory and unpack container."""
-        if self.config.verbose:
-            cprint(f"Unpacking {self.original_path}...", end="")
-
-        yield from self.unpack_into()
-
-        if self.config.verbose:
-            cprint("done")
+        self._container_path_history = (
+            *self.path_info.container_parents,
+            str(self.original_path),
+        )
 
     def set_task(self, path_info: PathInfo, mp_result: ApplyResult | None) -> None:
         """Store the mutiprocessing task."""

@@ -2,8 +2,10 @@
 
 from confuse.templates import AttrDict
 from termcolor import cprint
+from treestamps import Grovestamps
 
 from picopt.formats import FileFormat
+from picopt.handlers.archive.archive import ArchiveHandler
 from picopt.handlers.container import ContainerHandler, PackingContainerHandler
 from picopt.handlers.detect_format import detect_format
 from picopt.handlers.handler import Handler
@@ -59,10 +61,9 @@ def _get_repack_handler_class(
 
         print_exc()
     if not repack_handler_class and config.verbose > 1 and not config.list_only:
-        full_name = path_info.full_name()
         fmt = str(file_format) if file_format else "unknown"
         cprint(
-            f"Skipped {full_name}: ({fmt}) is not an enabled image or container.",
+            f"Skipped {path_info.full_output_name()}: ({fmt}) is not an enabled image or container.",
             "white",
             attrs=["dark"],
         )
@@ -70,7 +71,11 @@ def _get_repack_handler_class(
     return repack_handler_class
 
 
-def create_handler(config: AttrDict, path_info: PathInfo) -> Handler | None:
+def create_handler(
+    config: AttrDict,
+    path_info: PathInfo,
+    timestamps: Grovestamps | None = None,
+) -> Handler | None:
     """Return a handler for the image format."""
     # This is the consumer of config._format_handlers
     handler_cls: type[Handler] | None = None
@@ -96,11 +101,17 @@ def create_handler(config: AttrDict, path_info: PathInfo) -> Handler | None:
             )
             if repack_handler_class:
                 kwargs["repack_handler_class"] = repack_handler_class
+                if issubclass(handler_cls, ArchiveHandler):
+                    kwargs["timestamps"] = timestamps
             else:
                 handler_cls = None
         if handler_cls:
             handler = handler_cls(
-                config, path_info, input_file_format=file_format, info=info, **kwargs
+                config,
+                path_info,
+                input_file_format=file_format,
+                info=info,
+                **kwargs,
             )
     return handler
 

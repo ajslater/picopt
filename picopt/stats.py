@@ -40,7 +40,7 @@ class ReportStats(ReportStatBase):
         self.bigger: bool = config.bigger if config else False
         self.test: bool = config.dry_run if config else False
         self.convert: bool = path_info.convert if path_info else False
-        self._full_name = path_info.full_name() if path_info else str(path)
+        self._full_name = path_info.full_output_name() if path_info else str(path)
         super().__init__(path, *args, **kwargs)
         self.saved = self.bytes_in - self.bytes_out
 

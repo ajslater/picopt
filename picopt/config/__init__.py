@@ -58,7 +58,14 @@ _TEMPLATE = MappingTemplate(
                             "native_handlers": dict,
                             "convert_handlers": dict,
                             "handler_stages": dict,
-                            "ignore": Optional(re.Pattern),
+                            "ignore": Optional(
+                                MappingTemplate(
+                                    {
+                                        "case": re.Pattern,
+                                        "ignore_case": re.Pattern,
+                                    }
+                                )
+                            ),
                             "is_modern_cwebp": bool,
                         }
                     )
@@ -109,9 +116,12 @@ def _set_ignore(config: Subview) -> None:
             ignore_single_stars.append(ignore_single_star)
 
     ignore_regexp = r"|".join(ignore_regexps)
-    # TODO add case insensitivity if top paths are.
     ignore = re.compile(ignore_regexp) if ignore_regexp else None
-    config["computed"]["ignore"].set(ignore)
+    ignore_ignore_case = (
+        re.compile(ignore_regexp, re.IGNORECASE) if ignore_regexp else None
+    )
+    config["computed"]["ignore"]["case"].set(ignore)
+    config["computed"]["ignore"]["ignore_case"].set(ignore_ignore_case)
     if verbose > 1:
         ignore_text = ""
         if ignore_single_stars:
