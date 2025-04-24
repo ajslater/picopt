@@ -160,7 +160,15 @@ def get_arguments(params: tuple[str, ...] | None = None) -> Namespace:
         "--ignore",
         action=SplitArgsAction,
         dest="ignore",
-        help="Comma dilenated list of globs to ignore.",
+        help="Comma delimited list of case sensitive patterns to ignore. Use '*' as a wildcard.",
+    )
+    parser.add_argument(
+        "-I",
+        "--no-ignore-dotfiles",
+        dest="ignore_dotfiles",
+        default=True,
+        action="store_false",
+        help="Do not ignore dotfiles. By default they are ignored.",
     )
     parser.add_argument(
         "-b",

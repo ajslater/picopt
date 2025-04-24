@@ -1,5 +1,6 @@
 """Confuse config for picopt."""
 
+import re
 import time
 from argparse import Namespace
 from pathlib import Path
@@ -38,6 +39,7 @@ _TEMPLATE = MappingTemplate(
                 "extra_formats": Optional(Sequence(Choice(ALL_FORMAT_STRS))),
                 "formats": Sequence(Choice(ALL_FORMAT_STRS)),
                 "ignore": Sequence(str),
+                "ignore_dotfiles": bool,
                 "jobs": Integer(),
                 "keep_metadata": bool,
                 "list_only": bool,
@@ -56,6 +58,7 @@ _TEMPLATE = MappingTemplate(
                             "native_handlers": dict,
                             "convert_handlers": dict,
                             "handler_stages": dict,
+                            "ignore": Optional(re.Pattern),
                             "is_modern_cwebp": bool,
                         }
                     )
@@ -64,6 +67,8 @@ _TEMPLATE = MappingTemplate(
         )
     }
 )
+_MULTIPLE_STARS_RE = re.compile(r"\*+")
+_DOTFILE_REGEXPS = (r"^\.", r"\/\.")
 
 
 def _set_after(config: Subview) -> None:
@@ -84,15 +89,40 @@ def _set_after(config: Subview) -> None:
 
 
 def _set_ignore(config: Subview) -> None:
-    """Remove duplicates from the ignore list."""
-    ignore: Iterable = config["ignore"].get(list)  # type: ignore[reportAssignmentType]
-    ignore = tuple(sorted(ignore))
-    config["ignore"].set(ignore)
-    if ignore:
-        verbose: int = config["verbose"].get(int)  # type: ignore[reportAssignmentType]
+    """Compute ignore regexp."""
+    ignore_regexps = []
+    if ignore_dotfiles := config["ignore_dotfiles"].get(bool):
+        ignore_regexps += _DOTFILE_REGEXPS
+
+    ignore_list: list | tuple | set | frozenset = config["ignore"].get(list)  # type: ignore[reportAssignmentType]
+    ignore_list = sorted(frozenset(ignore_list))
+    verbose: int = config["verbose"].get(int)  # type: ignore[reportAssignmentType]
+    ignore_single_stars = []
+    for ignore_glob in ignore_list:
+        ignore_regexp = _MULTIPLE_STARS_RE.sub(r":", ignore_glob)
+        ignore_regexp = re.escape(ignore_regexp)
+        ignore_regexp = ignore_regexp.replace(":", ".*")
+        ignore_regexp = f"^{ignore_regexp}$"
+        ignore_regexps.append(ignore_regexp)
         if verbose > 1:
-            ignore_list = ",".join(ignore)
-            cprint(f"Ignoring: {ignore_list}", "cyan")
+            ignore_single_star = _MULTIPLE_STARS_RE.sub(r"*", ignore_glob)
+            ignore_single_stars.append(ignore_single_star)
+
+    ignore_regexp = r"|".join(ignore_regexps)
+    # TODO add case insensitivity if top paths are.
+    ignore = re.compile(ignore_regexp) if ignore_regexp else None
+    config["computed"]["ignore"].set(ignore)
+    if verbose > 1:
+        ignore_text = ""
+        if ignore_single_stars:
+            ignore_text = "Ignoring: "
+            ignore_text += ",".join(ignore_single_stars)
+        if not ignore_dotfiles:
+            if ignore_single_stars:
+                ignore_text += " "
+            ignore_text += "Not ignoring dotfiles."
+        if ignore_text:
+            cprint(ignore_text, "cyan")
 
 
 def _set_timestamps(config: Subview) -> None:
@@ -131,10 +161,10 @@ def get_config(args: Namespace | None = None, modname=PROGRAM_NAME) -> AttrDict:
     if args:
         config.set_args(args)
     config_program = config[PROGRAM_NAME]
-    set_format_handler_map(config_program)
-    _set_after(config_program)
     _set_ignore(config_program)
+    _set_after(config_program)
     _set_timestamps(config_program)
+    set_format_handler_map(config_program)
     ad = config.get(_TEMPLATE)
     if not isinstance(ad, AttrDict):
         msg = "Not a valid config"

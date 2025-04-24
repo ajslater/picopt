@@ -107,6 +107,10 @@ class PathInfo:
                     self._data = fp.read()
         return self._data
 
+    def set_data(self, data: bytes):
+        """Set the data."""
+        self._data = data
+
     def data_clear(self) -> None:
         """Clear the data cache."""
         self._data = None
@@ -183,5 +187,6 @@ class PathInfo:
 
 
 def is_path_ignored(config: AttrDict, path: Path):
-    """Match path against the ignore list."""
-    return any(path.match(ignore_glob) for ignore_glob in config.ignore)
+    """Match path against the ignore regexp."""
+    ignore = config.computed.ignore
+    return ignore and bool(ignore.search(str(path)))
