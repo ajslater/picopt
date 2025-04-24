@@ -1,6 +1,5 @@
 """import picopt 2.0 timestamps to Treestamps."""
 
-import os
 from pathlib import Path
 
 from confuse.templates import AttrDict
@@ -34,20 +33,19 @@ class OldTimestamps:
         if path.parent != path:
             self._import_old_parent_timestamps(path.parent)
 
-    def _import_old_child_timestamps(self, path: Path) -> None:
-        if is_path_ignored(self._config, path) or (
-            not self._config.symlinks and path.is_symlink()
-        ):
-            return
-        for root, dirnames, filenames in os.walk(path):
-            root_path = Path(root)
-            if OLD_TIMESTAMPS_NAME in filenames:
-                old_timestamp_path = root_path / OLD_TIMESTAMPS_NAME
-                self._add_old_timestamp(old_timestamp_path)
-                # Picopt is the only program that used old treestamps
-                self._timestamps._consumed_paths.add(old_timestamp_path)  # noqa: SLF001
-            for dirname in dirnames:
-                self._import_old_child_timestamps(root_path / dirname)
+    def _import_old_child_timestamps(self, root_path: Path) -> None:
+        stack = [root_path]
+        while stack:
+            path = stack.pop()
+            if not self._config.symlinks and path.is_symlink():
+                continue
+            if path.is_dir():
+                if not is_path_ignored(self._config, path):
+                    stack.extend(path / sub_path for sub_path in path.iterdir())
+            elif path.name == OLD_TIMESTAMPS_NAME:
+                self._add_old_timestamp(path)
+                # consume child timestamps
+                self._timestamps._consumed_paths.add(path)  # noqa: SLF001
 
     def import_old_timestamps(self) -> None:
         """Import all old timestamps."""

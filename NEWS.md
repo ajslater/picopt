@@ -5,8 +5,10 @@
 - Picopt learned to optimize 7-Zip and Tar Archives.
 - -T --test option becomes -d --dry-run
 - Fix tif & animated gifs not converted to pngs when asked.
+- Archives skipped without unpacking anything if all contents are skippable.
 - animated pngs better optimized with oxipng
 - updated treestamps
+- Faster scanning for legacy timestamps on startup.
 - uv build system
 
 ## v4.0.4
