@@ -95,15 +95,11 @@ def _set_after(config: Subview) -> None:
         cprint(f"Optimizing after {after}")
 
 
-def _set_ignore(config: Subview) -> None:
-    """Compute ignore regexp."""
+def _get_ignore_regexp(ignore_list: list[str], ignore_dotfiles: bool, verbose: int):
     ignore_regexps = []
-    if ignore_dotfiles := config["ignore_dotfiles"].get(bool):
+    if ignore_dotfiles:
         ignore_regexps += _DOTFILE_REGEXPS
 
-    ignore_list: list | tuple | set | frozenset = config["ignore"].get(list)  # type: ignore[reportAssignmentType]
-    ignore_list = sorted(frozenset(ignore_list))
-    verbose: int = config["verbose"].get(int)  # type: ignore[reportAssignmentType]
     ignore_single_stars = []
     for ignore_glob in ignore_list:
         ignore_regexp = _MULTIPLE_STARS_RE.sub(r":", ignore_glob)
@@ -115,7 +111,31 @@ def _set_ignore(config: Subview) -> None:
             ignore_single_star = _MULTIPLE_STARS_RE.sub(r"*", ignore_glob)
             ignore_single_stars.append(ignore_single_star)
 
-    ignore_regexp = r"|".join(ignore_regexps)
+    return r"|".join(ignore_regexps), ignore_single_stars
+
+
+def _print_ignores(ignore_single_stars: list[str], ignore_dotfiles: bool):
+    ignore_text = ""
+    if ignore_single_stars:
+        ignore_text = "Ignoring: "
+        ignore_text += ",".join(ignore_single_stars)
+    if not ignore_dotfiles:
+        if ignore_single_stars:
+            ignore_text += " "
+        ignore_text += "Not ignoring dotfiles."
+    if ignore_text:
+        cprint(ignore_text, "cyan")
+
+
+def _set_ignore(config: Subview) -> None:
+    """Compute ignore regexp."""
+    ignore_list: list | tuple | set | frozenset = config["ignore"].get(list)  # type: ignore[reportAssignmentType]
+    ignore_list = sorted(frozenset(ignore_list))
+    ignore_dotfiles: bool = config["ignore_dotfiles"].get(bool)  # type: ignore[reportAssignmentType]
+    verbose: int = config["verbose"].get(int)  # type: ignore[reportAssignmentType]
+    ignore_regexp, ignore_single_stars = _get_ignore_regexp(
+        ignore_list, ignore_dotfiles, verbose
+    )
     ignore = re.compile(ignore_regexp) if ignore_regexp else None
     ignore_ignore_case = (
         re.compile(ignore_regexp, re.IGNORECASE) if ignore_regexp else None
@@ -123,16 +143,7 @@ def _set_ignore(config: Subview) -> None:
     config["computed"]["ignore"]["case"].set(ignore)
     config["computed"]["ignore"]["ignore_case"].set(ignore_ignore_case)
     if verbose > 1:
-        ignore_text = ""
-        if ignore_single_stars:
-            ignore_text = "Ignoring: "
-            ignore_text += ",".join(ignore_single_stars)
-        if not ignore_dotfiles:
-            if ignore_single_stars:
-                ignore_text += " "
-            ignore_text += "Not ignoring dotfiles."
-        if ignore_text:
-            cprint(ignore_text, "cyan")
+        _print_ignores(ignore_single_stars, ignore_dotfiles)
 
 
 def _set_timestamps(config: Subview) -> None:
