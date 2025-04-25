@@ -105,6 +105,10 @@ class Handler(ABC):
         self.input_file_format = input_file_format
         self._input_file_formats = self.INPUT_FILE_FORMATS
 
+        # For writing archives in place on the disk
+        self._bytes_in = 0
+        self._optimize_in_place_on_disk = False
+
     def run_ext_fs(  # noqa: PLR0913
         self,
         args: tuple[str | None, ...],
@@ -146,13 +150,14 @@ class Handler(ABC):
             reason = "This should not happen. no buffer and no final path."
             raise ValueError(reason)
 
-        if isinstance(final_data_buffer, BytesIO):
-            with self.final_path.open("wb") as final_file, final_data_buffer:
-                final_data_buffer.seek(0)
-                final_file.write(final_data_buffer.read())
-        else:
-            final_data_buffer.close()
-            self.working_path.replace(self.final_path)
+        with final_data_buffer:
+            if not self._optimize_in_place_on_disk:
+                if isinstance(final_data_buffer, BytesIO):
+                    with self.final_path.open("wb") as final_file:
+                        final_data_buffer.seek(0)
+                        final_file.write(final_data_buffer.read())
+                else:
+                    self.working_path.replace(self.final_path)
 
         ###########
         # CLEANUP #
@@ -191,9 +196,13 @@ class Handler(ABC):
             raise TypeError(reason)
         return size
 
-    def _cleanup_after_optimize_save_new(self, final_data_buffer: BinaryIO) -> bytes:
+    def _cleanup_after_optimize_save_new(
+        self, final_data_buffer: BinaryIO | None
+    ) -> bytes:
         """Save new data."""
         return_data = b""
+        if final_data_buffer is None:
+            return return_data
         if isinstance(final_data_buffer, BytesIO) or self.path_info.in_container:
             # only return the data in the report for containers.
             final_data_buffer.seek(0)
@@ -205,8 +214,12 @@ class Handler(ABC):
     def _cleanup_after_optimize(self, final_data_buffer: BinaryIO) -> ReportStats:
         """Replace old file with better one or discard new wasteful file."""
         try:
-            bytes_in = self.path_info.bytes_in()
-            bytes_out = self.get_buffer_len(final_data_buffer)
+            if self._optimize_in_place_on_disk:
+                bytes_in = self._bytes_in
+                bytes_out = self.final_path.stat().st_size
+            else:
+                bytes_in = self.path_info.bytes_in()
+                bytes_out = self.get_buffer_len(final_data_buffer)
             if not self.config.dry_run and (
                 (bytes_out > 0) and ((bytes_out < bytes_in) or self.config.bigger)
             ):

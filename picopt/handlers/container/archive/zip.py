@@ -2,13 +2,14 @@
 
 from io import BytesIO
 from pathlib import Path
-from zipfile import ZIP_DEFLATED, ZIP_STORED, ZipFile, is_zipfile
+from zipfile import ZIP_DEFLATED, ZIP_STORED, is_zipfile
 
 from termcolor import cprint
 
 from picopt.formats import FileFormat
 from picopt.handlers.container.archive import PackingArchiveHandler
 from picopt.handlers.handler import INTERNAL
+from picopt.zipfile_remove import ZipFileWithRemove
 
 
 class Zip(PackingArchiveHandler):
@@ -19,7 +20,14 @@ class Zip(PackingArchiveHandler):
     INPUT_FILE_FORMAT = OUTPUT_FILE_FORMAT
     INPUT_FILE_FORMATS = frozenset({INPUT_FILE_FORMAT})
     PROGRAMS = ((INTERNAL,),)
-    ARCHIVE_CLASS = ZipFile
+    ARCHIVE_CLASS = ZipFileWithRemove
+    OPTIMIZE_IN_PLACE_ON_DISK = True
+
+    def __init__(self, *args, convert: bool = False, **kwargs):
+        """Init delete_filenames."""
+        super().__init__(*args, **kwargs)
+        self._delete_filenames = []
+        self._optimize_in_place_on_disk = not convert
 
     @classmethod
     def _is_archive(cls, path: Path | BytesIO) -> bool:
@@ -32,13 +40,28 @@ class Zip(PackingArchiveHandler):
     def _archive_readfile(self, archive, archiveinfo):
         return archive.read(archiveinfo.filename)
 
-    def _set_comment(self, archive: ZipFile) -> None:  # type: ignore[reportIncompatibleMethodOverride]
+    def _set_comment(self, archive) -> None:
         """Set the comment from the archive."""
         if archive.comment:
             self.comment = archive.comment
 
-    def _archive_for_write(self, output_buffer: BytesIO) -> ZipFile:
-        return ZipFile(output_buffer, "w", compression=ZIP_DEFLATED, compresslevel=9)
+    def _mark_delete(self) -> None:
+        """NoOp for containers."""
+        if self.original_path != self.final_path:
+            self._delete_filenames.append(self.original_path)
+
+    def _archive_for_write(self, output_buffer: BytesIO) -> ZipFileWithRemove:
+        if self._optimize_in_place_on_disk:
+            self._bytes_in = self.path_info.bytes_in()
+            file = self.original_path
+        else:
+            file = output_buffer
+        return ZipFileWithRemove(file, "w", compression=ZIP_DEFLATED, compresslevel=9)
+
+    def _delete_files(self, archive):
+        """Delete files in archive before write."""
+        for filename in self._delete_filenames:
+            archive.remove(filename)
 
     def _pack_info_one_file(self, archive, path_info):
         """Add one file to the new archive."""

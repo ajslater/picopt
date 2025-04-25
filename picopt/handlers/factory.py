@@ -136,5 +136,6 @@ def create_repack_handler(
             input_file_format=repack_handler_class.OUTPUT_FILE_FORMAT,
             comment=unpack_handler.comment,
             optimized_contents=unpack_handler.optimized_contents,
+            convert=True,
         )
     return handler

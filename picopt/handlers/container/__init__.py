@@ -51,6 +51,9 @@ class ContainerHandler(Handler, ABC):
         """Return tasks."""
         return self._tasks
 
+    def _mark_delete(self) -> None:
+        """NoOp for containers."""
+
     def optimize_contents(self) -> None:
         """Store results from mutiprocessing task."""
         for path_info in tuple(self._tasks):
@@ -59,6 +62,7 @@ class ContainerHandler(Handler, ABC):
             if report.data:
                 path_info.set_data(report.data)
             self.optimized_contents.append(path_info)
+            self._mark_delete()
 
     def optimize(self) -> BinaryIO:
         """NoOp for non packing containers."""

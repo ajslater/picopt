@@ -155,11 +155,15 @@ class PackingArchiveHandler(ArchiveHandler, PackingContainerHandler, ABC):
     def _pack_info_one_file(self, archive, path_info):
         raise NotImplementedError
 
+    def _delete_files(self, archive):
+        """NoOp for most archives."""
+
     def pack_into(self) -> BytesIO:
         """Zip up the files in the tempdir into the new filename."""
         output_buffer = BytesIO()
         archive = self._archive_for_write(output_buffer)
         with archive:
+            self._delete_files(archive)
             while self.optimized_contents:
                 path_info = self.optimized_contents.pop()
                 self._pack_info_one_file(archive, path_info)
