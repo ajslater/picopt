@@ -2,6 +2,7 @@
 
 from datetime import datetime, timezone
 from operator import attrgetter
+from pathlib import Path
 from tarfile import DIRTYPE, TarInfo
 from zipfile import ZipInfo
 
@@ -40,7 +41,7 @@ class ArchiveInfo:
     def filename(self):
         """Return archive filename."""
         if self._filename is None:
-            if isinstance(self.info, ZipInfo | RarInfo | SevenZipInfo):
+            if isinstance(self.info, ZipInfo | SevenZipInfo | RarInfo):
                 self._filename = self.info.filename or ""
             elif isinstance(self.info, TarInfo):
                 self._filename = self.info.name or ""
@@ -48,6 +49,20 @@ class ArchiveInfo:
                 reason = f"{self.info} is not a type with a known filename."
                 raise TypeError(reason)
         return self._filename
+
+    def rename(self, filename: str | Path):
+        """Rename archiveinfo."""
+        filename = str(filename)
+        if isinstance(self.info, ZipInfo | SevenZipInfo):
+            self.info.filename = filename
+        elif isinstance(self.info, TarInfo):
+            self.info.name = filename
+        else:
+            reason = f"{self.info} cannot be renamed."
+            raise TypeError(reason)
+
+        # clear filename cache
+        self._filename = None
 
     def is_dir(self):
         """Is a directory."""
@@ -69,13 +84,13 @@ class ArchiveInfo:
             if isinstance(self.info, ZipInfo):
                 if date_time := self.info.date_time:
                     self._dttm = datetime(*date_time, tzinfo=timezone.utc)
-            elif isinstance(self.info, RarInfo):
-                if dttm := self.info.mtime:
-                    self._dttm = dttm
             elif isinstance(self.info, TarInfo):
                 self._dttm = datetime.fromtimestamp(self.info.mtime, tz=timezone.utc)
             elif isinstance(self.info, SevenZipInfo):
                 self._dttm = self.info.creationtime
+            elif isinstance(self.info, RarInfo):
+                if dttm := self.info.mtime:
+                    self._dttm = dttm
             else:
                 reason = f"{self.info} is not a type with timestamp."
                 raise TypeError(reason)
@@ -84,7 +99,7 @@ class ArchiveInfo:
     def mtime(self):
         """Return Modified Timestamp."""
         if self._mtime is None:
-            if isinstance(self.info, RarInfo | SevenZipInfo | ZipInfo):
+            if isinstance(self.info, SevenZipInfo | ZipInfo | RarInfo):
                 dttm = self.datetime()
                 if dttm is not None:
                     self._mtime = dttm.timestamp()
