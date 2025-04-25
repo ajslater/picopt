@@ -20,42 +20,62 @@ class WalkSkipper:
         {*Treestamps.get_filenames(PROGRAM_NAME), OLD_TIMESTAMPS_NAME}
     )
 
-    def __init__(self, config: AttrDict, timestamps: Grovestamps | dict | None = None):
+    def __init__(
+        self,
+        config: AttrDict,
+        timestamps: Grovestamps | dict | None = None,
+        *,
+        in_archive: bool = False,
+    ):
         """Initialize."""
         self._config = config
         self._timestamps = timestamps if timestamps else {}
+        self._in_archive = in_archive
+        self._any_skipped = False
 
     def set_timestamps(self, timestamps: Grovestamps):
         """Reset the timestamps after they've been established."""
         self._timestamps = timestamps
 
+    def skip_message(self, reason, color="white", attrs=None):
+        """Print a dot or skip message."""
+        if self._config.verbose < 1:
+            return
+        if self._config.verbose == 1:
+            cprint(".", color, attrs=attrs, end="")
+            return
+        if self._in_archive and not self._any_skipped:
+            reason = "\n" + reason
+            self._any_skipped = True
+        attrs = attrs if attrs else []
+        cprint(reason, color, attrs=attrs)
+
     def _is_skippable(self, path_info: PathInfo) -> bool:
         """Handle things that are not optimizable files."""
-        reason = None
+        reason = ""
         color = "white"
         attrs: list = ["dark"]
 
-        in_archive = bool(path_info.archiveinfo)
         path = path_info.path
 
         # File types
-        if in_archive and path_info.is_dir():
-            reason = f"Skip archive directory {path_info.full_output_name()}"
         if not self._config.symlinks and path and path.is_symlink():
             reason = f"Skip symlink {path_info.full_output_name()}"
         elif path_info.name() in self._TIMESTAMPS_FILENAMES:
             legacy = "legacy " if path_info.name() == OLD_TIMESTAMPS_NAME else ""
             reason = f"Skip {legacy}timestamp {path_info.full_output_name()}"
-        elif not in_archive and path and not path.exists():
-            reason = f"WARNING: {path_info.full_output_name()} not found."
-            color = "yellow"
-            attrs = []
         elif is_path_ignored(
             self._config, path_info.archive_psuedo_path(), path_info.is_case_sensitive
         ):
             reason = f"Skip ignored {path_info.full_output_name()}"
-        if reason and self._config.verbose > 1:
-            cprint(reason, color, attrs=attrs)
+        elif not self._in_archive and path and not path.exists():
+            # Check disk last for performance
+            reason = f"WARNING: {path_info.full_output_name()} not found."
+            color = "yellow"
+            attrs = []
+
+        if reason:
+            self.skip_message(reason, color, attrs)
 
         return bool(reason)
 
@@ -66,8 +86,8 @@ class WalkSkipper:
                 shutil.rmtree(path, ignore_errors=True)
             else:
                 path.unlink(missing_ok=True)
-            if self._config.verbose > 1:
-                cprint(f"Deleted {path}", "yellow")
+            reason = f"Deleted {path}"
+            self.skip_message(reason, "yellow")
         except Exception as exc:
             cprint(str(exc), "red")
 
@@ -77,25 +97,19 @@ class WalkSkipper:
     ) -> bool:
         """Decide on skip the file or not."""
         if self._is_skippable(path_info):
-            if self._config.verbose == 1:
-                cprint(".", "white", attrs=["dark"], end="")
             return True
 
         path = path_info.path
         if path and path.name.rfind(Handler.WORKING_SUFFIX) > -1:
             self._clean_up_working_files(path)
-            if self._config.verbose == 1:
-                cprint(".", "yellow", end="")
             return True
         return False
 
     def _skip_older_than_timestamp(self, path_info: PathInfo) -> None:
         """Report on skipping files older than the timestamp."""
+        reason = f"Skip older than timestamp: {path_info.full_output_name()}"
         color = "green"
-        if self._config.verbose == 1:
-            cprint(".", color, end="")
-        elif self._config.verbose > 1:
-            cprint(f"Skip older than timestamp: {path_info.full_output_name()}", color)
+        self.skip_message(reason, color)
 
     def _get_walk_after(self, path_info: PathInfo):
         if self._config.after is not None:
@@ -125,7 +139,5 @@ class WalkSkipper:
         """Skip entire container."""
         color = "white"
         attrs = ["dark"]
-        if self._config.verbose == 1:
-            cprint(".", color, attrs=attrs, end="")
-        elif self._config.verbose > 1:
-            cprint(f"{container_type} contents all skipped: {path}", color, attrs=attrs)
+        reason = f"{container_type} contents all skipped: {path}"
+        self.skip_message(reason, color, attrs)
