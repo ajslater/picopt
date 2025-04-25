@@ -62,12 +62,12 @@ class SevenZip(PackingArchiveHandler):
 
     def _pack_info_one_file(self, archive, path_info):
         """Add one file to the new archive."""
-        data = self.optimized_contents.pop(path_info)
         if not path_info.archiveinfo:
             cprint("WARNING: No archiveinfo to write.", "yellow")
             return
+        data = BytesIO(path_info.data())
         arcname = path_info.archiveinfo.filename()
-        archive.writef(BytesIO(data), arcname=arcname)
+        archive.writef(data, arcname=arcname)
 
 
 class Cb7(SevenZip):

@@ -31,7 +31,7 @@ class ContainerHandler(Handler, ABC):
         super().__init__(*args, **kwargs)
         self.comment: bytes | None = None
         self._tasks: dict[PathInfo, ApplyResult] = {}
-        self.optimized_contents: dict[PathInfo, bytes] = {}
+        self.optimized_contents: list[PathInfo] = []
         self.repack_handler_class = repack_handler_class
         # Potentially build ever longer paths with container nesting.
         self._container_path_history = (
@@ -43,7 +43,7 @@ class ContainerHandler(Handler, ABC):
         """Store the mutiprocessing task."""
         if mp_result is None:
             # if not handled by picopt, place it in the results.
-            self.optimized_contents[path_info] = path_info.data()
+            self.optimized_contents.append(path_info)
         else:
             self._tasks[path_info] = mp_result
 
@@ -56,10 +56,9 @@ class ContainerHandler(Handler, ABC):
         for path_info in tuple(self._tasks):
             mp_results = self._tasks.pop(path_info)
             report = mp_results.get()
-            data = report.data if report.data else path_info.data()
-            # Clearing has to happen AFTER mp_results.get() or we risk not passing the data
-            path_info.data_clear()
-            self.optimized_contents[path_info] = data
+            if report.data:
+                path_info.set_data(report.data)
+            self.optimized_contents.append(path_info)
 
     def optimize(self) -> BinaryIO:
         """NoOp for non packing containers."""
@@ -77,7 +76,7 @@ class PackingContainerHandler(ContainerHandler, ABC):
         self,
         *args,
         comment: bytes | None = None,
-        optimized_contents: dict[PathInfo, bytes] | None = None,
+        optimized_contents: list[PathInfo] | None = None,
         **kwargs,
     ):
         """Iinitialize optimized contents."""

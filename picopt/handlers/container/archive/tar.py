@@ -65,10 +65,10 @@ class Tar(PackingArchiveHandler):
 
     def _pack_info_one_file(self, archive, path_info):
         """Add one file to the new archive."""
-        data = self.optimized_contents.pop(path_info)
         if not path_info.archiveinfo:
             cprint("WARNING: No archiveinfo to write.", "yellow")
             return
+        data = path_info.data()
         tarinfo = path_info.archiveinfo.to_tarinfo()
         tarinfo.size = len(data)
         buf = BytesIO(data)

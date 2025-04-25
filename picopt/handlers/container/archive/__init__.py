@@ -160,7 +160,8 @@ class PackingArchiveHandler(ArchiveHandler, PackingContainerHandler, ABC):
         output_buffer = BytesIO()
         archive = self._archive_for_write(output_buffer)
         with archive:
-            for path_info in tuple(self.optimized_contents):
+            while self.optimized_contents:
+                path_info = self.optimized_contents.pop()
                 self._pack_info_one_file(archive, path_info)
                 if self.config.verbose:
                     cprint(".", end="")

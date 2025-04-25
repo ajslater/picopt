@@ -42,7 +42,6 @@ class Zip(PackingArchiveHandler):
 
     def _pack_info_one_file(self, archive, path_info):
         """Add one file to the new archive."""
-        data = self.optimized_contents.pop(path_info)
         if not path_info.archiveinfo:
             cprint("WARNING: No archiveinfo to write.", "yellow")
             return
@@ -51,6 +50,7 @@ class Zip(PackingArchiveHandler):
             not zipinfo.compress_type or zipinfo.compress_type == ZIP_STORED
         ):
             zipinfo.compress_type = ZIP_DEFLATED
+        data = path_info.data()
         archive.writestr(zipinfo, data)
 
 

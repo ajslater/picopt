@@ -92,18 +92,18 @@ class ImageAnimated(PrepareInfoMixin, PackingContainerHandler, ABC):
 
     def pack_into(self) -> BytesIO:
         """Remux the optimized frames into an animated webp."""
-        sorted_pairs = sorted(
-            self.optimized_contents.items(),
-            key=lambda pair: 0 if pair[0].frame is None else pair[0].frame,
+        sorted_frames = sorted(
+            self.optimized_contents,
+            key=lambda p: 0 if p.frame is None else p.frame,
         )
-        head_image_data = sorted_pairs.pop()[1]
+        # clear optimized contents
+        self.optimized_contents = []
+        head_image_data = sorted_frames.pop().data()
 
         # Collect frames as images.
-        total_len = 0
         append_images = []
-        while sorted_pairs:
-            _, frame_data = sorted_pairs.pop()
-            total_len += len(frame_data)
+        while sorted_frames:
+            frame_data = sorted_frames.pop().data()
             frame = Image.open(BytesIO(frame_data))
             append_images.append(frame)
             if self.config.verbose:
