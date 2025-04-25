@@ -120,10 +120,6 @@ class PathInfo:
         """Set the data."""
         self._data = data
 
-    def data_clear(self) -> None:
-        """Clear the data cache."""
-        self._data = None
-
     def _buffer(self) -> BytesIO:
         """Return a seekable buffer for the data."""
         return BytesIO(self.data())
@@ -176,6 +172,17 @@ class PathInfo:
             else:
                 self._name = "Unknown"
         return self._name
+
+    def rename(self, filename: str | Path) -> None:
+        """Rename file."""
+        if self.path:
+            self.path = Path(filename)
+        if self.archiveinfo:
+            self.archiveinfo.rename(filename)
+
+        # Clear caches that use _name
+        self._name = self._suffix = self._container_path_history = None
+        self._archive_pretty_name = self._archive_psuedo_path = None
 
     def container_path_history(self) -> tuple[str, ...]:
         """Collect container parents plus this path's name."""
