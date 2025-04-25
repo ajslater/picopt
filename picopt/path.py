@@ -10,7 +10,7 @@ from confuse import AttrDict
 from py7zr.py7zr import FileInfo as SevenZipInfo
 from rarfile import RarInfo
 
-from picopt.handlers.archive.archiveinfo import ArchiveInfo
+from picopt.archiveinfo import ArchiveInfo
 
 _CONTAINER_PATH_DELIMETER = ":"
 _DOUBLE_SUFFIX = ".tar"

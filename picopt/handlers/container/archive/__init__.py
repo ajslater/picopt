@@ -13,8 +13,8 @@ from rarfile import RarFile, RarInfo
 from termcolor import cprint
 from treestamps import Grovestamps
 
+from picopt.archiveinfo import ArchiveInfo
 from picopt.formats import FileFormat
-from picopt.handlers.archive.archiveinfo import ArchiveInfo
 from picopt.handlers.container import ContainerHandler, PackingContainerHandler
 from picopt.handlers.non_pil import NonPILIdentifier
 from picopt.path import PathInfo

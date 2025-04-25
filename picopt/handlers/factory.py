@@ -5,8 +5,8 @@ from termcolor import cprint
 from treestamps import Grovestamps
 
 from picopt.formats import FileFormat
-from picopt.handlers.archive.archive import ArchiveHandler
 from picopt.handlers.container import ContainerHandler, PackingContainerHandler
+from picopt.handlers.container.archive import ArchiveHandler
 from picopt.handlers.detect_format import detect_format
 from picopt.handlers.handler import Handler
 from picopt.path import PathInfo

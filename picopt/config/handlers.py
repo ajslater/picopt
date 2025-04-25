@@ -17,22 +17,23 @@ from picopt.formats import (
     MPO_FILE_FORMAT,
     FileFormat,
 )
-from picopt.handlers.archive.rar import (
+from picopt.handlers.container.animated.webp import WebPAnimatedLossless
+from picopt.handlers.container.archive.rar import (
     Cbr,
     Rar,
 )
-from picopt.handlers.archive.seven_zip import (
+from picopt.handlers.container.archive.seven_zip import (
     Cb7,
     SevenZip,
 )
-from picopt.handlers.archive.tar import (
+from picopt.handlers.container.archive.tar import (
     Cbt,
     Tar,
     TarBz,
     TarGz,
     TarXz,
 )
-from picopt.handlers.archive.zip import (
+from picopt.handlers.container.archive.zip import (
     Cbz,
     EPub,
     Zip,
@@ -42,7 +43,7 @@ from picopt.handlers.image.gif import Gif, GifAnimated
 from picopt.handlers.image.jpeg import Jpeg
 from picopt.handlers.image.png import Png, PngAnimated
 from picopt.handlers.image.svg import Svg
-from picopt.handlers.image.webp import WebPAnimatedLossless, WebPLossless
+from picopt.handlers.image.webp import WebPLossless
 
 
 @dataclass

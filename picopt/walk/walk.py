@@ -7,8 +7,8 @@ from pathlib import Path
 from termcolor import cprint
 from treestamps import Treestamps
 
-from picopt.handlers.archive.archive import ArchiveHandler
 from picopt.handlers.container import ContainerHandler
+from picopt.handlers.container.archive import ArchiveHandler
 from picopt.handlers.factory import (
     create_handler,
     create_repack_handler,

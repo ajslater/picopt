@@ -6,7 +6,7 @@ from pathlib import Path
 from rarfile import RarFile, RarInfo, is_rarfile
 
 from picopt.formats import FileFormat
-from picopt.handlers.archive.archive import ArchiveHandler
+from picopt.handlers.container.archive import ArchiveHandler
 
 
 class Rar(ArchiveHandler):

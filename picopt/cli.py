@@ -17,7 +17,7 @@ from picopt.config.consts import (
     LOSSLESS_IMAGE_CONVERT_TO_FORMAT_STRS,
 )
 from picopt.exceptions import PicoptError
-from picopt.handlers.archive.zip import Cbz, Zip
+from picopt.handlers.container.archive.zip import Cbz, Zip
 from picopt.walk.walk import Walk
 
 _DEFAULT_FORMAT_STRS = frozenset(

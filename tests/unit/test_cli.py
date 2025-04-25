@@ -4,7 +4,7 @@ import shutil
 import sys
 
 from picopt import cli
-from picopt.handlers.archive.zip import Cbz, Zip
+from picopt.handlers.container.archive.zip import Cbz, Zip
 from tests import IMAGES_DIR, get_test_dir
 
 __all__ = ()  # hides module from pydocstring

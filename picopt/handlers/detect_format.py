@@ -13,22 +13,22 @@ from picopt.formats import (
     TIFF_LOSSLESS_COMPRESSION,
     FileFormat,
 )
-from picopt.handlers.archive.rar import (
+from picopt.handlers.container.archive.rar import (
     Cbr,
     Rar,
 )
-from picopt.handlers.archive.seven_zip import (
+from picopt.handlers.container.archive.seven_zip import (
     Cb7,
     SevenZip,
 )
-from picopt.handlers.archive.tar import (
+from picopt.handlers.container.archive.tar import (
     Cbt,
     Tar,
     TarBz,
     TarGz,
     TarXz,
 )
-from picopt.handlers.archive.zip import (
+from picopt.handlers.container.archive.zip import (
     Cbz,
     EPub,
     Zip,

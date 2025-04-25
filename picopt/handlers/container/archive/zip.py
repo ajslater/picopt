@@ -7,7 +7,7 @@ from zipfile import ZIP_DEFLATED, ZIP_STORED, ZipFile, is_zipfile
 from termcolor import cprint
 
 from picopt.formats import FileFormat
-from picopt.handlers.archive.archive import PackingArchiveHandler
+from picopt.handlers.container.archive import PackingArchiveHandler
 from picopt.handlers.handler import INTERNAL
 
 
