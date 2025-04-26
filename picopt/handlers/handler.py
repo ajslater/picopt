@@ -81,10 +81,14 @@ class Handler(ABC):
         """Initialize handler."""
         self.config: AttrDict = config
         self.path_info: PathInfo = path_info
+
+        # Paths
         self.original_path: Path = (
             path_info.path if path_info.path else Path(path_info.name())
         )
         self.working_path = self.original_path
+
+        # Suffixes
         default_suffix = (
             self.SUFFIXES[0] if self.SUFFIXES else "." + self.OUTPUT_FORMAT_STR.lower()
         )
@@ -92,6 +96,7 @@ class Handler(ABC):
         self.output_suffix: str = (
             suffix if (suffix.lower() in self.SUFFIXES) else default_suffix
         )
+
         # Handle replacing multiple suffixes
         final_path = str(self.original_path)
         for suffix in reversed(self.original_path.suffixes):
@@ -99,8 +104,10 @@ class Handler(ABC):
         final_path = Path(final_path)
         final_path = final_path.with_suffix(self.output_suffix)
         self.final_path: Path = final_path
+
         if self.config.preserve:
             self.path_info.stat()
+
         # For container repack and older cwebp which only accepts some formats
         self.input_file_format = input_file_format
         self._input_file_formats = self.INPUT_FILE_FORMATS
