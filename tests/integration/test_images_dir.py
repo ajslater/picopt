@@ -38,7 +38,7 @@ FNS = {
 if platform.system() == "Darwin":
     FNS.update(
         {
-            "test_animated_png.png": (63435, 63058, ("png", 63058), ("webp", 53388)),
+            "test_animated_png.png": (63435, 63058, ("png", 63058), ("webp", 52864)),
             "test_gif.gif": (138952, 138944, ("png", 112290), ("webp", 108058)),
             "test_pre-optimized_png.png": (
                 256572,
