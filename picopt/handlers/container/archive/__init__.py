@@ -11,7 +11,6 @@ from py7zr import SevenZipFile
 from py7zr.py7zr import FileInfo as SevenZipInfo
 from rarfile import RarFile, RarInfo
 from termcolor import cprint
-from treestamps import Grovestamps
 
 from picopt.archiveinfo import ArchiveInfo
 from picopt.formats import FileFormat
@@ -19,7 +18,6 @@ from picopt.handlers.container import ContainerHandler, PackingContainerHandler
 from picopt.handlers.non_pil import NonPILIdentifier
 from picopt.path import PathInfo
 from picopt.stats import ReportStats
-from picopt.walk.skip import WalkSkipper
 
 
 class ArchiveHandler(NonPILIdentifier, ContainerHandler, ABC):
@@ -31,19 +29,11 @@ class ArchiveHandler(NonPILIdentifier, ContainerHandler, ABC):
     ARCHIVE_CLASS: type[ZipFile | TarFile | SevenZipFile | RarFile] = ZipFile
     CONVERT_CHILDREN: bool = True
 
-    def __init__(
-        self,
-        *args,
-        timestamps: Grovestamps | None = None,
-        **kwargs,
-    ):
+    def __init__(self, *args, **kwargs):
         """Init Archive Treestamps."""
         super().__init__(*args, **kwargs)
-        self._timestamps = timestamps
-        self._skipper = WalkSkipper(self.config, timestamps, in_archive=True)
         self._skip_path_infos = set()
         self._delete_filenames = set()
-        self._optimized_any_files = False
         self._convert = self.CONVERT_CHILDREN and self.path_info.convert
 
     @classmethod
@@ -59,14 +49,6 @@ class ArchiveHandler(NonPILIdentifier, ContainerHandler, ABC):
     @abstractmethod
     def _archive_readfile(self, archive, archiveinfo):
         raise NotImplementedError
-
-    def set_optimized_any(self):
-        """Walk marks if it optimized any files."""
-        self._optimized_any_files = True
-
-    def is_repack_needed(self):
-        """Are there any changes to me made to the file."""
-        return self._optimized_any_files or bool(self._delete_filenames)
 
     @classmethod
     def identify_format(cls, path_info: PathInfo) -> FileFormat | None:
@@ -113,6 +95,7 @@ class ArchiveHandler(NonPILIdentifier, ContainerHandler, ABC):
     def _mark_delete(self, filename: str | Path) -> None:
         """NoOp for most archives."""
         self._delete_filenames.add(str(filename))
+        self._do_repack = True
 
     def _consume_archive_timestamps(self, archive) -> tuple:
         infolist = self._archive_infolist(archive)
@@ -162,12 +145,12 @@ class ArchiveHandler(NonPILIdentifier, ContainerHandler, ABC):
             for archiveinfo in non_treestamp_entries:
                 if path_info := self._walk_one_entry(archive, archiveinfo):
                     yield path_info
-            if self.is_repack_needed():
+            if self._do_repack:
                 self._copy_unchanged_files(archive)
-            elif self._skipper:
-                self._skipper.skip_container("Archive", str(self.path_info.path))
         if self.config.verbose:
             cprint("done.")
+        if not self._do_repack and self._skipper:
+            self._skipper.skip_container("Archive", str(self.path_info.path))
 
     def _hydrate_optimized_path_info(self, path_info: PathInfo, report: ReportStats):
         """Rename archive files that changed."""
@@ -181,8 +164,6 @@ class ArchiveHandler(NonPILIdentifier, ContainerHandler, ABC):
     def optimize_contents(self):
         """Remove data structures that are no longer used."""
         super().optimize_contents()
-        self._timestamps = None
-        self._skipper = None
         self._skip_path_infos = set()
 
 

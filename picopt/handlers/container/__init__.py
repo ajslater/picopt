@@ -7,11 +7,13 @@ from multiprocessing.pool import ApplyResult
 from typing import BinaryIO
 
 from termcolor import cprint
+from treestamps import Grovestamps
 
 from picopt.formats import FileFormat
 from picopt.handlers.handler import Handler
 from picopt.path import PathInfo
 from picopt.stats import ReportStats
+from picopt.walk.skip import WalkSkipper
 
 
 class ContainerHandler(Handler, ABC):
@@ -26,21 +28,40 @@ class ContainerHandler(Handler, ABC):
     def walk(self) -> Generator[PathInfo]:
         """Walk the container."""
 
-    def __init__(self, *args, repack_handler_class: Handler | None = None, **kwargs):
+    def __init__(
+        self,
+        *args,
+        timestamps: Grovestamps | None = None,
+        repack_handler_class: Handler | None = None,
+        **kwargs,
+    ):
         """Initialize unpack tasks and ."""
         super().__init__(*args, **kwargs)
+        self._timestamps = timestamps
+        self.repack_handler_class = repack_handler_class
+        self._skipper = WalkSkipper(self.config, timestamps, in_archive=True)
         self.comment: bytes | None = None
         self._tasks: dict[PathInfo, ApplyResult] = {}
         self._optimized_contents: set[PathInfo] = set()
-        self.repack_handler_class = repack_handler_class
+        self._do_repack = False
+
+    def is_do_repack(self):
+        """Return if any changes were made and we should repack."""
+        return self._do_repack
 
     def set_task(self, path_info: PathInfo, mp_result: ApplyResult | None) -> None:
         """Store the mutiprocessing task."""
+        color = "white"
         if mp_result is None:
             # if not handled by picopt, place it in the results.
             self._optimized_contents.add(path_info)
+            attrs = ["dark"]
         else:
             self._tasks[path_info] = mp_result
+            self._do_repack = True
+            attrs = []
+        if self.config.verbose:
+            cprint(".", color, attrs=attrs, end="")
 
     def _hydrate_optimized_path_info(self, path_info: PathInfo, report: ReportStats):
         """Replace path_info data."""
@@ -54,6 +75,8 @@ class ContainerHandler(Handler, ABC):
             report = mp_results.get()
             self._hydrate_optimized_path_info(path_info, report)
             self._optimized_contents.add(path_info)
+        self._timestamps = None
+        self._skipper = None
 
     def get_optimized_contents(self) -> set[PathInfo]:
         """Return optimized contents."""

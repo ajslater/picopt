@@ -8,7 +8,6 @@ from termcolor import cprint
 from treestamps import Treestamps
 
 from picopt.handlers.container import ContainerHandler
-from picopt.handlers.container.archive import ArchiveHandler
 from picopt.handlers.factory import (
     create_handler,
     create_repack_handler,
@@ -84,55 +83,27 @@ class Walk(WalkInit):
             timestamps = self._timestamps[dir_path_info.top_path]
             timestamps.set(dir_path, compact=True)
 
-    def _walk_archive_file(self, unpack_handler: ArchiveHandler, path_info: PathInfo):
+    def _walk_container_file(
+        self, unpack_handler: ContainerHandler, path_info: PathInfo
+    ):
         """Walk one archive path."""
         container_result = None
         if handler := self._walk_file_get_handler(path_info):
             container_result = self._handle_file(handler)
-            if container_result is not None:
-                unpack_handler.set_optimized_any()
-                if self._config.verbose:
-                    cprint(".", end="")
         unpack_handler.set_task(path_info, container_result)
 
-    def _walk_archive(self, unpack_handler: ArchiveHandler):
-        """Try to skip archive contents before unpacking them."""
+    def _walk_container(self, unpack_handler: ContainerHandler):
+        """Walk the container."""
         for path_info in unpack_handler.walk():
-            self._walk_archive_file(unpack_handler, path_info)
-        return unpack_handler.is_repack_needed()
-
-    def _walk_container_unpack(self, unpack_handler: ContainerHandler):
-        """Non archive containers always unpack everything."""
-        processed_any_file = False
-        for path_info in unpack_handler.walk():
-            handler = self._create_handler(path_info)
-            container_result = self._handle_file(handler)
-            processed_any_file = processed_any_file or container_result is not None
-            attrs = [] if container_result else ["dark"]
-            if self._config.verbose:
-                cprint(".", attrs=attrs, end="")
-            unpack_handler.set_task(path_info, container_result)
-        if not processed_any_file:
-            self._skipper.skip_container(
-                "Animated Image", str(unpack_handler.path_info.path)
-            )
-        return processed_any_file
-
-    def _handle_container_unpack(self, unpack_handler: ContainerHandler):
-        """Walk, unpack and optimize. Or Skip."""
-        if isinstance(unpack_handler, ArchiveHandler):
-            do_repack = self._walk_archive(unpack_handler)
-        else:
-            do_repack = self._walk_container_unpack(unpack_handler)
-        return do_repack
+            self._walk_container_file(unpack_handler, path_info)
 
     def _handle_container(self, handler: ContainerHandler) -> ApplyResult | None:
         """Optimize a container."""
         result: ApplyResult | None = None
         try:
-            # Unpack
-            do_repack = self._handle_container_unpack(handler)
-            if not do_repack:
+            # Walk and Unpack or Skip
+            self._walk_container(handler)
+            if not handler.is_do_repack():
                 return result
             # Optimize
             handler.optimize_contents()

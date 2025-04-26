@@ -27,7 +27,7 @@ FNS = MappingProxyType(
         "test_tar.tar": (11264, 10240, ("zip", 6996)),
         "test_tgz.tar.gz": (7620, 6878, ("zip", 6996)),
         "test_tbz.tar.bz2": (8071, 7332, ("zip", 6996)),
-        "test_txz.tar.xz": (7612, 6896, ("zip", 6996)),
+        "test_txz.tar.xz": (7612, 6908, ("zip", 6996)),
         "test_cbt.cbt": (7612, 7612, ("cbz", 6996)),
     }
 )

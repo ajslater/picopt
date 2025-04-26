@@ -85,6 +85,9 @@ class ImageAnimated(PrepareInfoMixin, PackingContainerHandler, ABC):
         image.close()
         self._save_frame_info(frame_info)
 
+        if not self._do_repack and self._skipper:
+            self._skipper.skip_container("Animated Image", str(self.path_info.path))
+
         if self.config.verbose:
             cprint("done")
 
