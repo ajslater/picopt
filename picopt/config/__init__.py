@@ -95,7 +95,12 @@ def _set_after(config: Subview) -> None:
         cprint(f"Optimizing after {after}")
 
 
-def _get_ignore_regexp(ignore_list: list[str], ignore_dotfiles: bool, verbose: int):
+def _get_ignore_regexp(
+    ignore_list: list[str],
+    verbose: int,
+    *,
+    ignore_dotfiles: bool,
+):
     ignore_regexps = []
     if ignore_dotfiles:
         ignore_regexps += _DOTFILE_REGEXPS
@@ -114,7 +119,7 @@ def _get_ignore_regexp(ignore_list: list[str], ignore_dotfiles: bool, verbose: i
     return r"|".join(ignore_regexps), ignore_single_stars
 
 
-def _print_ignores(ignore_single_stars: list[str], ignore_dotfiles: bool):
+def _print_ignores(ignore_single_stars: list[str], *, ignore_dotfiles: bool):
     ignore_text = ""
     if ignore_single_stars:
         ignore_text = "Ignoring: "
@@ -134,7 +139,7 @@ def _set_ignore(config: Subview) -> None:
     ignore_dotfiles: bool = config["ignore_dotfiles"].get(bool)  # type: ignore[reportAssignmentType]
     verbose: int = config["verbose"].get(int)  # type: ignore[reportAssignmentType]
     ignore_regexp, ignore_single_stars = _get_ignore_regexp(
-        ignore_list, ignore_dotfiles, verbose
+        ignore_list, verbose, ignore_dotfiles=ignore_dotfiles
     )
     ignore = re.compile(ignore_regexp) if ignore_regexp else None
     ignore_ignore_case = (
@@ -143,7 +148,7 @@ def _set_ignore(config: Subview) -> None:
     config["computed"]["ignore"]["case"].set(ignore)
     config["computed"]["ignore"]["ignore_case"].set(ignore_ignore_case)
     if verbose > 1:
-        _print_ignores(ignore_single_stars, ignore_dotfiles)
+        _print_ignores(ignore_single_stars, ignore_dotfiles=ignore_dotfiles)
 
 
 def _set_timestamps(config: Subview) -> None:

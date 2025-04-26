@@ -76,7 +76,6 @@ class Handler(ABC):
         config: AttrDict,
         path_info: PathInfo,
         input_file_format: FileFormat,
-        **kwargs,  # noqa: ARG002 for subclasses extra args
     ):
         """Initialize handler."""
         self.config: AttrDict = config
@@ -122,6 +121,7 @@ class Handler(ABC):
         input_buffer: BinaryIO,
         input_path: Path,
         output_path: Path,
+        *,
         input_path_tmp: bool,
         output_path_tmp: bool,
     ) -> BinaryIO:

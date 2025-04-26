@@ -89,11 +89,11 @@ class ArchiveHandler(NonPILIdentifier, ContainerHandler, ABC):
     def _create_path_info(self, archiveinfo, data: bytes | None = None):
         return PathInfo(
             self.path_info.top_path,
-            self.CONVERT_CHILDREN and self.path_info.convert,
             archiveinfo=archiveinfo,
             data=data,
             container_parents=self.path_info.container_path_history(),
             is_case_sensitive=self.path_info.is_case_sensitive,
+            convert=self.CONVERT_CHILDREN and self.path_info.convert,
         )
 
     def _is_archive_path_skip(self, path_info: PathInfo):

@@ -26,7 +26,7 @@ class OldTimestamps:
         """Walk up to the root eating old style timestamps."""
         path = self._root_dir
         while path:
-            if is_path_ignored(self._config, path, self._ignore_case) or (
+            if is_path_ignored(self._config, path, ignore_case=self._ignore_case) or (
                 not self._config.symlinks and path.is_symlink()
             ):
                 return
@@ -41,7 +41,9 @@ class OldTimestamps:
             if not self._config.symlinks and path.is_symlink():
                 continue
             if path.is_dir():
-                if not is_path_ignored(self._config, path, self._ignore_case):
+                if not is_path_ignored(
+                    self._config, path, ignore_case=self._ignore_case
+                ):
                     stack.extend(path / sub_path for sub_path in path.iterdir())
             elif path.name == OLD_TIMESTAMPS_NAME:
                 self._add_old_timestamp(path)

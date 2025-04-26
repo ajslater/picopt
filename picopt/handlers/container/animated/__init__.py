@@ -60,11 +60,11 @@ class ImageAnimated(PrepareInfoMixin, PackingContainerHandler, ABC):
             frame_buffer.seek(0)
             return PathInfo(
                 self.path_info.top_path,
-                self.path_info.convert,
                 frame=frame_index,
                 data=frame_buffer.read(),
                 container_parents=self.path_info.container_path_history(),
                 is_case_sensitive=self.path_info.is_case_sensitive,
+                convert=self.path_info.convert,
             )
 
     def _save_frame_info(self, frame_info: dict):

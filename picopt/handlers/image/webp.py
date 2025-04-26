@@ -75,8 +75,8 @@ class WebPBase(ImageHandler, ABC):
             input_buffer,
             input_path,
             output_path,
-            input_path_tmp,
-            output_path_tmp,
+            input_path_tmp=input_path_tmp,
+            output_path_tmp=output_path_tmp,
         )
 
 

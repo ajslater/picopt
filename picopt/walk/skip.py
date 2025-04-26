@@ -65,7 +65,9 @@ class WalkSkipper:
             legacy = "legacy " if path_info.name() == OLD_TIMESTAMPS_NAME else ""
             reason = f"Skip {legacy}timestamp {path_info.full_output_name()}"
         elif is_path_ignored(
-            self._config, path_info.archive_psuedo_path(), path_info.is_case_sensitive
+            self._config,
+            path_info.archive_psuedo_path(),
+            ignore_case=path_info.is_case_sensitive,
         ):
             reason = f"Skip ignored {path_info.full_output_name()}"
         elif not self._in_archive and path and not path.exists():

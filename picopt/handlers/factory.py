@@ -9,6 +9,7 @@ from picopt.handlers.container import ContainerHandler, PackingContainerHandler
 from picopt.handlers.container.archive import ArchiveHandler
 from picopt.handlers.detect_format import detect_format
 from picopt.handlers.handler import Handler
+from picopt.handlers.metadata import PrepareInfoMixin
 from picopt.path import PathInfo
 
 
@@ -21,9 +22,9 @@ def _get_handler_class(
 
 def _create_handler_get_handler_class(
     config: AttrDict,
-    convert: bool,
     file_format: FileFormat | None,
     *,
+    convert: bool,
     repack: bool = False,
 ) -> type[Handler] | None:
     handler_cls: type[Handler] | None = None
@@ -51,8 +52,8 @@ def _get_repack_handler_class(
         repack_handler_class: type[PackingContainerHandler] | None = (  # type: ignore[reportAssignmentType]
             _create_handler_get_handler_class(
                 config,
-                path_info.convert,
                 file_format,
+                convert=path_info.convert,
                 repack=True,
             )
         )
@@ -83,7 +84,9 @@ def create_handler(
     try:
         file_format, info = detect_format(config, path_info)
         handler_cls = _create_handler_get_handler_class(
-            config, path_info.convert, file_format
+            config,
+            file_format,
+            convert=path_info.convert,
         )
     except OSError as exc:
         cprint(f"WARNING: getting handler {exc}", "yellow")
@@ -96,6 +99,8 @@ def create_handler(
     handler = None
     if handler_cls and file_format:
         kwargs = {}
+        if issubclass(handler_cls, PrepareInfoMixin):
+            kwargs["info"] = info
         if issubclass(handler_cls, ContainerHandler):
             repack_handler_class = _get_repack_handler_class(
                 config, path_info, file_format
@@ -106,12 +111,12 @@ def create_handler(
                     kwargs["timestamps"] = timestamps
             else:
                 handler_cls = None
+
         if handler_cls:
             handler = handler_cls(
                 config,
                 path_info,
                 input_file_format=file_format,
-                info=info,
                 **kwargs,
             )
     return handler

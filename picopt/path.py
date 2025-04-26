@@ -31,7 +31,7 @@ def is_path_case_sensitive(dirpath: Path) -> bool:
     return result
 
 
-def is_path_ignored(config: AttrDict, path: str | Path, ignore_case: bool):
+def is_path_ignored(config: AttrDict, path: str | Path, *, ignore_case: bool):
     """Match path against the ignore regexp."""
     ignore = config.computed.ignore
     ignore = ignore.ignore_case if ignore_case else ignore.case
@@ -44,9 +44,9 @@ class PathInfo:
     def __init__(  # noqa: PLR0913
         self,
         top_path: Path,
+        *,
         convert: bool,
         is_case_sensitive: bool | None,
-        *,
         path: Path | None = None,
         frame: int | None = None,
         archiveinfo: ZipInfo | RarInfo | TarInfo | SevenZipInfo | None = None,

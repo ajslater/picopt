@@ -27,6 +27,7 @@ class Walk(WalkInit):
         self,
         results: list[ApplyResult],
         top_path: Path,
+        *,
         in_container: bool,
     ) -> None:
         """Get the async results and total them."""
@@ -61,10 +62,10 @@ class Walk(WalkInit):
             if entry_path.is_dir():
                 path_info = PathInfo(
                     path_info.top_path,
-                    path_info.convert,
                     path=entry_path,
                     in_container=path_info.in_container,
                     is_case_sensitive=path_info.is_case_sensitive,
+                    convert=path_info.convert,
                 )
                 self.walk_file(path_info)
             else:
@@ -73,10 +74,10 @@ class Walk(WalkInit):
         for entry_path in sorted(files):
             path_info = PathInfo(
                 path_info.top_path,
-                path_info.convert,
                 path=entry_path,
                 in_container=path_info.in_container,
                 is_case_sensitive=path_info.is_case_sensitive,
+                convert=path_info.convert,
             )
             if result := self.walk_file(path_info):
                 results.append(result)
@@ -84,7 +85,7 @@ class Walk(WalkInit):
         self._finish_results(
             results,
             path_info.top_path,
-            path_info.in_container,
+            in_container=path_info.in_container,
         )
 
         if self._timestamps:

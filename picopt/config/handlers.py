@@ -121,8 +121,9 @@ def _print_formats_config(
     verbose: int,
     handled_format_strs: set[str],
     convert_format_strs: dict[str, set[str]],
-    is_modern_cwebp: bool,
     cwebp_version: str,
+    *,
+    is_modern_cwebp: bool,
 ) -> None:
     """Print verbose init messages."""
     handled_format_list = ", ".join(sorted(handled_format_strs))
@@ -294,6 +295,6 @@ def set_format_handler_map(config: Subview) -> None:
         verbose,
         handled_format_strs,
         convert_format_strs,
-        is_modern_cwebp,
         cwebp_version,
+        is_modern_cwebp=is_modern_cwebp,
     )

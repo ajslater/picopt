@@ -57,7 +57,7 @@ _NON_PIL_HANDLERS: tuple[type[NonPILIdentifier], ...] = (
 
 
 def _extract_image_info(
-    path_info: PathInfo, keep_metadata: bool
+    path_info: PathInfo, *, keep_metadata: bool
 ) -> tuple[str | None, dict[str, Any]]:
     """Get image format and info from a file."""
     image_format_str = None
@@ -107,10 +107,10 @@ def _is_lossless(
 
 
 def _get_image_format(
-    path_info: PathInfo, keep_metadata: bool
+    path_info: PathInfo, *, keep_metadata: bool
 ) -> tuple[FileFormat | None, Mapping[str, Any]]:
     """Construct the image format with PIL."""
-    image_format_str, info = _extract_image_info(path_info, keep_metadata)
+    image_format_str, info = _extract_image_info(path_info, keep_metadata=keep_metadata)
 
     file_format = None
     if image_format_str:
@@ -135,7 +135,7 @@ def detect_format(
     config: AttrDict, path_info: PathInfo
 ) -> tuple[FileFormat | None, Mapping[str, Any]]:
     """Return the format and updated pathinfo."""
-    file_format, info = _get_image_format(path_info, config.keep_metadata)
+    file_format, info = _get_image_format(path_info, keep_metadata=config.keep_metadata)
     if not file_format:
         file_format = _get_non_pil_format(path_info)
     return file_format, info
