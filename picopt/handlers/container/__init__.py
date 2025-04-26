@@ -12,8 +12,9 @@ from treestamps import Grovestamps
 from picopt.formats import FileFormat
 from picopt.handlers.handler import Handler
 from picopt.path import PathInfo
+from picopt.printer import Messenger
 from picopt.stats import ReportStats
-from picopt.walk.skip import Messenger, WalkSkipper
+from picopt.walk.skip import WalkSkipper
 
 
 class ContainerHandler(Handler, ABC):

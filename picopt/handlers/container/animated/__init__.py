@@ -86,7 +86,7 @@ class ImageAnimated(PrepareInfoMixin, PackingContainerHandler, ABC):
         self._save_frame_info(frame_info)
 
         if not self._do_repack and self._skipper:
-            self._skipper.skip_container("Animated Image", str(self.path_info.path))
+            self._messenger.skip_container("Animated Image", str(self.path_info.path))
 
         if self.config.verbose:
             cprint("done")
@@ -108,7 +108,7 @@ class ImageAnimated(PrepareInfoMixin, PackingContainerHandler, ABC):
             frame_data = sorted_frames.pop().data()
             frame = Image.open(BytesIO(frame_data))
             append_images.append(frame)
-            self._skipper.packed_message()
+            self._messenger.packed_message()
 
         # Prepare info
         info = dict(self.prepare_info(self.OUTPUT_FORMAT_STR))
