@@ -23,7 +23,8 @@ def _create_handler_get_handler_class(
     config: AttrDict,
     convert: bool,
     file_format: FileFormat | None,
-    repack: bool = False,  # noqa: FBT002
+    *,
+    repack: bool = False,
 ) -> type[Handler] | None:
     handler_cls: type[Handler] | None = None
     if file_format and file_format.format_str in config.formats:

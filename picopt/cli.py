@@ -42,8 +42,9 @@ class SplitArgsAction(Action):
 
 def _comma_join(
     formats: frozenset[str] | tuple[str, ...],
-    space=True,  # noqa: FBT002
-    final_and=False,  # noqa: FBT002
+    *,
+    space=True,
+    final_and=False,
 ) -> str:
     """Sort and join a sequence into a human readable string."""
     formats = tuple(sorted(formats))
