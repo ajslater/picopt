@@ -21,12 +21,11 @@ class Zip(PackingArchiveHandler):
     INPUT_FILE_FORMATS = frozenset({INPUT_FILE_FORMAT})
     PROGRAMS = ((INTERNAL,),)
     ARCHIVE_CLASS = ZipFileWithRemove
-    OPTIMIZE_IN_PLACE_ON_DISK = True
 
     def __init__(self, *args, convert: bool = False, **kwargs):
         """Init delete_filenames."""
         super().__init__(*args, **kwargs)
-        self._optimize_in_place_on_disk = not convert
+        self._optimize_in_place_on_disk = not convert and not self.path_info.archiveinfo
 
     @classmethod
     def _is_archive(cls, path: Path | BytesIO) -> bool:
