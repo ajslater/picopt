@@ -13,7 +13,7 @@ from picopt.formats import FileFormat
 from picopt.handlers.handler import Handler
 from picopt.path import PathInfo
 from picopt.stats import ReportStats
-from picopt.walk.skip import WalkSkipper
+from picopt.walk.skip import Messenger, WalkSkipper
 
 
 class ContainerHandler(Handler, ABC):
@@ -44,6 +44,7 @@ class ContainerHandler(Handler, ABC):
         self._tasks: dict[PathInfo, ApplyResult] = {}
         self._optimized_contents: set[PathInfo] = set()
         self._do_repack = False
+        self._messenger = Messenger(self.config.verbose)
 
     def is_do_repack(self):
         """Return if any changes were made and we should repack."""
@@ -51,17 +52,14 @@ class ContainerHandler(Handler, ABC):
 
     def set_task(self, path_info: PathInfo, mp_result: ApplyResult | None) -> None:
         """Store the mutiprocessing task."""
-        color = "white"
         if mp_result is None:
             # if not handled by picopt, place it in the results.
             self._optimized_contents.add(path_info)
-            attrs = ["dark"]
+            self._messenger.copied_message()
         else:
             self._tasks[path_info] = mp_result
             self._do_repack = True
-            attrs = []
-        if self.config.verbose:
-            cprint(".", color, attrs=attrs, end="")
+            self._messenger.handled_message()
 
     def _hydrate_optimized_path_info(self, path_info: PathInfo, report: ReportStats):
         """Replace path_info data."""

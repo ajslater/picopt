@@ -13,6 +13,60 @@ from picopt.old_timestamps import OLD_TIMESTAMPS_NAME
 from picopt.path import PathInfo, is_path_ignored
 
 
+class Messenger:
+    """Class for printing dots and skipped messages."""
+
+    def __init__(self, verbose: int):
+        """Initialize verbosity and flags."""
+        self._verbose = verbose
+        self._last_verbose_message = False
+
+    def skip_message(self, reason, color="white", attrs=None):
+        """Print a dot or skip message."""
+        if self._verbose < 1:
+            return
+        if self._verbose == 1:
+            cprint(".", color, attrs=attrs, end="")
+            self._last_verbose_message = False
+            return
+        if not self._last_verbose_message:
+            reason = "\n" + reason
+            self._last_verbose_message = True
+        attrs = attrs if attrs else []
+        cprint(reason, color, attrs=attrs)
+
+    def skip_container(self, container_type: str, path: str):
+        """Skip entire container."""
+        color = "white"
+        attrs = ["dark"]
+        reason = f"{container_type} contents all skipped: {path}"
+        self.skip_message(reason, color, attrs)
+
+    def handled_message(self):
+        """Dot for handled file."""
+        if self._verbose:
+            cprint(".", end="")
+            self._last_verbose_message = False
+
+    def no_handler(self):
+        """Dot for no handler."""
+        if self._verbose:
+            cprint(".", attrs=["dark"], end="")
+            self._last_verbose_message = False
+
+    def copied_message(self):
+        """Dot for copied file."""
+        if self._verbose:
+            cprint(".", attrs=["dark"], end="")
+            self._last_verbose_message = False
+
+    def packed_message(self):
+        """Dot for repacked file."""
+        if self._verbose:
+            cprint(".", end="")
+            self._last_verbose_message = False
+
+
 class WalkSkipper:
     """Walk Methods for checking and skipping."""
 
@@ -31,24 +85,11 @@ class WalkSkipper:
         self._config = config
         self._timestamps = timestamps if timestamps else {}
         self._in_archive = in_archive
-        self._any_skipped = False
+        self._messenger = Messenger(self._config.verbose)
 
     def set_timestamps(self, timestamps: Grovestamps):
         """Reset the timestamps after they've been established."""
         self._timestamps = timestamps
-
-    def skip_message(self, reason, color="white", attrs=None):
-        """Print a dot or skip message."""
-        if self._config.verbose < 1:
-            return
-        if self._config.verbose == 1:
-            cprint(".", color, attrs=attrs, end="")
-            return
-        if self._in_archive and not self._any_skipped:
-            reason = "\n" + reason
-            self._any_skipped = True
-        attrs = attrs if attrs else []
-        cprint(reason, color, attrs=attrs)
 
     def _is_skippable(self, path_info: PathInfo) -> bool:
         """Handle things that are not optimizable files."""
@@ -77,7 +118,7 @@ class WalkSkipper:
             attrs = []
 
         if reason:
-            self.skip_message(reason, color, attrs)
+            self._messenger.skip_message(reason, color, attrs)
 
         return bool(reason)
 
@@ -89,9 +130,10 @@ class WalkSkipper:
             else:
                 path.unlink(missing_ok=True)
             reason = f"Deleted {path}"
-            self.skip_message(reason, "yellow")
+            self._messenger.skip_message(reason, "yellow")
         except Exception as exc:
-            cprint(str(exc), "red")
+            cprint("\n" + str(exc), "red")
+            self._last_verbose_message = True
 
     def is_walk_file_skip(
         self,
@@ -111,7 +153,7 @@ class WalkSkipper:
         """Report on skipping files older than the timestamp."""
         reason = f"Skip older than timestamp: {path_info.full_output_name()}"
         color = "green"
-        self.skip_message(reason, color)
+        self._messenger.skip_message(reason, color)
 
     def _get_walk_after(self, path_info: PathInfo):
         if self._config.after is not None:
@@ -136,10 +178,3 @@ class WalkSkipper:
         if result := bool(mtime <= walk_after):
             self._skip_older_than_timestamp(path_info)
         return result
-
-    def skip_container(self, container_type: str, path: str):
-        """Skip entire container."""
-        color = "white"
-        attrs = ["dark"]
-        reason = f"{container_type} contents all skipped: {path}"
-        self.skip_message(reason, color, attrs)

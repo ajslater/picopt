@@ -11,7 +11,7 @@ from picopt.config.consts import TIMESTAMPS_CONFIG_KEYS
 from picopt.exceptions import PicoptError
 from picopt.old_timestamps import OldTimestamps
 from picopt.stats import Totals
-from picopt.walk.skip import WalkSkipper
+from picopt.walk.skip import Messenger, WalkSkipper
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -49,6 +49,7 @@ class WalkInit:
             self._pool = Pool()
         self._timestamps: Grovestamps | None = None  # reassigned at start of run
         self._skipper = WalkSkipper(config)
+        self._messenger = Messenger(config.verbose)
 
     def _init_timestamps(self) -> None:
         """Init timestamps."""

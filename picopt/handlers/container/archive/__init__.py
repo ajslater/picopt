@@ -116,7 +116,7 @@ class ArchiveHandler(NonPILIdentifier, ContainerHandler, ABC):
             archive_sub_path = self.path_info.archive_psuedo_path() / path.parent
             self._timestamps.loads(archive_sub_path, yaml_str)
             if self._skipper:
-                self._skipper.skip_message(
+                self._messenger.skip_message(
                     f"Consumed picopt timestamp in archive: {path}"
                 )
             self._mark_delete(path)
@@ -133,8 +133,6 @@ class ArchiveHandler(NonPILIdentifier, ContainerHandler, ABC):
             ):
                 path_info.set_data(data)
             self.set_task(path_info, None)
-            if self.config.verbose:
-                cprint(".", attrs=["dark"], end="")
 
     def walk(self) -> Generator[PathInfo]:
         """Walk an archive's archiveinfos."""
@@ -150,7 +148,7 @@ class ArchiveHandler(NonPILIdentifier, ContainerHandler, ABC):
         if self.config.verbose:
             cprint("done.")
         if not self._do_repack and self._skipper:
-            self._skipper.skip_container("Archive", str(self.path_info.path))
+            self._messenger.skip_container("Archive", str(self.path_info.path))
 
     def _hydrate_optimized_path_info(self, path_info: PathInfo, report: ReportStats):
         """Rename archive files that changed."""
@@ -191,10 +189,8 @@ class PackingArchiveHandler(ArchiveHandler, PackingContainerHandler, ABC):
             while self._optimized_contents:
                 path_info = self._optimized_contents.pop()
                 self._pack_info_one_file(archive, path_info)
-                if self.config.verbose:
-                    cprint(".", end="")
+                self._messenger.packed_message()
             if self.comment:
                 archive.comment = self.comment
-                if self.config.verbose:
-                    cprint(".", end="")
+                self._messenger.packed_message()
         return output_buffer

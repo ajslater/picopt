@@ -150,8 +150,12 @@ class Walk(WalkInit):
     def walk_file(self, path_info: PathInfo) -> ApplyResult | None:
         """Optimize an individual file."""
         try:
-            handler = self._walk_file_get_handler(path_info)
-            result = self._handle_file(handler)
+            result = None
+            if handler := self._walk_file_get_handler(path_info):
+                result = self._handle_file(handler)
+                self._messenger.handled_message()
+            else:
+                self._messenger.no_handler()
         except Exception as exc:
             traceback.print_exc()
             apply_kwargs = {
