@@ -27,8 +27,6 @@ class Walk(WalkInit):
         self,
         results: list[ApplyResult],
         top_path: Path,
-        *,
-        in_container: bool,
     ) -> None:
         """Get the async results and total them."""
         for result in results:
@@ -43,29 +41,26 @@ class Walk(WalkInit):
                     self._totals.bytes_out += final_result.bytes_out
                 else:
                     self._totals.bytes_out += final_result.bytes_in
-            if self._timestamps and not in_container:
+            if self._timestamps:
                 timestamps = self._timestamps[top_path]
                 timestamps.set(final_result.path)
 
-    def walk_dir(self, path_info: PathInfo) -> None:
+    def walk_dir(self, dir_path_info: PathInfo) -> None:
         """Recursively optimize a directory."""
-        if not self._config.recurse or path_info.in_container or not path_info.is_dir():
+        if not self._config.recurse or not dir_path_info.is_dir():
             # Skip
             return
 
         results = []
         files = []
-        dir_path: Path = path_info.path  # type: ignore[reportAssignmentType]
+        dir_path: Path = dir_path_info.path  # type: ignore[reportAssignmentType]
 
         for name in sorted(dir_path.iterdir()):
             entry_path = dir_path / name
             if entry_path.is_dir():
                 path_info = PathInfo(
-                    path_info.top_path,
+                    path_info=dir_path_info,
                     path=entry_path,
-                    in_container=path_info.in_container,
-                    is_case_sensitive=path_info.is_case_sensitive,
-                    convert=path_info.convert,
                 )
                 self.walk_file(path_info)
             else:
@@ -73,24 +68,20 @@ class Walk(WalkInit):
 
         for entry_path in sorted(files):
             path_info = PathInfo(
-                path_info.top_path,
+                path_info=dir_path_info,
                 path=entry_path,
-                in_container=path_info.in_container,
-                is_case_sensitive=path_info.is_case_sensitive,
-                convert=path_info.convert,
             )
             if result := self.walk_file(path_info):
                 results.append(result)
 
         self._finish_results(
             results,
-            path_info.top_path,
-            in_container=path_info.in_container,
+            dir_path_info.top_path,
         )
 
         if self._timestamps:
             # Compact timestamps after every directory completes
-            timestamps = self._timestamps[path_info.top_path]
+            timestamps = self._timestamps[dir_path_info.top_path]
             timestamps.set(dir_path, compact=True)
 
     def _walk_archive_file(self, unpack_handler: ArchiveHandler, path_info: PathInfo):
@@ -217,7 +208,7 @@ class Walk(WalkInit):
         for top_path in self._top_paths:
             dirpath = Treestamps.get_dir(top_path)
             path_info = PathInfo(
-                dirpath, convert=True, path=top_path, is_case_sensitive=None
+                top_path=dirpath, convert=True, path=top_path, is_case_sensitive=None
             )
             result = self.walk_file(path_info)
             if not result:
@@ -228,7 +219,7 @@ class Walk(WalkInit):
 
         # Finish
         for dirpath, results in top_results.items():
-            self._finish_results(results, dirpath, in_container=False)
+            self._finish_results(results, dirpath)
 
         # Shut down multiprocessing
         self._pool.close()

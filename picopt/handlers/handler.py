@@ -210,7 +210,7 @@ class Handler(ABC):
         return_data = b""
         if final_data_buffer is None:
             return return_data
-        if isinstance(final_data_buffer, BytesIO) or self.path_info.in_container:
+        if isinstance(final_data_buffer, BytesIO) or bool(self.path_info.archiveinfo):
             # only return the data in the report for containers.
             final_data_buffer.seek(0)
             return_data = final_data_buffer.read()

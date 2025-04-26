@@ -41,42 +41,79 @@ def is_path_ignored(config: AttrDict, path: str | Path, *, ignore_case: bool):
 class PathInfo:
     """Path Info object, mostly for passing down walk."""
 
+    def _copy_constructor(
+        self,
+        path_info=None,
+        top_path: Path | None = None,
+        convert: bool | None = None,
+        is_case_sensitive: bool | None = None,
+        container_parents: tuple[str, ...] | None = None,
+    ):
+        """Copy from path_info or override with arg."""
+        if top_path:
+            self.top_path = top_path
+        elif path_info:
+            self.top_path = path_info.top_path
+        else:
+            reason = "PathInfo requires a top_path argument."
+            raise ValueError(reason)
+
+        if convert is not None:
+            self.convert = convert
+        elif path_info:
+            self.convert = path_info.convert
+        else:
+            reason = "PathInfo requires a convert argument."
+            raise ValueError(reason)
+
+        if is_case_sensitive is not None:
+            self.is_case_sensitive = is_case_sensitive
+        elif path_info:
+            self.is_case_sensitive = path_info.is_case_sensitive
+        else:
+            self.is_case_sensitive = is_path_case_sensitive(self.top_path)
+
+        if container_parents is not None:
+            self.container_parents = container_parents
+        elif path_info:
+            self.container_parents = path_info.container_parents
+        else:
+            self.container_parents = ()
+
     def __init__(  # noqa: PLR0913
         self,
-        top_path: Path,
+        path_info=None,
         *,
-        convert: bool,
-        is_case_sensitive: bool | None,
+        top_path: Path | None = None,
+        convert: bool | None = None,
+        is_case_sensitive: bool | None = None,
+        container_parents: tuple[str, ...] | None = None,
         path: Path | None = None,
         frame: int | None = None,
         archiveinfo: ZipInfo | RarInfo | TarInfo | SevenZipInfo | None = None,
         data: bytes | None = None,
-        container_parents: tuple[str, ...] | None = None,
-        in_container: bool = False,
     ):
         """Initialize."""
-        self.top_path: Path = top_path
-        self.convert: bool = convert
-        self.is_case_sensitive: bool = is_case_sensitive or bool(
-            is_case_sensitive is None and is_path_case_sensitive(top_path)
+        self._copy_constructor(
+            path_info,
+            top_path,
+            convert,
+            is_case_sensitive,
+            container_parents,
         )
 
+        ###############
+        # Primary key #
+        ###############
         # A filesystem path
         self.path = path
         # An animated image frame (in a container)
         self.frame = frame
         # An archived file (in a container)
         self.archiveinfo = ArchiveInfo(archiveinfo) if archiveinfo else None
-        self.in_container = (
-            in_container or self.archiveinfo is not None or self.frame is not None
-        )
-        # The history of parent container names
-        self.container_parents: tuple[str, ...] = (
-            container_parents if container_parents else ()
-        )
 
         # optionally computed
-        self._data: bytes | None = data
+        self._data = data
 
         # always computed
         self._is_dir: bool | None = None

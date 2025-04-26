@@ -44,6 +44,7 @@ class ArchiveHandler(NonPILIdentifier, ContainerHandler, ABC):
         self._skip_path_infos = set()
         self._delete_filenames = set()
         self._optimized_any_files = False
+        self._convert = self.CONVERT_CHILDREN and self.path_info.convert
 
     @classmethod
     @abstractmethod
@@ -88,12 +89,10 @@ class ArchiveHandler(NonPILIdentifier, ContainerHandler, ABC):
 
     def _create_path_info(self, archiveinfo, data: bytes | None = None):
         return PathInfo(
-            self.path_info.top_path,
+            path_info=self.path_info,
             archiveinfo=archiveinfo,
             data=data,
-            container_parents=self.path_info.container_path_history(),
-            is_case_sensitive=self.path_info.is_case_sensitive,
-            convert=self.CONVERT_CHILDREN and self.path_info.convert,
+            convert=self._convert,
         )
 
     def _is_archive_path_skip(self, path_info: PathInfo):
