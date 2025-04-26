@@ -141,8 +141,8 @@ class ArchiveHandler(NonPILIdentifier, ContainerHandler, ABC):
 
         return tuple(non_treestamp_entries)
 
-    def _copy_skipped_files(self, archive):
-        """Reopen the archive for skipped paths."""
+    def _copy_unchanged_files(self, archive):
+        """Copy unchanged paths into results."""
         while len(self._skip_path_infos):
             path_info = self._skip_path_infos.pop()
             archiveinfo = path_info.archiveinfo
@@ -164,7 +164,7 @@ class ArchiveHandler(NonPILIdentifier, ContainerHandler, ABC):
                 if path_info := self._walk_one_entry(archive, archiveinfo):
                     yield path_info
             if self.is_repack_needed():
-                self._copy_skipped_files(archive)
+                self._copy_unchanged_files(archive)
             elif self._skipper:
                 self._skipper.skip_container("Archive", str(self.path_info.path))
         if self.config.verbose:
