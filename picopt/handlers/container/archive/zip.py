@@ -26,7 +26,6 @@ class Zip(PackingArchiveHandler):
     def __init__(self, *args, convert: bool = False, **kwargs):
         """Init delete_filenames."""
         super().__init__(*args, **kwargs)
-        self._delete_filenames = []
         self._optimize_in_place_on_disk = not convert
 
     @classmethod
@@ -45,23 +44,24 @@ class Zip(PackingArchiveHandler):
         if archive.comment:
             self.comment = archive.comment
 
-    def _mark_delete(self) -> None:
-        """NoOp for containers."""
-        if self.original_path != self.final_path:
-            self._delete_filenames.append(self.original_path)
-
     def _archive_for_write(self, output_buffer: BytesIO) -> ZipFileWithRemove:
-        if self._optimize_in_place_on_disk:
-            self._bytes_in = self.path_info.bytes_in()
-            file = self.original_path
-        else:
-            file = output_buffer
-        return ZipFileWithRemove(file, "w", compression=ZIP_DEFLATED, compresslevel=9)
+        file = self.original_path if self._optimize_in_place_on_disk else output_buffer
+        return ZipFileWithRemove(file, "a", compression=ZIP_DEFLATED, compresslevel=9)
 
-    def _delete_files(self, archive):
-        """Delete files in archive before write."""
-        for filename in self._delete_filenames:
-            archive.remove(filename)
+    def _delete_files_before_write(self):
+        """Delete files in the archive on disk before appending new files.."""
+        if not self._optimize_in_place_on_disk:
+            return
+        for path_info in self._optimized_contents:
+            self._delete_filenames.add(path_info.name())
+        if not self._delete_filenames:
+            return
+        with ZipFileWithRemove(
+            self.original_path, "a", compression=ZIP_DEFLATED, compresslevel=9
+        ) as archive:
+            while len(self._delete_filenames):
+                filename = self._delete_filenames.pop()
+                archive.remove(filename)
 
     def _pack_info_one_file(self, archive, path_info):
         """Add one file to the new archive."""
@@ -69,12 +69,19 @@ class Zip(PackingArchiveHandler):
             cprint("WARNING: No archiveinfo to write.", "yellow")
             return
         zipinfo = path_info.archiveinfo.to_zipinfo()
+        if zipinfo.filename in self._delete_filenames:
+            return
         if not self.config.keep_metadata and (
             not zipinfo.compress_type or zipinfo.compress_type == ZIP_STORED
         ):
             zipinfo.compress_type = ZIP_DEFLATED
         data = path_info.data()
         archive.writestr(zipinfo, data)
+
+    def pack_into(self) -> BytesIO:
+        """Do in place deletes on disk before writing if we can."""
+        self._delete_files_before_write()
+        return super().pack_into()
 
 
 class Cbz(Zip):

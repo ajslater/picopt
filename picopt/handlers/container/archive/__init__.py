@@ -18,6 +18,7 @@ from picopt.formats import FileFormat
 from picopt.handlers.container import ContainerHandler, PackingContainerHandler
 from picopt.handlers.non_pil import NonPILIdentifier
 from picopt.path import PathInfo
+from picopt.stats import ReportStats
 from picopt.walk.skip import WalkSkipper
 
 
@@ -39,7 +40,10 @@ class ArchiveHandler(NonPILIdentifier, ContainerHandler, ABC):
         """Init Archive Treestamps."""
         super().__init__(*args, **kwargs)
         self._timestamps = timestamps
-        self._skipper = WalkSkipper(self.config, timestamps)
+        self._skipper = WalkSkipper(self.config, timestamps, in_archive=True)
+        self._skip_path_infos = set()
+        self._delete_filenames = set()
+        self._optimized_any_files = False
 
     @classmethod
     @abstractmethod
@@ -54,6 +58,14 @@ class ArchiveHandler(NonPILIdentifier, ContainerHandler, ABC):
     @abstractmethod
     def _archive_readfile(self, archive, archiveinfo):
         raise NotImplementedError
+
+    def set_optimized_any(self):
+        """Walk marks if it optimized any files."""
+        self._optimized_any_files = True
+
+    def is_repack_needed(self):
+        """Are there any changes to me made to the file."""
+        return self._optimized_any_files or bool(self._delete_filenames)
 
     @classmethod
     def identify_format(cls, path_info: PathInfo) -> FileFormat | None:
@@ -85,59 +97,94 @@ class ArchiveHandler(NonPILIdentifier, ContainerHandler, ABC):
         )
 
     def _is_archive_path_skip(self, path_info: PathInfo):
-        return self._skipper.is_walk_file_skip(
-            path_info
-        ) or self._skipper.is_older_than_timestamp(path_info)
+        return self._skipper and (
+            self._skipper.is_walk_file_skip(path_info)
+            or self._skipper.is_older_than_timestamp(path_info)
+        )
 
-    def _walk_one_entry(self, archive, archiveinfo) -> tuple[PathInfo, bool]:
+    def _walk_one_entry(self, archive, archiveinfo) -> PathInfo | None:
         path_info = self._create_path_info(archiveinfo)
-        skip = self._is_archive_path_skip(path_info)
-        if not skip and (data := self._archive_readfile(archive, archiveinfo)):
+        if self._is_archive_path_skip(path_info):
+            self._skip_path_infos.add(path_info)
+            path_info = None
+        elif data := self._archive_readfile(archive, archiveinfo):
             path_info.set_data(data)
-        return path_info, skip
+        return path_info
+
+    def _mark_delete(self, filename: str | Path) -> None:
+        """NoOp for most archives."""
+        self._delete_filenames.add(str(filename))
 
     def _consume_archive_timestamps(self, archive) -> tuple:
+        infolist = self._archive_infolist(archive)
+        if not (self.config.timestamps and self._timestamps):
+            return infolist
         non_treestamp_entries = []
         timestamps_filename = self._timestamps.filename if self._timestamps else ""
-        for archiveinfo in self._archive_infolist(archive):
-            add = True
-            if self.config.timestamps and self._timestamps:
-                ai = ArchiveInfo(archiveinfo)
-                if not ai.is_dir():
-                    path = Path(ai.filename())
-                    if path.name == timestamps_filename:
-                        yaml_str = self._archive_readfile(archive, archiveinfo)
-                        archive_sub_path = (
-                            self.path_info.archive_psuedo_path() / path.parent
-                        )
-                        self._timestamps.loads(archive_sub_path, yaml_str)
-                        add = False
-            if add:
+        for archiveinfo in infolist:
+            ai = ArchiveInfo(archiveinfo)
+            if ai.is_dir():
                 non_treestamp_entries.append(archiveinfo)
+                continue
+            path = Path(ai.filename())
+            if path.name != timestamps_filename:
+                non_treestamp_entries.append(archiveinfo)
+                continue
+            yaml_str = self._archive_readfile(archive, archiveinfo)
+            archive_sub_path = self.path_info.archive_psuedo_path() / path.parent
+            self._timestamps.loads(archive_sub_path, yaml_str)
+            if self._skipper:
+                self._skipper.skip_message(
+                    f"Consumed picopt timestamp in archive: {path}"
+                )
+            self._mark_delete(path)
 
         return tuple(non_treestamp_entries)
 
-    def walk(self) -> Generator[tuple[PathInfo, bool]]:
+    def _copy_skipped_files(self, archive):
+        """Reopen the archive for skipped paths."""
+        while len(self._skip_path_infos):
+            path_info = self._skip_path_infos.pop()
+            archiveinfo = path_info.archiveinfo
+            if archiveinfo and (
+                data := self._archive_readfile(archive, archiveinfo.info)
+            ):
+                path_info.set_data(data)
+            self.set_task(path_info, None)
+            if self.config.verbose:
+                cprint(".", attrs=["dark"], end="")
+
+    def walk(self) -> Generator[PathInfo]:
         """Walk an archive's archiveinfos."""
-        if self.config.verbose > 1:
+        if self.config.verbose:
             cprint(f"\nScanning archive {self.path_info.full_output_name()}...", end="")
         with self._get_archive() as archive:
             non_treestamp_entries = self._consume_archive_timestamps(archive)
             for archiveinfo in non_treestamp_entries:
-                yield self._walk_one_entry(archive, archiveinfo)
+                if path_info := self._walk_one_entry(archive, archiveinfo):
+                    yield path_info
+            if self.is_repack_needed():
+                self._copy_skipped_files(archive)
+            elif self._skipper:
+                self._skipper.skip_container("Archive", str(self.path_info.path))
+        if self.config.verbose:
+            cprint("done.")
 
-    def copy_skipped_files(self, skipped_paths: list[PathInfo]):
-        """Reopen the archive for skipped paths."""
-        with self._get_archive() as archive:
-            for path_info in skipped_paths:
-                archiveinfo = path_info.archiveinfo
-                if archiveinfo and (
-                    data := self._archive_readfile(archive, archiveinfo.info)
-                ):
-                    path_info.set_data(data)
-                self.set_task(path_info, None)
-                if self.config.verbose:
-                    cprint(".", attrs=["dark"], end="")
+    def _hydrate_optimized_path_info(self, path_info: PathInfo, report: ReportStats):
+        """Rename archive files that changed."""
+        super()._hydrate_optimized_path_info(path_info, report)
+        original_path = path_info.name()
+        final_path = report.path
+        if final_path and original_path != final_path:
+            path_info.rename(final_path)
+            self._mark_delete(original_path)
+
+    def optimize_contents(self):
+        """Remove data structures that are no longer used."""
+        super().optimize_contents()
+        self._timestamps = None
+        self._skipper = None
+        self._skip_path_infos = set()
 
 
 class PackingArchiveHandler(ArchiveHandler, PackingContainerHandler, ABC):
@@ -155,17 +202,14 @@ class PackingArchiveHandler(ArchiveHandler, PackingContainerHandler, ABC):
     def _pack_info_one_file(self, archive, path_info):
         raise NotImplementedError
 
-    def _delete_files(self, archive):
-        """NoOp for most archives."""
-
     def pack_into(self) -> BytesIO:
         """Zip up the files in the tempdir into the new filename."""
         output_buffer = BytesIO()
-        archive = self._archive_for_write(output_buffer)
-        with archive:
-            self._delete_files(archive)
-            while self.optimized_contents:
-                path_info = self.optimized_contents.pop()
+        if self._optimize_in_place_on_disk:
+            self._bytes_in = self.path_info.bytes_in()
+        with self._archive_for_write(output_buffer) as archive:
+            while self._optimized_contents:
+                path_info = self._optimized_contents.pop()
                 self._pack_info_one_file(archive, path_info)
                 if self.config.verbose:
                     cprint(".", end="")

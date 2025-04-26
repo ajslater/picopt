@@ -92,35 +92,27 @@ class Walk(WalkInit):
             timestamps = self._timestamps[path_info.top_path]
             timestamps.set(dir_path, compact=True)
 
+    def _walk_archive_file(self, unpack_handler: ArchiveHandler, path_info: PathInfo):
+        """Walk one archive path."""
+        container_result = None
+        if handler := self._walk_file_get_handler(path_info):
+            container_result = self._handle_file(handler)
+            if container_result is not None:
+                unpack_handler.set_optimized_any()
+                if self._config.verbose:
+                    cprint(".", end="")
+        unpack_handler.set_task(path_info, container_result)
+
     def _walk_archive(self, unpack_handler: ArchiveHandler):
         """Try to skip archive contents before unpacking them."""
-        processed_any_file = False
-        skipped_paths = []
-        for path_info, skip in unpack_handler.walk():
-            container_result = None
-            if skip:
-                skipped_paths.append(path_info)
-            else:
-                if handler := self._walk_file_get_handler(path_info):
-                    container_result = self._handle_file(handler)
-                    processed_any_file = (
-                        processed_any_file or container_result is not None
-                    )
-                unpack_handler.set_task(path_info, container_result)
-            if self._config.verbose and container_result:
-                cprint(".", end="")
-        if processed_any_file:
-            unpack_handler.copy_skipped_files(skipped_paths)
-            if self._config.verbose:
-                cprint("done.")
-        else:
-            self._skipper.skip_container("Archive", str(unpack_handler.path_info.path))
-        return processed_any_file
+        for path_info in unpack_handler.walk():
+            self._walk_archive_file(unpack_handler, path_info)
+        return unpack_handler.is_repack_needed()
 
     def _walk_container_unpack(self, unpack_handler: ContainerHandler):
         """Non archive containers always unpack everything."""
         processed_any_file = False
-        for path_info, _ in unpack_handler.walk():
+        for path_info in unpack_handler.walk():
             handler = self._create_handler(path_info)
             container_result = self._handle_file(handler)
             processed_any_file = processed_any_file or container_result is not None
@@ -142,25 +134,23 @@ class Walk(WalkInit):
             do_repack = self._walk_container_unpack(unpack_handler)
         return do_repack
 
-    def _handle_container(self, unpack_handler: ContainerHandler) -> ApplyResult | None:
+    def _handle_container(self, handler: ContainerHandler) -> ApplyResult | None:
         """Optimize a container."""
         result: ApplyResult | None = None
-        error_handler = unpack_handler
         try:
             # Unpack
-            do_repack = self._handle_container_unpack(unpack_handler)
+            do_repack = self._handle_container_unpack(handler)
             if not do_repack:
                 return result
             # Optimize
-            unpack_handler.optimize_contents()
+            handler.optimize_contents()
             # Repack
-            repack_handler = create_repack_handler(self._config, unpack_handler)
-            error_handler = repack_handler
-            result = self._pool.apply_async(repack_handler.repack)
+            handler = create_repack_handler(self._config, handler)
+            result = self._pool.apply_async(handler.repack)
         except Exception as exc:
             traceback.print_exc()
             args = (exc,)
-            result = self._pool.apply_async(error_handler.error, args=args)
+            result = self._pool.apply_async(handler.error, args=args)
         return result
 
     def _handle_file(self, handler):

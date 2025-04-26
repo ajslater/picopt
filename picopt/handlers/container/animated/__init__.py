@@ -67,25 +67,26 @@ class ImageAnimated(PrepareInfoMixin, PackingContainerHandler, ABC):
                 is_case_sensitive=self.path_info.is_case_sensitive,
             )
 
-    def walk(self) -> Generator[tuple[PathInfo, bool]]:
-        """Unpack animated image frames with PIL."""
-        if self.config.verbose:
-            cprint(f"Unpacking {self.original_path}...", end="")
-
-        frame_index = 1
-        frame_info = {}
-        with Image.open(self.original_path) as image:
-            for frame in ImageSequence.Iterator(image):
-                frame_path_info = self._unpack_frame(frame, frame_index, frame_info)
-                yield frame_path_info, False
-                frame_index += 1
-        # Animated images need a double close because of some PIL bug.
-        image.close()
+    def _save_frame_info(self, frame_info: dict):
         for key in tuple(frame_info):
             value = frame_info[key]
             if value is not None:
                 frame_info[key] = tuple(value)
         self.frame_info = frame_info
+
+    def walk(self) -> Generator[PathInfo]:
+        """Unpack animated image frames with PIL."""
+        if self.config.verbose:
+            cprint(f"Unpacking {self.original_path}...", end="")
+
+        frame_info = {}
+        with Image.open(self.original_path) as image:
+            for index, frame in enumerate(ImageSequence.Iterator(image), start=1):
+                frame_path_info = self._unpack_frame(frame, index, frame_info)
+                yield frame_path_info
+        # Animated images need a double close because of some PIL bug.
+        image.close()
+        self._save_frame_info(frame_info)
 
         if self.config.verbose:
             cprint("done")
@@ -93,11 +94,12 @@ class ImageAnimated(PrepareInfoMixin, PackingContainerHandler, ABC):
     def pack_into(self) -> BytesIO:
         """Remux the optimized frames into an animated webp."""
         sorted_frames = sorted(
-            self.optimized_contents,
+            self._optimized_contents,
             key=lambda p: 0 if p.frame is None else p.frame,
         )
         # clear optimized contents
-        self.optimized_contents = []
+        self.optimized_contents = set()
+
         head_image_data = sorted_frames.pop().data()
 
         # Collect frames as images.

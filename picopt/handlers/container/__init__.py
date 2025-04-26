@@ -23,7 +23,7 @@ class ContainerHandler(Handler, ABC):
         """Return the format if this handler can handle this path."""
 
     @abstractmethod
-    def walk(self) -> Generator[tuple[PathInfo, bool]]:
+    def walk(self) -> Generator[PathInfo]:
         """Walk the container."""
 
     def __init__(self, *args, repack_handler_class: Handler | None = None, **kwargs):
@@ -31,38 +31,33 @@ class ContainerHandler(Handler, ABC):
         super().__init__(*args, **kwargs)
         self.comment: bytes | None = None
         self._tasks: dict[PathInfo, ApplyResult] = {}
-        self.optimized_contents: list[PathInfo] = []
+        self._optimized_contents: set[PathInfo] = set()
         self.repack_handler_class = repack_handler_class
-        # Potentially build ever longer paths with container nesting.
-        self._container_path_history = (
-            *self.path_info.container_parents,
-            str(self.original_path),
-        )
 
     def set_task(self, path_info: PathInfo, mp_result: ApplyResult | None) -> None:
         """Store the mutiprocessing task."""
         if mp_result is None:
             # if not handled by picopt, place it in the results.
-            self.optimized_contents.append(path_info)
+            self._optimized_contents.add(path_info)
         else:
             self._tasks[path_info] = mp_result
 
-    def get_tasks(self) -> dict[PathInfo, ApplyResult]:
-        """Return tasks."""
-        return self._tasks
-
-    def _mark_delete(self) -> None:
-        """NoOp for containers."""
+    def _hydrate_optimized_path_info(self, path_info: PathInfo, report: ReportStats):
+        """Replace path_info data."""
+        if report.data:
+            path_info.set_data(report.data)
 
     def optimize_contents(self) -> None:
         """Store results from mutiprocessing task."""
         for path_info in tuple(self._tasks):
             mp_results = self._tasks.pop(path_info)
             report = mp_results.get()
-            if report.data:
-                path_info.set_data(report.data)
-            self.optimized_contents.append(path_info)
-            self._mark_delete()
+            self._hydrate_optimized_path_info(path_info, report)
+            self._optimized_contents.add(path_info)
+
+    def get_optimized_contents(self) -> set[PathInfo]:
+        """Return optimized contents."""
+        return self._optimized_contents
 
     def optimize(self) -> BinaryIO:
         """NoOp for non packing containers."""
@@ -80,7 +75,7 @@ class PackingContainerHandler(ContainerHandler, ABC):
         self,
         *args,
         comment: bytes | None = None,
-        optimized_contents: list[PathInfo] | None = None,
+        optimized_contents: set[PathInfo] | None = None,
         **kwargs,
     ):
         """Iinitialize optimized contents."""
@@ -88,7 +83,7 @@ class PackingContainerHandler(ContainerHandler, ABC):
         if comment:
             self.comment = comment
         if optimized_contents:
-            self.optimized_contents = optimized_contents
+            self._optimized_contents = optimized_contents
 
     def optimize(self) -> BinaryIO:
         """Run pack_into."""

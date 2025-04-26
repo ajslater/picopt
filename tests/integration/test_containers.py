@@ -16,17 +16,18 @@ SRC_CBZ = CONTAINER_DIR / "test_cbz.cbz"
 FNS = MappingProxyType(
     {
         # filename       orig   no-convert     convert
+        "test_delete_stored.zip": (231327, 230890, ("zip", 230890)),
         "test_cbz.cbz": (93408, 84544, ("cbz", 84544)),
         "test_cbr.cbr": (93725, 93725, ("cbz", 88035)),
         "test_rar.rar": (93675, 93675, ("zip", 88035)),
         "test_zip.zip": (7783, 7015, ("zip", 7015)),
         "igp-twss.epub": (292448, 285999, ("epub", 285999)),
-        "test_7z.7z": (7613, 6833, ("zip", 6996)),
-        "test_cb7.cb7": (7613, 6833, ("cbz", 6996)),
+        "test_7z.7z": (7613, 6835, ("zip", 6996)),
+        "test_cb7.cb7": (7613, 6840, ("cbz", 6996)),
         "test_tar.tar": (11264, 10240, ("zip", 6996)),
-        "test_tgz.tar.gz": (7620, 6879, ("zip", 6996)),
+        "test_tgz.tar.gz": (7620, 6880, ("zip", 6996)),
         "test_tbz.tar.bz2": (8071, 7373, ("zip", 6996)),
-        "test_txz.tar.xz": (7612, 6908, ("zip", 6996)),
+        "test_txz.tar.xz": (7612, 6900, ("zip", 6996)),
         "test_cbt.cbt": (7612, 7612, ("cbz", 6996)),
     }
 )
@@ -36,7 +37,7 @@ BMP_FN = "OPS/test_bmp.bmp"
 NOOP_ARGS = (PROGRAM_NAME, str(TMP_ROOT))
 ARGS = (
     PROGRAM_NAME,
-    "-vvx",
+    "-vvtx",
     "GIF,ZIP,CBZ,EPUB,RAR,CBR,7Z,CB7,TAR,TGZ,TBZ,TXZ,CBT",
 )
 NO_CONVERT_ARGS = (
@@ -72,7 +73,6 @@ class TestContainersDir(BaseTest):
         sizes = FNS[fn]
         assert path.stat().st_size == sizes[0]
 
-    # @pytest.mark.parametrize("fn", FNS)
     def test_containers_no_convert(self, fn: str) -> None:
         """Test containers no convert."""
         path = TMP_ROOT / fn
@@ -90,7 +90,6 @@ class TestContainersDir(BaseTest):
         else:
             assert path_size == size
 
-    # @pytest.mark.parametrize("fn", FNS)
     def test_containers_convert_to_zip(self, fn: str) -> None:
         """Test containers convert to zip."""
         sizes = FNS[fn]
