@@ -240,6 +240,8 @@ class Handler(ABC):
                 and isinstance(final_data_buffer, BufferedReader)
             ):
                 self.working_path.unlink(missing_ok=True)
+            if self.original_path != self.final_path:
+                self.path_info.rename(self.final_path)
             return ReportStats(
                 self.final_path,
                 path_info=self.path_info,

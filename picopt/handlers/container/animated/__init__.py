@@ -62,6 +62,7 @@ class ImageAnimated(PrepareInfoMixin, PackingContainerHandler, ABC):
                 path_info=self.path_info,
                 frame=frame_index,
                 data=frame_buffer.read(),
+                container_parents=self.path_info.container_path_history(),
             )
 
     def _save_frame_info(self, frame_info: dict):

@@ -75,6 +75,7 @@ class ArchiveHandler(NonPILIdentifier, ContainerHandler, ABC):
             archiveinfo=archiveinfo,
             data=data,
             convert=self._convert,
+            container_parents=self.path_info.container_path_history(),
         )
 
     def _is_archive_path_skip(self, path_info: PathInfo):

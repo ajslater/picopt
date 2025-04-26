@@ -24,7 +24,7 @@ def png_bit_depth(buffer: BinaryIO) -> int | None:
         depth = buffer.read(1)
         result = int.from_bytes(depth, byteorder="little")
     else:
-        cprint("WARNING: cannot find bit depts of non png.", "yellow")
+        cprint("\nWARNING: cannot find bit depts of non png.", "yellow")
         result = None
     return result
 

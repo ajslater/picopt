@@ -69,7 +69,7 @@ class ReportStats(ReportStatBase):
 
     def _report_error(self) -> str:
         """Return the error report string."""
-        report = f"\nERROR: {self._full_name}\n"
+        report = f"ERROR: {self._full_name}\n"
         if isinstance(self.exc, CalledProcessError):
             report += f"\n{self._TAB}retcode: {self.exc.returncode}"
             if self.exc.cmd:
@@ -97,6 +97,7 @@ class ReportStats(ReportStatBase):
                 color = "blue"
                 attrs = ["bold"]
 
+        report = "\n" + report
         cprint(report, color, attrs=attrs)
 
 

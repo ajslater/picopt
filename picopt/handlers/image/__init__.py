@@ -38,7 +38,7 @@ class ImageHandler(PrepareInfoMixin, Handler, ABC):
         stages = self.config.computed.handler_stages.get(self.__class__, {})
         if not stages:
             cprint(
-                f"Tried to execute handler {self.__class__.__name__} with no available stages.",
+                f"\nTried to execute handler {self.__class__.__name__} with no available stages.",
                 "yellow",
             )
             raise ValueError

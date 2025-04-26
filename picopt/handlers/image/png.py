@@ -73,7 +73,7 @@ class Png(PngBase):
         depth = png_bit_depth(input_buffer)
         if not depth or depth > self._PNGOUT_DEPTH_MAX or depth < 1:
             cprint(
-                f"Skipped pngout for {depth} bit PNG: {self.original_path}",
+                f"\nSkipped pngout for {depth} bit PNG: {self.original_path}",
                 "white",
                 attrs=["dark"],
             )
