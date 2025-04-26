@@ -83,19 +83,13 @@ class Walk(WalkInit):
             timestamps = self._timestamps[dir_path_info.top_path]
             timestamps.set(dir_path, compact=True)
 
-    def _walk_container_file(
-        self, unpack_handler: ContainerHandler, path_info: PathInfo
-    ):
-        """Walk one archive path."""
-        container_result = None
-        if handler := self._walk_file_get_handler(path_info):
-            container_result = self._handle_file(handler)
-        unpack_handler.set_task(path_info, container_result)
-
     def _walk_container(self, unpack_handler: ContainerHandler):
         """Walk the container."""
         for path_info in unpack_handler.walk():
-            self._walk_container_file(unpack_handler, path_info)
+            container_result = None
+            if handler := self._create_handler(path_info):
+                container_result = self._handle_file(handler)
+            unpack_handler.set_task(path_info, container_result)
 
     def _handle_container(self, handler: ContainerHandler) -> ApplyResult | None:
         """Optimize a container."""
