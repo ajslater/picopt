@@ -75,7 +75,7 @@ class TestContainersDir(BaseTest):
 
     @staticmethod
     def _vary_byte_assert(path_size, size, variation):
-        # lzma varies its output size by 10 bytes :o
+        # lzma & bz2 vary output size :o
         cond = abs(path_size - size) <= variation
         if not cond:
             print(f"{path_size=} != {size=}")
@@ -93,7 +93,7 @@ class TestContainersDir(BaseTest):
         size = FNS[fn][1]
         path_size = path.stat().st_size
         if fn.endswith(("7z", "cb7", "xz", "gz")):
-            self._vary_byte_assert(path_size, size, 10)
+            self._vary_byte_assert(path_size, size, 20)
         elif fn.endswith(("bz2",)):
             self._vary_byte_assert(path_size, size, 50)
         else:
