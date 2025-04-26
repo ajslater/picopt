@@ -13,10 +13,10 @@
 - Performance
   - Archives skipped without unpacking contents if all contents are skippable.
   - Zip archives rewritten in place on disk if possible.
-  - animated pngs better optimized with oxipng
+  - Animated pngs better optimized with oxipng
   - Faster scanning for legacy timestamps on startup.
 - Dev
-  - updated treestamps
+  - Updated treestamps
   - uv build system
 
 ## v4.0.4
