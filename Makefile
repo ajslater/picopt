@@ -92,6 +92,18 @@ lint: lint-backend
 lint-backend:
 	./bin/lint-backend.sh
 
+.PHONY: uml
+## Create a UML class diagram
+## #category Lint
+uml:
+	bin/uml.sh
+
+.PHONY: cycle
+## Detect Circular imports
+## @category Lint
+cycle:
+	uvx pycycle --ignore node_modules,.venv --verbose --here
+
 ## Test
 ## @category Test
 T :=
@@ -103,7 +115,7 @@ test:
 
 .PHONY: dev-server
 ## Run the dev webserver
-## @category Run
+## @category Test
 dev-server:
 	./bin/dev-server.sh
 
