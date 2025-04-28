@@ -181,17 +181,18 @@ class PackingArchiveHandler(ArchiveHandler, PackingContainerHandler, ABC):
     def _pack_info_one_file(self, archive, path_info):
         raise NotImplementedError
 
+    def _archive_write(self, archive):
+        while self._optimized_contents:
+            path_info = self._optimized_contents.pop()
+            self._pack_info_one_file(archive, path_info)
+            self._messenger.packed_message()
+        if self.comment:
+            archive.comment = self.comment
+            self._messenger.packed_message()
+
     def pack_into(self) -> BytesIO:
         """Zip up the files in the tempdir into the new filename."""
         output_buffer = BytesIO()
-        if self._optimize_in_place_on_disk:
-            self._bytes_in = self.path_info.bytes_in()
         with self._archive_for_write(output_buffer) as archive:
-            while self._optimized_contents:
-                path_info = self._optimized_contents.pop()
-                self._pack_info_one_file(archive, path_info)
-                self._messenger.packed_message()
-            if self.comment:
-                archive.comment = self.comment
-                self._messenger.packed_message()
+            self._archive_write(archive)
         return output_buffer

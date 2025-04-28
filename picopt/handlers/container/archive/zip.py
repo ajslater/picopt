@@ -44,23 +44,21 @@ class Zip(PackingArchiveHandler):
             self.comment = archive.comment
 
     def _archive_for_write(self, output_buffer: BytesIO) -> ZipFileWithRemove:
-        file = self.original_path if self._optimize_in_place_on_disk else output_buffer
-        return ZipFileWithRemove(file, "a", compression=ZIP_DEFLATED, compresslevel=9)
+        if self._optimize_in_place_on_disk:
+            file = self.original_path
+            mode = "a"
+        else:
+            file = output_buffer
+            mode = "x"
+        return ZipFileWithRemove(file, mode, compression=ZIP_DEFLATED, compresslevel=9)
 
-    def _delete_files_before_write(self):
+    def _delete_files_before_write(self, archive):
         """Delete files in the archive on disk before appending new files.."""
-        if not self._optimize_in_place_on_disk:
-            return
         for path_info in self._optimized_contents:
             self._delete_filenames.add(path_info.name())
-        if not self._delete_filenames:
-            return
-        with ZipFileWithRemove(
-            self.original_path, "a", compression=ZIP_DEFLATED, compresslevel=9
-        ) as archive:
-            while len(self._delete_filenames):
-                filename = self._delete_filenames.pop()
-                archive.remove(filename)
+        while len(self._delete_filenames):
+            filename = self._delete_filenames.pop()
+            archive.remove(filename)
 
     def _pack_info_one_file(self, archive, path_info):
         """Add one file to the new archive."""
@@ -77,9 +75,15 @@ class Zip(PackingArchiveHandler):
         data = path_info.data()
         archive.writestr(zipinfo, data)
 
+    def _archive_write(self, archive):
+        if self._optimize_in_place_on_disk:
+            self._delete_files_before_write(archive)
+        super()._archive_write(archive)
+
     def pack_into(self) -> BytesIO:
         """Do in place deletes on disk before writing if we can."""
-        self._delete_files_before_write()
+        if self._optimize_in_place_on_disk:
+            self._bytes_in = self.path_info.bytes_in()
         return super().pack_into()
 
 
