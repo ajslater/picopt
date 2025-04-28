@@ -111,10 +111,6 @@ class Handler(ABC):
         self.input_file_format = input_file_format
         self._input_file_formats = self.INPUT_FILE_FORMATS
 
-        # For writing archives in place on the disk
-        self._bytes_in = 0
-        self._optimize_in_place_on_disk = False
-
     def run_ext_fs(  # noqa: PLR0913
         self,
         args: tuple[str | None, ...],
@@ -151,6 +147,39 @@ class Handler(ABC):
             output_buffer = output_path.open("rb")
         return output_buffer
 
+    def _cleanup_filesystem_write_final_path(self, final_data_buffer: BinaryIO) -> None:
+        if isinstance(final_data_buffer, BytesIO):
+            with self.final_path.open("wb") as final_file:
+                final_data_buffer.seek(0)
+                final_file.write(final_data_buffer.read())
+        else:
+            self.working_path.replace(self.final_path)
+
+    def _cleanup_filesystem_cleanup_original_path(self):
+        """Remove original path if the file has a new name."""
+        compare_final_str = str(self.final_path)
+        compare_original_str = str(self.original_path)
+        if not self.path_info.is_case_sensitive:
+            # Be careful of case sensitive fs.
+            compare_final_str = compare_final_str.lower()
+            compare_original_str = compare_original_str.lower()
+        if compare_final_str != compare_original_str:
+            self.original_path.unlink(missing_ok=True)
+
+    def _cleanup_filesystem_preserve_stats(self):
+        if not self.config.preserve:
+            return
+        stat = self.path_info.stat()
+        if not stat or stat is True:
+            return
+
+        os.chown(self.final_path, stat.st_uid, stat.st_gid)
+        self.final_path.chmod(stat.st_mode)
+        os.utime(
+            self.final_path,
+            ns=(stat.st_atime_ns, stat.st_mtime_ns),
+        )
+
     def _cleanup_filesystem(self, final_data_buffer: BinaryIO) -> None:
         """Write file to filesystem and clean up."""
         if not self.final_path:
@@ -158,39 +187,11 @@ class Handler(ABC):
             raise ValueError(reason)
 
         with final_data_buffer:
-            if not self._optimize_in_place_on_disk:
-                if isinstance(final_data_buffer, BytesIO):
-                    with self.final_path.open("wb") as final_file:
-                        final_data_buffer.seek(0)
-                        final_file.write(final_data_buffer.read())
-                else:
-                    self.working_path.replace(self.final_path)
+            # if this method is a noop, still closes buffer.
+            self._cleanup_filesystem_write_final_path(final_data_buffer)
 
-        ###########
-        # CLEANUP #
-        ###########
-        # Remove original path if the file has
-        # a new name. But be careful of case sensitive fs.
-        compare_final_str = str(self.final_path)
-        compare_original_str = str(self.original_path)
-        if not self.path_info.is_case_sensitive:
-            compare_final_str = compare_final_str.lower()
-            compare_original_str = compare_original_str.lower()
-        if compare_final_str != compare_original_str:
-            self.original_path.unlink(missing_ok=True)
-
-        ###############################
-        # RESTORE STATS TO FINAL PATH #
-        ###############################
-        if self.config.preserve:
-            stat = self.path_info.stat()
-            if stat and stat is not True:
-                os.chown(self.final_path, stat.st_uid, stat.st_gid)
-                self.final_path.chmod(stat.st_mode)
-                os.utime(
-                    self.final_path,
-                    ns=(stat.st_atime_ns, stat.st_mtime_ns),
-                )
+        self._cleanup_filesystem_cleanup_original_path()
+        self._cleanup_filesystem_preserve_stats()
 
     def get_buffer_len(self, buffer: BinaryIO) -> int:
         """Return buffer size."""
@@ -218,15 +219,19 @@ class Handler(ABC):
             self._cleanup_filesystem(final_data_buffer)
         return return_data
 
+    def _cleanup_after_optimize_calculate_bytes(
+        self, final_data_buffer: BinaryIO
+    ) -> tuple[int, int]:
+        bytes_in = self.path_info.bytes_in()
+        bytes_out = self.get_buffer_len(final_data_buffer)
+        return bytes_in, bytes_out
+
     def _cleanup_after_optimize(self, final_data_buffer: BinaryIO) -> ReportStats:
         """Replace old file with better one or discard new wasteful file."""
         try:
-            if self._optimize_in_place_on_disk:
-                bytes_in = self._bytes_in
-                bytes_out = self.final_path.stat().st_size
-            else:
-                bytes_in = self.path_info.bytes_in()
-                bytes_out = self.get_buffer_len(final_data_buffer)
+            bytes_in, bytes_out = self._cleanup_after_optimize_calculate_bytes(
+                final_data_buffer
+            )
             if not self.config.dry_run and (
                 (bytes_out > 0) and ((bytes_out < bytes_in) or self.config.bigger)
             ):

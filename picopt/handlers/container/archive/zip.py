@@ -2,6 +2,7 @@
 
 from io import BytesIO
 from pathlib import Path
+from typing import BinaryIO
 from zipfile import ZIP_DEFLATED, ZIP_STORED, is_zipfile
 
 from termcolor import cprint
@@ -27,6 +28,7 @@ class Zip(PackingArchiveHandler):
         super().__init__(*args, **kwargs)
         self._optimize_in_place_on_disk = not convert and not self.path_info.archiveinfo
         self._delete_filenames = set()
+        self._bytes_in = 0
 
     @classmethod
     def _is_archive(cls, path: Path | BytesIO) -> bool:
@@ -91,6 +93,18 @@ class Zip(PackingArchiveHandler):
         if self._optimize_in_place_on_disk:
             self._bytes_in = self.path_info.bytes_in()
         return super().pack_into()
+
+    def _cleanup_after_optimize_calculate_bytes(
+        self, final_data_buffer: BinaryIO
+    ) -> tuple[int, int]:
+        if self._optimize_in_place_on_disk:
+            bytes_in = self._bytes_in
+            bytes_out = self.final_path.stat().st_size
+        else:
+            bytes_in, bytes_out = super()._cleanup_after_optimize_calculate_bytes(
+                final_data_buffer
+            )
+        return bytes_in, bytes_out
 
 
 class Cbz(Zip):
