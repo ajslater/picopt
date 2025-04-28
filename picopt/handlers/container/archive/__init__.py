@@ -33,8 +33,7 @@ class ArchiveHandler(NonPILIdentifier, ContainerHandler, ABC):
         """Init Archive Treestamps."""
         super().__init__(*args, **kwargs)
         self._skip_path_infos = set()
-        self._delete_filenames = set()
-        self._convert = self.CONVERT_CHILDREN and self.path_info.convert
+        self._convert_children = self.CONVERT_CHILDREN and self.path_info.convert
 
     @classmethod
     @abstractmethod
@@ -74,7 +73,7 @@ class ArchiveHandler(NonPILIdentifier, ContainerHandler, ABC):
             path_info=self.path_info,
             archiveinfo=archiveinfo,
             data=data,
-            convert=self._convert,
+            convert=self._convert_children,
             container_parents=self.path_info.container_path_history(),
         )
 
@@ -95,8 +94,6 @@ class ArchiveHandler(NonPILIdentifier, ContainerHandler, ABC):
 
     def _mark_delete(self, filename: str | Path) -> None:
         """NoOp for most archives."""
-        self._delete_filenames.add(str(filename))
-        self._do_repack = True
 
     def _consume_archive_timestamps(self, archive) -> tuple:
         infolist = self._archive_infolist(archive)

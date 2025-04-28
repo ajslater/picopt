@@ -26,6 +26,7 @@ class Zip(PackingArchiveHandler):
         """Init delete_filenames."""
         super().__init__(*args, **kwargs)
         self._optimize_in_place_on_disk = not convert and not self.path_info.archiveinfo
+        self._delete_filenames = set()
 
     @classmethod
     def _is_archive(cls, path: Path | BytesIO) -> bool:
@@ -42,6 +43,11 @@ class Zip(PackingArchiveHandler):
         """Set the comment from the archive."""
         if archive.comment:
             self.comment = archive.comment
+
+    def _mark_delete(self, filename: str | Path) -> None:
+        """Mark delete for optimize_in_place_on_disk."""
+        self._delete_filenames.add(str(filename))
+        self._do_repack = True
 
     def _archive_for_write(self, output_buffer: BytesIO) -> ZipFileWithRemove:
         if self._optimize_in_place_on_disk:
