@@ -28,18 +28,14 @@ class Printer:
         attrs = attrs if attrs else []
         cprint(reason, color, attrs=attrs, end=end)
 
+    def skip_message(self, message):
+        """Skip Message."""
+        self.message(message, attrs=["dark"])
+
     def skip_container(self, container_type: str, path: str):
         """Skip entire container."""
-        color = "white"
-        attrs = ["dark"]
         reason = f"{container_type} contents all skipped: {path}"
-        self.message(reason, color, attrs)
-
-    def handled_message(self):
-        """Dot for handled file."""
-        if self._verbose:
-            cprint(".", end="")
-            self._last_verbose_message = False
+        self.skip_message(reason)
 
     def no_handler(self):
         """Dot for no handler."""
@@ -47,22 +43,11 @@ class Printer:
             cprint(".", attrs=["dark"], end="")
             self._last_verbose_message = False
 
-    def copied_message(self):
-        """Dot for copied file."""
-        if self._verbose:
-            cprint(".", attrs=["dark"], end="")
-            self._last_verbose_message = False
-
-    def packed_message(self):
-        """Dot for repacked file."""
+    def handled_message(self):
+        """Dot for handled file."""
         if self._verbose:
             cprint(".", end="")
             self._last_verbose_message = False
-
-    def optimize_container(self, path: str):
-        """Declare that we're optiming contents."""
-        if self._verbose == 1:
-            cprint(f"Optimizing contents in {path}:")
 
     def start_operation(self, operation: str, path: str):
         """Scan archive start."""
@@ -71,12 +56,6 @@ class Printer:
     def scan_archive(self, path: str):
         """Scan archive start."""
         self.start_operation("Scanning archive", path)
-
-    def done(self):
-        """Operation done."""
-        if self._verbose:
-            cprint("done.")
-            self._last_verbose_message = True
 
     def container_unpacking(self, path: str):
         """Start Unpacking Operation."""
@@ -87,6 +66,29 @@ class Printer:
         """Start Repacking Operation."""
         if self._verbose:
             self.start_operation("Repacking", path)
+
+    def copied_message(self):
+        """Dot for copied file."""
+        if self._verbose:
+            cprint(".", attrs=["dark"], end="")
+            self._last_verbose_message = False
+
+    def optimize_container(self, path: str):
+        """Declare that we're optiming contents."""
+        if self._verbose == 1:
+            cprint(f"Optimizing contents in {path}:")
+
+    def packed_message(self):
+        """Dot for repacked file."""
+        if self._verbose:
+            cprint(".", end="")
+            self._last_verbose_message = False
+
+    def done(self):
+        """Operation done."""
+        if self._verbose:
+            cprint("done.")
+            self._last_verbose_message = True
 
     def warn(self, message: str, exc: Exception | None = None):
         """Warning."""

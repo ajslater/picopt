@@ -41,8 +41,7 @@ class WalkSkipper:
     def _is_skippable(self, path_info: PathInfo) -> bool:
         """Handle things that are not optimizable files."""
         reason = ""
-        color = "white"
-        attrs: list = ["dark"]
+        warn = False
 
         path = path_info.path
 
@@ -60,12 +59,14 @@ class WalkSkipper:
             reason = f"Skip ignored {path_info.full_output_name()}"
         elif not self._in_archive and path and not path.exists():
             # Check disk last for performance
-            reason = f"WARNING: {path_info.full_output_name()} not found."
-            color = "yellow"
-            attrs = []
+            reason = f"{path_info.full_output_name()} not found."
+            warn = True
 
         if reason:
-            self._printer.message(reason, color, attrs)
+            if warn:
+                self._printer.warn(reason)
+            else:
+                self._printer.skip_message(reason)
 
         return bool(reason)
 
