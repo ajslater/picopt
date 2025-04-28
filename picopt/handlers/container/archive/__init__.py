@@ -16,7 +16,7 @@ from picopt.formats import FileFormat
 from picopt.handlers.container import ContainerHandler, PackingContainerHandler
 from picopt.handlers.non_pil import NonPILIdentifier
 from picopt.path import PathInfo
-from picopt.stats import ReportStats
+from picopt.report import ReportStats
 
 
 class ArchiveHandler(NonPILIdentifier, ContainerHandler, ABC):

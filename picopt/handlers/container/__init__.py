@@ -11,7 +11,7 @@ from treestamps import Grovestamps
 from picopt.formats import FileFormat
 from picopt.handlers.handler import Handler
 from picopt.path import PathInfo
-from picopt.stats import ReportStats
+from picopt.report import ReportStats
 from picopt.walk.skip import WalkSkipper
 
 

@@ -7,7 +7,7 @@ from pathlib import Path
 from typing import BinaryIO
 
 from picopt.handlers.handler.cleanup import HandlerCleanup
-from picopt.stats import ReportStats
+from picopt.report import ReportStats
 
 WORKING_PATH_TRANS_TABLE = str.maketrans(dict.fromkeys(" /", "_"))
 INTERNAL: str = "internal"

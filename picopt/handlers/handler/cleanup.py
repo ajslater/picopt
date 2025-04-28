@@ -5,7 +5,7 @@ from io import BufferedReader, BytesIO
 from typing import BinaryIO
 
 from picopt.handlers.handler.init import HandlerInit
-from picopt.stats import ReportStats
+from picopt.report import ReportStats
 
 
 class HandlerCleanup(HandlerInit):

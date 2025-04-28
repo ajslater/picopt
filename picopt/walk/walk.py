@@ -11,7 +11,7 @@ from picopt.handlers.container import ContainerHandler
 from picopt.handlers.handler import Handler
 from picopt.handlers.image import ImageHandler
 from picopt.path import PathInfo
-from picopt.stats import ReportStats, Totals
+from picopt.report import ReportStats, Totals
 from picopt.walk.handler_factory import HandlerFactory
 
 
