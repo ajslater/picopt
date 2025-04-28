@@ -61,7 +61,7 @@ class Zip(PackingArchiveHandler):
     def _delete_files_before_write(self, archive):
         """Delete files in the archive on disk before appending new files.."""
         for path_info in self._optimized_contents:
-            self._delete_filenames.add(path_info.name())
+            self._delete_filenames.add(path_info.original_name)
         while len(self._delete_filenames):
             filename = self._delete_filenames.pop()
             archive.remove(filename)
