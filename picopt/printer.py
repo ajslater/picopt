@@ -3,7 +3,7 @@
 from termcolor import cprint
 
 
-class Messenger:
+class Printer:
     """Printing messages during walk and handling."""
 
     def __init__(self, verbose: int):

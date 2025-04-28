@@ -11,7 +11,7 @@ from picopt import PROGRAM_NAME
 from picopt.handlers.handler import Handler
 from picopt.old_timestamps import OLD_TIMESTAMPS_NAME
 from picopt.path import PathInfo, is_path_ignored
-from picopt.printer import Messenger
+from picopt.printer import Printer
 
 
 class WalkSkipper:
@@ -32,7 +32,7 @@ class WalkSkipper:
         self._config = config
         self._timestamps = timestamps if timestamps else {}
         self._in_archive = in_archive
-        self._messenger = Messenger(self._config.verbose)
+        self._printer = Printer(self._config.verbose)
 
     def set_timestamps(self, timestamps: Grovestamps):
         """Reset the timestamps after they've been established."""
@@ -65,7 +65,7 @@ class WalkSkipper:
             attrs = []
 
         if reason:
-            self._messenger.message(reason, color, attrs)
+            self._printer.message(reason, color, attrs)
 
         return bool(reason)
 
@@ -77,7 +77,7 @@ class WalkSkipper:
             else:
                 path.unlink(missing_ok=True)
             reason = f"Deleted {path}"
-            self._messenger.message(reason, "yellow")
+            self._printer.message(reason, "yellow")
         except Exception as exc:
             cprint("\n" + str(exc), "red")
             self._last_verbose_message = True
@@ -100,7 +100,7 @@ class WalkSkipper:
         """Report on skipping files older than the timestamp."""
         reason = f"Skip older than timestamp: {path_info.full_output_name()}"
         color = "green"
-        self._messenger.message(reason, color)
+        self._printer.message(reason, color)
 
     def _get_walk_after(self, path_info: PathInfo):
         if self._config.after is not None:

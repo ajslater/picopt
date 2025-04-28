@@ -71,7 +71,7 @@ class Png(PngBase):
         """Run the external program pngout on the file."""
         depth = png_bit_depth(input_buffer)
         if not depth or depth > self._PNGOUT_DEPTH_MAX or depth < 1:
-            self._messenger.message(
+            self._printer.message(
                 f"Skipped pngout for {depth} bit PNG: {self.path_info.full_output_name()}",
                 attrs=["dark"],
             )

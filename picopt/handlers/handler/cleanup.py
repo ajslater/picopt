@@ -120,7 +120,7 @@ class HandlerCleanup(HandlerInit):
                 data=return_data,
             )
         except Exception as exc:
-            self._messenger.error(
+            self._printer.error(
                 f"cleanup_after_optimize: {self.path_info.full_output_name()}", exc
             )
             raise

@@ -9,6 +9,7 @@ from humanize import naturalsize
 from termcolor import cprint
 
 from picopt.path import PathInfo
+from picopt.printer import Printer
 
 
 @dataclass
@@ -69,7 +70,7 @@ class ReportStats(ReportStatBase):
 
     def _report_error(self) -> str:
         """Return the error report string."""
-        report = f"ERROR: {self._full_name}\n"
+        report = f"{self._full_name}\n"
         if isinstance(self.exc, CalledProcessError):
             report += f"\n{self._TAB}retcode: {self.exc.returncode}"
             if self.exc.cmd:
@@ -83,12 +84,12 @@ class ReportStats(ReportStatBase):
             report += f"\n{self._TAB}{self.exc!s}"
         return report
 
-    def report(self) -> None:
+    def report(self, printer: Printer) -> None:
         """Record the percent saved & print it."""
         attrs = []
         if self.exc:
             report = self._report_error()
-            color = "red"
+            printer.error(report, self.exc)
         else:
             report = self._report_saved()
             color = "cyan" if self.convert else "white"
@@ -96,9 +97,7 @@ class ReportStats(ReportStatBase):
             if self.saved <= 0:
                 color = "blue"
                 attrs = ["bold"]
-
-        report = "\n" + report
-        cprint(report, color, attrs=attrs)
+            printer.message(report, color, attrs=attrs)
 
 
 class Totals:
@@ -111,9 +110,6 @@ class Totals:
         self.errors: list[ReportStats] = []
         self._config: AttrDict = config
 
-    ##########
-    # Finish #
-    ##########
     def _report_bytes_in(self) -> None:
         """Report Totals if there were bytes in."""
         if not self._config.verbose and not self._config.dry_run:
@@ -140,7 +136,7 @@ class Totals:
         if self._config.dry_run:
             cprint("Dry run did not change any files.")
 
-    def report(self) -> None:
+    def report(self, printer: Printer) -> None:
         """Report the total number and percent of bytes saved."""
         if self._config.verbose == 1:
             cprint("")
@@ -152,4 +148,4 @@ class Totals:
         if self.errors:
             cprint("Errors with the following files:", "red")
             for rs in self.errors:
-                rs.report()
+                rs.report(printer)

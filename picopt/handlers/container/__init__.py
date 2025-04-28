@@ -28,13 +28,11 @@ class ContainerHandler(Handler, ABC):
     def _walk_finish(self) -> None:
         if not self.config.verbose:
             return
-        self._messenger.done()
+        self._printer.done()
         if self._do_repack and self._skipper:
-            self._messenger.optimize_container(str(self.path_info.path))
+            self._printer.optimize_container(str(self.path_info.path))
         else:
-            self._messenger.skip_container(
-                self.CONTAINER_TYPE, str(self.path_info.path)
-            )
+            self._printer.skip_container(self.CONTAINER_TYPE, str(self.path_info.path))
 
     @abstractmethod
     def walk(self) -> Generator[PathInfo]:
@@ -66,11 +64,11 @@ class ContainerHandler(Handler, ABC):
         if mp_result is None:
             # if not handled by picopt, place it in the results.
             self._optimized_contents.add(path_info)
-            self._messenger.copied_message()
+            self._printer.copied_message()
         else:
             self._tasks[path_info] = mp_result
             self._do_repack = True
-            self._messenger.handled_message()
+            self._printer.handled_message()
 
     def _hydrate_optimized_path_info(self, path_info: PathInfo, report: ReportStats):
         """Replace path_info data."""
@@ -120,9 +118,9 @@ class PackingContainerHandler(ContainerHandler, ABC):
 
     def optimize(self) -> BinaryIO:
         """Run pack_into."""
-        self._messenger.container_repacking(self.path_info.full_output_name())
+        self._printer.container_repacking(self.path_info.full_output_name())
         buffer = self.pack_into()
-        self._messenger.done()
+        self._printer.done()
         return buffer
 
     def repack(self) -> ReportStats:

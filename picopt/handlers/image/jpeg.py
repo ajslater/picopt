@@ -88,13 +88,13 @@ class Jpeg(ImageHandler):
         try:
             jpeg_data = self._mpo2jpeg_copy_exif(jpeg_data)
         except Exception as exc:
-            self._messenger.warn(
+            self._printer.warn(
                 f"could not copy EXIF data for {self.path_info.full_output_name()}", exc
             )
         try:
             jpeg_data = self._mpo2jpeg_copy_xmp(jpeg_data)
         except Exception as exc:
-            self._messenger.warn(
+            self._printer.warn(
                 f"could not copy XMP data for {self.path_info.full_output_name()}", exc
             )
 

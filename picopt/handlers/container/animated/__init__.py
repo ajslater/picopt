@@ -74,7 +74,7 @@ class ImageAnimated(PrepareInfoMixin, PackingContainerHandler, ABC):
 
     def walk(self) -> Generator[PathInfo]:
         """Unpack animated image frames with PIL."""
-        self._messenger.container_unpacking(self.path_info.full_output_name())
+        self._printer.container_unpacking(self.path_info.full_output_name())
         frame_info = {}
         with Image.open(self.original_path) as image:
             for index, frame in enumerate(ImageSequence.Iterator(image), start=1):
@@ -102,7 +102,7 @@ class ImageAnimated(PrepareInfoMixin, PackingContainerHandler, ABC):
             frame_data = sorted_frames.pop().data()
             frame = Image.open(BytesIO(frame_data))
             append_images.append(frame)
-            self._messenger.packed_message()
+            self._printer.packed_message()
 
         # Prepare info
         info = dict(self.prepare_info(self.OUTPUT_FORMAT_STR))

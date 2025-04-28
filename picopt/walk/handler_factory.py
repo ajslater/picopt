@@ -61,7 +61,7 @@ class HandlerFactory(DetectFormat):
                 )
             )
         except OSError as exc:
-            self._messenger.warn(
+            self._printer.warn(
                 f"getting repack container handler for {path_info.full_output_name()}",
                 exc,
             )
@@ -74,7 +74,7 @@ class HandlerFactory(DetectFormat):
             and not self._config.list_only
         ):
             fmt = str(file_format) if file_format else "unknown"
-            self._messenger.message(
+            self._printer.message(
                 f"Skipped {path_info.full_output_name()}: ({fmt}) is not an enabled image or container.",
                 attrs=["dark"],
             )
@@ -96,7 +96,7 @@ class HandlerFactory(DetectFormat):
                 convert=path_info.convert,
             )
         except OSError as exc:
-            self._messenger.warn(
+            self._printer.warn(
                 f"getting handler for {path_info.full_output_name()}", exc
             )
             from traceback import print_exc

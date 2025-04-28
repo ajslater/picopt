@@ -292,8 +292,7 @@ def main(args: tuple[str, ...] | None = None):
 
         config = get_config(arguments)
         walker = Walk(config)
-        totals = walker.walk()
-        totals.report()
+        walker.walk()
     except ConfigError as err:
         cprint(f"ERROR: {err}", "red")
         sys.exit(78)

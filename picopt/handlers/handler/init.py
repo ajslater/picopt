@@ -7,7 +7,7 @@ from confuse.templates import AttrDict
 from picopt import PROGRAM_NAME
 from picopt.formats import FileFormat
 from picopt.path import PathInfo
-from picopt.printer import Messenger
+from picopt.printer import Printer
 
 
 class HandlerInit:
@@ -32,7 +32,7 @@ class HandlerInit:
         """Initialize handler."""
         self.config: AttrDict = config
         self.path_info: PathInfo = path_info
-        self._messenger = Messenger(self.config.verbose)
+        self._printer = Printer(self.config.verbose)
 
         # Paths
         self.original_path: Path = (

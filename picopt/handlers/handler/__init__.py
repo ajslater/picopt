@@ -110,5 +110,5 @@ class Handler(ABC, HandlerCleanup):
             traceback.print_exc()
             report_stats = self.error(exc)
         if self.config.verbose:
-            report_stats.report()
+            report_stats.report(self._printer)
         return report_stats

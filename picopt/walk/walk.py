@@ -149,9 +149,9 @@ class Walk(HandlerFactory):
             result = None
             if handler := self._walk_file_get_handler(path_info):
                 result = self._handle_file(handler)
-                self._messenger.handled_message()
+                self._printer.handled_message()
             else:
-                self._messenger.no_handler()
+                self._printer.no_handler()
         except Exception as exc:
             traceback.print_exc()
             apply_kwargs = {
@@ -195,4 +195,5 @@ class Walk(HandlerFactory):
         if self._timestamps:
             self._timestamps.dumpf()
 
+        self._totals.report(self._printer)
         return self._totals
