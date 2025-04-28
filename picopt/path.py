@@ -125,6 +125,7 @@ class PathInfo:
         self._archive_psuedo_path: Path | None = None
         self._suffix: str | None = None
         self._container_path_history: tuple[str, ...] | None = None
+        self.original_name = self.name()
 
     def is_dir(self) -> bool:
         """Is the file a directory."""
