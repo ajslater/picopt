@@ -83,7 +83,8 @@ class ContainerHandler(Handler, ABC):
 
     def optimize(self) -> BinaryIO:
         """NoOp for non packing containers."""
-        return BytesIO()
+        reason = "Non packing container doesn't optimize."
+        raise NotImplementedError(reason)
 
 
 class PackingContainerHandler(ContainerHandler, ABC):
@@ -109,14 +110,13 @@ class PackingContainerHandler(ContainerHandler, ABC):
 
     def optimize(self) -> BinaryIO:
         """Run pack_into."""
-        return self.pack_into()
+        if self.config.verbose:
+            cprint(f"Repacking {self.final_path}...", end="")
+        buffer = self.pack_into()
+        if self.config.verbose:
+            cprint("done")
+        return buffer
 
     def repack(self) -> ReportStats:
         """Create a new container and clean up the tmp dir."""
-        if self.config.verbose:
-            cprint(f"Repacking {self.final_path}...", end="")
-
-        report_stats = self.optimize_wrapper()
-        if self.config.verbose:
-            cprint("done")
-        return report_stats
+        return self.optimize_wrapper()
