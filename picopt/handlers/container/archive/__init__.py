@@ -10,7 +10,6 @@ from zipfile import ZipFile, ZipInfo
 from py7zr import SevenZipFile
 from py7zr.py7zr import FileInfo as SevenZipInfo
 from rarfile import RarFile, RarInfo
-from termcolor import cprint
 
 from picopt.archiveinfo import ArchiveInfo
 from picopt.formats import FileFormat
@@ -28,6 +27,7 @@ class ArchiveHandler(NonPILIdentifier, ContainerHandler, ABC):
     INPUT_FILE_FORMATS = frozenset({INPUT_FILE_FORMAT})
     ARCHIVE_CLASS: type[ZipFile | TarFile | SevenZipFile | RarFile] = ZipFile
     CONVERT_CHILDREN: bool = True
+    CONTAINER_TYPE = "Archive"
 
     def __init__(self, *args, **kwargs):
         """Init Archive Treestamps."""
@@ -114,9 +114,7 @@ class ArchiveHandler(NonPILIdentifier, ContainerHandler, ABC):
             archive_sub_path = self.path_info.archive_psuedo_path() / path.parent
             self._timestamps.loads(archive_sub_path, yaml_str)
             if self._skipper:
-                self._messenger.skip_message(
-                    f"Consumed picopt timestamp in archive: {path}"
-                )
+                self._messenger.message(f"Consumed picopt timestamp in archive: {path}")
             self._mark_delete(path)
 
         return tuple(non_treestamp_entries)
@@ -134,8 +132,7 @@ class ArchiveHandler(NonPILIdentifier, ContainerHandler, ABC):
 
     def walk(self) -> Generator[PathInfo]:
         """Walk an archive's archiveinfos."""
-        if self.config.verbose:
-            cprint(f"\nScanning archive {self.path_info.full_output_name()}...", end="")
+        self._messenger.scan_archive(self.path_info.full_output_name())
         with self._get_archive() as archive:
             non_treestamp_entries = self._consume_archive_timestamps(archive)
             for archiveinfo in non_treestamp_entries:
@@ -143,10 +140,7 @@ class ArchiveHandler(NonPILIdentifier, ContainerHandler, ABC):
                     yield path_info
             if self._do_repack:
                 self._copy_unchanged_files(archive)
-        if self.config.verbose:
-            cprint("done.")
-        if not self._do_repack and self._skipper:
-            self._messenger.skip_container("Archive", str(self.path_info.path))
+        self._walk_finish()
 
     def _hydrate_optimized_path_info(self, path_info: PathInfo, report: ReportStats):
         """Rename archive files that changed."""

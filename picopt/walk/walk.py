@@ -8,18 +8,14 @@ from termcolor import cprint
 from treestamps import Treestamps
 
 from picopt.handlers.container import ContainerHandler
-from picopt.handlers.factory import (
-    create_handler,
-    create_repack_handler,
-)
 from picopt.handlers.handler import Handler
 from picopt.handlers.image import ImageHandler
 from picopt.path import PathInfo
 from picopt.stats import ReportStats, Totals
-from picopt.walk.init import WalkInit
+from picopt.walk.handler_factory import HandlerFactory
 
 
-class Walk(WalkInit):
+class Walk(HandlerFactory):
     """Methods for walking the tree and handling files."""
 
     def _finish_results(
@@ -102,7 +98,7 @@ class Walk(WalkInit):
             # Optimize
             handler.optimize_contents()
             # Repack
-            handler = create_repack_handler(self._config, handler)
+            handler = self.create_repack_handler(self._config, handler)
             result = self._pool.apply_async(handler.repack)
         except Exception as exc:
             traceback.print_exc()
@@ -125,7 +121,7 @@ class Walk(WalkInit):
         return result
 
     def _create_handler(self, path_info: PathInfo):
-        handler = create_handler(self._config, path_info, self._timestamps)
+        handler = self.create_handler(path_info, self._timestamps)
         if handler is None:
             return None
 

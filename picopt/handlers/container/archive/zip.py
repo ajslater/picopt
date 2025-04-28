@@ -5,8 +5,6 @@ from pathlib import Path
 from typing import BinaryIO
 from zipfile import ZIP_DEFLATED, ZIP_STORED, is_zipfile
 
-from termcolor import cprint
-
 from picopt.formats import FileFormat
 from picopt.handlers.container.archive import PackingArchiveHandler
 from picopt.handlers.handler import INTERNAL
@@ -70,9 +68,6 @@ class Zip(PackingArchiveHandler):
 
     def _pack_info_one_file(self, archive, path_info):
         """Add one file to the new archive."""
-        if not path_info.archiveinfo:
-            cprint("WARNING: No archiveinfo to write.", "yellow")
-            return
         zipinfo = path_info.archiveinfo.to_zipinfo()
         if zipinfo.filename in self._delete_filenames:
             return

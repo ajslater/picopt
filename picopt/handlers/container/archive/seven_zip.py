@@ -7,7 +7,6 @@ from sys import maxsize
 from py7zr import SevenZipFile, is_7zfile
 from py7zr.io import BytesIOFactory
 from py7zr.py7zr import FileInfo as SevenZipInfo
-from termcolor import cprint
 
 from picopt.formats import FileFormat
 from picopt.handlers.container.archive import PackingArchiveHandler
@@ -62,9 +61,6 @@ class SevenZip(PackingArchiveHandler):
 
     def _pack_info_one_file(self, archive, path_info):
         """Add one file to the new archive."""
-        if not path_info.archiveinfo:
-            cprint("WARNING: No archiveinfo to write.", "yellow")
-            return
         data = BytesIO(path_info.data())
         arcname = path_info.archiveinfo.filename()
         archive.writef(data, arcname=arcname)

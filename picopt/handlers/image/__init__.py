@@ -8,7 +8,6 @@ from typing import Any, BinaryIO
 
 from PIL import Image
 from PIL.PngImagePlugin import PngImageFile
-from termcolor import cprint
 
 from picopt.handlers.handler import Handler
 from picopt.handlers.metadata import PrepareInfoMixin
@@ -37,9 +36,8 @@ class ImageHandler(PrepareInfoMixin, Handler, ABC):
         """
         stages = self.config.computed.handler_stages.get(self.__class__, {})
         if not stages:
-            cprint(
-                f"\nTried to execute handler {self.__class__.__name__} with no available stages.",
-                "yellow",
+            self._messenger.warn(
+                f"Tried to execute handler {self.__class__.__name__} with no available stages.",
             )
             raise ValueError
 

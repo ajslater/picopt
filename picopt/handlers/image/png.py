@@ -7,7 +7,6 @@ from typing import Any
 
 import oxipng
 from PIL.PngImagePlugin import PngImageFile
-from termcolor import cprint
 
 from picopt.formats import FileFormat
 from picopt.handlers.image import ImageHandler
@@ -72,9 +71,8 @@ class Png(PngBase):
         """Run the external program pngout on the file."""
         depth = png_bit_depth(input_buffer)
         if not depth or depth > self._PNGOUT_DEPTH_MAX or depth < 1:
-            cprint(
-                f"\nSkipped pngout for {depth} bit PNG: {self.original_path}",
-                "white",
+            self._messenger.message(
+                f"Skipped pngout for {depth} bit PNG: {self.path_info.full_output_name()}",
                 attrs=["dark"],
             )
             return input_buffer

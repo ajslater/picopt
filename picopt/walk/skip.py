@@ -65,7 +65,7 @@ class WalkSkipper:
             attrs = []
 
         if reason:
-            self._messenger.skip_message(reason, color, attrs)
+            self._messenger.message(reason, color, attrs)
 
         return bool(reason)
 
@@ -77,7 +77,7 @@ class WalkSkipper:
             else:
                 path.unlink(missing_ok=True)
             reason = f"Deleted {path}"
-            self._messenger.skip_message(reason, "yellow")
+            self._messenger.message(reason, "yellow")
         except Exception as exc:
             cprint("\n" + str(exc), "red")
             self._last_verbose_message = True
@@ -100,7 +100,7 @@ class WalkSkipper:
         """Report on skipping files older than the timestamp."""
         reason = f"Skip older than timestamp: {path_info.full_output_name()}"
         color = "green"
-        self._messenger.skip_message(reason, color)
+        self._messenger.message(reason, color)
 
     def _get_walk_after(self, path_info: PathInfo):
         if self._config.after is not None:

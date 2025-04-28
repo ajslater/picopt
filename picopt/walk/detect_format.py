@@ -4,7 +4,6 @@ from collections.abc import Mapping
 from contextlib import suppress
 from typing import Any
 
-from confuse.templates import AttrDict
 from PIL import Image, UnidentifiedImageError
 from PIL.TiffImagePlugin import TiffImageFile
 
@@ -38,6 +37,7 @@ from picopt.handlers.image.webp import WebPLossless
 from picopt.handlers.non_pil import NonPILIdentifier
 from picopt.path import PathInfo
 from picopt.pillow.webp_lossless import is_lossless
+from picopt.walk.init import WalkInit
 
 _NON_PIL_HANDLERS: tuple[type[NonPILIdentifier], ...] = (
     Svg,
@@ -131,11 +131,16 @@ def _get_non_pil_format(path_info: PathInfo) -> FileFormat | None:
     return file_format
 
 
-def detect_format(
-    config: AttrDict, path_info: PathInfo
-) -> tuple[FileFormat | None, Mapping[str, Any]]:
-    """Return the format and updated pathinfo."""
-    file_format, info = _get_image_format(path_info, keep_metadata=config.keep_metadata)
-    if not file_format:
-        file_format = _get_non_pil_format(path_info)
-    return file_format, info
+class DetectFormat(WalkInit):
+    """Detect format method."""
+
+    def detect_format(
+        self, path_info: PathInfo
+    ) -> tuple[FileFormat | None, Mapping[str, Any]]:
+        """Return the format and updated pathinfo."""
+        file_format, info = _get_image_format(
+            path_info, keep_metadata=self._config.keep_metadata
+        )
+        if not file_format:
+            file_format = _get_non_pil_format(path_info)
+        return file_format, info

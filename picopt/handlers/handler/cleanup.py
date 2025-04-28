@@ -4,8 +4,6 @@ import os
 from io import BufferedReader, BytesIO
 from typing import BinaryIO
 
-from termcolor import cprint
-
 from picopt.handlers.handler.init import HandlerInit
 from picopt.stats import ReportStats
 
@@ -122,5 +120,7 @@ class HandlerCleanup(HandlerInit):
                 data=return_data,
             )
         except Exception as exc:
-            cprint(f"ERROR: cleanup_after_optimize: {self.final_path} {exc}", "red")
+            self._messenger.error(
+                f"cleanup_after_optimize: {self.path_info.full_output_name()}", exc
+            )
             raise

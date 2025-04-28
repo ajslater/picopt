@@ -8,7 +8,6 @@ from typing import Any
 
 from PIL import Image, ImageSequence
 from PIL.PngImagePlugin import PngImageFile
-from termcolor import cprint
 
 from picopt.formats import FileFormat
 from picopt.handlers.container import PackingContainerHandler
@@ -26,6 +25,7 @@ class ImageAnimated(PrepareInfoMixin, PackingContainerHandler, ABC):
         {"format": str(PngImageFile.format), "compress_level": 0}
     )
     PIL2_KWARGS: MappingProxyType[str, Any] = MappingProxyType({})
+    CONTAINER_TYPE = "Animated Image"
 
     def __init__(self, *args, info: Mapping[str, Any], **kwargs):
         """Set image metadata."""
@@ -74,9 +74,7 @@ class ImageAnimated(PrepareInfoMixin, PackingContainerHandler, ABC):
 
     def walk(self) -> Generator[PathInfo]:
         """Unpack animated image frames with PIL."""
-        if self.config.verbose:
-            cprint(f"Unpacking {self.original_path}...", end="")
-
+        self._messenger.container_unpacking(self.path_info.full_output_name())
         frame_info = {}
         with Image.open(self.original_path) as image:
             for index, frame in enumerate(ImageSequence.Iterator(image), start=1):
@@ -85,12 +83,7 @@ class ImageAnimated(PrepareInfoMixin, PackingContainerHandler, ABC):
         # Animated images need a double close because of some PIL bug.
         image.close()
         self._save_frame_info(frame_info)
-
-        if not self._do_repack and self._skipper:
-            self._messenger.skip_container("Animated Image", str(self.path_info.path))
-
-        if self.config.verbose:
-            cprint("done")
+        self._walk_finish()
 
     def pack_into(self) -> BytesIO:
         """Remux the optimized frames into an animated webp."""

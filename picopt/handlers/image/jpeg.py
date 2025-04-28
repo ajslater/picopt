@@ -5,7 +5,6 @@ from typing import BinaryIO
 
 import piexif
 from PIL.JpegImagePlugin import JpegImageFile
-from termcolor import cprint
 
 from picopt.formats import MPO_FILE_FORMAT, FileFormat
 from picopt.handlers.image import ImageHandler
@@ -89,16 +88,14 @@ class Jpeg(ImageHandler):
         try:
             jpeg_data = self._mpo2jpeg_copy_exif(jpeg_data)
         except Exception as exc:
-            cprint(
-                f"\nWARNING: could not copy EXIF data for {self.path_info.full_output_name()}: {exc}",
-                "yellow",
+            self._messenger.warn(
+                f"could not copy EXIF data for {self.path_info.full_output_name()}", exc
             )
         try:
             jpeg_data = self._mpo2jpeg_copy_xmp(jpeg_data)
         except Exception as exc:
-            cprint(
-                f"\nWARNING: could not copy XMP data for {self.path_info.full_output_name()}: {exc}",
-                "yellow",
+            self._messenger.warn(
+                f"could not copy XMP data for {self.path_info.full_output_name()}", exc
             )
 
         self.input_file_format = self.OUTPUT_FILE_FORMAT

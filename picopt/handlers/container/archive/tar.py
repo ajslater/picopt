@@ -7,7 +7,6 @@ from tarfile import open as tar_open
 from types import MappingProxyType
 
 import filetype
-from termcolor import cprint
 
 from picopt.formats import FileFormat
 from picopt.handlers.container.archive import PackingArchiveHandler
@@ -65,11 +64,8 @@ class Tar(PackingArchiveHandler):
 
     def _pack_info_one_file(self, archive, path_info):
         """Add one file to the new archive."""
-        if not path_info.archiveinfo:
-            cprint("WARNING: No archiveinfo to write.", "yellow")
-            return
-        data = path_info.data()
         tarinfo = path_info.archiveinfo.to_tarinfo()
+        data = path_info.data()
         tarinfo.size = len(data)
         buf = BytesIO(data)
         archive.addfile(tarinfo, buf)

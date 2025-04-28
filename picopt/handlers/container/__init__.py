@@ -6,13 +6,11 @@ from io import BytesIO
 from multiprocessing.pool import ApplyResult
 from typing import BinaryIO
 
-from termcolor import cprint
 from treestamps import Grovestamps
 
 from picopt.formats import FileFormat
 from picopt.handlers.handler import Handler
 from picopt.path import PathInfo
-from picopt.printer import Messenger
 from picopt.stats import ReportStats
 from picopt.walk.skip import WalkSkipper
 
@@ -20,10 +18,23 @@ from picopt.walk.skip import WalkSkipper
 class ContainerHandler(Handler, ABC):
     """Container handler for unpacking multiple images and archives."""
 
+    CONTAINER_TYPE = "Container"
+
     @classmethod
     @abstractmethod
     def identify_format(cls, path_info: PathInfo) -> FileFormat | None:
         """Return the format if this handler can handle this path."""
+
+    def _walk_finish(self) -> None:
+        if not self.config.verbose:
+            return
+        self._messenger.done()
+        if self._do_repack and self._skipper:
+            self._messenger.optimize_container(str(self.path_info.path))
+        else:
+            self._messenger.skip_container(
+                self.CONTAINER_TYPE, str(self.path_info.path)
+            )
 
     @abstractmethod
     def walk(self) -> Generator[PathInfo]:
@@ -45,7 +56,6 @@ class ContainerHandler(Handler, ABC):
         self._tasks: dict[PathInfo, ApplyResult] = {}
         self._optimized_contents: set[PathInfo] = set()
         self._do_repack = False
-        self._messenger = Messenger(self.config.verbose)
 
     def is_do_repack(self):
         """Return if any changes were made and we should repack."""
@@ -101,7 +111,7 @@ class PackingContainerHandler(ContainerHandler, ABC):
         optimized_contents: set[PathInfo] | None = None,
         **kwargs,
     ):
-        """Iinitialize optimized contents."""
+        """Copy optimized contents from previous handler."""
         super().__init__(*args, **kwargs)
         if comment:
             self.comment = comment
@@ -110,11 +120,9 @@ class PackingContainerHandler(ContainerHandler, ABC):
 
     def optimize(self) -> BinaryIO:
         """Run pack_into."""
-        if self.config.verbose:
-            cprint(f"Repacking {self.final_path}...", end="")
+        self._messenger.container_repacking(self.path_info.full_output_name())
         buffer = self.pack_into()
-        if self.config.verbose:
-            cprint("done")
+        self._messenger.done()
         return buffer
 
     def repack(self) -> ReportStats:
