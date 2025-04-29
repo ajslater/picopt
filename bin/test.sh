@@ -1,8 +1,7 @@
 #!/bin/bash
 # Run all tests
 set -euxo pipefail
-export PYTHONPATH=.
 mkdir -p test-results
-PYTHONDONTWRITEBYTECODE=1 poetry run pytest "$@"
+LOGLEVEL=DEBUG uv run pytest "$@"
 # pytest-cov leaves .coverage.$HOST.$PID.$RAND files around while coverage itself doesn't
-poetry run coverage erase
+uv run coverage erase || true

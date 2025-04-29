@@ -3,17 +3,19 @@ picopt:
   bigger: False
   convert_to: []
   disable_programs: []
+  dry_run: False
   formats: [GIF, JPEG, PNG, WEBP]
   ignore: []
+  ignore_dotfiles: True
   jobs: 0
   keep_metadata: True
   list_only: False
   near_lossless: False
   paths: []
+  png_max: False
   preserve: False
   recurse: False
   symlinks: True
-  test: False
   timestamps: False
   timestamps_check_config: True
   verbose: 1

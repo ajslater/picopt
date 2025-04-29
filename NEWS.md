@@ -1,5 +1,42 @@
 # 📰 Picopt News
 
+## v5.0.0-a0
+
+- Fixes
+  - Fix tif & animated gifs were not converted to pngs when specified.
+  - Fix --ignore option wildcards and performance.
+  - --ignore is now case insensitive on case insenstitive filesystems
+- Features
+  - Picopt learned to optimize 7-Zip and Tar Archives.
+  - Ignore dotfiles by default. Disable with -I.
+  - -T --test option becomes -d --dry-run
+  - colors changed.
+- Performance
+  - Archives skipped without unpacking contents if all contents are skippable.
+  - Zip archives rewritten in place on disk if possible.
+  - Animated pngs better optimized with oxipng
+  - Faster scanning for legacy timestamps on startup.
+- Dev
+  - Updated treestamps
+  - uv build system
+
+## v4.0.4
+
+- Pillow 11 support.
+- Better jpeg xmp preservation.
+- Fix crash on reporting some errors.
+- README Redhat installation and spelling fixes by @bpepple
+
+## v4.0.3 - Bad release
+
+## v4.0.2
+
+- Fix windows mmap crash. Thanks @Fletcher.
+
+## v4.0.1
+
+- Reduce overzealous png optimization. Provide an option to do that.
+
 ## v4.0.0
 
 - Alert!

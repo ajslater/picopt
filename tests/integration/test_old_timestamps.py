@@ -1,4 +1,5 @@
 """Test comic format."""
+
 import shutil
 
 from picopt import PROGRAM_NAME, cli
@@ -26,8 +27,8 @@ DEFAULT_CONFIG = {
 }
 
 
-class TestContainersDir:
-    """Test containers dir."""
+class TestOldTimestamps:
+    """Test old timestamps."""
 
     @staticmethod
     def _assert_sizes(index, root=TMP_ROOT):
