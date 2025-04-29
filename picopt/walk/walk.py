@@ -27,7 +27,7 @@ class Walk(HandlerFactory):
         for result in results:
             final_result = result.get()
             if final_result.exc:
-                final_result.report()
+                final_result.report(self._printer)
 
                 self._totals.errors.append(final_result)
             else:
@@ -149,9 +149,8 @@ class Walk(HandlerFactory):
             result = None
             if handler := self._walk_file_get_handler(path_info):
                 result = self._handle_file(handler)
-                self._printer.handled_message()
             else:
-                self._printer.no_handler()
+                self._printer.skip_message("")
         except Exception as exc:
             traceback.print_exc()
             apply_kwargs = {

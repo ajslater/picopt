@@ -2,6 +2,8 @@
 
 from termcolor import cprint
 
+from picopt.path import PathInfo
+
 
 class Printer:
     """Printing messages during walk and handling."""
@@ -9,7 +11,7 @@ class Printer:
     def __init__(self, verbose: int):
         """Initialize verbosity and flags."""
         self._verbose = verbose
-        self._last_verbose_message = False
+        self._last_verbose_message = True
 
     def message(
         self, reason, color="white", attrs=None, *, force_verbose=False, end="\n"
@@ -17,72 +19,64 @@ class Printer:
         """Print a dot or skip message."""
         if self._verbose < 1:
             return
-        if self._verbose == 1 and not force_verbose:
+        if (self._verbose == 1 and not force_verbose) or not reason:
             cprint(".", color, attrs=attrs, end="")
             self._last_verbose_message = False
             return
         if not self._last_verbose_message:
             reason = "\n" + reason
-            if end:
-                self._last_verbose_message = True
         attrs = attrs if attrs else []
         cprint(reason, color, attrs=attrs, end=end)
+        if end:
+            self._last_verbose_message = True
 
     def skip_message(self, message):
         """Skip Message."""
         self.message(message, attrs=["dark"])
 
-    def skip_container(self, container_type: str, path: str):
+    def skip_container(self, container_type: str, path_info: PathInfo):
         """Skip entire container."""
+        path = path_info.full_output_name()
         reason = f"{container_type} contents all skipped: {path}"
         self.skip_message(reason)
 
-    def no_handler(self):
-        """Dot for no handler."""
-        if self._verbose:
-            cprint(".", attrs=["dark"], end="")
-            self._last_verbose_message = False
-
-    def handled_message(self):
-        """Dot for handled file."""
-        if self._verbose:
-            cprint(".", end="")
-            self._last_verbose_message = False
-
-    def start_operation(self, operation: str, path: str):
+    def start_operation(self, operation: str, path_info: PathInfo):
         """Scan archive start."""
+        path = path_info.full_output_name()
         self.message(f"{operation} {path}...", force_verbose=True, end="")
 
-    def scan_archive(self, path: str):
+    def scan_archive(self, path_info: PathInfo):
         """Scan archive start."""
-        self.start_operation("Scanning archive", path)
+        self.start_operation("Scanning archive", path_info)
 
-    def container_unpacking(self, path: str):
+    def container_unpacking(self, path_info: PathInfo):
         """Start Unpacking Operation."""
-        if self._verbose:
-            self.start_operation("Unpacking", path)
+        # this fixes containers within containers newlines.
+        self._last_verbose_message = False
+        self.start_operation("Unpacking", path_info)
 
-    def container_repacking(self, path: str):
+    def container_repacking(self, path_info: PathInfo):
         """Start Repacking Operation."""
-        if self._verbose:
-            self.start_operation("Repacking", path)
+        if self._verbose > 1:
+            self.start_operation("Repacking", path_info)
+
+    def container_repacking_done(self):
+        """Only done for repack if very verbose."""
+        if self._verbose > 1:
+            self.done()
 
     def copied_message(self):
         """Dot for copied file."""
-        if self._verbose:
-            cprint(".", attrs=["dark"], end="")
-            self._last_verbose_message = False
+        self.skip_message("")
 
-    def optimize_container(self, path: str):
-        """Declare that we're optiming contents."""
-        if self._verbose == 1:
-            cprint(f"Optimizing contents in {path}:")
+    def optimize_container(self, path_info: PathInfo):
+        """Declare that we're optimizing contents."""
+        path = path_info.full_output_name()
+        cprint(f"Optimizing contents in {path}:")
 
     def packed_message(self):
         """Dot for repacked file."""
-        if self._verbose:
-            cprint(".", end="")
-            self._last_verbose_message = False
+        self.message("")
 
     def done(self):
         """Operation done."""

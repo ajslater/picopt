@@ -132,7 +132,7 @@ class ArchiveHandler(NonPILIdentifier, ContainerHandler, ABC):
 
     def walk(self) -> Generator[PathInfo]:
         """Walk an archive's archiveinfos."""
-        self._printer.scan_archive(self.path_info.full_output_name())
+        self._printer.scan_archive(self.path_info)
         with self._get_archive() as archive:
             non_treestamp_entries = self._consume_archive_timestamps(archive)
             for archiveinfo in non_treestamp_entries:

@@ -30,9 +30,9 @@ class ContainerHandler(Handler, ABC):
             return
         self._printer.done()
         if self._do_repack and self._skipper:
-            self._printer.optimize_container(str(self.path_info.path))
+            self._printer.optimize_container(self.path_info)
         else:
-            self._printer.skip_container(self.CONTAINER_TYPE, str(self.path_info.path))
+            self._printer.skip_container(self.CONTAINER_TYPE, self.path_info)
 
     @abstractmethod
     def walk(self) -> Generator[PathInfo]:
@@ -68,7 +68,6 @@ class ContainerHandler(Handler, ABC):
         else:
             self._tasks[path_info] = mp_result
             self._do_repack = True
-            self._printer.handled_message()
 
     def _hydrate_optimized_path_info(self, path_info: PathInfo, report: ReportStats):
         """Replace path_info data."""
@@ -118,9 +117,9 @@ class PackingContainerHandler(ContainerHandler, ABC):
 
     def optimize(self) -> BinaryIO:
         """Run pack_into."""
-        self._printer.container_repacking(self.path_info.full_output_name())
+        self._printer.container_repacking(self.path_info)
         buffer = self.pack_into()
-        self._printer.done()
+        self._printer.container_repacking_done()
         return buffer
 
     def repack(self) -> ReportStats:
