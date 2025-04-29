@@ -2,6 +2,7 @@
 
 from abc import ABC, abstractmethod
 from collections.abc import Generator
+from copy import copy
 from io import BytesIO
 from multiprocessing.pool import ApplyResult
 from typing import BinaryIO
@@ -47,6 +48,9 @@ class ContainerHandler(Handler, ABC):
     ):
         """Initialize unpack tasks and ."""
         super().__init__(*args, **kwargs)
+        # Config gets modified later for pickling protection for containers
+        # after optimize_contents, before repack
+        self.config = copy(self.config)
         self._timestamps = timestamps
         self.repack_handler_class = repack_handler_class
         self._skipper = WalkSkipper(self.config, timestamps, in_archive=True)
