@@ -5,7 +5,7 @@ from argparse import Action, ArgumentParser, Namespace, RawDescriptionHelpFormat
 from importlib.metadata import PackageNotFoundError, version
 
 from confuse.exceptions import ConfigError
-from termcolor import colored, cprint
+from termcolor import colored
 
 from picopt import PROGRAM_NAME
 from picopt.config import PicoptConfig
@@ -18,6 +18,7 @@ from picopt.config.consts import (
 )
 from picopt.exceptions import PicoptError
 from picopt.handlers.container.archive.zip import Cbz, Zip
+from picopt.printer import Printer
 from picopt.walk.walk import Walk
 
 _DEFAULT_FORMAT_STRS = frozenset(
@@ -300,20 +301,21 @@ def get_arguments(params: tuple[str, ...] | None = None) -> Namespace:
 
 def main(args: tuple[str, ...] | None = None):
     """Process command line arguments and walk inputs."""
+    printer = Printer(2)
     try:
         arguments = get_arguments(args)
 
-        config = PicoptConfig().get_config(arguments)
+        config = PicoptConfig(printer).get_config(arguments)
         walker = Walk(config)
         walker.walk()
     except ConfigError as err:
-        cprint(f"ERROR: {err}", "red")
+        printer.error("", err)
         sys.exit(78)
     except PicoptError as err:
-        cprint(f"ERROR: {err}", "red")
+        printer.error("", err)
         sys.exit(1)
     except Exception as exc:
-        cprint(f"ERROR: {exc}", "red")
+        printer.error("", exc)
         import traceback
 
         traceback.print_exception(exc)
