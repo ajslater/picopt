@@ -137,3 +137,11 @@ class Printer:
         """Error."""
         message = "ERROR: " + message + f": {exc}"
         self._message(message, color="light_red", force_verbose=True)
+
+    def error_title(self, message: str):
+        """Error title."""
+        self._message(message, color="light_red", force_verbose=True)
+
+    def final_message(self, message: str):
+        """Print final message."""
+        self._message(message, force_verbose=True)

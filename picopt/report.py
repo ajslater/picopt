@@ -6,7 +6,6 @@ from subprocess import CalledProcessError
 
 from confuse import AttrDict
 from humanize import naturalsize
-from termcolor import cprint
 
 from picopt.path import PathInfo
 from picopt.printer import Printer
@@ -30,7 +29,7 @@ class ReportStats(ReportStatBase):
 
     def __init__(
         self,
-        path,
+        path: Path,
         *args,
         config: AttrDict | None = None,
         path_info: PathInfo | None = None,
@@ -86,6 +85,7 @@ class ReportStats(ReportStatBase):
 
     def report(self, printer: Printer) -> None:
         """Record the percent saved & print it."""
+        # Pass the printer in at the end here to avoid pickling
         if self.exc:
             report = self._report_error()
             printer.error(report, self.exc)
@@ -100,12 +100,13 @@ class ReportStats(ReportStatBase):
 class Totals:
     """Totals for final report."""
 
-    def __init__(self, config: AttrDict):
+    def __init__(self, config: AttrDict, printer: Printer):
         """Initialize Totals."""
         self.bytes_in: int = 0
         self.bytes_out: int = 0
         self.errors: list[ReportStats] = []
         self._config: AttrDict = config
+        self._printer: Printer = printer
 
     def _report_bytes_in(self) -> None:
         """Report Totals if there were bytes in."""
@@ -129,20 +130,20 @@ class Totals:
             msg = "Lost"
         natural_saved = naturalsize(bytes_saved)
         msg += f" a total of {natural_saved} or {percent_bytes_saved:.2f}%"
-        cprint(msg)
+        self._printer.saved(msg)
         if self._config.dry_run:
-            cprint("Dry run did not change any files.")
+            self._printer.final_message("Dry run did not change any files.")
 
-    def report(self, printer: Printer) -> None:
+    def report(self) -> None:
         """Report the total number and percent of bytes saved."""
         if self._config.verbose == 1:
-            cprint("")
+            print("")  # noqa: T201
         if self.bytes_in:
             self._report_bytes_in()
-        elif self._config.verbose:
-            cprint("Didn't optimize any files.")
+        else:
+            self._printer.final_message("Didn't optimize any files.")
 
         if self.errors:
-            cprint("Errors with the following files:", "red")
+            self._printer.error_title("Errors with the following files:")
             for rs in self.errors:
-                rs.report(printer)
+                rs.report(self._printer)
