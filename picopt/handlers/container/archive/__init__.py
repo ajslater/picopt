@@ -114,7 +114,7 @@ class ArchiveHandler(NonPILIdentifier, ContainerHandler, ABC):
             archive_sub_path = self.path_info.archive_psuedo_path() / path.parent
             self._timestamps.loads(archive_sub_path, yaml_str)
             if self._skipper:
-                self._printer.message(f"Consumed picopt timestamp in archive: {path}")
+                self._printer.message_consumed_timestamp(path)
             self._mark_delete(path)
 
         return tuple(non_treestamp_entries)

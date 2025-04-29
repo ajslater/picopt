@@ -1,6 +1,6 @@
 # 📰 Picopt News
 
-## v4.1.0
+## v5.0.0-a0
 
 - Fixes
   - Fix tif & animated gifs were not converted to pngs when specified.
@@ -10,6 +10,7 @@
   - Picopt learned to optimize 7-Zip and Tar Archives.
   - Ignore dotfiles by default. Disable with -I.
   - -T --test option becomes -d --dry-run
+  - colors changed.
 - Performance
   - Archives skipped without unpacking contents if all contents are skippable.
   - Zip archives rewritten in place on disk if possible.

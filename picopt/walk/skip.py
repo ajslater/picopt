@@ -81,8 +81,7 @@ class WalkSkipper:
                 shutil.rmtree(path, ignore_errors=True)
             else:
                 path.unlink(missing_ok=True)
-            reason = f"Deleted {path}"
-            self._printer.message(reason, "yellow")
+            self._printer.message_deleted(path)
         except Exception as exc:
             cprint("\n" + str(exc), "red")
             self._last_verbose_message = True
@@ -104,8 +103,7 @@ class WalkSkipper:
     def _skip_older_than_timestamp(self, path_info: PathInfo) -> None:
         """Report on skipping files older than the timestamp."""
         reason = f"Skip older than timestamp: {path_info.full_output_name()}"
-        color = "green"
-        self._printer.message(reason, color)
+        self._printer.skip_timestamp_message(reason)
 
     def _get_walk_after(self, path_info: PathInfo):
         if self._config.after is not None:

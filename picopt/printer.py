@@ -1,5 +1,7 @@
 """Print Messages."""
 
+from pathlib import Path
+
 from termcolor import cprint
 
 from picopt.path import PathInfo
@@ -32,7 +34,7 @@ class Printer:
 
     def skip_message(self, message):
         """Skip Message."""
-        self.message(message, attrs=["dark"])
+        self.message(message, color="dark_grey")
 
     def skip_container(self, container_type: str, path_info: PathInfo):
         """Skip entire container."""
@@ -40,10 +42,22 @@ class Printer:
         reason = f"{container_type} contents all skipped: {path}"
         self.skip_message(reason)
 
+    def skip_timestamp_message(self, message):
+        """Skipped by timestamp."""
+        self.message(message, color="light_green", attrs=["dark", "bold"])
+
     def start_operation(self, operation: str, path_info: PathInfo):
         """Scan archive start."""
         path = path_info.full_output_name()
         self.message(f"{operation} {path}...", force_verbose=True, end="")
+
+    def message_deleted(self, path: Path | str):
+        """Print deleted message."""
+        self.message(f"Deleted {path}", color="yellow")
+
+    def message_consumed_timestamp(self, path: Path | str):
+        """Consume timestamp message."""
+        self.message(f"Consumed picopt timestamp in archive: {path}", color="magenta")
 
     def scan_archive(self, path_info: PathInfo):
         """Scan archive start."""
@@ -67,7 +81,7 @@ class Printer:
 
     def copied_message(self):
         """Dot for copied file."""
-        self.skip_message("")
+        self.message("", color="green")
 
     def optimize_container(self, path_info: PathInfo):
         """Declare that we're optimizing contents."""
@@ -76,7 +90,7 @@ class Printer:
 
     def packed_message(self):
         """Dot for repacked file."""
-        self.message("")
+        self.message("", color="light_grey")
 
     def done(self):
         """Operation done."""
@@ -84,14 +98,22 @@ class Printer:
             cprint("done.")
             self._last_verbose_message = True
 
+    def saved_message(self, report):
+        """Report saved size."""
+        self.message(report, color="light_cyan")
+
+    def lost_message(self, report):
+        """Lost size."""
+        self.message(report, color="light_blue")
+
     def warn(self, message: str, exc: Exception | None = None):
         """Warning."""
         message = "WARNING: " + message
         if exc:
             message += f": {exc}"
-        self.message(message, color="yellow", force_verbose=True)
+        self.message(message, color="light_yellow", force_verbose=True)
 
     def error(self, message: str, exc: Exception):
         """Error."""
         message = "ERROR: " + message + f": {exc}"
-        self.message(message, color="red", force_verbose=True)
+        self.message(message, color="light_red", force_verbose=True)

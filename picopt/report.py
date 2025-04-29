@@ -86,18 +86,15 @@ class ReportStats(ReportStatBase):
 
     def report(self, printer: Printer) -> None:
         """Record the percent saved & print it."""
-        attrs = []
         if self.exc:
             report = self._report_error()
             printer.error(report, self.exc)
+            return
+        report = self._report_saved()
+        if self.saved > 0:
+            printer.saved_message(report)
         else:
-            report = self._report_saved()
-            color = "cyan" if self.convert else "white"
-
-            if self.saved <= 0:
-                color = "blue"
-                attrs = ["bold"]
-            printer.message(report, color, attrs=attrs)
+            printer.lost_message(report)
 
 
 class Totals:

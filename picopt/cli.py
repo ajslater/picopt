@@ -64,20 +64,33 @@ def _comma_join(
     return result
 
 
+COLOR_KEY = (
+    ("skipped", "dark_grey", []),
+    ("skipped by timestamp", "light_green", ["dark", "bold"]),
+    ("copied archive contents unchanged", "green", []),
+    ("optimized bigger than original", "light_blue", ["bold"]),
+    ("noop on dry run", "dark_grey", ["bold"]),
+    ("optimized in same format", "white", []),
+    ("converted to another format", "light_cyan", []),
+    ("packed into archive", "light_grey", []),
+    ("consumed timestamp from archive", "magenta", []),
+    ("WARNING", "light_yellow", []),
+    ("ERROR", "light_red", []),
+)
+
+
+def get_dot_color_key():
+    """Create dot color key."""
+    epilogue = "Progress dot colors:\n"
+    for text, color, attrs in COLOR_KEY:
+        epilogue += "\t" + colored(text, color, attrs=attrs) + "\n"
+    return epilogue
+
+
 def get_arguments(params: tuple[str, ...] | None = None) -> Namespace:
     """Parse the command line."""
     description = "Losslessly optimizes and optionally converts images."
-    epilog = (
-        "progress colors:",
-        colored("skipped", "white", attrs=["dark"]),
-        colored("skipped by timestamp", "green"),
-        colored("optimization bigger than original", "blue", attrs=["bold"]),
-        "optimized in same format",
-        colored("converted to another format", "cyan"),
-        colored("warning", "yellow"),
-        colored("error", "red"),
-    )
-    epilog = "\n  ".join(epilog)
+    epilog = get_dot_color_key()
     parser = ArgumentParser(
         description=description,
         epilog=epilog,
