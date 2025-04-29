@@ -620,7 +620,7 @@ requires-dist = [
     { name = "python-dateutil", specifier = ">=2.8,<3.0" },
     { name = "rarfile", specifier = ">=4.0,<5.0" },
     { name = "ruamel-yaml", specifier = ">=0.18.5,<1.0.0" },
-    { name = "treestamps", specifier = ">=2.2.0,<3.0.0" },
+    { name = "treestamps", specifier = ">=2.2.1,<3.0.0" },
 ]
 
 [package.metadata.requires-dev]
@@ -1442,29 +1442,29 @@ wheels = [
 
 [[package]]
 name = "treestamps"
-version = "2.2.0"
+version = "2.2.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "ruamel-yaml" },
     { name = "termcolor" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/a8/db/78c7d202b6be7812e759ff16bac3b169b9ebc4673c39fff0b6e891e8567f/treestamps-2.2.0.tar.gz", hash = "sha256:a5a41d4a00e1ff7131255015a4bcec56dfafcf307a4b7965f48890a8e0ec60ab", size = 24294, upload_time = "2025-04-24T22:29:08.942Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/11/e8/c42e36d33d96b4f96af1d4637a9222a86a2d7390cf6241f3463f42c6d940/treestamps-2.2.1.tar.gz", hash = "sha256:244aabd5c00d65075a9f9301142f33ec418db99a19c97f07bd7d559922f60755", size = 24304, upload_time = "2025-04-29T04:00:03.858Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/68/95/9b65839dcfdcd7f76422d0bc388d4a598492de41671ede48cb0fe6e1be98/treestamps-2.2.0-py3-none-any.whl", hash = "sha256:6cead2da1ed212b5107e286be16bc2f3ddb86aed242e4b927c5fd5949a3bad96", size = 23221, upload_time = "2025-04-24T22:29:08.038Z" },
+    { url = "https://files.pythonhosted.org/packages/e2/f4/c45170fc23837f43739863aa50be9b0c2e7d35992e783adeeb9bb7f08cac/treestamps-2.2.1-py3-none-any.whl", hash = "sha256:439000fc33cc7f61321171812cf9dbbfcd9f38463efbae2ee907ccdd5c6c6558", size = 23165, upload_time = "2025-04-29T04:00:02.94Z" },
 ]
 
 [[package]]
 name = "trove-classifiers"
-version = "2025.4.11.15"
+version = "2025.4.28.22"
 source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/52/db/cd8510702ed0ac1215e960ab3511a7f5750d63b56f2ae94d94fb4a6425af/trove_classifiers-2025.4.11.15.tar.gz", hash = "sha256:634728aa6698dc1ae3db161da94d9e4c7597a9a5da2c4410211b36f15fed60fc", size = 16321, upload_time = "2025-04-11T15:13:17.479Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/b0/f3/4d82f6d81391237842c4250766ae02c7a178a3a236e0fbd749ec154da17c/trove_classifiers-2025.4.28.22.tar.gz", hash = "sha256:42bef4957a74fe7724b8310dafd4b23e0a71406a4812cf4dfd65e2ee34f1943d", size = 16883, upload_time = "2025-04-28T22:49:32.609Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/70/7d/a2271b98b833680561ab3fcd60ab682478dc4f7cc023fab24991601ac8ac/trove_classifiers-2025.4.11.15-py3-none-any.whl", hash = "sha256:e7d98983f004df35293caf954bdfe944b139eb402677a97115450e320f0bd855", size = 13710, upload_time = "2025-04-11T15:13:16.152Z" },
+    { url = "https://files.pythonhosted.org/packages/e5/d6/647f7aca9314bcc83d5608166f89121f55ccc05402b0cd1a1e72cffa3e62/trove_classifiers-2025.4.28.22-py3-none-any.whl", hash = "sha256:fdb453fefa3a0da9c18b8d390846e6df7e961e8924703559ea9be07ec99c0925", size = 14056, upload_time = "2025-04-28T22:49:30.687Z" },
 ]
 
 [[package]]
 name = "typer"
-version = "0.15.2"
+version = "0.15.3"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "click" },
@@ -1472,9 +1472,9 @@ dependencies = [
     { name = "shellingham" },
     { name = "typing-extensions" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/8b/6f/3991f0f1c7fcb2df31aef28e0594d8d54b05393a0e4e34c65e475c2a5d41/typer-0.15.2.tar.gz", hash = "sha256:ab2fab47533a813c49fe1f16b1a370fd5819099c00b119e0633df65f22144ba5", size = 100711, upload_time = "2025-02-27T19:17:34.807Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/98/1a/5f36851f439884bcfe8539f6a20ff7516e7b60f319bbaf69a90dc35cc2eb/typer-0.15.3.tar.gz", hash = "sha256:818873625d0569653438316567861899f7e9972f2e6e0c16dab608345ced713c", size = 101641, upload_time = "2025-04-28T21:40:59.204Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/7f/fc/5b29fea8cee020515ca82cc68e3b8e1e34bb19a3535ad854cac9257b414c/typer-0.15.2-py3-none-any.whl", hash = "sha256:46a499c6107d645a9c13f7ee46c5d5096cae6f5fc57dd11eccbbb9ae3e44ddfc", size = 45061, upload_time = "2025-02-27T19:17:32.111Z" },
+    { url = "https://files.pythonhosted.org/packages/48/20/9d953de6f4367163d23ec823200eb3ecb0050a2609691e512c8b95827a9b/typer-0.15.3-py3-none-any.whl", hash = "sha256:c86a65ad77ca531f03de08d1b9cb67cd09ad02ddddf4b34745b5008f43b239bd", size = 45253, upload_time = "2025-04-28T21:40:56.269Z" },
 ]
 
 [[package]]
