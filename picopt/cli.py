@@ -8,7 +8,7 @@ from confuse.exceptions import ConfigError
 from termcolor import colored, cprint
 
 from picopt import PROGRAM_NAME
-from picopt.config import get_config
+from picopt.config import PicoptConfig
 from picopt.config.consts import (
     ALL_FORMAT_STRS,
     ARCHIVE_CONVERT_FROM_FORMAT_STRS,
@@ -303,7 +303,7 @@ def main(args: tuple[str, ...] | None = None):
     try:
         arguments = get_arguments(args)
 
-        config = get_config(arguments)
+        config = PicoptConfig().get_config(arguments)
         walker = Walk(config)
         walker.walk()
     except ConfigError as err:
