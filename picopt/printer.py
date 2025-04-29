@@ -15,7 +15,7 @@ class Printer:
         self._verbose = verbose
         self._after_newline = True
 
-    def message(  # noqa : PLR0913
+    def _message(  # noqa : PLR0913
         self,
         message: str,
         color="white",
@@ -42,7 +42,7 @@ class Printer:
 
     def config(self, message):
         """Config messages."""
-        self.message(message, color="cyan", force_verbose=True)
+        self._message(message, color="cyan", force_verbose=True)
 
     def skip(
         self,
@@ -54,7 +54,7 @@ class Printer:
         """Skip Message."""
         parts = ("Skip", reason, path_info.full_output_name())
         message = ": ".join(parts)
-        self.message(message, color=color, attrs=attrs)
+        self._message(message, color=color, attrs=attrs)
 
     def skip_container(self, container_type: str, path_info: PathInfo):
         """Skip entire container."""
@@ -72,15 +72,15 @@ class Printer:
         path = path_info.full_output_name()
         if self._verbose == 1 and force_newline:
             self._after_newline = False
-        self.message(f"{operation} {path}...", force_verbose=True, end="")
+        self._message(f"{operation} {path}...", force_verbose=True, end="")
 
     def deleted(self, path: Path | str):
         """Print deleted message."""
-        self.message(f"Deleted {path}", color="yellow")
+        self._message(f"Deleted {path}", color="yellow")
 
     def consumed_timestamp(self, path: Path | str):
         """Consume timestamp message."""
-        self.message(f"Consumed picopt timestamp in archive: {path}", color="magenta")
+        self._message(f"Consumed picopt timestamp in archive: {path}", color="magenta")
 
     def scan_archive(self, path_info: PathInfo):
         """Scan archive start."""
@@ -104,7 +104,7 @@ class Printer:
 
     def copied(self):
         """Dot for copied file."""
-        self.message(".", color="green", end="", force_continue_line=True)
+        self._message(".", color="green", end="", force_continue_line=True)
 
     def optimize_container(self, path_info: PathInfo):
         """Declare that we're optimizing contents."""
@@ -112,28 +112,28 @@ class Printer:
 
     def packed(self):
         """Dot for repacked file."""
-        self.message(".", color="light_grey", end="", force_continue_line=True)
+        self._message(".", color="light_grey", end="", force_continue_line=True)
 
     def done(self):
         """Operation done."""
-        self.message("done.", force_verbose=True, force_continue_line=True)
+        self._message("done.", force_verbose=True, force_continue_line=True)
 
     def saved(self, report):
         """Report saved size."""
-        self.message(report, color="light_cyan")
+        self._message(report, color="light_cyan")
 
     def lost(self, report):
         """Lost size."""
-        self.message(report, color="light_blue")
+        self._message(report, color="light_blue")
 
     def warn(self, message: str, exc: Exception | None = None):
         """Warning."""
         message = "WARNING: " + message
         if exc:
             message += f": {exc}"
-        self.message(message, color="light_yellow", force_verbose=True)
+        self._message(message, color="light_yellow", force_verbose=True)
 
     def error(self, message: str, exc: Exception):
         """Error."""
         message = "ERROR: " + message + f": {exc}"
-        self.message(message, color="light_red", force_verbose=True)
+        self._message(message, color="light_red", force_verbose=True)
