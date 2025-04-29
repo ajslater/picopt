@@ -81,8 +81,12 @@ class ContainerHandler(Handler, ABC):
             report = mp_results.get()
             self._hydrate_optimized_path_info(path_info, report)
             self._optimized_contents.add(path_info)
+        # Wipe things that may not pickle or don't need to be pickled
         self._timestamps = None
         self._skipper = None
+        # Patterns in computed.ignore don't pickle. But none of computed is needed
+        # after here.
+        self.config.computed = None
 
     def get_optimized_contents(self) -> set[PathInfo]:
         """Return optimized contents."""
