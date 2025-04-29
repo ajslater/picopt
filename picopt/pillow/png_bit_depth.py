@@ -9,8 +9,6 @@ This should be a part of Pillow
 from pathlib import Path
 from typing import BinaryIO
 
-from termcolor import cprint
-
 from picopt.pillow.header import ImageHeader
 
 _PNG_HEADER = ImageHeader(0, b"\x89PNG\r\n\x1a\n")
@@ -24,8 +22,8 @@ def png_bit_depth(buffer: BinaryIO) -> int | None:
         depth = buffer.read(1)
         result = int.from_bytes(depth, byteorder="little")
     else:
-        cprint("\nWARNING: cannot find bit depts of non png.", "yellow")
-        result = None
+        reason  = "cannot find bit depth of non png"
+        raise ValueError(reason)
     return result
 
 

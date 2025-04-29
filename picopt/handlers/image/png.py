@@ -69,7 +69,11 @@ class Png(PngBase):
         input_buffer: BufferedReader | BytesIO,
     ) -> BytesIO | BufferedReader:
         """Run the external program pngout on the file."""
-        depth = png_bit_depth(input_buffer)
+        try:
+            depth = png_bit_depth(input_buffer)
+        except ValueError as exc:
+            depth = None
+            self._printer.warn(str(exc))
         if not depth or depth > self._PNGOUT_DEPTH_MAX or depth < 1:
             self._printer.skip(f"pngout for {depth} bit PNG", self.path_info)
             return input_buffer
