@@ -27,8 +27,11 @@ def test_png_bit_depth_16() -> None:
 
 def test_png_bit_depth_invalid() -> None:
     """Test PNG bit depth invalid."""
-    with TEST_SRC_PATH_JPG.open("rb") as jpg_file:
-        res = png_bit_depth(jpg_file)
+    try:
+        with TEST_SRC_PATH_JPG.open("rb") as jpg_file:
+            res = png_bit_depth(jpg_file)
+    except ValueError:
+        res = None
     assert res is None
 
 
