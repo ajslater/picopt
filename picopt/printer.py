@@ -20,13 +20,13 @@ class Printer:
         if self._verbose < 1:
             return
         if (self._verbose == 1 and not force_verbose) or not reason:
-            cprint(".", color, attrs=attrs, end="")
+            cprint(".", color, attrs=attrs, end="", flush=True)
             self._last_verbose_message = False
             return
         if not self._last_verbose_message:
             reason = "\n" + reason
         attrs = attrs if attrs else []
-        cprint(reason, color, attrs=attrs, end=end)
+        cprint(reason, color, attrs=attrs, end=end, flush=True)
         if end:
             self._last_verbose_message = True
 
