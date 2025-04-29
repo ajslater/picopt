@@ -46,9 +46,8 @@ class Printer:
         attrs: list[str] | None = None,
     ):
         """Skip Message."""
-        message = "Skip " + reason
-        if path_info:
-            message += ": " + path_info.full_output_name()
+        parts = ("Skip", reason, path_info.full_output_name())
+        message = ": ".join(parts)
         self.message(message, color=color, attrs=attrs)
 
     def skip_container(self, container_type: str, path_info: PathInfo):
