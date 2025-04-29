@@ -114,7 +114,7 @@ class ArchiveHandler(NonPILIdentifier, ContainerHandler, ABC):
             archive_sub_path = self.path_info.archive_psuedo_path() / path.parent
             self._timestamps.loads(archive_sub_path, yaml_str)
             if self._skipper:
-                self._printer.message_consumed_timestamp(path)
+                self._printer.consumed_timestamp(path)
             self._mark_delete(path)
 
         return tuple(non_treestamp_entries)
@@ -176,10 +176,10 @@ class PackingArchiveHandler(ArchiveHandler, PackingContainerHandler, ABC):
         while self._optimized_contents:
             path_info = self._optimized_contents.pop()
             self._pack_info_one_file(archive, path_info)
-            self._printer.packed_message()
+            self._printer.packed()
         if self.comment:
             archive.comment = self.comment
-            self._printer.packed_message()
+            self._printer.packed()
 
     def pack_into(self) -> BytesIO:
         """Zip up the files in the tempdir into the new filename."""

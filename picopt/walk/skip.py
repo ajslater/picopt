@@ -43,7 +43,7 @@ class WalkSkipper:
         if warn:
             self._printer.warn(reason)
         else:
-            self._printer.skip_message(reason, path_info)
+            self._printer.skip(reason, path_info)
 
     def _is_skippable(self, path_info: PathInfo) -> bool:
         """Handle things that are not optimizable files."""
@@ -80,7 +80,7 @@ class WalkSkipper:
                 shutil.rmtree(path, ignore_errors=True)
             else:
                 path.unlink(missing_ok=True)
-            self._printer.message_deleted(path)
+            self._printer.deleted(path)
         except Exception as exc:
             self._printer.error("", exc)
             self._last_verbose_message = True
@@ -120,5 +120,5 @@ class WalkSkipper:
 
         mtime = path_info.mtime()
         if result := bool(mtime <= walk_after):
-            self._printer.skip_timestamp_message("older than timestamp", path_info)
+            self._printer.skip_timestamp("older than timestamp", path_info)
         return result

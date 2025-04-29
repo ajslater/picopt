@@ -68,7 +68,7 @@ class ContainerHandler(Handler, ABC):
         if mp_result is None:
             # if not handled by picopt, place it in the results.
             self._optimized_contents.add(path_info)
-            self._printer.copied_message()
+            self._printer.copied()
         else:
             self._tasks[path_info] = mp_result
             self._do_repack = True

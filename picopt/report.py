@@ -92,9 +92,9 @@ class ReportStats(ReportStatBase):
             return
         report = self._report_saved()
         if self.saved > 0:
-            printer.saved_message(report)
+            printer.saved(report)
         else:
-            printer.lost_message(report)
+            printer.lost(report)
 
 
 class Totals:

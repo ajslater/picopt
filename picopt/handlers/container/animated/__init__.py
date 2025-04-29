@@ -102,7 +102,7 @@ class ImageAnimated(PrepareInfoMixin, PackingContainerHandler, ABC):
             frame_data = sorted_frames.pop().data()
             frame = Image.open(BytesIO(frame_data))
             append_images.append(frame)
-            self._printer.packed_message()
+            self._printer.packed()
 
         # Prepare info
         info = dict(self.prepare_info(self.OUTPUT_FORMAT_STR))

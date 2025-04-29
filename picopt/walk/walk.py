@@ -142,7 +142,7 @@ class Walk(HandlerFactory):
 
         handler = self._create_handler(path_info)
         if not handler:
-            self._printer.skip_message("no handler", path_info)
+            self._printer.skip("no handler", path_info)
         return handler
 
     def walk_file(self, path_info: PathInfo) -> ApplyResult | None:

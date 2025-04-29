@@ -44,7 +44,7 @@ class Printer:
         """Config messages."""
         self.message(message, color="cyan", force_verbose=True)
 
-    def skip_message(
+    def skip(
         self,
         reason,
         path_info: PathInfo,
@@ -59,13 +59,11 @@ class Printer:
     def skip_container(self, container_type: str, path_info: PathInfo):
         """Skip entire container."""
         reason = f"{container_type}, contents all skipped"
-        self.skip_message(reason, path_info)
+        self.skip(reason, path_info)
 
-    def skip_timestamp_message(self, message, path_info: PathInfo):
+    def skip_timestamp(self, message, path_info: PathInfo):
         """Skipped by timestamp."""
-        self.skip_message(
-            message, path_info, color="light_green", attrs=["dark", "bold"]
-        )
+        self.skip(message, path_info, color="light_green", attrs=["dark", "bold"])
 
     def start_operation(
         self, operation: str, path_info: PathInfo, *, force_newline: bool = True
@@ -76,11 +74,11 @@ class Printer:
             self._after_newline = False
         self.message(f"{operation} {path}...", force_verbose=True, end="")
 
-    def message_deleted(self, path: Path | str):
+    def deleted(self, path: Path | str):
         """Print deleted message."""
         self.message(f"Deleted {path}", color="yellow")
 
-    def message_consumed_timestamp(self, path: Path | str):
+    def consumed_timestamp(self, path: Path | str):
         """Consume timestamp message."""
         self.message(f"Consumed picopt timestamp in archive: {path}", color="magenta")
 
@@ -104,7 +102,7 @@ class Printer:
         if self._verbose > 1:
             self.done()
 
-    def copied_message(self):
+    def copied(self):
         """Dot for copied file."""
         self.message(".", color="green", end="", force_continue_line=True)
 
@@ -112,7 +110,7 @@ class Printer:
         """Declare that we're optimizing contents."""
         self.start_operation("Optimizing contents in", path_info, force_newline=False)
 
-    def packed_message(self):
+    def packed(self):
         """Dot for repacked file."""
         self.message(".", color="light_grey", end="", force_continue_line=True)
 
@@ -120,11 +118,11 @@ class Printer:
         """Operation done."""
         self.message("done.", force_verbose=True, force_continue_line=True)
 
-    def saved_message(self, report):
+    def saved(self, report):
         """Report saved size."""
         self.message(report, color="light_cyan")
 
-    def lost_message(self, report):
+    def lost(self, report):
         """Lost size."""
         self.message(report, color="light_blue")
 
