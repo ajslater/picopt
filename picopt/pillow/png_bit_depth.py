@@ -22,7 +22,7 @@ def png_bit_depth(buffer: BinaryIO) -> int | None:
         depth = buffer.read(1)
         result = int.from_bytes(depth, byteorder="little")
     else:
-        reason  = "cannot find bit depth of non png"
+        reason = "cannot find bit depth of non png"
         raise ValueError(reason)
     return result
 
