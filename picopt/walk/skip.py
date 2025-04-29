@@ -4,7 +4,6 @@ import shutil
 from pathlib import Path
 
 from confuse import AttrDict
-from termcolor import cprint
 from treestamps import Grovestamps, Treestamps
 
 from picopt import PROGRAM_NAME
@@ -83,7 +82,7 @@ class WalkSkipper:
                 path.unlink(missing_ok=True)
             self._printer.message_deleted(path)
         except Exception as exc:
-            cprint("\n" + str(exc), "red")
+            self._printer.error("", exc)
             self._last_verbose_message = True
 
     def is_walk_file_skip(

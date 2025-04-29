@@ -4,7 +4,6 @@ import traceback
 from multiprocessing.pool import ApplyResult
 from pathlib import Path
 
-from termcolor import cprint
 from treestamps import Treestamps
 
 from picopt.handlers.container import ContainerHandler
@@ -190,7 +189,7 @@ class Walk(HandlerFactory):
         self._pool.close()
         self._pool.join()
 
-        cprint("done.")
+        self._printer.done()
 
         if self._timestamps:
             self._timestamps.dumpf()
