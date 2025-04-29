@@ -38,6 +38,14 @@ class WalkSkipper:
         """Reset the timestamps after they've been established."""
         self._timestamps = timestamps
 
+    def _log_skip(self, reason: str, *, warn: bool):
+        if not reason:
+            return
+        if warn:
+            self._printer.warn(reason)
+        else:
+            self._printer.skip_message(reason)
+
     def _is_skippable(self, path_info: PathInfo) -> bool:
         """Handle things that are not optimizable files."""
         reason = ""
@@ -62,11 +70,7 @@ class WalkSkipper:
             reason = f"{path_info.full_output_name()} not found."
             warn = True
 
-        if reason:
-            if warn:
-                self._printer.warn(reason)
-            else:
-                self._printer.skip_message(reason)
+        self._log_skip(reason, warn=warn)
 
         return bool(reason)
 

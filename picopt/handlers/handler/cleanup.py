@@ -80,47 +80,39 @@ class HandlerCleanup(HandlerInit):
         if not self.final_path:
             reason = "This should not happen. no buffer and no final path."
             raise ValueError(reason)
-
-        with final_data_buffer:
-            # if this method is a noop, still closes buffer.
-            self._cleanup_filesystem_write_final_path(final_data_buffer)
-
+        self._cleanup_filesystem_write_final_path(final_data_buffer)
+        # Can early close here
+        final_data_buffer.close()
         self._cleanup_filesystem_cleanup_original_path()
         self._cleanup_filesystem_preserve_stats()
 
     def _cleanup_after_optimize(self, final_data_buffer: BinaryIO) -> ReportStats:
         """Replace old file with better one or discard new wasteful file."""
-        try:
-            bytes_in, bytes_out = self._cleanup_after_optimize_calculate_bytes(
-                final_data_buffer
-            )
-            if not self.config.dry_run and (
-                (bytes_out > 0) and ((bytes_out < bytes_in) or self.config.bigger)
-            ):
-                return_data = self._cleanup_after_optimize_save_new(final_data_buffer)
-                if self.path_info.path:
-                    self._cleanup_filesystem(final_data_buffer)
-            else:
-                return_data = b""
-            final_data_buffer.close()
-            if (
-                self.working_path
-                and self.working_path != self.final_path
-                and isinstance(final_data_buffer, BufferedReader)
-            ):
-                self.working_path.unlink(missing_ok=True)
-            if self.original_path != self.final_path:
-                self.path_info.rename(self.final_path)
-            return ReportStats(
-                self.final_path,
-                path_info=self.path_info,
-                config=self.config,
-                bytes_in=bytes_in,
-                bytes_out=bytes_out,
-                data=return_data,
-            )
-        except Exception as exc:
-            self._printer.error(
-                f"cleanup_after_optimize: {self.path_info.full_output_name()}", exc
-            )
-            raise
+        bytes_in, bytes_out = self._cleanup_after_optimize_calculate_bytes(
+            final_data_buffer
+        )
+        if not self.config.dry_run and (
+            (bytes_out > 0) and ((bytes_out < bytes_in) or self.config.bigger)
+        ):
+            return_data = self._cleanup_after_optimize_save_new(final_data_buffer)
+            if self.path_info.path:
+                self._cleanup_filesystem(final_data_buffer)
+        else:
+            return_data = b""
+        final_data_buffer.close()
+        if (
+            self.working_path
+            and self.working_path != self.final_path
+            and isinstance(final_data_buffer, BufferedReader)
+        ):
+            self.working_path.unlink(missing_ok=True)
+        if self.original_path != self.final_path:
+            self.path_info.rename(self.final_path)
+        return ReportStats(
+            self.final_path,
+            path_info=self.path_info,
+            config=self.config,
+            bytes_in=bytes_in,
+            bytes_out=bytes_out,
+            data=return_data,
+        )
