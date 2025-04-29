@@ -7,7 +7,6 @@ from dataclasses import dataclass, fields
 from types import MappingProxyType
 
 from confuse import Subview
-from termcolor import cprint
 
 from picopt.config.cwebp import is_cwebp_modern
 from picopt.formats import (
@@ -44,6 +43,7 @@ from picopt.handlers.image.jpeg import Jpeg
 from picopt.handlers.image.png import Png, PngAnimated
 from picopt.handlers.image.svg import Svg
 from picopt.handlers.image.webp import WebPLossless
+from picopt.printer import Printer
 
 
 @dataclass
@@ -117,23 +117,24 @@ _FORMAT_HANDLERS = MappingProxyType(
 )
 
 
-def _print_formats_config(
+def _print_formats_config(  # noqa: PLR0913
     verbose: int,
     handled_format_strs: set[str],
     convert_format_strs: dict[str, set[str]],
     cwebp_version: str,
+    printer: Printer,
     *,
     is_modern_cwebp: bool,
 ) -> None:
     """Print verbose init messages."""
     handled_format_list = ", ".join(sorted(handled_format_strs))
-    cprint(f"Optimizing formats: {handled_format_list}")
+    printer.config(f"Optimizing formats: {handled_format_list}")
     for convert_to_format_str, format_strs in convert_format_strs.items():
         convert_from_list = sorted(format_strs)
         if not convert_from_list:
             return
         convert_from = ", ".join(convert_from_list)
-        cprint(f"Converting {convert_from} to {convert_to_format_str}", "cyan")
+        printer.config(f"Converting {convert_from} to {convert_to_format_str}")
     if (
         verbose > 1
         and not is_modern_cwebp
@@ -142,9 +143,8 @@ def _print_formats_config(
         to_webp_strs = MODERN_CWEBP_FORMAT_STRS & handled_format_strs
         if to_webp_strs:
             to_web_str = " & ".join(sorted(to_webp_strs))
-            cprint(
+            printer.config(
                 f"Converting {to_web_str} with an extra step for older cwebp {cwebp_version}",
-                "cyan",
             )
 
 
@@ -243,7 +243,7 @@ def _set_format_handler_map_entry(  # noqa: PLR0913
     return True
 
 
-def set_format_handler_map(config: Subview) -> None:
+def set_format_handler_map(config: Subview, printer: Printer) -> None:
     """Create a format to handler map from config."""
     all_format_strs = _get_config_set(config, "formats", "extra_formats")
     config["formats"].set(tuple(sorted(all_format_strs)))
@@ -296,5 +296,6 @@ def set_format_handler_map(config: Subview) -> None:
         handled_format_strs,
         convert_format_strs,
         cwebp_version,
+        printer,
         is_modern_cwebp=is_modern_cwebp,
     )

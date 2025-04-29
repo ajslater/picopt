@@ -18,11 +18,11 @@ from confuse.templates import (
     Path as ConfusePath,
 )
 from dateutil.parser import parse
-from termcolor import cprint
 
 from picopt import PROGRAM_NAME
 from picopt.config.consts import ALL_FORMAT_STRS, CONVERT_TO_FORMAT_STRS
 from picopt.config.handlers import set_format_handler_map
+from picopt.printer import Printer
 
 if TYPE_CHECKING:
     from collections.abc import Iterable
@@ -78,7 +78,7 @@ _MULTIPLE_STARS_RE = re.compile(r"\*+")
 _DOTFILE_REGEXPS = (r"^\.", r"\/\.")
 
 
-def _set_after(config: Subview) -> None:
+def _set_after(config: Subview, printer: Printer) -> None:
     after = config["after"].get()
     if after is None:
         return
@@ -92,7 +92,7 @@ def _set_after(config: Subview) -> None:
     config["after"].set(timestamp)
     if timestamp is not None:
         after = time.ctime(timestamp)
-        cprint(f"Optimizing after {after}")
+        printer.config(f"Optimizing after {after}")
 
 
 def _get_ignore_regexp(
@@ -119,7 +119,7 @@ def _get_ignore_regexp(
     return r"|".join(ignore_regexps), ignore_single_stars
 
 
-def _print_ignores(ignore_single_stars: list[str], *, ignore_dotfiles: bool):
+def _print_ignores(ignore_single_stars: list[str], printer: Printer, *, ignore_dotfiles: bool):
     ignore_text = ""
     if ignore_single_stars:
         ignore_text = "Ignoring: "
@@ -129,10 +129,10 @@ def _print_ignores(ignore_single_stars: list[str], *, ignore_dotfiles: bool):
             ignore_text += " "
         ignore_text += "Not ignoring dotfiles."
     if ignore_text:
-        cprint(ignore_text, "cyan")
+        printer.config(ignore_text)
 
 
-def _set_ignore(config: Subview) -> None:
+def _set_ignore(config: Subview, printer: Printer) -> None:
     """Compute ignore regexp."""
     ignore_list: list | tuple | set | frozenset = config["ignore"].get(list)  # type: ignore[reportAssignmentType]
     ignore_list = sorted(frozenset(ignore_list))
@@ -148,10 +148,10 @@ def _set_ignore(config: Subview) -> None:
     config["computed"]["ignore"]["case"].set(ignore)
     config["computed"]["ignore"]["ignore_case"].set(ignore_ignore_case)
     if verbose > 1:
-        _print_ignores(ignore_single_stars, ignore_dotfiles=ignore_dotfiles)
+        _print_ignores(ignore_single_stars, printer, ignore_dotfiles=ignore_dotfiles)
 
 
-def _set_timestamps(config: Subview) -> None:
+def _set_timestamps(config: Subview, printer: Printer) -> None:
     """Set the timestamps attribute."""
     timestamps = (
         config["timestamps"].get(bool)
@@ -174,7 +174,7 @@ def _set_timestamps(config: Subview) -> None:
             ts_str = f"Setting a timestamp file at the top of each directory tree: {roots_str}"
         else:
             ts_str = "Not setting timestamps."
-        cprint(ts_str, "cyan")
+        printer.config(ts_str)
 
 
 def get_config(args: Namespace | None = None, modname=PROGRAM_NAME) -> AttrDict:
@@ -187,10 +187,11 @@ def get_config(args: Namespace | None = None, modname=PROGRAM_NAME) -> AttrDict:
     if args:
         config.set_args(args)
     config_program = config[PROGRAM_NAME]
-    _set_ignore(config_program)
-    _set_after(config_program)
-    _set_timestamps(config_program)
-    set_format_handler_map(config_program)
+    printer = Printer(2)
+    _set_ignore(config_program, printer)
+    _set_after(config_program, printer)
+    _set_timestamps(config_program, printer)
+    set_format_handler_map(config_program, printer)
     ad = config.get(_TEMPLATE)
     if not isinstance(ad, AttrDict):
         msg = "Not a valid config"
