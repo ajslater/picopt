@@ -150,7 +150,7 @@ class Walk(HandlerFactory):
             if handler := self._walk_file_get_handler(path_info):
                 result = self._handle_file(handler)
             else:
-                self._printer.skip_message("")
+                self._printer.skip_message("No Handler", path_info)
         except Exception as exc:
             traceback.print_exc()
             apply_kwargs = {

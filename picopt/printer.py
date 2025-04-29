@@ -16,7 +16,13 @@ class Printer:
         self._last_verbose_message = True
 
     def message(
-        self, reason, color="white", attrs=None, *, force_verbose=False, end="\n"
+        self,
+        reason: str,
+        color="white",
+        attrs: list[str] | None = None,
+        *,
+        force_verbose: bool = False,
+        end: str = "\n",
     ):
         """Print a dot or skip message."""
         if self._verbose < 1:
@@ -32,19 +38,29 @@ class Printer:
         if end:
             self._last_verbose_message = True
 
-    def skip_message(self, message):
+    def skip_message(
+        self,
+        reason,
+        path_info: PathInfo,
+        color="dark_grey",
+        attrs: list[str] | None = None,
+    ):
         """Skip Message."""
-        self.message(message, color="dark_grey")
+        message = "Skip " + reason
+        if path_info:
+            message += ": " + path_info.full_output_name()
+        self.message(message, color=color, attrs=attrs)
 
     def skip_container(self, container_type: str, path_info: PathInfo):
         """Skip entire container."""
-        path = path_info.full_output_name()
-        reason = f"{container_type} contents all skipped: {path}"
-        self.skip_message(reason)
+        reason = f"{container_type}, contents all skipped"
+        self.skip_message(reason, path_info)
 
-    def skip_timestamp_message(self, message):
+    def skip_timestamp_message(self, message, path_info: PathInfo):
         """Skipped by timestamp."""
-        self.message(message, color="light_green", attrs=["dark", "bold"])
+        self.skip_message(
+            message, path_info, color="light_green", attrs=["dark", "bold"]
+        )
 
     def start_operation(self, operation: str, path_info: PathInfo):
         """Scan archive start."""

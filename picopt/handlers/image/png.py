@@ -72,7 +72,7 @@ class Png(PngBase):
         depth = png_bit_depth(input_buffer)
         if not depth or depth > self._PNGOUT_DEPTH_MAX or depth < 1:
             self._printer.skip_message(
-                f"Skipped pngout for {depth} bit PNG: {self.path_info.full_output_name()}",
+                f"Skipped pngout for {depth} bit PNG", self.path_info
             )
             return input_buffer
         opts = ("-k1",) if self.config.keep_metadata else ("-k0",)

@@ -38,13 +38,13 @@ class WalkSkipper:
         """Reset the timestamps after they've been established."""
         self._timestamps = timestamps
 
-    def _log_skip(self, reason: str, *, warn: bool):
+    def _log_skip(self, reason: str, path_info: PathInfo, *, warn: bool):
         if not reason:
             return
         if warn:
             self._printer.warn(reason)
         else:
-            self._printer.skip_message(reason)
+            self._printer.skip_message(reason, path_info)
 
     def _is_skippable(self, path_info: PathInfo) -> bool:
         """Handle things that are not optimizable files."""
@@ -55,22 +55,22 @@ class WalkSkipper:
 
         # File types
         if not self._config.symlinks and path and path.is_symlink():
-            reason = f"Skip symlink {path_info.full_output_name()}"
+            reason = "symlink"
         elif path_info.name() in self._TIMESTAMPS_FILENAMES:
             legacy = "legacy " if path_info.name() == OLD_TIMESTAMPS_NAME else ""
-            reason = f"Skip {legacy}timestamp {path_info.full_output_name()}"
+            reason = f"{legacy}timestamp"
         elif is_path_ignored(
             self._config,
             path_info.archive_psuedo_path(),
             ignore_case=path_info.is_case_sensitive,
         ):
-            reason = f"Skip ignored {path_info.full_output_name()}"
+            reason = "ignored"
         elif not self._in_archive and path and not path.exists():
             # Check disk last for performance
-            reason = f"{path_info.full_output_name()} not found."
+            reason = "not found"
             warn = True
 
-        self._log_skip(reason, warn=warn)
+        self._log_skip(reason, path_info, warn=warn)
 
         return bool(reason)
 
@@ -100,11 +100,6 @@ class WalkSkipper:
             return True
         return False
 
-    def _skip_older_than_timestamp(self, path_info: PathInfo) -> None:
-        """Report on skipping files older than the timestamp."""
-        reason = f"Skip older than timestamp: {path_info.full_output_name()}"
-        self._printer.skip_timestamp_message(reason)
-
     def _get_walk_after(self, path_info: PathInfo):
         if self._config.after is not None:
             walk_after = self._config.after
@@ -126,5 +121,5 @@ class WalkSkipper:
 
         mtime = path_info.mtime()
         if result := bool(mtime <= walk_after):
-            self._skip_older_than_timestamp(path_info)
+            self._printer.skip_timestamp_message("older than timestamp", path_info)
         return result
