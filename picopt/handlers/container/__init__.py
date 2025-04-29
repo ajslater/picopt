@@ -53,7 +53,9 @@ class ContainerHandler(Handler, ABC):
         self.config = copy(self.config)
         self._timestamps = timestamps
         self.repack_handler_class = repack_handler_class
-        self._skipper = WalkSkipper(self.config, timestamps, in_archive=True)
+        self._skipper = WalkSkipper(
+            self.config, self._printer, timestamps, in_archive=True
+        )
         self.comment: bytes | None = None
         self._tasks: dict[PathInfo, ApplyResult] = {}
         self._optimized_contents: set[PathInfo] = set()

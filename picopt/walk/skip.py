@@ -23,6 +23,7 @@ class WalkSkipper:
     def __init__(
         self,
         config: AttrDict,
+        printer: Printer,
         timestamps: Grovestamps | dict | None = None,
         *,
         in_archive: bool = False,
@@ -31,7 +32,7 @@ class WalkSkipper:
         self._config = config
         self._timestamps = timestamps if timestamps else {}
         self._in_archive = in_archive
-        self._printer = Printer(self._config.verbose)
+        self._printer = printer
 
     def set_timestamps(self, timestamps: Grovestamps):
         """Reset the timestamps after they've been established."""

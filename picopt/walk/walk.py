@@ -194,5 +194,5 @@ class Walk(HandlerFactory):
         if self._timestamps:
             self._timestamps.dumpf()
 
-        self._totals.report(self._printer)
+        self._totals.report()
         return self._totals
