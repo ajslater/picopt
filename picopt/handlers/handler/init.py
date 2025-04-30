@@ -9,9 +9,6 @@ from picopt.formats import FileFormat
 from picopt.path import PathInfo
 from picopt.printer import Printer
 
-_BAD_SUFFIX_CHARS = " ()"
-_MAX_SUFFIX_LEN = 8
-
 
 class HandlerInit:
     """Handler init."""
@@ -24,21 +21,16 @@ class HandlerInit:
     )
     INPUT_FILE_FORMATS: frozenset[FileFormat] = frozenset({OUTPUT_FILE_FORMAT})
     PROGRAMS: tuple[tuple[str, ...], ...] = ()
-    WORKING_SUFFIX: str = f"{PROGRAM_NAME}-tmp"
+    WORKING_SUFFIX: str = f".{PROGRAM_NAME}-tmp"
 
     def _compute_final_path(self):
         """Compute the final path even if it the original has multiple suffixes."""
-        final_path = str(self.original_path)
-        for suffix in reversed(self.original_path.suffixes):
-            if len(suffix) > _MAX_SUFFIX_LEN or any(
-                char in suffix for char in _BAD_SUFFIX_CHARS
-            ):
-                # dots in filenames are different than multiple suffixes
-                # bail if it doesn't look like a suffix
-                break
-            final_path = final_path.removesuffix(suffix)
-        final_path += self.output_suffix
-        return Path(final_path)
+        final_path = self.original_path.with_suffix("")
+        if final_path.suffix == "tar":
+            # Special casing tar prevents heaps of false signals for other multiple suffix types.
+            final_path = final_path.with_suffix("")
+        # Add to suffix, don't replace to fix remaining suffixes.
+        return final_path.parent / (final_path.name + self.output_suffix)
 
     def __init__(
         self,
