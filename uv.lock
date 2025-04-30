@@ -620,7 +620,7 @@ requires-dist = [
     { name = "python-dateutil", specifier = ">=2.8,<3.0" },
     { name = "rarfile", specifier = ">=4.0,<5.0" },
     { name = "ruamel-yaml", specifier = ">=0.18.5,<1.0.0" },
-    { name = "treestamps", specifier = ">=2.2.3,<3.0.0" },
+    { name = "treestamps", specifier = ">=2.2.4,<3.0.0" },
 ]
 
 [package.metadata.requires-dev]
@@ -1366,11 +1366,11 @@ wheels = [
 
 [[package]]
 name = "termcolor"
-version = "3.0.1"
+version = "3.1.0"
 source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/f8/b6/8e2aaa8aeb570b5cc955cd913b083d96c5447bbe27eaf330dfd7cc8e3329/termcolor-3.0.1.tar.gz", hash = "sha256:a6abd5c6e1284cea2934443ba806e70e5ec8fd2449021be55c280f8a3731b611", size = 12935, upload-time = "2025-04-02T10:02:25.243Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/ca/6c/3d75c196ac07ac8749600b60b03f4f6094d54e132c4d94ebac6ee0e0add0/termcolor-3.1.0.tar.gz", hash = "sha256:6a6dd7fbee581909eeec6a756cff1d7f7c376063b14e4a298dc4980309e55970", size = 14324, upload-time = "2025-04-30T11:37:53.791Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/a6/7e/a574ccd49ad07e8b117407bac361f1e096b01f1b620365daf60ff702c936/termcolor-3.0.1-py3-none-any.whl", hash = "sha256:da1ed4ec8a5dc5b2e17476d859febdb3cccb612be1c36e64511a6f2485c10c69", size = 7157, upload-time = "2025-04-02T10:02:24.088Z" },
+    { url = "https://files.pythonhosted.org/packages/4f/bd/de8d508070629b6d84a30d01d57e4a65c69aa7f5abe7560b8fad3b50ea59/termcolor-3.1.0-py3-none-any.whl", hash = "sha256:591dd26b5c2ce03b9e43f391264626557873ce1d379019786f99b0c2bee140aa", size = 7684, upload-time = "2025-04-30T11:37:52.382Z" },
 ]
 
 [[package]]
@@ -1446,15 +1446,15 @@ wheels = [
 
 [[package]]
 name = "treestamps"
-version = "2.2.3"
+version = "2.2.4"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "ruamel-yaml" },
     { name = "termcolor" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/27/0f/d9011a36fcabda2701043a6f3ac84c1cbc9da17689af80d54604c09859f6/treestamps-2.2.3.tar.gz", hash = "sha256:6598face7d7c76069c412450b8a0f5ed956d7b7c1095f8beeca0e48d8184fcba", size = 24937, upload-time = "2025-04-30T01:14:24.022Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/80/9e/df015c618b4d4d9408f0747e98ec7f6193405c2e2d7f97fa1fdc0d34d1c2/treestamps-2.2.4.tar.gz", hash = "sha256:78eb47d96218a5819ab1a9c98f064e02bdb88913d025ce0d17cd5569847ca698", size = 24947, upload-time = "2025-04-30T22:10:39.552Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/04/f0/0f2d8408a97e761a53c7a5f85592a9140b33de1bffb2c5568b469f0a3809/treestamps-2.2.3-py3-none-any.whl", hash = "sha256:24e1605b4e0e00dee3fc5d0ea251c7ccb2c5238aee9e50abd5cee670b5156333", size = 23872, upload-time = "2025-04-30T01:14:22.865Z" },
+    { url = "https://files.pythonhosted.org/packages/4c/21/ee8352c41b56bde7f3aa68283b9285d1f7ef363911b6947d5128a313abd6/treestamps-2.2.4-py3-none-any.whl", hash = "sha256:7c54e3386f3b5f6202ffe9de9645b0db167b9bd9a5b68b9fa5972537bf8e989a", size = 23871, upload-time = "2025-04-30T22:10:38.677Z" },
 ]
 
 [[package]]
