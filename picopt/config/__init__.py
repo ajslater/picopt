@@ -38,7 +38,7 @@ _TEMPLATE = MappingTemplate(
                 "extra_formats": Optional(Sequence(Choice(ALL_FORMAT_STRS))),
                 "formats": Sequence(Choice(ALL_FORMAT_STRS)),
                 "ignore": Sequence(str),
-                "ignore_dotfiles": bool,
+                "ignore_defaults": bool,
                 "jobs": Integer(),
                 "keep_metadata": bool,
                 "list_only": bool,
@@ -74,7 +74,7 @@ _TEMPLATE = MappingTemplate(
     }
 )
 _MULTIPLE_STARS_RE = re.compile(r"\*+")
-_DOTFILE_REGEXPS = (r"^\.", r"\/\.")
+_DEFAULT_IGNORE_REGEXPS = (r"^\.", r"\/\.", r"\.sparsebundle$")
 
 
 class PicoptConfig(ConfigHandlers):
@@ -101,11 +101,11 @@ class PicoptConfig(ConfigHandlers):
         ignore_list: list[str],
         verbose: int,
         *,
-        ignore_dotfiles: bool,
+        ignore_defaults: bool,
     ):
         ignore_regexps = []
-        if ignore_dotfiles:
-            ignore_regexps += _DOTFILE_REGEXPS
+        if ignore_defaults:
+            ignore_regexps += _DEFAULT_IGNORE_REGEXPS
 
         ignore_single_stars = []
         for ignore_glob in ignore_list:
@@ -120,12 +120,12 @@ class PicoptConfig(ConfigHandlers):
 
         return r"|".join(ignore_regexps), ignore_single_stars
 
-    def _print_ignores(self, ignore_single_stars: list[str], *, ignore_dotfiles: bool):
+    def _print_ignores(self, ignore_single_stars: list[str], *, ignore_defaults: bool):
         ignore_text = ""
         if ignore_single_stars:
             ignore_text = "Ignoring: "
             ignore_text += ",".join(ignore_single_stars)
-        if not ignore_dotfiles:
+        if not ignore_defaults:
             if ignore_single_stars:
                 ignore_text += " "
             ignore_text += "Not ignoring dotfiles."
@@ -136,10 +136,10 @@ class PicoptConfig(ConfigHandlers):
         """Compute ignore regexp."""
         ignore_list: list | tuple | set | frozenset = config["ignore"].get(list)  # type: ignore[reportAssignmentType]
         ignore_list = sorted(frozenset(ignore_list))
-        ignore_dotfiles: bool = config["ignore_dotfiles"].get(bool)  # type: ignore[reportAssignmentType]
+        ignore_defaults: bool = config["ignore_defaults"].get(bool)  # type: ignore[reportAssignmentType]
         verbose: int = config["verbose"].get(int)  # type: ignore[reportAssignmentType]
         ignore_regexp, ignore_single_stars = self._get_ignore_regexp(
-            ignore_list, verbose, ignore_dotfiles=ignore_dotfiles
+            ignore_list, verbose, ignore_defaults=ignore_defaults
         )
         ignore = re.compile(ignore_regexp) if ignore_regexp else None
         ignore_ignore_case = (
@@ -148,7 +148,7 @@ class PicoptConfig(ConfigHandlers):
         config["computed"]["ignore"]["case"].set(ignore)
         config["computed"]["ignore"]["ignore_case"].set(ignore_ignore_case)
         if verbose > 1:
-            self._print_ignores(ignore_single_stars, ignore_dotfiles=ignore_dotfiles)
+            self._print_ignores(ignore_single_stars, ignore_defaults=ignore_defaults)
 
     def _set_timestamps(self, config: Subview) -> None:
         """Set the timestamps attribute."""

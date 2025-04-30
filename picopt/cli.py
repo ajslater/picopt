@@ -180,11 +180,11 @@ def get_arguments(params: tuple[str, ...] | None = None) -> Namespace:
     )
     parser.add_argument(
         "-I",
-        "--no-ignore-dotfiles",
-        dest="ignore_dotfiles",
+        "--no-default-ignores",
+        dest="ignore_defaults",
         default=True,
         action="store_false",
-        help="Do not ignore dotfiles. By default they are ignored.",
+        help="Do not ignore dotfiles and sparsebundles. By default they are ignored.",
     )
     parser.add_argument(
         "-b",
