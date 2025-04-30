@@ -120,6 +120,10 @@ class Printer:
 
     def saved(self, report):
         """Report saved size."""
+        self._message(report)
+
+    def converted(self, report):
+        """Report converted file."""
         self._message(report, color="light_cyan")
 
     def lost(self, report):

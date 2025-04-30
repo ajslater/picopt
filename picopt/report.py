@@ -33,6 +33,7 @@ class ReportStats(ReportStatBase):
         *args,
         config: AttrDict | None = None,
         path_info: PathInfo | None = None,
+        converted: bool = False,
         **kwargs,
     ) -> None:
         """Initialize required instance variables."""
@@ -43,6 +44,7 @@ class ReportStats(ReportStatBase):
         self._full_name = path_info.full_output_name() if path_info else str(path)
         super().__init__(path, *args, **kwargs)
         self.saved = self.bytes_in - self.bytes_out
+        self.converted = converted
 
     def _new_percent_saved(self) -> str:
         """Spit out how much space the optimization saved."""
@@ -92,7 +94,10 @@ class ReportStats(ReportStatBase):
             return
         report = self._report_saved()
         if self.saved > 0:
-            printer.saved(report)
+            if self.converted:
+                printer.converted(report)
+            else:
+                printer.saved(report)
         else:
             printer.lost(report)
 

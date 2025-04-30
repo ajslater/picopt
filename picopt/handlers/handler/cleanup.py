@@ -106,10 +106,12 @@ class HandlerCleanup(HandlerInit):
             and isinstance(final_data_buffer, BufferedReader)
         ):
             self.working_path.unlink(missing_ok=True)
-        if self.original_path != self.final_path:
+        converted = self.original_path != self.final_path
+        if converted:
             self.path_info.rename(self.final_path)
         return ReportStats(
             self.final_path,
+            converted=converted,
             path_info=self.path_info,
             config=self.config,
             bytes_in=bytes_in,
