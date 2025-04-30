@@ -26,7 +26,7 @@ class HandlerInit:
     def _compute_final_path(self):
         """Compute the final path even if it the original has multiple suffixes."""
         final_path = self.original_path.with_suffix("")
-        if final_path.suffix == "tar":
+        if final_path.suffix == ".tar":
             # Special casing tar prevents heaps of false signals for other multiple suffix types.
             final_path = final_path.with_suffix("")
         # Add to suffix, don't replace to fix remaining suffixes.
