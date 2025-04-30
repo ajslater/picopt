@@ -17,7 +17,7 @@ dependencies = [
   "py7zr<2.0.0,>=1.0.0rc2",
   "filetype<2.0.0,>=1.2.0",
 ]
-version = "5.0.0a2"
+version = "5.0.0a3"
 description = "A multi format lossless image optimizer that uses external tools"
 readme = "README.md"
 keywords = ["image", "png", "jpg", "cbz", "cbr"]
