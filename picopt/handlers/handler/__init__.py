@@ -48,11 +48,11 @@ class Handler(ABC, HandlerCleanup):
         else:
             path = self.original_path
 
-        suffixes = [self.original_path.suffix, self.WORKING_SUFFIX]
+        suffixes = [*self.original_path.suffixes, self.WORKING_SUFFIX]
         if identifier_suffix:
-            suffixes += [identifier_suffix]
-        suffix = ".".join(suffixes)
-        suffix += self.output_suffix
+            suffixes.append(identifier_suffix)
+        suffixes.append(self.output_suffix)
+        suffix = "".join(suffixes)
         return path.with_suffix(suffix)
 
     def run_ext_fs(  # noqa: PLR0913
