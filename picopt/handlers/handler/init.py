@@ -6,7 +6,7 @@ from confuse.templates import AttrDict
 
 from picopt import PROGRAM_NAME
 from picopt.formats import FileFormat
-from picopt.path import PathInfo
+from picopt.path import DOUBLE_SUFFIX, PathInfo
 from picopt.printer import Printer
 
 
@@ -26,8 +26,7 @@ class HandlerInit:
     def _compute_final_path(self):
         """Compute the final path even if it the original has multiple suffixes."""
         final_path = self.original_path.with_suffix("")
-        if final_path.suffix == ".tar":
-            # Special casing tar prevents heaps of false signals for other multiple suffix types.
+        if final_path.suffix == DOUBLE_SUFFIX:
             final_path = final_path.with_suffix("")
         # Add to suffix, don't replace to fix remaining suffixes.
         return final_path.parent / (final_path.name + self.output_suffix)

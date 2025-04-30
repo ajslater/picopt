@@ -13,9 +13,11 @@ from rarfile import RarInfo
 from picopt.archiveinfo import ArchiveInfo
 
 _CONTAINER_PATH_DELIMETER = ":"
-_DOUBLE_SUFFIX = ".tar"
 _LOWERCASE_TESTNAME = ".picopt_case_sensitive_test"
 _UPPERCASE_TESTNAME = _LOWERCASE_TESTNAME.upper()
+# Special case only supported double suffixes prevents heaps of false signals for
+# other multiple suffix types.
+DOUBLE_SUFFIX = ".tar"
 
 
 def is_path_case_sensitive(dirpath: Path) -> bool:
@@ -247,10 +249,10 @@ class PathInfo:
         return self._archive_psuedo_path
 
     def suffix(self) -> str:
-        """Return file suffix."""
+        """Return first suffix or tar+ suffix."""
         if self._suffix is None:
             path = Path(self.name())
             suffixes = path.suffixes
-            index = -2 if len(suffixes) > 1 and suffixes[-2] == _DOUBLE_SUFFIX else -1
+            index = -2 if len(suffixes) > 1 and suffixes[-2] == DOUBLE_SUFFIX else -1
             self._suffix = "".join(suffixes[index:])
         return self._suffix
