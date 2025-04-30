@@ -6,7 +6,7 @@ uv tree --outdated
 npm update
 npm outdated
 if [ -d frontend ]; then
-    cd frontend
-    npm update
-    npm outdated
+  cd frontend
+  npm update
+  npm outdated
 fi
