@@ -11,13 +11,13 @@ dependencies = [
   "python-dateutil<3.0,>=2.8",
   "rarfile<5.0,>=4.0",
   "ruamel-yaml<1.0.0,>=0.18.5",
-  "treestamps<3.0.0,>=2.2.1",
+  "treestamps<3.0.0,>=2.2.2",
   "Pillow>=9.5",
   "defusedxml<1.0.0,>=0.7.1",
   "py7zr<2.0.0,>=1.0.0rc2",
   "filetype<2.0.0,>=1.2.0",
 ]
-version = "5.0.0-a1"
+version = "5.0.0a2"
 description = "A multi format lossless image optimizer that uses external tools"
 readme = "README.md"
 keywords = ["image", "png", "jpg", "cbz", "cbr"]
