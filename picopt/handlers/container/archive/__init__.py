@@ -92,9 +92,6 @@ class ArchiveHandler(NonPILIdentifier, ContainerHandler, ABC):
             path_info.set_data(data)
         return path_info
 
-    def _mark_delete(self, filename: str | Path) -> None:
-        """NoOp for most archives."""
-
     def _consume_archive_timestamps(self, archive) -> tuple:
         infolist = self._archive_infolist(archive)
         if not (self.config.timestamps and self._timestamps):
@@ -115,7 +112,7 @@ class ArchiveHandler(NonPILIdentifier, ContainerHandler, ABC):
             self._timestamps.loads(archive_sub_path, yaml_str)
             if self._skipper:
                 self._printer.consumed_timestamp(path)
-            self._mark_delete(path)
+            self._do_repack = True
 
         return tuple(non_treestamp_entries)
 
@@ -149,7 +146,7 @@ class ArchiveHandler(NonPILIdentifier, ContainerHandler, ABC):
         final_path = report.path
         if final_path and original_path != final_path:
             path_info.rename(final_path)
-            self._mark_delete(original_path)
+            self._do_repack = True
 
     def optimize_contents(self):
         """Remove data structures that are no longer used."""

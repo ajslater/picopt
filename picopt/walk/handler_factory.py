@@ -150,6 +150,5 @@ class HandlerFactory(DetectFormat):
                 input_file_format=repack_handler_class.OUTPUT_FILE_FORMAT,
                 comment=unpack_handler.comment,
                 optimized_contents=unpack_handler.get_optimized_contents(),
-                convert=True,
             )
         return handler

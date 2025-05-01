@@ -17,7 +17,6 @@
   - colors changed.
 - Performance
   - Archives skipped without unpacking contents if all contents are skippable.
-  - Zip archives rewritten in place on disk if possible.
   - Animated pngs better optimized with oxipng
   - Faster scanning for legacy timestamps on startup.
 - Dev
