@@ -111,6 +111,7 @@ def get_arguments(params: tuple[str, ...] | None = None) -> Namespace:
         "-v",
         "--verbose",
         action="count",
+        default=1,
         dest="verbose",
         help="Display more output. Can be used multiple times for "
         "increasingly noisy output.",
@@ -293,7 +294,9 @@ def get_arguments(params: tuple[str, ...] | None = None) -> Namespace:
     pns = parser.parse_args(params)
 
     # increment verbose
-    if pns.verbose is not None and pns.verbose > 0:
+    if pns.verbose is None:
+        pns.verbose = 1
+    elif pns.verbose > 0:
         pns.verbose += 1
 
     return Namespace(picopt=pns)
