@@ -1,6 +1,6 @@
 # 📰 Picopt News
 
-## v5.0.0-a0
+## v5.0.0
 
 - Alert!
   - Timestamps options changed, invalidating old timestamps. On your first run
