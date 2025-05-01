@@ -42,14 +42,14 @@ class WalkInit:
             top_paths.append(path)
         self._top_paths: tuple[Path, ...] = tuple(top_paths)
         self._validate_top_paths()
-        self._totals = Totals(config)
+        self._printer = Printer(config.verbose)
+        self._totals = Totals(config, self._printer)
         if self._config.jobs:
             self._pool = Pool(self._config.jobs)
         else:
             self._pool = Pool()
         self._timestamps: Grovestamps | None = None  # reassigned at start of run
-        self._skipper = WalkSkipper(config)
-        self._printer = Printer(config.verbose)
+        self._skipper = WalkSkipper(config, self._printer)
 
     def _init_timestamps(self) -> None:
         """Init timestamps."""

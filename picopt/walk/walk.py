@@ -4,7 +4,6 @@ import traceback
 from multiprocessing.pool import ApplyResult
 from pathlib import Path
 
-from termcolor import cprint
 from treestamps import Treestamps
 
 from picopt.handlers.container import ContainerHandler
@@ -141,7 +140,10 @@ class Walk(HandlerFactory):
             if self._skipper.is_older_than_timestamp(path_info):
                 return None
 
-        return self._create_handler(path_info)
+        handler = self._create_handler(path_info)
+        if not handler:
+            self._printer.skip("no handler", path_info)
+        return handler
 
     def walk_file(self, path_info: PathInfo) -> ApplyResult | None:
         """Optimize an individual file."""
@@ -149,8 +151,6 @@ class Walk(HandlerFactory):
             result = None
             if handler := self._walk_file_get_handler(path_info):
                 result = self._handle_file(handler)
-            else:
-                self._printer.skip_message("")
         except Exception as exc:
             traceback.print_exc()
             apply_kwargs = {
@@ -189,10 +189,10 @@ class Walk(HandlerFactory):
         self._pool.close()
         self._pool.join()
 
-        cprint("done.")
+        self._printer.done()
 
         if self._timestamps:
             self._timestamps.dumpf()
 
-        self._totals.report(self._printer)
+        self._totals.report()
         return self._totals

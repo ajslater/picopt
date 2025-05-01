@@ -5,10 +5,10 @@ from argparse import Action, ArgumentParser, Namespace, RawDescriptionHelpFormat
 from importlib.metadata import PackageNotFoundError, version
 
 from confuse.exceptions import ConfigError
-from termcolor import colored, cprint
+from termcolor import colored
 
 from picopt import PROGRAM_NAME
-from picopt.config import get_config
+from picopt.config import PicoptConfig
 from picopt.config.consts import (
     ALL_FORMAT_STRS,
     ARCHIVE_CONVERT_FROM_FORMAT_STRS,
@@ -18,6 +18,7 @@ from picopt.config.consts import (
 )
 from picopt.exceptions import PicoptError
 from picopt.handlers.container.archive.zip import Cbz, Zip
+from picopt.printer import Printer
 from picopt.walk.walk import Walk
 
 _DEFAULT_FORMAT_STRS = frozenset(
@@ -110,6 +111,7 @@ def get_arguments(params: tuple[str, ...] | None = None) -> Namespace:
         "-v",
         "--verbose",
         action="count",
+        default=1,
         dest="verbose",
         help="Display more output. Can be used multiple times for "
         "increasingly noisy output.",
@@ -179,11 +181,11 @@ def get_arguments(params: tuple[str, ...] | None = None) -> Namespace:
     )
     parser.add_argument(
         "-I",
-        "--no-ignore-dotfiles",
-        dest="ignore_dotfiles",
+        "--no-default-ignores",
+        dest="ignore_defaults",
         default=True,
         action="store_false",
-        help="Do not ignore dotfiles. By default they are ignored.",
+        help="Do not ignore dotfiles and sparsebundles. By default they are ignored.",
     )
     parser.add_argument(
         "-b",
@@ -292,7 +294,9 @@ def get_arguments(params: tuple[str, ...] | None = None) -> Namespace:
     pns = parser.parse_args(params)
 
     # increment verbose
-    if pns.verbose is not None and pns.verbose > 0:
+    if pns.verbose is None:
+        pns.verbose = 1
+    elif pns.verbose > 0:
         pns.verbose += 1
 
     return Namespace(picopt=pns)
@@ -300,20 +304,21 @@ def get_arguments(params: tuple[str, ...] | None = None) -> Namespace:
 
 def main(args: tuple[str, ...] | None = None):
     """Process command line arguments and walk inputs."""
+    printer = Printer(2)
     try:
         arguments = get_arguments(args)
 
-        config = get_config(arguments)
+        config = PicoptConfig(printer).get_config(arguments)
         walker = Walk(config)
         walker.walk()
     except ConfigError as err:
-        cprint(f"ERROR: {err}", "red")
+        printer.error("", err)
         sys.exit(78)
     except PicoptError as err:
-        cprint(f"ERROR: {err}", "red")
+        printer.error("", err)
         sys.exit(1)
     except Exception as exc:
-        cprint(f"ERROR: {exc}", "red")
+        printer.error("", exc)
         import traceback
 
         traceback.print_exception(exc)

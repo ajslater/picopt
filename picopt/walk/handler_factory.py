@@ -74,9 +74,8 @@ class HandlerFactory(DetectFormat):
             and not self._config.list_only
         ):
             fmt = str(file_format) if file_format else "unknown"
-            self._printer.message(
-                f"Skipped {path_info.full_output_name()}: ({fmt}) is not an enabled image or container.",
-                attrs=["dark"],
+            self._printer.skip(
+                f"({fmt}) is not an enabled image or container.", path_info
             )
 
         return repack_handler_class
@@ -151,6 +150,5 @@ class HandlerFactory(DetectFormat):
                 input_file_format=repack_handler_class.OUTPUT_FILE_FORMAT,
                 comment=unpack_handler.comment,
                 optimized_contents=unpack_handler.get_optimized_contents(),
-                convert=True,
             )
         return handler

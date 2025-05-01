@@ -2,6 +2,10 @@
 
 ## v5.0.0-a0
 
+- Alert!
+  - Timestamps options changed, invalidating old timestamps. On your first run
+    in a path with picopt 5.0 you may use the `-N` option to ignore the old
+    timestamp's config differences.
 - Fixes
   - Fix tif & animated gifs were not converted to pngs when specified.
   - Fix --ignore option wildcards and performance.
@@ -13,7 +17,6 @@
   - colors changed.
 - Performance
   - Archives skipped without unpacking contents if all contents are skippable.
-  - Zip archives rewritten in place on disk if possible.
   - Animated pngs better optimized with oxipng
   - Faster scanning for legacy timestamps on startup.
 - Dev

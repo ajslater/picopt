@@ -92,9 +92,6 @@ class ArchiveHandler(NonPILIdentifier, ContainerHandler, ABC):
             path_info.set_data(data)
         return path_info
 
-    def _mark_delete(self, filename: str | Path) -> None:
-        """NoOp for most archives."""
-
     def _consume_archive_timestamps(self, archive) -> tuple:
         infolist = self._archive_infolist(archive)
         if not (self.config.timestamps and self._timestamps):
@@ -114,8 +111,8 @@ class ArchiveHandler(NonPILIdentifier, ContainerHandler, ABC):
             archive_sub_path = self.path_info.archive_psuedo_path() / path.parent
             self._timestamps.loads(archive_sub_path, yaml_str)
             if self._skipper:
-                self._printer.message_consumed_timestamp(path)
-            self._mark_delete(path)
+                self._printer.consumed_timestamp(path)
+            self._do_repack = True
 
         return tuple(non_treestamp_entries)
 
@@ -149,7 +146,7 @@ class ArchiveHandler(NonPILIdentifier, ContainerHandler, ABC):
         final_path = report.path
         if final_path and original_path != final_path:
             path_info.rename(final_path)
-            self._mark_delete(original_path)
+            self._do_repack = True
 
     def optimize_contents(self):
         """Remove data structures that are no longer used."""
@@ -176,10 +173,10 @@ class PackingArchiveHandler(ArchiveHandler, PackingContainerHandler, ABC):
         while self._optimized_contents:
             path_info = self._optimized_contents.pop()
             self._pack_info_one_file(archive, path_info)
-            self._printer.packed_message()
+            self._printer.packed()
         if self.comment:
             archive.comment = self.comment
-            self._printer.packed_message()
+            self._printer.packed()
 
     def pack_into(self) -> BytesIO:
         """Zip up the files in the tempdir into the new filename."""

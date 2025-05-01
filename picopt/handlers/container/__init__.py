@@ -2,6 +2,7 @@
 
 from abc import ABC, abstractmethod
 from collections.abc import Generator
+from copy import copy
 from io import BytesIO
 from multiprocessing.pool import ApplyResult
 from typing import BinaryIO
@@ -47,9 +48,14 @@ class ContainerHandler(Handler, ABC):
     ):
         """Initialize unpack tasks and ."""
         super().__init__(*args, **kwargs)
+        # Config gets modified later for pickling protection for containers
+        # after optimize_contents, before repack
+        self.config = copy(self.config)
         self._timestamps = timestamps
         self.repack_handler_class = repack_handler_class
-        self._skipper = WalkSkipper(self.config, timestamps, in_archive=True)
+        self._skipper = WalkSkipper(
+            self.config, self._printer, timestamps, in_archive=True
+        )
         self.comment: bytes | None = None
         self._tasks: dict[PathInfo, ApplyResult] = {}
         self._optimized_contents: set[PathInfo] = set()
@@ -64,7 +70,7 @@ class ContainerHandler(Handler, ABC):
         if mp_result is None:
             # if not handled by picopt, place it in the results.
             self._optimized_contents.add(path_info)
-            self._printer.copied_message()
+            self._printer.copied()
         else:
             self._tasks[path_info] = mp_result
             self._do_repack = True
@@ -81,8 +87,12 @@ class ContainerHandler(Handler, ABC):
             report = mp_results.get()
             self._hydrate_optimized_path_info(path_info, report)
             self._optimized_contents.add(path_info)
+        # Wipe things that may not pickle or don't need to be pickled
         self._timestamps = None
         self._skipper = None
+        # Patterns in computed.ignore don't pickle. But none of computed is needed
+        # after here.
+        self.config.computed = None
 
     def get_optimized_contents(self) -> set[PathInfo]:
         """Return optimized contents."""

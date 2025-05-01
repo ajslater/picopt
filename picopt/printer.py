@@ -13,51 +13,74 @@ class Printer:
     def __init__(self, verbose: int):
         """Initialize verbosity and flags."""
         self._verbose = verbose
-        self._last_verbose_message = True
+        self._after_newline = True
 
-    def message(
-        self, reason, color="white", attrs=None, *, force_verbose=False, end="\n"
+    def _message(  # noqa : PLR0913
+        self,
+        message: str,
+        color="white",
+        attrs: list[str] | None = None,
+        end: str = "\n",
+        *,
+        force_verbose: bool = False,
+        force_continue_line: bool = False,
     ):
         """Print a dot or skip message."""
         if self._verbose < 1:
             return
-        if (self._verbose == 1 and not force_verbose) or not reason:
-            cprint(".", color, attrs=attrs, end="", flush=True)
-            self._last_verbose_message = False
-            return
-        if not self._last_verbose_message:
-            reason = "\n" + reason
+        if not message:
+            reason = "No message given to printer"
+            raise ValueError(reason)
+        if self._verbose == 1 and not force_verbose:
+            message = "."
+            end = ""
+        elif not self._after_newline and not force_continue_line:
+            message = "\n" + message
         attrs = attrs if attrs else []
-        cprint(reason, color, attrs=attrs, end=end, flush=True)
-        if end:
-            self._last_verbose_message = True
+        cprint(message, color, attrs=attrs, end=end, flush=True)
+        self._after_newline = bool(end)
 
-    def skip_message(self, message):
+    def config(self, message):
+        """Config messages."""
+        self._message(message, color="cyan", force_verbose=True)
+
+    def skip(
+        self,
+        reason,
+        path_info: PathInfo,
+        color="dark_grey",
+        attrs: list[str] | None = None,
+    ):
         """Skip Message."""
-        self.message(message, color="dark_grey")
+        parts = ("Skip", reason, path_info.full_output_name())
+        message = ": ".join(parts)
+        self._message(message, color=color, attrs=attrs)
 
     def skip_container(self, container_type: str, path_info: PathInfo):
         """Skip entire container."""
-        path = path_info.full_output_name()
-        reason = f"{container_type} contents all skipped: {path}"
-        self.skip_message(reason)
+        reason = f"{container_type}, contents all skipped"
+        self.skip(reason, path_info)
 
-    def skip_timestamp_message(self, message):
+    def skip_timestamp(self, message, path_info: PathInfo):
         """Skipped by timestamp."""
-        self.message(message, color="light_green", attrs=["dark", "bold"])
+        self.skip(message, path_info, color="light_green", attrs=["dark", "bold"])
 
-    def start_operation(self, operation: str, path_info: PathInfo):
+    def start_operation(
+        self, operation: str, path_info: PathInfo, *, force_newline: bool = True
+    ):
         """Scan archive start."""
         path = path_info.full_output_name()
-        self.message(f"{operation} {path}...", force_verbose=True, end="")
+        if self._verbose == 1 and force_newline:
+            self._after_newline = False
+        self._message(f"{operation} {path}...", force_verbose=True, end="")
 
-    def message_deleted(self, path: Path | str):
+    def deleted(self, path: Path | str):
         """Print deleted message."""
-        self.message(f"Deleted {path}", color="yellow")
+        self._message(f"Deleted {path}", color="yellow")
 
-    def message_consumed_timestamp(self, path: Path | str):
+    def consumed_timestamp(self, path: Path | str):
         """Consume timestamp message."""
-        self.message(f"Consumed picopt timestamp in archive: {path}", color="magenta")
+        self._message(f"Consumed picopt timestamp in archive: {path}", color="magenta")
 
     def scan_archive(self, path_info: PathInfo):
         """Scan archive start."""
@@ -66,7 +89,7 @@ class Printer:
     def container_unpacking(self, path_info: PathInfo):
         """Start Unpacking Operation."""
         # this fixes containers within containers newlines.
-        self._last_verbose_message = False
+        self._after_newline = False
         self.start_operation("Unpacking", path_info)
 
     def container_repacking(self, path_info: PathInfo):
@@ -79,41 +102,50 @@ class Printer:
         if self._verbose > 1:
             self.done()
 
-    def copied_message(self):
+    def copied(self):
         """Dot for copied file."""
-        self.message("", color="green")
+        self._message(".", color="green", end="", force_continue_line=True)
 
     def optimize_container(self, path_info: PathInfo):
         """Declare that we're optimizing contents."""
-        path = path_info.full_output_name()
-        cprint(f"Optimizing contents in {path}:")
+        self.start_operation("Optimizing contents in", path_info, force_newline=False)
 
-    def packed_message(self):
+    def packed(self):
         """Dot for repacked file."""
-        self.message("", color="light_grey")
+        self._message(".", color="light_grey", end="", force_continue_line=True)
 
     def done(self):
         """Operation done."""
-        if self._verbose:
-            cprint("done.")
-            self._last_verbose_message = True
+        self._message("done.", force_verbose=True, force_continue_line=True)
 
-    def saved_message(self, report):
+    def saved(self, report):
         """Report saved size."""
-        self.message(report, color="light_cyan")
+        self._message(report)
 
-    def lost_message(self, report):
+    def converted(self, report):
+        """Report converted file."""
+        self._message(report, color="light_cyan")
+
+    def lost(self, report):
         """Lost size."""
-        self.message(report, color="light_blue")
+        self._message(report, color="light_blue")
 
     def warn(self, message: str, exc: Exception | None = None):
         """Warning."""
         message = "WARNING: " + message
         if exc:
             message += f": {exc}"
-        self.message(message, color="light_yellow", force_verbose=True)
+        self._message(message, color="light_yellow", force_verbose=True)
 
     def error(self, message: str, exc: Exception):
         """Error."""
         message = "ERROR: " + message + f": {exc}"
-        self.message(message, color="light_red", force_verbose=True)
+        self._message(message, color="light_red", force_verbose=True)
+
+    def error_title(self, message: str):
+        """Error title."""
+        self._message(message, color="light_red", force_verbose=True)
+
+    def final_message(self, message: str):
+        """Print final message."""
+        self._message(message, force_verbose=True)

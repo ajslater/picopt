@@ -19,6 +19,6 @@ class NonPILIdentifier(Handler):
         # inefficient
         suffixes = cls.SUFFIXES if cls.SUFFIXES else "." + cls.OUTPUT_FORMAT_STR.lower()
         suffix = path_info.suffix().lower()
-        if suffix in suffixes:
+        if suffix and suffix in suffixes:
             return cls.INPUT_FILE_FORMAT
         return None

@@ -7,7 +7,6 @@ from io import BytesIO
 
 from PIL import ImageCms
 from PIL.JpegImagePlugin import JpegImageFile
-from termcolor import cprint
 
 _APP1_SECTION_DELIMETER = b"\x00"
 _XAP_MARKER = b"http://ns.adobe.com/xap/1.0/"
@@ -21,10 +20,8 @@ def _get_xmp(info, image, path_name):
                 if xmp := image.getxmp():
                     info["xmp"] = xmp
     except Exception as exc:
-        cprint(
-            f"WARNING: Failed to extract xmp data for {path_name} {exc}",
-            "yellow",
-        )
+        reason = f"Failed to extract xmp data for {path_name} {exc}"
+        raise ValueError(reason) from exc
 
 
 def _get_exif_bytes(info, image, path_name):
@@ -34,10 +31,8 @@ def _get_exif_bytes(info, image, path_name):
             if exif := image.getexif():
                 info["exif_bytes"] = exif.tobytes()
     except Exception as exc:
-        cprint(
-            f"WARNING: Failed to extract exif bytes data for {path_name} {exc}",
-            "yellow",
-        )
+        reason = f"Failed to extract exif bytes data for {path_name} {exc}"
+        raise ValueError(reason) from exc
 
 
 def extract_info_for_webp(keep_metadata, info, image, path_info):

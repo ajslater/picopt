@@ -94,10 +94,12 @@ class HandlerCleanup(HandlerInit):
         if not self.config.dry_run and (
             (bytes_out > 0) and ((bytes_out < bytes_in) or self.config.bigger)
         ):
+            # Keep New
             return_data = self._cleanup_after_optimize_save_new(final_data_buffer)
             if self.path_info.path:
                 self._cleanup_filesystem(final_data_buffer)
         else:
+            # Revert to old
             return_data = b""
         final_data_buffer.close()
         if (
@@ -106,10 +108,12 @@ class HandlerCleanup(HandlerInit):
             and isinstance(final_data_buffer, BufferedReader)
         ):
             self.working_path.unlink(missing_ok=True)
-        if self.original_path != self.final_path:
+        converted = self.original_path != self.final_path
+        if converted:
             self.path_info.rename(self.final_path)
         return ReportStats(
             self.final_path,
+            converted=converted,
             path_info=self.path_info,
             config=self.config,
             bytes_in=bytes_in,

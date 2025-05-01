@@ -6,7 +6,7 @@ from confuse.templates import AttrDict
 
 from picopt import PROGRAM_NAME
 from picopt.formats import FileFormat
-from picopt.path import PathInfo
+from picopt.path import DOUBLE_SUFFIX, PathInfo
 from picopt.printer import Printer
 
 
@@ -21,7 +21,15 @@ class HandlerInit:
     )
     INPUT_FILE_FORMATS: frozenset[FileFormat] = frozenset({OUTPUT_FILE_FORMAT})
     PROGRAMS: tuple[tuple[str, ...], ...] = ()
-    WORKING_SUFFIX: str = f"{PROGRAM_NAME}-tmp"
+    WORKING_SUFFIX: str = f".{PROGRAM_NAME}-tmp"
+
+    def _compute_final_path(self):
+        """Compute the final path even if it the original has multiple suffixes."""
+        final_path = self.original_path.with_suffix("")
+        if final_path.suffix == DOUBLE_SUFFIX:
+            final_path = final_path.with_suffix("")
+        # Add to suffix, don't replace to fix remaining suffixes.
+        return final_path.parent / (final_path.name + self.output_suffix)
 
     def __init__(
         self,
@@ -48,14 +56,7 @@ class HandlerInit:
         self.output_suffix: str = (
             suffix if (suffix.lower() in self.SUFFIXES) else default_suffix
         )
-
-        # Handle replacing multiple suffixes
-        final_path = str(self.original_path)
-        for suffix in reversed(self.original_path.suffixes):
-            final_path = final_path.removesuffix(suffix)
-        final_path = Path(final_path)
-        final_path = final_path.with_suffix(self.output_suffix)
-        self.final_path: Path = final_path
+        self.final_path: Path = self._compute_final_path()
 
         if self.config.preserve:
             self.path_info.stat()

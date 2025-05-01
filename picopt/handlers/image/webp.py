@@ -57,7 +57,7 @@ class WebPBase(ImageHandler, ABC):
 
         input_path_tmp = isinstance(input_buffer, BytesIO)
         input_path: Path | None = (
-            self.get_working_path("cwebp-input")
+            self.get_working_path(".cwebp-input")
             if input_path_tmp
             else self.path_info.path
         )
@@ -65,7 +65,7 @@ class WebPBase(ImageHandler, ABC):
             reason = "No input path for cwebp"
             raise ValueError(reason)
 
-        output_path = self.get_working_path("cwebp-output")
+        output_path = self.get_working_path(".cwebp-output")
         output_path_tmp = bool(self.path_info.path)
         args += [str(input_path), "-o", str(output_path)]
         # If python cwebp gains enough options to beat this or

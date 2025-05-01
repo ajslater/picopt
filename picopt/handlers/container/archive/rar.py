@@ -30,6 +30,9 @@ class Rar(ArchiveHandler):
         return archive.infolist()
 
     def _archive_readfile(self, archive, archiveinfo):
+        if archiveinfo.is_dir():
+            # Rarfile empty directories throw
+            return b""
         return archive.read(archiveinfo.filename)
 
     def _set_comment(self, archive: RarFile) -> None:  # type: ignore[reportIncompatibleMethodOverride]
