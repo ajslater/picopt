@@ -1,18 +1,16 @@
 """WebP format."""
 
 from abc import ABC
-from collections.abc import Mapping
 from io import BytesIO
 from types import MappingProxyType
-from typing import TYPE_CHECKING, Any, BinaryIO
+from typing import TYPE_CHECKING, BinaryIO
 
 from confuse import AttrDict
 from PIL.WebPImagePlugin import WebPImageFile
 
 from picopt.formats import MODERN_CWEBP_FORMATS, FileFormat
 from picopt.handlers.image import ImageHandler
-from picopt.handlers.png import Png
-from picopt.path import PathInfo
+from picopt.handlers.image.png import Png
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -59,7 +57,7 @@ class WebPBase(ImageHandler, ABC):
 
         input_path_tmp = isinstance(input_buffer, BytesIO)
         input_path: Path | None = (
-            self.get_working_path("cwebp-input")
+            self.get_working_path(".cwebp-input")
             if input_path_tmp
             else self.path_info.path
         )
@@ -67,7 +65,7 @@ class WebPBase(ImageHandler, ABC):
             reason = "No input path for cwebp"
             raise ValueError(reason)
 
-        output_path = self.get_working_path("cwebp-output")
+        output_path = self.get_working_path(".cwebp-output")
         output_path_tmp = bool(self.path_info.path)
         args += [str(input_path), "-o", str(output_path)]
         # If python cwebp gains enough options to beat this or
@@ -77,8 +75,8 @@ class WebPBase(ImageHandler, ABC):
             input_buffer,
             input_path,
             output_path,
-            input_path_tmp,
-            output_path_tmp,
+            input_path_tmp=input_path_tmp,
+            output_path_tmp=output_path_tmp,
         )
 
 
@@ -89,9 +87,6 @@ class WebPLossless(WebPBase):
         WebPBase.OUTPUT_FORMAT_STR, lossless=True, animated=False
     )
     INPUT_FILE_FORMATS = frozenset({OUTPUT_FILE_FORMAT, Png.OUTPUT_FILE_FORMAT})
-    CONVERT_FROM_FORMAT_STRS = frozenset(
-        Png.CONVERT_FROM_FORMAT_STRS | {Png.OUTPUT_FORMAT_STR}
-    )
     CWEBP_ARGS_PREFIX = (
         # https://groups.google.com/a/webmproject.org/g/webp-discuss/c/0GmxDmlexek
         "-lossless",
@@ -99,17 +94,11 @@ class WebPLossless(WebPBase):
     )
     PIL2_KWARGS = MappingProxyType({**WebPBase.PIL2_KWARGS, "lossless": True})
     PROGRAMS = (("pil2png",), ("cwebp", "pil2native"))
-    NEAR_LOSSLESS_OPTS: tuple[str, ...] = ("-near_lossless", "0")
+    _NEAR_LOSSLESS_OPTS: tuple[str, ...] = ("-near_lossless", "0")
 
-    def __init__(
-        self,
-        config: AttrDict,
-        path_info: PathInfo,
-        input_file_format: FileFormat,
-        info: Mapping[str, Any],
-    ):
+    def __init__(self, config: AttrDict, *args, **kwargs):
         """Initialize extra input formats."""
-        super().__init__(config, path_info, input_file_format, info)
+        super().__init__(config, *args, **kwargs)
         if config.computed.is_modern_cwebp:
             self._input_file_formats |= MODERN_CWEBP_FORMATS
 
@@ -120,5 +109,5 @@ class WebPLossless(WebPBase):
         opts: tuple[str, ...] | None = None,
     ) -> BinaryIO:
         """Optimize using cwebp and with runtime optional arguments."""
-        opts = self.NEAR_LOSSLESS_OPTS if self.config.near_lossless else None
+        opts = self._NEAR_LOSSLESS_OPTS if self.config.near_lossless else None
         return super().cwebp(exec_args, input_buffer, opts=opts)

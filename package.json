@@ -21,13 +21,21 @@
         "options": {
           "proseWrap": "always"
         }
+      },
+      {
+        "files": [
+          "**/*Dockerfile"
+        ],
+        "options": {
+          "parser": "sh"
+        }
       }
     ]
   },
   "devDependencies": {
     "@eslint-community/eslint-plugin-eslint-comments": "^4.4.1",
     "@eslint/eslintrc": "^3.0.1",
-    "@eslint/json": "^0.11.0",
+    "@eslint/json": "^0.12.0",
     "@fsouza/prettierd": "^0.26.1",
     "@prettier/plugin-xml": "^3.1.0",
     "eslint": "^9.17.0",
@@ -49,7 +57,7 @@
     "eslint-plugin-sonarjs": "^3.0.1",
     "eslint-plugin-switch-case": "^3.0.1",
     "eslint-plugin-toml": "^0.12.0",
-    "eslint-plugin-unicorn": "^58.0.0",
+    "eslint-plugin-unicorn": "^59.0.0",
     "eslint-plugin-yml": "^1.16.0",
     "eslint_d": "^14.3.0",
     "prettier": "^3.4.2",

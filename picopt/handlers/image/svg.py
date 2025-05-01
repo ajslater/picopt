@@ -13,8 +13,8 @@ class Svg(ImageHandler, NonPILIdentifier):
 
     OUTPUT_FORMAT_STR = SVG_FORMAT_STR
     OUTPUT_FILE_FORMAT = FileFormat(OUTPUT_FORMAT_STR, lossless=True, animated=False)
-    INPUT_FORMAT_SUFFIX = "." + OUTPUT_FORMAT_STR.lower()
-    INPUT_FILE_FORMATS = frozenset({OUTPUT_FILE_FORMAT})
+    INPUT_FILE_FORMAT = OUTPUT_FILE_FORMAT
+    INPUT_FILE_FORMATS = frozenset({INPUT_FILE_FORMAT})
     PROGRAMS = (("svgo", "npx_svgo"),)
     _SVGO_ARGS = ("--multipass", "--output", "-", "--input", "-")
 

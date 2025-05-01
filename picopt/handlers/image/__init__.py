@@ -1,6 +1,6 @@
 """FileFormat Superclass."""
 
-from abc import ABCMeta
+from abc import ABC
 from collections.abc import Mapping
 from io import BufferedReader, BytesIO
 from types import MappingProxyType
@@ -8,17 +8,25 @@ from typing import Any, BinaryIO
 
 from PIL import Image
 from PIL.PngImagePlugin import PngImageFile
-from termcolor import cprint
 
 from picopt.handlers.handler import Handler
+from picopt.handlers.metadata import PrepareInfoMixin
 
 
-class ImageHandler(Handler, metaclass=ABCMeta):
+class ImageHandler(PrepareInfoMixin, Handler, ABC):
     """Image Handler superclass."""
 
     PIL2_KWARGS: MappingProxyType[str, Any] = MappingProxyType({})
-    PIL2PNG_KWARGS: MappingProxyType[str, Any] = MappingProxyType({"compress_level": 0})
-    EMPTY_EXEC_ARGS: tuple[str, tuple[str, ...]] = ("", ())
+    _PIL2PNG_KWARGS: MappingProxyType[str, Any] = MappingProxyType(
+        {"compress_level": 0}
+    )
+    _EMPTY_EXEC_ARGS: tuple[str, tuple[str, ...]] = ("", ())
+
+    def __init__(self, *args, info: Mapping[str, Any], **kwargs):
+        """Save image info metadata."""
+        super().__init__(*args, **kwargs)
+        # For image metadata preservation
+        self.set_info(info)
 
     def optimize(self) -> BinaryIO:
         """
@@ -28,9 +36,8 @@ class ImageHandler(Handler, metaclass=ABCMeta):
         """
         stages = self.config.computed.handler_stages.get(self.__class__, {})
         if not stages:
-            cprint(
+            self._printer.warn(
                 f"Tried to execute handler {self.__class__.__name__} with no available stages.",
-                "yellow",
             )
             raise ValueError
 
@@ -82,8 +89,8 @@ class ImageHandler(Handler, metaclass=ABCMeta):
     ) -> BytesIO | BufferedReader:
         """Internally convert unhandled formats to uncompressed png for cwebp."""
         return self.pil2native(
-            self.EMPTY_EXEC_ARGS,
+            self._EMPTY_EXEC_ARGS,
             input_buffer,
             format_str=PngImageFile.format,
-            opts=self.PIL2PNG_KWARGS,
+            opts=self._PIL2PNG_KWARGS,
         )

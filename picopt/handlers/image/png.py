@@ -7,14 +7,8 @@ from typing import Any
 
 import oxipng
 from PIL.PngImagePlugin import PngImageFile
-from termcolor import cprint
 
-from picopt.formats import (
-    CONVERTIBLE_ANIMATED_FORMAT_STRS,
-    CONVERTIBLE_FORMAT_STRS,
-    FileFormat,
-)
-from picopt.handlers.gif import Gif, GifAnimated
+from picopt.formats import FileFormat
 from picopt.handlers.image import ImageHandler
 from picopt.pillow.png_bit_depth import png_bit_depth
 
@@ -62,9 +56,6 @@ class Png(PngBase):
     OUTPUT_FORMAT_STR = str(PngImageFile.format)
     OUTPUT_FILE_FORMAT = FileFormat(OUTPUT_FORMAT_STR, lossless=True, animated=False)
     INPUT_FILE_FORMATS = frozenset({OUTPUT_FILE_FORMAT})
-    CONVERT_FROM_FORMAT_STRS = frozenset(
-        CONVERTIBLE_FORMAT_STRS | {Gif.OUTPUT_FORMAT_STR}
-    )
     PROGRAMS = (
         *PngBase.PROGRAMS,
         ("pngout",),
@@ -78,13 +69,13 @@ class Png(PngBase):
         input_buffer: BufferedReader | BytesIO,
     ) -> BytesIO | BufferedReader:
         """Run the external program pngout on the file."""
-        depth = png_bit_depth(input_buffer)
+        try:
+            depth = png_bit_depth(input_buffer)
+        except ValueError as exc:
+            depth = None
+            self._printer.warn(str(exc))
         if not depth or depth > self._PNGOUT_DEPTH_MAX or depth < 1:
-            cprint(
-                f"Skipped pngout for {depth} bit PNG: {self.original_path}",
-                "white",
-                attrs=["dark"],
-            )
+            self._printer.skip(f"pngout for {depth} bit PNG", self.path_info)
             return input_buffer
         opts = ("-k1",) if self.config.keep_metadata else ("-k0",)
         args = (*exec_args, *self._PNGOUT_ARGS, *opts)
@@ -97,6 +88,3 @@ class PngAnimated(PngBase):
     OUTPUT_FORMAT_STR: str = Png.OUTPUT_FORMAT_STR
     OUTPUT_FILE_FORMAT = FileFormat(OUTPUT_FORMAT_STR, lossless=True, animated=True)
     INPUT_FILE_FORMATS = frozenset({OUTPUT_FILE_FORMAT})
-    CONVERT_FROM_FORMAT_STRS = frozenset(
-        CONVERTIBLE_ANIMATED_FORMAT_STRS | {GifAnimated.OUTPUT_FORMAT_STR}
-    )

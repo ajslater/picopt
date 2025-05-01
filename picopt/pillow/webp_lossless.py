@@ -14,9 +14,9 @@ from picopt.pillow.header import ImageHeader
 
 # RIFF_HEADER = ImageHeader(0, b"RIFF"))
 # WEBP_HEADER = ImageHeader(8, b"WEBP"))
-VP8_HEADER = ImageHeader(12, b"VP8")
-VP8L_HEADER = b"VP8L"
-SEARCH_LEN = 128
+_VP8_HEADER = ImageHeader(12, b"VP8")
+_VP8L_HEADER = b"VP8L"
+_SEARCH_LEN = 128
 
 
 def is_lossless(input_buffer: BytesIO | BufferedReader) -> bool:
@@ -29,7 +29,7 @@ def is_lossless(input_buffer: BytesIO | BufferedReader) -> bool:
         else input_buffer
     )
 
-    if not VP8_HEADER.compare(buffer):
+    if not _VP8_HEADER.compare(buffer):
         result = False
     else:
         x = buffer.read(1)
@@ -39,9 +39,9 @@ def is_lossless(input_buffer: BytesIO | BufferedReader) -> bool:
             finder = (
                 buffer
                 if isinstance(buffer, mmap)
-                else bytearray(buffer.read(SEARCH_LEN))
+                else bytearray(buffer.read(_SEARCH_LEN))
             )
-            result = finder.find(VP8L_HEADER) != -1
+            result = finder.find(_VP8L_HEADER) != -1
         else:
             result = False
 

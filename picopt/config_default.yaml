@@ -6,6 +6,7 @@ picopt:
   dry_run: False
   formats: [GIF, JPEG, PNG, WEBP]
   ignore: []
+  ignore_defaults: True
   jobs: 0
   keep_metadata: True
   list_only: False

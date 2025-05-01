@@ -1,13 +1,13 @@
-"""WebP Animated images are treated like containers."""
+"""Animated WebP Image Handler."""
 
 from types import MappingProxyType
 
 from PIL.WebPImagePlugin import WebPImageFile
 
 from picopt.formats import FileFormat
-from picopt.handlers.image_animated import ImageAnimated
-from picopt.handlers.png import PngAnimated
-from picopt.handlers.webp import WebPBase
+from picopt.handlers.container.animated import ImageAnimated
+from picopt.handlers.image.png import PngAnimated
+from picopt.handlers.image.webp import WebPBase
 
 
 class WebPAnimatedBase(ImageAnimated):
@@ -26,9 +26,6 @@ class WebPAnimatedLossless(WebPAnimatedBase):
     )
     INPUT_FILE_FORMATS = frozenset(
         {*PngAnimated.INPUT_FILE_FORMATS, OUTPUT_FILE_FORMAT}
-    )
-    CONVERT_FROM_FORMAT_STRS = frozenset(
-        {*PngAnimated.CONVERT_FROM_FORMAT_STRS, PngAnimated.OUTPUT_FORMAT_STR}
     )
     PIL2_FRAME_KWARGS = MappingProxyType(
         {**WebPAnimatedBase.PIL2_FRAME_KWARGS, "lossless": True, "quality": 0}

@@ -9,23 +9,21 @@ This should be a part of Pillow
 from pathlib import Path
 from typing import BinaryIO
 
-from termcolor import cprint
-
 from picopt.pillow.header import ImageHeader
 
-PNG_HEADER = ImageHeader(0, b"\x89PNG\r\n\x1a\n")
-BIT_DEPTH_OFFSET = 24
+_PNG_HEADER = ImageHeader(0, b"\x89PNG\r\n\x1a\n")
+_BIT_DEPTH_OFFSET = 24
 
 
 def png_bit_depth(buffer: BinaryIO) -> int | None:
     """If a file is a png, get the bit depth from the standard position."""
-    if PNG_HEADER.compare(buffer):
-        buffer.seek(BIT_DEPTH_OFFSET)  # bit depth offset
+    if _PNG_HEADER.compare(buffer):
+        buffer.seek(_BIT_DEPTH_OFFSET)  # bit depth offset
         depth = buffer.read(1)
         result = int.from_bytes(depth, byteorder="little")
     else:
-        cprint("WARNING: cannot find bit depts of non png.", "yellow")
-        result = None
+        reason = "cannot find bit depth of non png"
+        raise ValueError(reason)
     return result
 
 

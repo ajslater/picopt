@@ -92,6 +92,7 @@ export default [
       "dist/",
       "node_modules/",
       "package-lock.json",
+      "picopt/zipfile_remove/",
       "uv.lock",
       "test-results/",
       "typings/",

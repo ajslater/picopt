@@ -1,12 +1,27 @@
 # 📰 Picopt News
 
-## v4.1.0
+## v5.0.0
 
-- -T --test option becomes -d --dry-run
-- Fix tif & animated gifs not converted to pngs when asked.
-- animated pngs better optimized with oxipng
-- updated treestamps
-- uv build system
+- Alert!
+  - Timestamps options changed, invalidating old timestamps. On your first run
+    in a path with picopt 5.0 you may use the `-N` option to ignore the old
+    timestamp's config differences.
+- Fixes
+  - Fix tif & animated gifs were not converted to pngs when specified.
+  - Fix --ignore option wildcards and performance.
+  - --ignore is now case insensitive on case insenstitive filesystems
+- Features
+  - Picopt learned to optimize 7-Zip and Tar Archives.
+  - Ignore dotfiles by default. Disable with -I.
+  - -T --test option becomes -d --dry-run
+  - colors changed.
+- Performance
+  - Archives skipped without unpacking contents if all contents are skippable.
+  - Animated pngs better optimized with oxipng
+  - Faster scanning for legacy timestamps on startup.
+- Dev
+  - Updated treestamps
+  - uv build system
 
 ## v4.0.4
 
