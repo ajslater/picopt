@@ -8,10 +8,11 @@ from typing import Any
 
 from PIL import Image, ImageSequence
 from PIL.PngImagePlugin import PngImageFile
+from typing_extensions import override
 
 from picopt.formats import FileFormat
 from picopt.handlers.container import PackingContainerHandler
-from picopt.handlers.metadata import PrepareInfoMixin
+from picopt.handlers.mixins import PrepareInfoMixin
 from picopt.path import PathInfo
 
 ANIMATED_INFO_KEYS = ("bbox", "blend", "disposal", "duration")
@@ -20,20 +21,21 @@ ANIMATED_INFO_KEYS = ("bbox", "blend", "disposal", "duration")
 class ImageAnimated(PrepareInfoMixin, PackingContainerHandler, ABC):
     """Animated image container."""
 
-    PROGRAMS = (("pil2native",),)
-    PIL2_FRAME_KWARGS = MappingProxyType(
+    PROGRAMS: tuple[tuple[str, ...]] = (("pil2native",),)
+    PIL2_FRAME_KWARGS: MappingProxyType[str, Any] = MappingProxyType(
         {"format": str(PngImageFile.format), "compress_level": 0}
     )
     PIL2_KWARGS: MappingProxyType[str, Any] = MappingProxyType({})
-    CONTAINER_TYPE = "Animated Image"
+    CONTAINER_TYPE: str = "Animated Image"
 
     def __init__(self, *args, info: Mapping[str, Any], **kwargs):
         """Set image metadata."""
         super().__init__(*args, **kwargs)
         self.set_info(info)
 
+    @override
     @classmethod
-    def identify_format(cls, path_info: PathInfo) -> FileFormat | None:  # noqa: ARG003
+    def identify_format(cls, path_info: PathInfo) -> FileFormat | None:
         """Return the format if this handler can handle this path."""
         return cls.OUTPUT_FILE_FORMAT
 
@@ -65,13 +67,14 @@ class ImageAnimated(PrepareInfoMixin, PackingContainerHandler, ABC):
                 container_parents=self.path_info.container_path_history(),
             )
 
-    def _save_frame_info(self, frame_info: dict):
+    def _save_frame_info(self, frame_info: dict[str, Any]):
         for key in tuple(frame_info):
             value = frame_info[key]
             if value is not None:
                 frame_info[key] = tuple(value)
-        self.frame_info = frame_info
+        self.frame_info: dict[str, Any] = frame_info
 
+    @override
     def walk(self) -> Generator[PathInfo]:
         """Unpack animated image frames with PIL."""
         self._printer.container_unpacking(self.path_info)
@@ -85,6 +88,7 @@ class ImageAnimated(PrepareInfoMixin, PackingContainerHandler, ABC):
         self._save_frame_info(frame_info)
         self._walk_finish()
 
+    @override
     def pack_into(self) -> BytesIO:
         """Remux the optimized frames into an animated webp."""
         sorted_frames = sorted(
@@ -92,7 +96,7 @@ class ImageAnimated(PrepareInfoMixin, PackingContainerHandler, ABC):
             key=lambda p: 0 if p.frame is None else p.frame,
         )
         # clear optimized contents
-        self.optimized_contents = set()
+        self.optimized_contents: set[PathInfo] = set()
 
         head_image_data = sorted_frames.pop().data()
 

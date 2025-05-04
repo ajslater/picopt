@@ -5,9 +5,10 @@ from collections.abc import Generator
 from copy import copy
 from io import BytesIO
 from multiprocessing.pool import ApplyResult
-from typing import BinaryIO
+from typing import TYPE_CHECKING, BinaryIO
 
 from treestamps import Grovestamps
+from typing_extensions import override
 
 from picopt.formats import FileFormat
 from picopt.handlers.handler import Handler
@@ -15,11 +16,14 @@ from picopt.path import PathInfo
 from picopt.report import ReportStats
 from picopt.walk.skip import WalkSkipper
 
+if TYPE_CHECKING:
+    from confuse import AttrDict
+
 
 class ContainerHandler(Handler, ABC):
     """Container handler for unpacking multiple images and archives."""
 
-    CONTAINER_TYPE = "Container"
+    CONTAINER_TYPE: str = "Container"
 
     @classmethod
     @abstractmethod
@@ -50,16 +54,16 @@ class ContainerHandler(Handler, ABC):
         super().__init__(*args, **kwargs)
         # Config gets modified later for pickling protection for containers
         # after optimize_contents, before repack
-        self.config = copy(self.config)
-        self._timestamps = timestamps
-        self.repack_handler_class = repack_handler_class
-        self._skipper = WalkSkipper(
+        self.config: AttrDict = copy(self.config)
+        self._timestamps: Grovestamps | None = timestamps
+        self.repack_handler_class: Handler | None = repack_handler_class
+        self._skipper: WalkSkipper | None = WalkSkipper(
             self.config, self._printer, timestamps, in_archive=True
         )
         self.comment: bytes | None = None
         self._tasks: dict[PathInfo, ApplyResult] = {}
         self._optimized_contents: set[PathInfo] = set()
-        self._do_repack = False
+        self._do_repack: bool = False
 
     def is_do_repack(self):
         """Return if any changes were made and we should repack."""
@@ -98,18 +102,45 @@ class ContainerHandler(Handler, ABC):
         """Return optimized contents."""
         return self._optimized_contents
 
+    @override
     def optimize(self) -> BinaryIO:
         """NoOp for non packing containers."""
         reason = "Non packing container doesn't optimize."
         raise NotImplementedError(reason)
 
 
-class PackingContainerHandler(ContainerHandler, ABC):
-    """Container handler for unpacking and packing multiple images and archives."""
+class PackingContainerHandlerMixin(ABC):
+    """Mixin for Packing Archive."""
 
     @abstractmethod
     def pack_into(self) -> BytesIO:
         """Create a container from unpacked contents."""
+
+    def init_repack(
+        self,
+        comment: bytes | None = None,
+        optimized_contents: set[PathInfo] | None = None,
+    ):
+        """Initialize repack instance variables."""
+        if comment:
+            self.comment: bytes | None = comment
+        if optimized_contents:
+            self._optimized_contents: set[PathInfo] = optimized_contents
+
+    def optimize(self) -> BinaryIO:
+        """Run pack_into."""
+        self._printer.container_repacking(self.path_info)  # pyright: ignore[reportAttributeAccessIssue]
+        buffer = self.pack_into()
+        self._printer.container_repacking_done()  # pyright: ignore[reportAttributeAccessIssue]
+        return buffer
+
+    def repack(self) -> ReportStats:
+        """Create a new container and clean up the tmp dir."""
+        return self.optimize_wrapper()  # pyright: ignore[reportAttributeAccessIssue]
+
+
+class PackingContainerHandler(PackingContainerHandlerMixin, ContainerHandler, ABC):
+    """Container handler for unpacking and packing multiple images and archives."""
 
     def __init__(
         self,
@@ -120,18 +151,4 @@ class PackingContainerHandler(ContainerHandler, ABC):
     ):
         """Copy optimized contents from previous handler."""
         super().__init__(*args, **kwargs)
-        if comment:
-            self.comment = comment
-        if optimized_contents:
-            self._optimized_contents = optimized_contents
-
-    def optimize(self) -> BinaryIO:
-        """Run pack_into."""
-        self._printer.container_repacking(self.path_info)
-        buffer = self.pack_into()
-        self._printer.container_repacking_done()
-        return buffer
-
-    def repack(self) -> ReportStats:
-        """Create a new container and clean up the tmp dir."""
-        return self.optimize_wrapper()
+        self.init_repack(comment, optimized_contents)

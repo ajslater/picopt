@@ -47,18 +47,19 @@ class Walk(HandlerFactory):
 
         results = []
         files = []
-        dir_path: Path = dir_path_info.path  # type: ignore[reportAssignmentType]
+        dir_path = dir_path_info.path
 
-        for name in sorted(dir_path.iterdir()):
-            entry_path = dir_path / name
-            if entry_path.is_dir():
-                path_info = PathInfo(
-                    path_info=dir_path_info,
-                    path=entry_path,
-                )
-                self.walk_file(path_info)
-            else:
-                files.append(entry_path)
+        if dir_path:
+            for name in sorted(dir_path.iterdir()):
+                entry_path = dir_path / name
+                if entry_path.is_dir():
+                    path_info = PathInfo(
+                        path_info=dir_path_info,
+                        path=entry_path,
+                    )
+                    self.walk_file(path_info)
+                else:
+                    files.append(entry_path)
 
         for entry_path in sorted(files):
             path_info = PathInfo(

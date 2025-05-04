@@ -4,13 +4,17 @@ from abc import ABC
 from collections.abc import Mapping
 from io import BufferedReader, BytesIO
 from types import MappingProxyType
-from typing import Any, BinaryIO
+from typing import TYPE_CHECKING, Any, BinaryIO
 
 from PIL import Image
 from PIL.PngImagePlugin import PngImageFile
+from typing_extensions import override
 
 from picopt.handlers.handler import Handler
-from picopt.handlers.metadata import PrepareInfoMixin
+from picopt.handlers.mixins import PrepareInfoMixin
+
+if TYPE_CHECKING:
+    from picopt.formats import FileFormat
 
 
 class ImageHandler(PrepareInfoMixin, Handler, ABC):
@@ -28,6 +32,7 @@ class ImageHandler(PrepareInfoMixin, Handler, ABC):
         # For image metadata preservation
         self.set_info(info)
 
+    @override
     def optimize(self) -> BinaryIO:
         """
         Use the correct optimizing functions in sequence.
@@ -81,7 +86,7 @@ class ImageHandler(PrepareInfoMixin, Handler, ABC):
                 **info,
             )
         image.close()  # for animated images
-        self.input_file_format = self.OUTPUT_FILE_FORMAT
+        self.input_file_format: FileFormat = self.OUTPUT_FILE_FORMAT
         return output_buffer
 
     def pil2png(

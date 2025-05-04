@@ -10,8 +10,9 @@ from picopt import PROGRAM_NAME
 from picopt.config.consts import TIMESTAMPS_CONFIG_KEYS
 from picopt.exceptions import PicoptError
 from picopt.old_timestamps import OldTimestamps
+from picopt.printer import Printer
 from picopt.report import Totals
-from picopt.walk.skip import Printer, WalkSkipper
+from picopt.walk.skip import WalkSkipper
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -33,7 +34,7 @@ class WalkInit:
 
     def __init__(self, config: AttrDict) -> None:
         """Initialize."""
-        self._config = config
+        self._config: AttrDict = config
         top_paths = []
         paths: list[Path] = sorted(frozenset(self._config.paths))
         for path in paths:
@@ -42,14 +43,11 @@ class WalkInit:
             top_paths.append(path)
         self._top_paths: tuple[Path, ...] = tuple(top_paths)
         self._validate_top_paths()
-        self._printer = Printer(config.verbose)
-        self._totals = Totals(config, self._printer)
-        if self._config.jobs:
-            self._pool = Pool(self._config.jobs)
-        else:
-            self._pool = Pool()
+        self._printer: Printer = Printer(config.verbose)
+        self._totals: Totals = Totals(config, self._printer)
+        self._pool: Pool = Pool(self._config.jobs) if self._config.jobs else Pool()
         self._timestamps: Grovestamps | None = None  # reassigned at start of run
-        self._skipper = WalkSkipper(config, self._printer)
+        self._skipper: WalkSkipper = WalkSkipper(config, self._printer)
 
     def _init_timestamps(self) -> None:
         """Init timestamps."""

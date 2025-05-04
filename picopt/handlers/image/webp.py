@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING, BinaryIO
 
 from confuse import AttrDict
 from PIL.WebPImagePlugin import WebPImageFile
+from typing_extensions import override
 
 from picopt.formats import MODERN_CWEBP_FORMATS, FileFormat
 from picopt.handlers.image import ImageHandler
@@ -21,9 +22,9 @@ class WebPBase(ImageHandler, ABC):
 
     PIL2_KWARGS = MappingProxyType({"quality": 100, "method": 6})
     OUTPUT_FORMAT_STR = str(WebPImageFile.format)
-    PROGRAMS = (("cwebp", "pil2native"),)
+    PROGRAMS: tuple[tuple[str, ...], ...] = (("cwebp", "pil2native"),)
     # https://developers.google.com/speed/webp/docs/cwebp
-    CWEBP_ARGS_PREFIX = (
+    CWEBP_ARGS_PREFIX: tuple[str, ...] = (
         "-mt",
         "-q",
         "100",
@@ -87,13 +88,13 @@ class WebPLossless(WebPBase):
         WebPBase.OUTPUT_FORMAT_STR, lossless=True, animated=False
     )
     INPUT_FILE_FORMATS = frozenset({OUTPUT_FILE_FORMAT, Png.OUTPUT_FILE_FORMAT})
-    CWEBP_ARGS_PREFIX = (
+    CWEBP_ARGS_PREFIX: tuple[str, ...] = (
         # https://groups.google.com/a/webmproject.org/g/webp-discuss/c/0GmxDmlexek
         "-lossless",
         *WebPBase.CWEBP_ARGS_PREFIX,
     )
     PIL2_KWARGS = MappingProxyType({**WebPBase.PIL2_KWARGS, "lossless": True})
-    PROGRAMS = (("pil2png",), ("cwebp", "pil2native"))
+    PROGRAMS: tuple[tuple[str, ...], ...] = (("pil2png",), ("cwebp", "pil2native"))
     _NEAR_LOSSLESS_OPTS: tuple[str, ...] = ("-near_lossless", "0")
 
     def __init__(self, config: AttrDict, *args, **kwargs):
@@ -102,6 +103,7 @@ class WebPLossless(WebPBase):
         if config.computed.is_modern_cwebp:
             self._input_file_formats |= MODERN_CWEBP_FORMATS
 
+    @override
     def cwebp(
         self,
         exec_args: tuple[str, ...],

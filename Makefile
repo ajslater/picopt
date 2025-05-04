@@ -79,7 +79,7 @@ fix: fix-backend
 ## Static typecheck
 ## @category Lint
 typecheck:
-	uv run pyright .
+	uv run basedpyright .
 
 .PHONY: lint
 ## Lint front and back end

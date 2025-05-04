@@ -5,9 +5,9 @@ from treestamps import Grovestamps
 
 from picopt.formats import FileFormat
 from picopt.handlers.container import ContainerHandler, PackingContainerHandler
-from picopt.handlers.container.archive import ArchiveHandler
+from picopt.handlers.container.archive import ArchiveHandler, PackingArchiveHandler
 from picopt.handlers.handler import Handler
-from picopt.handlers.metadata import PrepareInfoMixin
+from picopt.handlers.mixins import PrepareInfoMixin
 from picopt.path import PathInfo
 from picopt.walk.detect_format import DetectFormat
 
@@ -40,7 +40,9 @@ class HandlerFactory(DetectFormat):
         if (
             repack
             and handler_cls
-            and not issubclass(handler_cls, PackingContainerHandler)
+            and not issubclass(
+                handler_cls, PackingContainerHandler | PackingArchiveHandler
+            )
         ):
             handler_cls = None
         return handler_cls
@@ -53,7 +55,7 @@ class HandlerFactory(DetectFormat):
         """Get the repack handler class or none if not configured."""
         repack_handler_class: type[PackingContainerHandler] | None = None
         try:
-            repack_handler_class: type[PackingContainerHandler] | None = (  # type: ignore[reportAssignmentType]
+            repack_handler_class = (  # pyright: ignore[reportAssignmentType]
                 self._create_handler_get_handler_class(
                     file_format,
                     convert=path_info.convert,
@@ -136,7 +138,7 @@ class HandlerFactory(DetectFormat):
     ) -> PackingContainerHandler:
         """Return a handler to repack the container using optimized contents of the unpack handler."""
         # handler input_file_format is only for images so it doesn't matter what this is.
-        repack_handler_class: type[PackingContainerHandler] = (
+        repack_handler_class: type[PackingContainerHandler] = (  # pyright: ignore[reportAssignmentType]
             unpack_handler.repack_handler_class
         )  # type: ignore[reportAssignmentType]
         if unpack_handler.__class__ == repack_handler_class and isinstance(

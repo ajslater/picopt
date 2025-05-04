@@ -1,5 +1,6 @@
 """Test comic format."""
 
+from pathlib import Path
 from types import MappingProxyType
 from zipfile import ZipFile
 
@@ -57,9 +58,9 @@ CONVERT_TO_ZIP_ARGS = (
 class TestContainersDir(BaseTest):
     """Test containers dirs."""
 
-    TMP_ROOT = TMP_ROOT
-    SOURCE_DIR = CONTAINER_DIR
-    FNS = FNS
+    TMP_ROOT: Path = TMP_ROOT
+    SOURCE_DIR: Path = CONTAINER_DIR
+    FNS: MappingProxyType[str, tuple] = FNS
 
     def test_containers_noop(self, fn: str) -> None:
         """Test containers noop."""

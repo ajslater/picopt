@@ -14,7 +14,7 @@ class HandlerInit:
     """Handler init."""
 
     # if multiple suffixes, default suffix is first. Otherwise generated from OUTPUT_FORMAT_STR.
-    SUFFIXES = ()
+    SUFFIXES: tuple[str, ...] = ()
     OUTPUT_FORMAT_STR: str = "unimplemented"
     OUTPUT_FILE_FORMAT: FileFormat = FileFormat(
         OUTPUT_FORMAT_STR, lossless=False, animated=False
@@ -40,13 +40,13 @@ class HandlerInit:
         """Initialize handler."""
         self.config: AttrDict = config
         self.path_info: PathInfo = path_info
-        self._printer = Printer(self.config.verbose)
+        self._printer: Printer = Printer(self.config.verbose)
 
         # Paths
         self.original_path: Path = (
             path_info.path if path_info.path else Path(path_info.name())
         )
-        self.working_path = self.original_path
+        self.working_path: Path = self.original_path
 
         # Suffixes
         default_suffix = (
@@ -62,5 +62,5 @@ class HandlerInit:
             self.path_info.stat()
 
         # For container repack and older cwebp which only accepts some formats
-        self.input_file_format = input_file_format
-        self._input_file_formats = self.INPUT_FILE_FORMATS
+        self.input_file_format: FileFormat = input_file_format
+        self._input_file_formats: frozenset[FileFormat] = self.INPUT_FILE_FORMATS

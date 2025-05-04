@@ -12,27 +12,28 @@ from rarfile import RarInfo
 _DATETIME_ATTRGETTER = attrgetter(
     "year", "month", "day", "hour", "minute", "second", "microsecond"
 )
+ArchiveInfoType = TarInfo | RarInfo | ZipInfo | SevenZipInfo
 
 
 class SevenZipInfoDefaults:
     """Defaults for SevenZip FileInfo."""
 
-    compressed = True
-    uncompressed = False
-    archivable = True
-    crc32 = None
+    compressed: bool = True
+    uncompressed: bool = False
+    archivable: bool = True
+    crc32: None = None
 
 
 class ArchiveInfo:
     """Archive Info Converter."""
 
-    def __init__(self, info: TarInfo | RarInfo | ZipInfo | SevenZipInfo):
+    def __init__(self, info: ArchiveInfoType):
         """Store the source info."""
-        self.info = info
-        self._filename = None
-        self._is_dir = None
-        self._mtime = None
-        self._dttm = None
+        self.info: ArchiveInfoType = info
+        self._filename: str | None = None
+        self._is_dir: bool | None = None
+        self._mtime: float | None = None
+        self._dttm: datetime | None = None
         if isinstance(self.info, RarInfo):
             # This weird hack because
             # Some instances of RarInfo don't serialize properly for multiprocessing
@@ -43,11 +44,8 @@ class ArchiveInfo:
         if self._filename is None:
             if isinstance(self.info, ZipInfo | SevenZipInfo | RarInfo):
                 self._filename = self.info.filename or ""
-            elif isinstance(self.info, TarInfo):
+            else:  # TarInfo
                 self._filename = self.info.name or ""
-            else:
-                reason = f"{self.info} is not a type with a known filename."
-                raise TypeError(reason)
         return self._filename
 
     def rename(self, filename: str | Path):
@@ -71,11 +69,8 @@ class ArchiveInfo:
                 self._is_dir = self.info.is_dir()
             elif isinstance(self.info, TarInfo):
                 self._is_dir = self.info.type == DIRTYPE
-            elif isinstance(self.info, SevenZipInfo):
+            else:  # SevenZipInfo):
                 self._is_dir = bool(self.info.is_directory)
-            else:
-                reason = f"{self.info} is not a type with a known filetype."
-                raise TypeError(reason)
         return self._is_dir
 
     def datetime(self):
@@ -88,12 +83,8 @@ class ArchiveInfo:
                 self._dttm = datetime.fromtimestamp(self.info.mtime, tz=timezone.utc)
             elif isinstance(self.info, SevenZipInfo):
                 self._dttm = self.info.creationtime
-            elif isinstance(self.info, RarInfo):
-                if dttm := self.info.mtime:
-                    self._dttm = dttm
-            else:
-                reason = f"{self.info} is not a type with timestamp."
-                raise TypeError(reason)
+            elif dttm := self.info.mtime:  # RarInfo
+                self._dttm = dttm
         return self._dttm
 
     def mtime(self):
@@ -103,11 +94,8 @@ class ArchiveInfo:
                 dttm = self.datetime()
                 if dttm is not None:
                     self._mtime = dttm.timestamp()
-            elif isinstance(self.info, TarInfo):
+            else:  # TarInfo
                 self._mtime = self.info.mtime
-            else:
-                reason = f"{self.info} is not a type with timestamp."
-                raise TypeError(reason)
         return self._mtime
 
     def to_zipinfo(self):
@@ -121,7 +109,7 @@ class ArchiveInfo:
             if self.info.date_time:
                 kwargs["date_time"] = self.info.date_time
             info = ZipInfo(**kwargs)
-        elif isinstance(self.info, TarInfo | SevenZipInfo):
+        elif isinstance(self.info, TarInfo | SevenZipInfo):  # pyright: ignore[reportUnnecessaryIsInstance]
             date_time = _DATETIME_ATTRGETTER(self.datetime())
             info = ZipInfo(filename=self.filename(), date_time=date_time)
         else:
@@ -133,12 +121,12 @@ class ArchiveInfo:
         """Convert to TarInfo."""
         if isinstance(self.info, TarInfo):
             info = self.info
-        elif isinstance(self.info, RarInfo | SevenZipInfo | ZipInfo):
+        elif isinstance(self.info, RarInfo | SevenZipInfo | ZipInfo):  # pyright: ignore[reportUnnecessaryIsInstance]
             kwargs = {}
             if isinstance(self.info, ZipInfo | RarInfo):
                 if name := self.filename():
                     kwargs["name"] = name
-            elif isinstance(self.info, SevenZipInfo):
+            else:
                 kwargs["name"] = self.info.filename
             info = TarInfo(**kwargs)
             mtime = self.mtime()
@@ -163,7 +151,7 @@ class ArchiveInfo:
                 self.datetime(),
                 SevenZipInfoDefaults.crc32,
             )
-        elif isinstance(self.info, TarInfo):
+        else:  # TarInfo
             is_dir = self.info.type == DIRTYPE
             info = SevenZipInfo(
                 self.info.name,
@@ -174,8 +162,5 @@ class ArchiveInfo:
                 self.datetime(),
                 SevenZipInfoDefaults.crc32,
             )
-        else:
-            reason = f"{self.info} cannot be converted to SevenZip FileInfo"
-            raise TypeError(reason)
 
         return info
