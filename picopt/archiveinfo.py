@@ -68,7 +68,7 @@ class ArchiveInfo:
             if isinstance(self.info, ZipInfo | RarInfo):
                 self._is_dir = self.info.is_dir()
             elif isinstance(self.info, TarInfo):
-                self._is_dir = self.info.type == DIRTYPE
+                self._is_dir = self.info.isdir()
             else:  # SevenZipInfo):
                 self._is_dir = bool(self.info.is_directory)
         return self._is_dir
