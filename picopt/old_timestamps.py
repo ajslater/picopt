@@ -48,7 +48,7 @@ class OldTimestamps:
             elif path.name == OLD_TIMESTAMPS_NAME:
                 self._add_old_timestamp(path)
                 # consume child timestamps
-                self._timestamps._consumed_paths.add(path)  # noqa: SLF001, # pyright: ignore[reportPrivateUsage]
+                self._timestamps._consumed_paths.add(path) # noqa: SLF001
 
     def import_old_timestamps(self) -> None:
         """Import all old timestamps."""
