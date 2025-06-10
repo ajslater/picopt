@@ -3,6 +3,7 @@
 from abc import ABC
 from collections.abc import Generator, Mapping
 from io import BytesIO
+from statistics import mean
 from types import MappingProxyType
 from typing import Any
 
@@ -67,6 +68,17 @@ class ImageAnimated(PrepareInfoMixin, PackingContainerHandler, ABC):
                 container_parents=self.path_info.container_path_history(),
             )
 
+    @staticmethod
+    def _fix_duration(frame_info: dict, index: int):
+        """Fix bad duration entries."""
+        duration = frame_info.get("duration")
+        if duration is None:
+            return
+        num_missing_durations = index - len(duration)
+        if num_missing_durations > 0:
+            mean_duration = mean(duration)
+            duration.extend([mean_duration] * num_missing_durations)
+
     def _save_frame_info(self, frame_info: dict[str, Any]):
         for key in tuple(frame_info):
             value = frame_info[key]
@@ -79,12 +91,14 @@ class ImageAnimated(PrepareInfoMixin, PackingContainerHandler, ABC):
         """Unpack animated image frames with PIL."""
         self._printer.container_unpacking(self.path_info)
         frame_info = {}
+        index = 0
         with Image.open(self.original_path) as image:
             for index, frame in enumerate(ImageSequence.Iterator(image), start=1):
                 frame_path_info = self._unpack_frame(frame, index, frame_info)
                 yield frame_path_info
         # Animated images need a double close because of some PIL bug.
         image.close()
+        self._fix_duration(frame_info, index)
         self._save_frame_info(frame_info)
         self._walk_finish()
 

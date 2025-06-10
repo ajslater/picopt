@@ -1,5 +1,9 @@
 # 📰 Picopt News
 
+## v5.0.1
+
+- Fix crash converting animated images with bad duration metadata.
+
 ## v5.0.0
 
 - Alert!
