@@ -25,7 +25,7 @@ class ReportStatBase:
 class ReportStats(ReportStatBase):
     """Container for reported stats from optimization operations."""
 
-    _TAB = " " * 4
+    _TAB: str = " " * 4
 
     def __init__(
         self,
@@ -41,10 +41,10 @@ class ReportStats(ReportStatBase):
         self.bigger: bool = config.bigger if config else False
         self.test: bool = config.dry_run if config else False
         self.convert: bool = path_info.convert if path_info else False
-        self._full_name = path_info.full_output_name() if path_info else str(path)
+        self._full_name: str = path_info.full_output_name() if path_info else str(path)
         super().__init__(path, *args, **kwargs)
-        self.saved = self.bytes_in - self.bytes_out
-        self.converted = converted
+        self.saved: int = self.bytes_in - self.bytes_out
+        self.converted: bool = converted
 
     def _new_percent_saved(self) -> str:
         """Spit out how much space the optimization saved."""

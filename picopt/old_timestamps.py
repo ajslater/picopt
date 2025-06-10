@@ -57,7 +57,7 @@ class OldTimestamps:
 
     def __init__(self, config: AttrDict, timestamps: Treestamps):
         """Hold new timestamp object."""
-        self._config = config
-        self._timestamps = timestamps
-        self._root_dir = self._timestamps.root_dir
-        self._ignore_case = is_path_case_sensitive(self._root_dir)
+        self._config: AttrDict = config
+        self._timestamps: Treestamps = timestamps
+        self._root_dir: Path = self._timestamps.root_dir
+        self._ignore_case: bool = is_path_case_sensitive(self._root_dir)

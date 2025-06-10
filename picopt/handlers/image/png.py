@@ -30,7 +30,7 @@ class PngBase(ImageHandler, ABC):
             "deflate": oxipng.Deflaters.zopfli(15),
         }
     )
-    PROGRAMS = (("pil2png",), ("internal_oxipng",))
+    PROGRAMS: tuple[tuple[str, ...], ...] = (("pil2png",), ("internal_oxipng",))
     PIL2_KWARGS = MappingProxyType({"optimize": True})
 
     def internal_oxipng(

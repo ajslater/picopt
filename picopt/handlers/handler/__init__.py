@@ -57,7 +57,7 @@ class Handler(ABC, HandlerCleanup):
 
     def run_ext_fs(  # noqa: PLR0913
         self,
-        args: tuple[str | None, ...],
+        args: tuple[str, ...],
         input_buffer: BinaryIO,
         input_path: Path,
         output_path: Path,
@@ -87,7 +87,7 @@ class Handler(ABC, HandlerCleanup):
                 output_buffer = BytesIO(output_tmp_file.read())
             output_path.unlink(missing_ok=True)
         else:
-            self.working_path = output_path
+            self.working_path: Path = output_path
             output_buffer = output_path.open("rb")
         return output_buffer
 

@@ -14,10 +14,11 @@ dependencies = [
   "treestamps<3.0.0,>=2.2.6",
   "Pillow>=9.5",
   "defusedxml<1.0.0,>=0.7.1",
-  "py7zr<2.0.0,>=1.0.0rc2",
+  "py7zr<2.0.0,>=1.0.0",
   "filetype<2.0.0,>=1.2.0",
+  "typing-extensions>=4.13.2",
 ]
-version = "5.0.0"
+version = "5.0.1"
 description = "A multi format lossless image optimizer that uses external tools"
 readme = "README.md"
 keywords = ["image", "png", "jpg", "cbz", "cbr"]
@@ -44,10 +45,10 @@ picopt = "picopt.cli:main"
 
 [dependency-groups]
 dev = [
+  "basedpyright~=1.29.1",
   "codespell<3.0.0,>=2.1.0",
   "coverage[toml]<8.0,>=7.0",
   "neovim<1.0.0,>=0.3.1",
-  "pyright<2.0.0,>=1.1.237",
   "pytest-cov<7.0,>=6.0",
   "pytest-gitignore<2.0,>=1.3",
   "radon[toml]<7.0.0,>=6.0.1",
@@ -70,8 +71,36 @@ include = ["picopt", "tests", "NEWS.md"]
 [tool.hatch.build.targets.wheel]
 include = ["picopt", "NEWS.md"]
 
+[tool.basedpyright]
+exclude = [
+  "**/.*",
+  "**/__pycache__",
+  "**/node_modules",
+  "dist",
+  "test-results",
+  "typings",
+  "vulture_whitelist.py",
+]
+pythonVersion = "3.10"
+failOnWarnings = false
+reportAny = false
+reportExplicitAny = false
+reportImportCycles = true
+reportIncompatibleUnannotatedOverride = true
+reportMissingParameterType = false
+reportMissingTypeArgument = false
+reportPrivateUsage = false # ruff does this
+reportUnannotatedClassAttribute = false
+reportUnknownArgumentType = false
+reportUnknownMemberType = false
+reportUnknownParameterType = false
+reportUnknownVariableType = false
+reportUnusedCallResult = false
+reportUnusedParameter = false # ruff does this
+reportMissingTypeStubs = false
+
 [tool.codespell]
-skip = ".git,.mypy_cache,.pytest_cache,.ruff_cache,.venv,*~,./dist,./node_modules,./package-lock.json,./uv.lock,./test-results,zipfile_remove"
+skip = ".*,*~,./dist,./node_modules,./package.json,./package-lock.json,./uv.lock,./test-results"
 builtin = "clear,rare,code"
 check-hidden = true
 ignore-words-list = "thead"
@@ -81,15 +110,10 @@ source = ["picopt"]
 branch = true
 concurrency = ["multiprocessing"]
 omit = [
-  ".git/*",
-  ".mypy_cache/*",
-  ".pytest_cache/*",
-  ".ruff_cache/*",
-  ".venv/*",
+  "*/.*",
   "*__pycache__*",
   "dist/*",
   "node_modules/*",
-  "picopt/zipfile_remove/*",
   "test-results/*",
   "typings/*",
 ]
@@ -102,33 +126,8 @@ addopts = "--junitxml=test-results/pytest/junit.xml -ra --strict-markers --cov -
 junit_family = "xunit2"
 testpaths = "tests"
 
-[tool.pyright]
-exclude = [
-  "**/__pycache__",
-  "**/node_modules",
-  ".git",
-  ".mypy_cache",
-  ".pytest_cache",
-  ".ruff_cache",
-  ".venv",
-  "dist",
-  "package-lock.json",
-  "picopt/zipfile_remove",
-  "uv.lock",
-  "test-results",
-  "typings",
-  "vulture_whitelist.py",
-]
-pythonVersion = "3.10"
-pythonPlatform = "All"
-reportImportCycles = true
-reportMisingImports = true
-useLibraryCodeForTypes = true
-venvPath = "."
-venv = ".venv"
-
 [tool.radon]
-exclude = "*~,.git/*,.mypy_cache/*,.pytest_cache/*,.ruff_cache/*,.venv/*,__pycache__/*,dist/*,node_modules/*,test-results/*,typings/*,picopt/zipfile_remove/*"
+exclude = "*~,.*,.*/*,__pycache__/*,dist/*,node_modules/*,test-results/*,typings/*"
 
 [tool.ruff]
 extend-exclude = ["cache", "typings", "zipfile_remove"]
@@ -227,13 +226,12 @@ ignore-overlong-task-comments = true
 
 [tool.vulture]
 exclude = [
-  ".git/",
-  ".mypy_cache/",
-  ".pytest_cache",
-  ".ruff_cache",
-  ".venv",
-  "*__pycache__*",
-  "zipfile_remove/",
+  "*/.*",
+  "*/__pycache__*",
+  "*/node_modules*",
+  "dist/",
+  "test-results/",
+  "typings/",
 ]
 min_confidence = 61
 sort_by_size = true

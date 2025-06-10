@@ -1,5 +1,6 @@
 """Test comic format."""
 
+from pathlib import Path
 from types import MappingProxyType
 
 import pytest
@@ -32,9 +33,9 @@ FNS = MappingProxyType(
 class TestMPO(BaseTest):
     """Test images dir."""
 
-    TMP_ROOT = get_test_dir()
-    SOURCE_DIR = IMAGES_DIR
-    FNS = FNS
+    TMP_ROOT: Path = get_test_dir()
+    SOURCE_DIR: Path = IMAGES_DIR
+    FNS: MappingProxyType[str, tuple] = FNS
 
     def test_no_convert(self, fn: str) -> None:
         """Test no convert."""

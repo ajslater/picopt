@@ -12,8 +12,8 @@ class Printer:
 
     def __init__(self, verbose: int):
         """Initialize verbosity and flags."""
-        self._verbose = verbose
-        self._after_newline = True
+        self._verbose: int = verbose
+        self._after_newline: bool = True
 
     def _message(  # noqa : PLR0913
         self,

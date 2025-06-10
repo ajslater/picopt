@@ -53,7 +53,7 @@ class PathInfo:
     ):
         """Copy from path_info or override with arg."""
         if top_path:
-            self.top_path = top_path
+            self.top_path: Path = top_path
         elif path_info:
             self.top_path = path_info.top_path
         else:
@@ -61,7 +61,7 @@ class PathInfo:
             raise ValueError(reason)
 
         if convert is not None:
-            self.convert = convert
+            self.convert: bool = convert
         elif path_info:
             self.convert = path_info.convert
         else:
@@ -69,14 +69,14 @@ class PathInfo:
             raise ValueError(reason)
 
         if is_case_sensitive is not None:
-            self.is_case_sensitive = is_case_sensitive
+            self.is_case_sensitive: bool = is_case_sensitive
         elif path_info:
             self.is_case_sensitive = path_info.is_case_sensitive
         else:
             self.is_case_sensitive = is_path_case_sensitive(self.top_path)
 
         if container_parents is not None:
-            self.container_parents = container_parents
+            self.container_parents: tuple[str, ...] = container_parents
         elif path_info:
             self.container_parents = path_info.container_parents
         else:
@@ -108,14 +108,16 @@ class PathInfo:
         # Primary key #
         ###############
         # A filesystem path
-        self.path = path
+        self.path: Path | None = path
         # An animated image frame (in a container)
-        self.frame = frame
+        self.frame: int | None = frame
         # An archived file (in a container)
-        self.archiveinfo = ArchiveInfo(archiveinfo) if archiveinfo else None
+        self.archiveinfo: ArchiveInfo | None = (
+            ArchiveInfo(archiveinfo) if archiveinfo else None
+        )
 
         # optionally computed
-        self._data = data
+        self._data: bytes | None = data
 
         # always computed
         self._is_dir: bool | None = None
@@ -127,7 +129,7 @@ class PathInfo:
         self._archive_psuedo_path: Path | None = None
         self._suffix: str | None = None
         self._container_path_history: tuple[str, ...] | None = None
-        self.original_name = self.name()
+        self.original_name: str = self.name()
 
     def is_dir(self) -> bool:
         """Is the file a directory."""

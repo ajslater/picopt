@@ -16,7 +16,7 @@ class Gif(ImageHandler):
     OUTPUT_FORMAT_STR = str(GifImageFile.format)
     OUTPUT_FILE_FORMAT = FileFormat(OUTPUT_FORMAT_STR, lossless=True, animated=False)
     INPUT_FILE_FORMATS = frozenset({OUTPUT_FILE_FORMAT})
-    PROGRAMS = (("gifsicle", "pil2native"),)
+    PROGRAMS: tuple[tuple[str, ...]] = (("gifsicle", "pil2native"),)
     PIL2_KWARGS = MappingProxyType({"optimize": True})
     _GIFSICLE_ARGS_PREFIX: tuple[str, ...] = (
         "--optimize=3",

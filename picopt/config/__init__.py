@@ -86,15 +86,14 @@ class PicoptConfig(ConfigHandlers):
             return
 
         try:
-            timestamp = float(after)  # type: ignore[reportArgumentType]
+            timestamp = float(after)  # pyright: ignore[reportArgumentType]
         except ValueError:
-            after_dt = parse(after)  # type: ignore[reportArgumentType]
+            after_dt = parse(after)  # pyright: ignore[reportArgumentType]
             timestamp = time.mktime(after_dt.timetuple())
 
         config["after"].set(timestamp)
-        if timestamp is not None:
-            after = time.ctime(timestamp)
-            self._printer.config(f"Optimizing after {after}")
+        after = time.ctime(timestamp)
+        self._printer.config(f"Optimizing after {after}")
 
     @staticmethod
     def _get_ignore_regexp(
@@ -134,10 +133,10 @@ class PicoptConfig(ConfigHandlers):
 
     def _set_ignore(self, config: Subview) -> None:
         """Compute ignore regexp."""
-        ignore_list: list | tuple | set | frozenset = config["ignore"].get(list)  # type: ignore[reportAssignmentType]
+        ignore_list: list = config["ignore"].get(list)  # pyright: ignore[reportAssignmentType]
         ignore_list = sorted(frozenset(ignore_list))
-        ignore_defaults: bool = config["ignore_defaults"].get(bool)  # type: ignore[reportAssignmentType]
-        verbose: int = config["verbose"].get(int)  # type: ignore[reportAssignmentType]
+        ignore_defaults: bool = config["ignore_defaults"].get(bool)  # pyright: ignore[reportAssignmentType]
+        verbose: int = config["verbose"].get(int)  # pyright: ignore[reportAssignmentType]
         ignore_regexp, ignore_single_stars = self._get_ignore_regexp(
             ignore_list, verbose, ignore_defaults=ignore_defaults
         )
@@ -158,11 +157,11 @@ class PicoptConfig(ConfigHandlers):
             and not config["list_only"].get(bool)
         )
         config["timestamps"].set(timestamps)
-        verbose: int = config["verbose"].get(int)  # type: ignore[reportAssignmentType]
+        verbose: int = config["verbose"].get(int)  # pyright: ignore[reportAssignmentType]
         if verbose > 1:
             if timestamps:
                 roots = set()
-                paths: Iterable = config["paths"].get(list)  # type: ignore[reportAssignmentType]
+                paths: Iterable = config["paths"].get(list)  # pyright: ignore[reportAssignmentType]
                 for path_str in paths:
                     path = Path(path_str)
                     if path.is_dir():
