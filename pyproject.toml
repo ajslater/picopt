@@ -18,7 +18,7 @@ dependencies = [
   "filetype<2.0.0,>=1.2.0",
   "typing-extensions>=4.13.2",
 ]
-version = "5.0.1"
+version = "5.1.0"
 description = "A multi format lossless image optimizer that uses external tools"
 readme = "README.md"
 keywords = ["image", "png", "jpg", "cbz", "cbr"]

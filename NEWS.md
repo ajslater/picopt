@@ -1,5 +1,10 @@
 # 📰 Picopt News
 
+## v5.1.0
+
+- gif2webp & img2webp experimental options hidden behind environment variables.
+  See README.
+
 ## v5.0.1
 
 - Fix crash converting animated images with bad duration metadata.

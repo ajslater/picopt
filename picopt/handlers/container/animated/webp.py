@@ -11,7 +11,7 @@ from picopt.handlers.image.png import PngAnimated
 from picopt.handlers.image.webp import WebPBase
 
 
-class WebPAnimatedBase(ImageAnimated):
+class PILPackWebPAnimatedBase(ImageAnimated):
     """Animated WebP container."""
 
     OUTPUT_FORMAT_STR: str = WebPBase.OUTPUT_FORMAT_STR
@@ -23,18 +23,18 @@ class WebPAnimatedBase(ImageAnimated):
     )
 
 
-class WebPAnimatedLossless(WebPAnimatedBase):
+class PILPackWebPAnimatedLossless(PILPackWebPAnimatedBase):
     """Animated Lossless WebP Handler."""
 
     OUTPUT_FILE_FORMAT: FileFormat = FileFormat(
-        WebPAnimatedBase.OUTPUT_FORMAT_STR, lossless=True, animated=True
+        PILPackWebPAnimatedBase.OUTPUT_FORMAT_STR, lossless=True, animated=True
     )
     INPUT_FILE_FORMATS: frozenset[FileFormat] = frozenset(
         {*PngAnimated.INPUT_FILE_FORMATS, OUTPUT_FILE_FORMAT}
     )
     PIL2_FRAME_KWARGS: MappingProxyType[str, Any] = MappingProxyType(
-        {**WebPAnimatedBase.PIL2_FRAME_KWARGS, "lossless": True, "quality": 0}
+        {**PILPackWebPAnimatedBase.PIL2_FRAME_KWARGS, "lossless": True, "quality": 0}
     )
     PIL2_KWARGS: MappingProxyType[str, Any] = MappingProxyType(
-        {**WebPAnimatedBase.PIL2_KWARGS, "lossless": True}
+        {**PILPackWebPAnimatedBase.PIL2_KWARGS, "lossless": True}
     )
