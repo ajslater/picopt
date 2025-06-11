@@ -99,6 +99,18 @@ WebP lossless formats are optimized with
 with the internal optimizer if not. cwebp provides significant improvements over
 the internal optimizer.
 
+#### Experimental options
+
+These experimental options are activated with environment variabales.
+
+Set `PICOPT_ENABLE_GIF2WEBP=1` to make picopt will attempt to convert gifs to
+webp with the [gif2webp](https://developers.google.com/speed/webp/docs/gif2webp)
+binary
+
+Set `PICOPT_ENABLE_IMG2WEBP=1` to make picopt will attempt to optimize animated
+webps and convert animated pngs to webp with the
+[img2webp](https://developers.google.com/speed/webp/docs/img2webp) binary
+
 ### SVG
 
 Picopt can only optimize SVGs if [svgo](https://github.com/svg/svgo) is on the

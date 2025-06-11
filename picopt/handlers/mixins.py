@@ -1,4 +1,4 @@
-"""Image metadata preservation."""
+"""Handler Mixins."""
 
 from collections.abc import Mapping
 from types import MappingProxyType
@@ -7,8 +7,8 @@ from typing import Any
 from PIL.PngImagePlugin import PngImageFile, PngInfo
 from PIL.WebPImagePlugin import WebPImageFile
 
-from picopt.formats import PNGINFO_XMP_KEY
-from picopt.handlers.handler import Handler
+from picopt.formats import PNGINFO_XMP_KEY, FileFormat
+from picopt.path import PathInfo
 
 _SAVE_INFO_KEYS: frozenset[str] = frozenset(
     {"n_frames", "loop", "duration", "background"}
@@ -32,12 +32,12 @@ def _gif_palette_index_to_rgb(
     return (red, green, blue)
 
 
-class PrepareInfoMixin(Handler):
+class PrepareInfoMixin:
     """Prepare to write stored metadata."""
 
     def set_info(self, info: Mapping[str, Any]):
         """Set metadata."""
-        self.info: dict[str, Any] = dict(info)
+        self.info: dict[str, Any] = dict(info)  #  pyright: ignore[reportUninitializedInstanceVariable]
 
     def _prepare_info_webp(self):
         """Transform info for webp."""
@@ -63,7 +63,7 @@ class PrepareInfoMixin(Handler):
             self._prepare_info_webp()
         elif format_str == PngImageFile.format:
             self._prepare_info_png()
-        if self.config.keep_metadata:
+        if self.config.keep_metadata:  # pyright: ignore[reportAttributeAccessIssue]
             info = self.info
         else:
             info = {}
@@ -71,3 +71,21 @@ class PrepareInfoMixin(Handler):
                 if key in _SAVE_INFO_KEYS:
                     info[key] = val
         return MappingProxyType(info)
+
+
+class NonPILIdentifierMixin:
+    """Methods for files that that can't be identified with PIL."""
+
+    SUFFIXES: tuple[str, ...] = ()
+    INPUT_FILE_FORMAT: FileFormat = FileFormat("UNIMPLEMENTED")
+
+    @classmethod
+    def identify_format(
+        cls,
+        path_info: PathInfo,
+    ) -> FileFormat | None:
+        """Return the format if the suffix matches the handler."""
+        suffix = path_info.suffix().lower()
+        if suffix and suffix in cls.SUFFIXES:
+            return cls.INPUT_FILE_FORMAT
+        return None

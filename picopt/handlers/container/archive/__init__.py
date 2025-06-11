@@ -10,24 +10,28 @@ from zipfile import ZipFile, ZipInfo
 from py7zr import SevenZipFile
 from py7zr.py7zr import FileInfo as SevenZipInfo
 from rarfile import RarFile, RarInfo
+from typing_extensions import override
 
 from picopt.archiveinfo import ArchiveInfo
 from picopt.formats import FileFormat
-from picopt.handlers.container import ContainerHandler, PackingContainerHandler
-from picopt.handlers.non_pil import NonPILIdentifier
+from picopt.handlers.container import ContainerHandler, PackingContainerHandlerMixin
+from picopt.handlers.mixins import NonPILIdentifierMixin
 from picopt.path import PathInfo
 from picopt.report import ReportStats
 
+ArchiveClassType = type[ZipFile | TarFile | SevenZipFile | RarFile]
+ArchiveInfoClassType = type[ZipInfo | TarInfo | SevenZipInfo | RarInfo]
 
-class ArchiveHandler(NonPILIdentifier, ContainerHandler, ABC):
+
+class ArchiveHandler(NonPILIdentifierMixin, ContainerHandler, ABC):
     """Compressed Archive that must be converted with another handler."""
 
-    INPUT_FORMAT_STR = "UNINMPLEMENTED"
+    INPUT_FORMAT_STR: str = "UNINMPLEMENTED"
     INPUT_FILE_FORMAT = FileFormat(INPUT_FORMAT_STR)
     INPUT_FILE_FORMATS = frozenset({INPUT_FILE_FORMAT})
     ARCHIVE_CLASS: type[ZipFile | TarFile | SevenZipFile | RarFile] = ZipFile
     CONVERT_CHILDREN: bool = True
-    CONTAINER_TYPE = "Archive"
+    CONTAINER_TYPE: str = "Archive"
 
     def __init__(self, *args, **kwargs):
         """Init Archive Treestamps."""
@@ -49,6 +53,7 @@ class ArchiveHandler(NonPILIdentifier, ContainerHandler, ABC):
     def _archive_readfile(self, archive, archiveinfo):
         raise NotImplementedError
 
+    @override
     @classmethod
     def identify_format(cls, path_info: PathInfo) -> FileFormat | None:
         """Return the format if this handler can handle this path."""
@@ -127,6 +132,7 @@ class ArchiveHandler(NonPILIdentifier, ContainerHandler, ABC):
                 path_info.set_data(data)
             self.set_task(path_info, None)
 
+    @override
     def walk(self) -> Generator[PathInfo]:
         """Walk an archive's archiveinfos."""
         self._printer.scan_archive(self.path_info)
@@ -139,6 +145,7 @@ class ArchiveHandler(NonPILIdentifier, ContainerHandler, ABC):
                 self._copy_unchanged_files(archive)
         self._walk_finish()
 
+    @override
     def _hydrate_optimized_path_info(self, path_info: PathInfo, report: ReportStats):
         """Rename archive files that changed."""
         super()._hydrate_optimized_path_info(path_info, report)
@@ -148,18 +155,30 @@ class ArchiveHandler(NonPILIdentifier, ContainerHandler, ABC):
             path_info.rename(final_path)
             self._do_repack = True
 
+    @override
     def optimize_contents(self):
         """Remove data structures that are no longer used."""
         super().optimize_contents()
         self._skip_path_infos = set()
 
 
-class PackingArchiveHandler(ArchiveHandler, PackingContainerHandler, ABC):
+class PackingArchiveHandler(PackingContainerHandlerMixin, ArchiveHandler, ABC):
     """Compressed Archive."""
 
-    OUTPUT_FORMAT_STR = ArchiveHandler.INPUT_FORMAT_STR
+    OUTPUT_FORMAT_STR: str = ArchiveHandler.INPUT_FORMAT_STR
     OUTPUT_FILE_FORMAT = FileFormat(OUTPUT_FORMAT_STR)
     INFO_CLASS: type[ZipInfo | TarInfo | SevenZipInfo | RarInfo] = ZipInfo
+
+    def __init__(
+        self,
+        *args,
+        comment: bytes | None = None,
+        optimized_contents: set[PathInfo] | None = None,
+        **kwargs,
+    ):
+        """Copy optimized contents from previous handler."""
+        super().__init__(*args, **kwargs)
+        self.init_repack(comment, optimized_contents)
 
     @abstractmethod
     def _archive_for_write(self, output_buffer: BytesIO):
@@ -178,6 +197,7 @@ class PackingArchiveHandler(ArchiveHandler, PackingContainerHandler, ABC):
             archive.comment = self.comment
             self._printer.packed()
 
+    @override
     def pack_into(self) -> BytesIO:
         """Zip up the files in the tempdir into the new filename."""
         output_buffer = BytesIO()

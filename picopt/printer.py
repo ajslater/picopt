@@ -12,8 +12,8 @@ class Printer:
 
     def __init__(self, verbose: int):
         """Initialize verbosity and flags."""
-        self._verbose = verbose
-        self._after_newline = True
+        self._verbose: int = verbose
+        self._after_newline: bool = True
 
     def _message(  # noqa : PLR0913
         self,
@@ -96,6 +96,13 @@ class Printer:
         """Start Repacking Operation."""
         if self._verbose > 1:
             self.start_operation("Repacking", path_info)
+
+    def img2webp_repacking(self, path_info: PathInfo):
+        """Start img2webp Repacking Operation."""
+        if self._verbose > 1:
+            self.start_operation(
+                "Optimizing while repacking animated WebP...", path_info
+            )
 
     def container_repacking_done(self):
         """Only done for repack if very verbose."""

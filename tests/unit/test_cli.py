@@ -2,6 +2,7 @@
 
 import shutil
 import sys
+from pathlib import Path
 
 from picopt import cli
 from picopt.handlers.container.archive.zip import Cbz, Zip
@@ -15,7 +16,7 @@ JPEG_SRC = IMAGES_DIR / "test_jpg.jpg"
 class TestCLI:
     """Test CLI."""
 
-    OLD_PATH = TMP_ROOT / "old.jpg"
+    OLD_PATH: Path = TMP_ROOT / "old.jpg"
 
     def setup_method(self) -> None:
         """Set up method."""

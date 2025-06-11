@@ -16,7 +16,7 @@ from picopt.printer import Printer
 class WalkSkipper:
     """Walk Methods for checking and skipping."""
 
-    _TIMESTAMPS_FILENAMES = frozenset(
+    _TIMESTAMPS_FILENAMES: frozenset[str] = frozenset(
         {*Treestamps.get_filenames(PROGRAM_NAME), OLD_TIMESTAMPS_NAME}
     )
 
@@ -24,15 +24,15 @@ class WalkSkipper:
         self,
         config: AttrDict,
         printer: Printer,
-        timestamps: Grovestamps | dict | None = None,
+        timestamps: Grovestamps | None = None,
         *,
         in_archive: bool = False,
     ):
         """Initialize."""
-        self._config = config
-        self._timestamps = timestamps if timestamps else {}
-        self._in_archive = in_archive
-        self._printer = printer
+        self._config: AttrDict = config
+        self._timestamps: Grovestamps | None = timestamps
+        self._in_archive: bool = in_archive
+        self._printer: Printer = printer
 
     def set_timestamps(self, timestamps: Grovestamps):
         """Reset the timestamps after they've been established."""
@@ -84,7 +84,6 @@ class WalkSkipper:
             self._printer.deleted(path)
         except Exception as exc:
             self._printer.error("", exc)
-            self._last_verbose_message = True
 
     def is_walk_file_skip(
         self,
@@ -103,9 +102,9 @@ class WalkSkipper:
     def _get_walk_after(self, path_info: PathInfo):
         if self._config.after is not None:
             walk_after = self._config.after
-        elif path_info.archive_psuedo_path() and self._config.timestamps:
+        elif self._timestamps and (api := path_info.archive_psuedo_path()):
             timestamps = self._timestamps.get(path_info.top_path, {})
-            walk_after = timestamps.get(path_info.archive_psuedo_path())
+            walk_after = timestamps.get(api)
         else:
             walk_after = None
         return walk_after

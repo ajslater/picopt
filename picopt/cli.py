@@ -6,6 +6,7 @@ from importlib.metadata import PackageNotFoundError, version
 
 from confuse.exceptions import ConfigError
 from termcolor import colored
+from typing_extensions import override
 
 from picopt import PROGRAM_NAME
 from picopt.config import PicoptConfig
@@ -25,15 +26,23 @@ _DEFAULT_FORMAT_STRS = frozenset(
     [handler_cls.OUTPUT_FORMAT_STR for handler_cls in DEFAULT_HANDLERS]
 )
 _LIST_DELIMETER = ","
-try:
-    VERSION = version(PROGRAM_NAME)
-except PackageNotFoundError:
-    VERSION = "test"
+
+
+def _get_version():
+    try:
+        v = version(PROGRAM_NAME)
+    except PackageNotFoundError:
+        v = "test"
+    return v
+
+
+VERSION = _get_version()
 
 
 class SplitArgsAction(Action):
     """Convert csv string from argparse to a list."""
 
+    @override
     def __call__(self, _parser, namespace, values, _option_string=None):
         """Split values string into list."""
         if isinstance(values, str):
@@ -113,8 +122,10 @@ def get_arguments(params: tuple[str, ...] | None = None) -> Namespace:
         action="count",
         default=1,
         dest="verbose",
-        help="Display more output. Can be used multiple times for "
-        "increasingly noisy output.",
+        help=(
+            "Display more output. Can be used multiple times for "
+            "increasingly noisy output."
+        ),
     )
     parser.add_argument(
         "-q",
@@ -129,9 +140,11 @@ def get_arguments(params: tuple[str, ...] | None = None) -> Namespace:
         "--formats",
         action=SplitArgsAction,
         dest="formats",
-        help="Only optimize images of the specified "
-        f"comma delimited formats from: {_comma_join(ALL_FORMAT_STRS)}. "
-        f"Defaults to {_comma_join(_DEFAULT_FORMAT_STRS, space=False)}",
+        help=(
+            "Only optimize images of the specified "
+            f"comma delimited formats from: {_comma_join(ALL_FORMAT_STRS)}. "
+            f"Defaults to {_comma_join(_DEFAULT_FORMAT_STRS, space=False)}"
+        ),
     )
     parser.add_argument(
         "-x",
@@ -145,12 +158,14 @@ def get_arguments(params: tuple[str, ...] | None = None) -> Namespace:
         "--convert-to",
         action=SplitArgsAction,
         dest="convert_to",
-        help="A list of formats to convert to. "
-        "By default formats are not converted to other formats. "
-        f"Lossless images may convert to {_comma_join(LOSSLESS_IMAGE_CONVERT_TO_FORMAT_STRS)}.\n"
-        f"{_comma_join(ARCHIVE_CONVERT_FROM_FORMAT_STRS, final_and=True)} archives "
-        f"may convert to {Zip.OUTPUT_FORMAT_STR}.\n"
-        f"{_comma_join(CB_CONVERT_FROM_FORMAT_STRS, final_and=True)} may convert to {Cbz.OUTPUT_FORMAT_STR}.",
+        help=(
+            "A list of formats to convert to. "
+            "By default formats are not converted to other formats. "
+            f"Lossless images may convert to {_comma_join(LOSSLESS_IMAGE_CONVERT_TO_FORMAT_STRS)}.\n"
+            f"{_comma_join(ARCHIVE_CONVERT_FROM_FORMAT_STRS, final_and=True)} archives "
+            f"may convert to {Zip.OUTPUT_FORMAT_STR}.\n"
+            f"{_comma_join(CB_CONVERT_FROM_FORMAT_STRS, final_and=True)} may convert to {Cbz.OUTPUT_FORMAT_STR}."
+        ),
     )
     parser.add_argument(
         "-n",
@@ -199,8 +214,10 @@ def get_arguments(params: tuple[str, ...] | None = None) -> Namespace:
         "--timestamps",
         action="store_true",
         dest="timestamps",
-        help="Record the optimization time in a timestamps file. "
-        "Do not optimize files that are older than their timestamp record.",
+        help=(
+            "Record the optimization time in a timestamps file. "
+            "Do not optimize files that are older than their timestamp record."
+        ),
     )
     parser.add_argument(
         "-N",
@@ -215,9 +232,11 @@ def get_arguments(params: tuple[str, ...] | None = None) -> Namespace:
         "--after",
         action="store",
         dest="after",
-        help="Only optimize files after the specified timestamp. "
-        "Supersedes recorded timestamp files. Can be an epoch number or "
-        "datetime string",
+        help=(
+            "Only optimize files after the specified timestamp. "
+            "Supersedes recorded timestamp files. Can be an epoch number or "
+            "datetime string"
+        ),
     )
     parser.add_argument(
         "-d",
@@ -246,8 +265,10 @@ def get_arguments(params: tuple[str, ...] | None = None) -> Namespace:
         type=int,
         action="store",
         dest="jobs",
-        help="Number of parallel jobs to run simultaneously. Defaults "
-        "to number of available cores.",
+        help=(
+            "Number of parallel jobs to run simultaneously. Defaults "
+            "to number of available cores."
+        ),
     )
     parser.add_argument(
         "-C",

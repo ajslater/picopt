@@ -1,6 +1,7 @@
 """Test comic format."""
 
 import platform
+from pathlib import Path
 from types import MappingProxyType
 
 import pytest
@@ -86,9 +87,9 @@ NEAR_LOSSLESS_FNS = MappingProxyType(
 class TestImagesDir(BaseTest):
     """Test images dir."""
 
-    TMP_ROOT = get_test_dir()
-    SOURCE_DIR = IMAGES_DIR
-    FNS = FNS
+    TMP_ROOT: Path = get_test_dir()
+    SOURCE_DIR: Path = IMAGES_DIR
+    FNS: MappingProxyType[str, tuple] = MappingProxyType(FNS)
 
     def test_no_convert(self, fn: str) -> None:
         """Test no convert."""
@@ -131,9 +132,9 @@ class TestImagesDir(BaseTest):
 
 @pytest.mark.parametrize("fn", NEAR_LOSSLESS_FNS)
 class TestNearLosslessImageDir(BaseTest):
-    TMP_ROOT = get_test_dir()
-    SOURCE_DIR = IMAGES_DIR
-    FNS = NEAR_LOSSLESS_FNS
+    TMP_ROOT: Path = get_test_dir()
+    SOURCE_DIR: Path = IMAGES_DIR
+    FNS: MappingProxyType[str, tuple] = NEAR_LOSSLESS_FNS
 
     def test_convert_to_webp_near_lossless(self, fn: str) -> None:
         """Test convert to WEBP."""

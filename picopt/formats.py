@@ -22,6 +22,7 @@ from PIL.TgaImagePlugin import TgaImageFile
 from PIL.TiffImagePlugin import TiffImageFile
 from PIL.XbmImagePlugin import XbmImageFile
 from PIL.XpmImagePlugin import XpmImageFile
+from typing_extensions import override
 
 
 @dataclass(eq=True, frozen=True)
@@ -33,6 +34,7 @@ class FileFormat:
     animated: bool = False
     archive: bool = False
 
+    @override
     def __repr__(self):
         """Represent format as a string."""
         parts = [self.format_str]

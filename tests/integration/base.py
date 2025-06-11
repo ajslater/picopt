@@ -1,7 +1,6 @@
 """Base class for testing images."""
 
 import shutil
-from collections.abc import Mapping
 from pathlib import Path
 from types import MappingProxyType
 
@@ -15,7 +14,7 @@ class BaseTest:
 
     TMP_ROOT: Path = get_test_dir()
     SOURCE_DIR: Path = IMAGES_DIR
-    FNS: Mapping = MappingProxyType({})
+    FNS: MappingProxyType[str, tuple] = MappingProxyType({})
 
     @pytest.fixture(autouse=True)
     def setup_and_teardown(self, fn: str):

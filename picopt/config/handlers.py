@@ -8,6 +8,10 @@ from types import MappingProxyType
 
 from confuse import Subview
 
+from picopt.config.consts import (
+    GIF2WEBP_ANIMATED_LOSSLESS_HANDLERS,
+    IMG2WEBP_ANIMATED_LOSSLESS_HANDLERS,
+)
 from picopt.config.cwebp import ConfigCWebP
 from picopt.formats import (
     CONVERTIBLE_PIL_ANIMATED_FILE_FORMATS,
@@ -16,7 +20,7 @@ from picopt.formats import (
     MPO_FILE_FORMAT,
     FileFormat,
 )
-from picopt.handlers.container.animated.webp import WebPAnimatedLossless
+from picopt.handlers.container.animated.webp import PILPackWebPAnimatedLossless
 from picopt.handlers.container.archive.rar import (
     Cbr,
     Rar,
@@ -69,7 +73,13 @@ _LOSSLESS_CONVERTIBLE_FORMAT_HANDLERS = MappingProxyType(
 )
 _LOSSLESS_CONVERTIBLE_ANIMATED_FORMAT_HANDLERS = MappingProxyType(
     {
-        ffmt: FileFormatHandlers(convert=(WebPAnimatedLossless, PngAnimated))
+        ffmt: FileFormatHandlers(
+            convert=(
+                *IMG2WEBP_ANIMATED_LOSSLESS_HANDLERS,
+                PILPackWebPAnimatedLossless,
+                PngAnimated,
+            )
+        )
         for ffmt in CONVERTIBLE_PIL_ANIMATED_FILE_FORMATS
     }
 )
@@ -82,7 +92,11 @@ _FORMAT_HANDLERS = MappingProxyType(
             native=(Gif,),
         ),
         GifAnimated.OUTPUT_FILE_FORMAT: FileFormatHandlers(
-            convert=(WebPAnimatedLossless, PngAnimated),
+            convert=(
+                *GIF2WEBP_ANIMATED_LOSSLESS_HANDLERS,
+                PILPackWebPAnimatedLossless,
+                PngAnimated,
+            ),
             native=(GifAnimated,),
         ),
         MPO_FILE_FORMAT: FileFormatHandlers(convert=(Jpeg,)),
@@ -91,11 +105,12 @@ _FORMAT_HANDLERS = MappingProxyType(
             convert=(WebPLossless,), native=(Png,)
         ),
         PngAnimated.OUTPUT_FILE_FORMAT: FileFormatHandlers(
-            convert=(WebPAnimatedLossless,), native=(PngAnimated,)
+            convert=(*IMG2WEBP_ANIMATED_LOSSLESS_HANDLERS, PILPackWebPAnimatedLossless),
+            native=(PngAnimated,),
         ),
         WebPLossless.OUTPUT_FILE_FORMAT: FileFormatHandlers(native=(WebPLossless,)),
-        WebPAnimatedLossless.OUTPUT_FILE_FORMAT: FileFormatHandlers(
-            native=(WebPAnimatedLossless,)
+        PILPackWebPAnimatedLossless.OUTPUT_FILE_FORMAT: FileFormatHandlers(
+            native=(*IMG2WEBP_ANIMATED_LOSSLESS_HANDLERS, PILPackWebPAnimatedLossless),
         ),
         Svg.OUTPUT_FILE_FORMAT: FileFormatHandlers(native=(Svg,)),
         # Archives
@@ -122,7 +137,7 @@ class ConfigHandlers(ConfigCWebP):
 
     def __init__(self, printer: Printer | None = None):
         """Initialize printer."""
-        self._printer = printer if printer else Printer(2)
+        self._printer: Printer = printer if printer else Printer(2)
 
     def _print_formats_config(
         self,
@@ -147,7 +162,7 @@ class ConfigHandlers(ConfigCWebP):
         if (
             verbose > 1
             and not is_modern_cwebp
-            and WebPAnimatedLossless.OUTPUT_FORMAT_STR in convert_format_strs
+            and PILPackWebPAnimatedLossless.OUTPUT_FORMAT_STR in convert_format_strs
         ):
             to_webp_strs = MODERN_CWEBP_FORMAT_STRS & handled_format_strs
             if to_webp_strs:
@@ -160,7 +175,7 @@ class ConfigHandlers(ConfigCWebP):
     def _get_config_set(config: Subview, *keys: str) -> frozenset[str]:
         val_list = []
         for key in keys:
-            val_list += config[key].get(list) if key in config else []  # type: ignore[reportAssignmentType]
+            val_list += config[key].get(list) if key in config else []  # pyright: ignore[reportOperatorIssue]
         return frozenset(val.upper() for val in val_list)
 
     @staticmethod
@@ -193,7 +208,7 @@ class ConfigHandlers(ConfigCWebP):
             exec_args = ()
         elif program.startswith("npx_"):
             exec_args = cls._get_handler_stage_npx(program)
-        elif bin_path := shutil.which(program):
+        elif bin_path := shutil.which(program):  # pyright: ignore[reportDeprecated]
             exec_args = (bin_path,)
         return exec_args
 
@@ -266,11 +281,9 @@ class ConfigHandlers(ConfigCWebP):
 
         handled_format_strs = set()
         convert_format_strs = {}
-        disabled_programs: list | tuple | set | frozenset = config[
-            "disable_programs"
-        ].get(list)  # type: ignore[reportAssignmentType]
+        disabled_programs_list: list | None = config["disable_programs"].get(list)  # pyright: ignore[reportAssignmentType]
         disabled_programs = (
-            frozenset(disabled_programs) if disabled_programs else frozenset()
+            frozenset(disabled_programs_list) if disabled_programs_list else frozenset()
         )
 
         for file_format, possible_file_handlers in _FORMAT_HANDLERS.items():
@@ -301,7 +314,7 @@ class ConfigHandlers(ConfigCWebP):
         config["computed"]["convert_handlers"].set(convert_handlers)
         config["computed"]["handler_stages"].set(handler_stages)
         config["computed"]["is_modern_cwebp"].set(is_modern_cwebp)
-        verbose: int = config["verbose"].get(int)  # type: ignore[reportAssignmentType]
+        verbose: int = config["verbose"].get(int)  # pyright: ignore[reportAssignmentType]
         self._print_formats_config(
             verbose,
             handled_format_strs,

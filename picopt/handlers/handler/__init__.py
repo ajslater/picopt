@@ -57,16 +57,16 @@ class Handler(ABC, HandlerCleanup):
 
     def run_ext_fs(  # noqa: PLR0913
         self,
-        args: tuple[str | None, ...],
+        args: tuple[str, ...],
         input_buffer: BinaryIO,
-        input_path: Path,
+        input_path: Path | None,
         output_path: Path,
         *,
         input_path_tmp: bool,
         output_path_tmp: bool,
     ) -> BinaryIO:
         """Run EXTERNAL program that lacks stdin/stdout streaming."""
-        if input_path_tmp:
+        if input_path_tmp and input_path:
             with input_path.open("wb") as input_tmp_file, input_buffer:
                 input_buffer.seek(0)
                 input_tmp_file.write(input_buffer.read())
@@ -79,15 +79,14 @@ class Handler(ABC, HandlerCleanup):
             stderr=subprocess.PIPE,
         )
 
-        if input_path_tmp:
+        if input_path_tmp and input_path:
             input_path.unlink(missing_ok=True)
 
         if output_path_tmp:
-            with output_path.open("rb") as output_tmp_file:
-                output_buffer = BytesIO(output_tmp_file.read())
+            output_buffer = BytesIO(output_path.read_bytes())
             output_path.unlink(missing_ok=True)
         else:
-            self.working_path = output_path
+            self.working_path: Path = output_path
             output_buffer = output_path.open("rb")
         return output_buffer
 
