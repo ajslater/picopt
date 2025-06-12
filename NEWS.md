@@ -2,8 +2,8 @@
 
 ## v5.1.0
 
-- gif2webp & img2webp experimental options hidden behind environment variables.
-  See README.
+- Use gif2webp to convert GIFs to WebP. It saves space compared to picopt's
+  custom method.
 
 ## v5.0.1
 

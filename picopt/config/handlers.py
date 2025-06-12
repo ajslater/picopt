@@ -8,10 +8,7 @@ from types import MappingProxyType
 
 from confuse import Subview
 
-from picopt.config.consts import (
-    GIF2WEBP_ANIMATED_LOSSLESS_HANDLERS,
-    IMG2WEBP_ANIMATED_LOSSLESS_HANDLERS,
-)
+from picopt.config.consts import IMG2WEBP_ANIMATED_LOSSLESS_HANDLERS
 from picopt.config.cwebp import ConfigCWebP
 from picopt.formats import (
     CONVERTIBLE_PIL_ANIMATED_FILE_FORMATS,
@@ -46,7 +43,7 @@ from picopt.handlers.image.gif import Gif, GifAnimated
 from picopt.handlers.image.jpeg import Jpeg
 from picopt.handlers.image.png import Png, PngAnimated
 from picopt.handlers.image.svg import Svg
-from picopt.handlers.image.webp import WebPLossless
+from picopt.handlers.image.webp import Gif2WebPAnimatedLossless, WebPLossless
 from picopt.printer import Printer
 
 
@@ -93,7 +90,7 @@ _FORMAT_HANDLERS = MappingProxyType(
         ),
         GifAnimated.OUTPUT_FILE_FORMAT: FileFormatHandlers(
             convert=(
-                *GIF2WEBP_ANIMATED_LOSSLESS_HANDLERS,
+                Gif2WebPAnimatedLossless,
                 PILPackWebPAnimatedLossless,
                 PngAnimated,
             ),

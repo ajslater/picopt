@@ -13,7 +13,7 @@ from tests.integration.base import BaseTest
 __all__ = ()
 FNS = {
     "07themecamplist.pdf": (93676, 93676, ("pdf", 93676), ("pdf", 93676)),
-    "test_animated_gif.gif": (16383, 16358, ("png", 24255), ("webp", 11892)),
+    "test_animated_gif.gif": (16383, 16358, ("png", 24255), ("webp", 11856)),
     "test_animated_webp.webp": (13610, 12174, ("webp", 12174), ("webp", 12174)),
     "test_png.png": (7967, 4150, ("png", 4150), ("webp", 3870)),
     "test_pre-optimized_jpg.jpg": (

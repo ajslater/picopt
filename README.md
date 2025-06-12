@@ -99,17 +99,19 @@ WebP lossless formats are optimized with
 with the internal optimizer if not. cwebp provides significant improvements over
 the internal optimizer.
 
-#### Experimental options
+When configured to convert GIFS to WebP, Animated GIFs are converted to WebP
+with the [gif2webp](https://developers.google.com/speed/webp/docs/gif2webp)
+binary if it exists. It is normally distributed as part of the webp package.
 
-These experimental options are activated with environment variabales.
+#### Experimental option
 
-Set `PICOPT_ENABLE_GIF2WEBP=1` to make picopt will attempt to convert gifs to
-webp with the [gif2webp](https://developers.google.com/speed/webp/docs/gif2webp)
-binary
+This experimental options is activated with an environment variable.
 
-Set `PICOPT_ENABLE_IMG2WEBP=1` to make picopt will attempt to optimize animated
-webps and convert animated pngs to webp with the
-[img2webp](https://developers.google.com/speed/webp/docs/img2webp) binary
+Set `PICOPT_ENABLE_IMG2WEBP=1` to make picopt optimize animated WebPs and
+convert animated PNGs to webp with the
+[img2webp](https://developers.google.com/speed/webp/docs/img2webp) binary. In my
+experiments img2webp has performed worse than picopt's custom algorithm using
+PIL & cwebp
 
 ### SVG
 

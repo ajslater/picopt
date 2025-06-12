@@ -35,9 +35,6 @@ from picopt.handlers.image.svg import Svg
 from picopt.handlers.image.webp import Gif2WebPAnimatedLossless, WebPLossless
 
 # Environment variable activated beta handlers
-GIF2WEBP_ANIMATED_LOSSLESS_HANDLERS = (
-    (Gif2WebPAnimatedLossless,) if os.environ.get("PICOPT_ENABLE_GIF2WEBP") else ()
-)
 IMG2WEBP_ANIMATED_LOSSLESS_HANDLERS = (
     (Img2WebPAnimatedLossless,) if os.environ.get("PICOPT_ENABLE_IMG2WEBP") else ()
 )
@@ -46,7 +43,7 @@ _LOSSLESS_IMAGE_CONVERT_TO_HANDLERS = (
     PngAnimated,
     WebPLossless,
     PILPackWebPAnimatedLossless,
-    *GIF2WEBP_ANIMATED_LOSSLESS_HANDLERS,
+    Gif2WebPAnimatedLossless,
     *IMG2WEBP_ANIMATED_LOSSLESS_HANDLERS,
 )
 
@@ -82,7 +79,7 @@ DEFAULT_HANDLERS = frozenset(
         Png,
         WebPLossless,
         PILPackWebPAnimatedLossless,
-        *GIF2WEBP_ANIMATED_LOSSLESS_HANDLERS,
+        Gif2WebPAnimatedLossless,
         *IMG2WEBP_ANIMATED_LOSSLESS_HANDLERS,
     }
 )
