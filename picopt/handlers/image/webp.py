@@ -31,8 +31,6 @@ class WebPBase(ImageHandler, ABC):
         "100",
         "-m",
         "6",
-        # advanced
-        "-sharp_yuv",
         # logging,
         "-quiet",
     )
@@ -117,6 +115,8 @@ class WebPLossless(WebPBase):
         # https://groups.google.com/a/webmproject.org/g/webp-discuss/c/0GmxDmlexek
         "-lossless",
         *WebPBase.WEBP_ARGS_PREFIX,
+        # advanced
+        "-sharp_yuv",
         # additional
         "-alpha_filter",
         "best",
