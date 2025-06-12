@@ -88,6 +88,8 @@ class HandlerFactory(DetectFormat):
         timestamps: Grovestamps | None = None,
     ) -> Handler | None:
         """Return a handler for the image format."""
+        if path_info.noop:
+            return None
         # This is the consumer of config._format_handlers
         handler_cls: type[Handler] | None = None
         try:

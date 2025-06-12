@@ -43,13 +43,15 @@ def is_path_ignored(config: AttrDict, path: str | Path, *, ignore_case: bool):
 class PathInfo:
     """Path Info object, mostly for passing down walk."""
 
-    def _copy_constructor(
+    def _copy_constructor(  # noqa: PLR0913
         self,
         path_info=None,
         top_path: Path | None = None,
         convert: bool | None = None,
         is_case_sensitive: bool | None = None,
         container_parents: tuple[str, ...] | None = None,
+        *,
+        noop: bool = False,
     ):
         """Copy from path_info or override with arg."""
         if top_path:
@@ -82,6 +84,8 @@ class PathInfo:
         else:
             self.container_parents = ()
 
+        self.noop = noop
+
     def __init__(  # noqa: PLR0913
         self,
         path_info=None,
@@ -94,6 +98,7 @@ class PathInfo:
         frame: int | None = None,
         archiveinfo: ZipInfo | RarInfo | TarInfo | SevenZipInfo | None = None,
         data: bytes | None = None,
+        noop: bool = False,
     ):
         """Initialize."""
         self._copy_constructor(
@@ -102,6 +107,7 @@ class PathInfo:
             convert,
             is_case_sensitive,
             container_parents,
+            noop=noop,
         )
 
         ###############

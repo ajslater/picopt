@@ -3,7 +3,6 @@
 from abc import ABC, abstractmethod
 from collections.abc import Generator
 from copy import copy
-from io import BytesIO
 from multiprocessing.pool import ApplyResult
 from typing import TYPE_CHECKING, BinaryIO
 
@@ -113,7 +112,7 @@ class PackingContainerHandlerMixin(ABC):
     """Mixin for Packing Archive."""
 
     @abstractmethod
-    def pack_into(self) -> BytesIO:
+    def pack_into(self) -> BinaryIO:
         """Create a container from unpacked contents."""
 
     def init_repack(

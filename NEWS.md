@@ -1,5 +1,10 @@
 # 📰 Picopt News
 
+## v5.1.0
+
+- Use gif2webp to convert GIFs to WebP. It saves space compared to picopt's
+  custom method.
+
 ## v5.0.1
 
 - Fix crash converting animated images with bad duration metadata.

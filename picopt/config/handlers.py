@@ -8,6 +8,7 @@ from types import MappingProxyType
 
 from confuse import Subview
 
+from picopt.config.consts import IMG2WEBP_ANIMATED_LOSSLESS_HANDLERS
 from picopt.config.cwebp import ConfigCWebP
 from picopt.formats import (
     CONVERTIBLE_PIL_ANIMATED_FILE_FORMATS,
@@ -16,7 +17,7 @@ from picopt.formats import (
     MPO_FILE_FORMAT,
     FileFormat,
 )
-from picopt.handlers.container.animated.webp import WebPAnimatedLossless
+from picopt.handlers.container.animated.webp import PILPackWebPAnimatedLossless
 from picopt.handlers.container.archive.rar import (
     Cbr,
     Rar,
@@ -42,7 +43,7 @@ from picopt.handlers.image.gif import Gif, GifAnimated
 from picopt.handlers.image.jpeg import Jpeg
 from picopt.handlers.image.png import Png, PngAnimated
 from picopt.handlers.image.svg import Svg
-from picopt.handlers.image.webp import WebPLossless
+from picopt.handlers.image.webp import Gif2WebPAnimatedLossless, WebPLossless
 from picopt.printer import Printer
 
 
@@ -69,7 +70,13 @@ _LOSSLESS_CONVERTIBLE_FORMAT_HANDLERS = MappingProxyType(
 )
 _LOSSLESS_CONVERTIBLE_ANIMATED_FORMAT_HANDLERS = MappingProxyType(
     {
-        ffmt: FileFormatHandlers(convert=(WebPAnimatedLossless, PngAnimated))
+        ffmt: FileFormatHandlers(
+            convert=(
+                *IMG2WEBP_ANIMATED_LOSSLESS_HANDLERS,
+                PILPackWebPAnimatedLossless,
+                PngAnimated,
+            )
+        )
         for ffmt in CONVERTIBLE_PIL_ANIMATED_FILE_FORMATS
     }
 )
@@ -82,7 +89,11 @@ _FORMAT_HANDLERS = MappingProxyType(
             native=(Gif,),
         ),
         GifAnimated.OUTPUT_FILE_FORMAT: FileFormatHandlers(
-            convert=(WebPAnimatedLossless, PngAnimated),
+            convert=(
+                Gif2WebPAnimatedLossless,
+                PILPackWebPAnimatedLossless,
+                PngAnimated,
+            ),
             native=(GifAnimated,),
         ),
         MPO_FILE_FORMAT: FileFormatHandlers(convert=(Jpeg,)),
@@ -91,11 +102,12 @@ _FORMAT_HANDLERS = MappingProxyType(
             convert=(WebPLossless,), native=(Png,)
         ),
         PngAnimated.OUTPUT_FILE_FORMAT: FileFormatHandlers(
-            convert=(WebPAnimatedLossless,), native=(PngAnimated,)
+            convert=(*IMG2WEBP_ANIMATED_LOSSLESS_HANDLERS, PILPackWebPAnimatedLossless),
+            native=(PngAnimated,),
         ),
         WebPLossless.OUTPUT_FILE_FORMAT: FileFormatHandlers(native=(WebPLossless,)),
-        WebPAnimatedLossless.OUTPUT_FILE_FORMAT: FileFormatHandlers(
-            native=(WebPAnimatedLossless,)
+        PILPackWebPAnimatedLossless.OUTPUT_FILE_FORMAT: FileFormatHandlers(
+            native=(*IMG2WEBP_ANIMATED_LOSSLESS_HANDLERS, PILPackWebPAnimatedLossless),
         ),
         Svg.OUTPUT_FILE_FORMAT: FileFormatHandlers(native=(Svg,)),
         # Archives
@@ -147,7 +159,7 @@ class ConfigHandlers(ConfigCWebP):
         if (
             verbose > 1
             and not is_modern_cwebp
-            and WebPAnimatedLossless.OUTPUT_FORMAT_STR in convert_format_strs
+            and PILPackWebPAnimatedLossless.OUTPUT_FORMAT_STR in convert_format_strs
         ):
             to_webp_strs = MODERN_CWEBP_FORMAT_STRS & handled_format_strs
             if to_webp_strs:

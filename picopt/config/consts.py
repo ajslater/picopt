@@ -1,10 +1,13 @@
 """Contst and Confuse Config template."""
 
+import os
+
 from picopt.formats import (
     LOSSLESS_FORMAT_STRS,
     MPO_FILE_FORMAT,
 )
-from picopt.handlers.container.animated.webp import WebPAnimatedLossless
+from picopt.handlers.container.animated.img2webp import Img2WebPAnimatedLossless
+from picopt.handlers.container.animated.webp import PILPackWebPAnimatedLossless
 from picopt.handlers.container.archive.rar import (
     Cbr,
     Rar,
@@ -29,13 +32,19 @@ from picopt.handlers.image.gif import Gif, GifAnimated
 from picopt.handlers.image.jpeg import Jpeg
 from picopt.handlers.image.png import Png, PngAnimated
 from picopt.handlers.image.svg import Svg
-from picopt.handlers.image.webp import WebPLossless
+from picopt.handlers.image.webp import Gif2WebPAnimatedLossless, WebPLossless
 
+# Environment variable activated beta handlers
+IMG2WEBP_ANIMATED_LOSSLESS_HANDLERS = (
+    (Img2WebPAnimatedLossless,) if os.environ.get("PICOPT_ENABLE_IMG2WEBP") else ()
+)
 _LOSSLESS_IMAGE_CONVERT_TO_HANDLERS = (
     Png,
     PngAnimated,
     WebPLossless,
-    WebPAnimatedLossless,
+    PILPackWebPAnimatedLossless,
+    Gif2WebPAnimatedLossless,
+    *IMG2WEBP_ANIMATED_LOSSLESS_HANDLERS,
 )
 
 LOSSLESS_IMAGE_CONVERT_TO_FORMAT_STRS = frozenset(
@@ -63,7 +72,16 @@ _ARCHIVE_CONVERTIBLE_FORMAT_STRS = frozenset(
 )
 
 DEFAULT_HANDLERS = frozenset(
-    {Gif, GifAnimated, Jpeg, Png, WebPLossless, WebPAnimatedLossless}
+    {
+        Gif,
+        GifAnimated,
+        Jpeg,
+        Png,
+        WebPLossless,
+        PILPackWebPAnimatedLossless,
+        Gif2WebPAnimatedLossless,
+        *IMG2WEBP_ANIMATED_LOSSLESS_HANDLERS,
+    }
 )
 _NON_PIL_HANDLERS = frozenset({Svg})
 _ARCHIVE_HANDLERS = frozenset(

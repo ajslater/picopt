@@ -5,7 +5,7 @@ from collections.abc import Generator, Mapping
 from io import BytesIO
 from statistics import mean
 from types import MappingProxyType
-from typing import Any
+from typing import Any, BinaryIO
 
 from PIL import Image, ImageSequence
 from PIL.PngImagePlugin import PngImageFile
@@ -40,26 +40,31 @@ class ImageAnimated(PrepareInfoMixin, PackingContainerHandler, ABC):
         """Return the format if this handler can handle this path."""
         return cls.OUTPUT_FILE_FORMAT
 
+    @staticmethod
+    def populate_frame_info(frame, frame_info: dict):
+        """Populate the frame info from the frame."""
+        for key in ANIMATED_INFO_KEYS:
+            value = frame.info.get(key)
+            if value is not None:
+                if key not in frame_info:
+                    frame_info[key] = []
+                frame_info[key].append(value)
+
     def _unpack_frame(self, frame, frame_index: int, frame_info: dict) -> PathInfo:
         """
         Save the frame as quickly as possible with the correct lossless format.
 
         Real optimization happens later with the specific handler.
-        It would be better to do what i do for mpo and read the bytes directly
+        It would be better to do what I do for mpo and read the bytes directly
         because this shows bad numbers for compressing uncompressed frames. But
         Pillow doesn't have raw access to frames.
         """
+        self.populate_frame_info(frame, frame_info)
         with BytesIO() as frame_buffer:
             frame.save(
                 frame_buffer,
-                **self.PIL2_FRAME_KWARGS,  # type: ignore[reportArgumentType]
+                **self.PIL2_FRAME_KWARGS,
             )
-            for key in ANIMATED_INFO_KEYS:
-                value = frame.info.get(key)
-                if value is not None:
-                    if key not in frame_info:
-                        frame_info[key] = []
-                    frame_info[key].append(value)
             frame_buffer.seek(0)
             return PathInfo(
                 path_info=self.path_info,
@@ -94,8 +99,7 @@ class ImageAnimated(PrepareInfoMixin, PackingContainerHandler, ABC):
         index = 0
         with Image.open(self.original_path) as image:
             for index, frame in enumerate(ImageSequence.Iterator(image), start=1):
-                frame_path_info = self._unpack_frame(frame, index, frame_info)
-                yield frame_path_info
+                yield self._unpack_frame(frame, index, frame_info)
         # Animated images need a double close because of some PIL bug.
         image.close()
         self._fix_duration(frame_info, index)
@@ -103,7 +107,7 @@ class ImageAnimated(PrepareInfoMixin, PackingContainerHandler, ABC):
         self._walk_finish()
 
     @override
-    def pack_into(self) -> BytesIO:
+    def pack_into(self) -> BinaryIO:
         """Remux the optimized frames into an animated webp."""
         sorted_frames = sorted(
             self._optimized_contents,
