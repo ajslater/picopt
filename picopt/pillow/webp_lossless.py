@@ -52,7 +52,7 @@ def is_lossless(input_buffer: BytesIO | BufferedReader) -> bool:
 
 def main() -> None:
     """Stand alone cli tool for getting lossless status."""
-    import sys
+    import sys  # noqa: PLC0415
 
     with Path(sys.argv[1]).open("rb") as f:
         lossless = is_lossless(f)

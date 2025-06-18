@@ -1,6 +1,7 @@
 """Run pictures through image specific external optimizers."""
 
 import sys
+import traceback
 from argparse import Action, ArgumentParser, Namespace, RawDescriptionHelpFormatter
 from importlib.metadata import PackageNotFoundError, version
 
@@ -313,13 +314,6 @@ def get_arguments(params: tuple[str, ...] | None = None) -> Namespace:
         params = params[1:]
 
     pns = parser.parse_args(params)
-
-    # increment verbose
-    if pns.verbose is None:
-        pns.verbose = 1
-    elif pns.verbose > 0:
-        pns.verbose += 1
-
     return Namespace(picopt=pns)
 
 
@@ -340,7 +334,6 @@ def main(args: tuple[str, ...] | None = None):
         sys.exit(1)
     except Exception as exc:
         printer.error("", exc)
-        import traceback
 
         traceback.print_exception(exc)
         sys.exit(1)

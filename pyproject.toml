@@ -18,7 +18,7 @@ dependencies = [
   "typing-extensions>=4.13.2",
   "Pillow>=9.5",
 ]
-version = "5.1.0"
+version = "5.1.1"
 description = "A multi format lossless image optimizer that uses external tools"
 readme = "README.md"
 keywords = ["image", "png", "jpg", "cbz", "cbr"]
@@ -52,7 +52,7 @@ dev = [
   "pytest-cov<7.0,>=6.0",
   "pytest-gitignore<2.0,>=1.3",
   "radon[toml]<7.0.0,>=6.0.1",
-  "ruff<1.0.0,>=0.11.5",
+  "ruff~=0.12.0",
   "types-python-dateutil<3.0.0,>=2.8.0",
   "vulture<3.0,>=2.1",
   "hatchling<2.0.0,>=1.27.0",

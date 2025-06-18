@@ -29,7 +29,7 @@ def png_bit_depth(buffer: BinaryIO) -> int | None:
 
 def main() -> None:
     """Stand alone cli tool for getting png bit depth."""
-    import sys
+    import sys  # noqa: PLC0415
 
     with Path(sys.argv[1]).open("rb") as f:
         bit_depth = png_bit_depth(f)

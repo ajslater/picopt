@@ -1,5 +1,9 @@
 # 📰 Picopt News
 
+## v5.1.1
+
+- Fix verbosity default too high.
+
 ## v5.1.0
 
 - Use gif2webp to convert GIFs to WebP. It saves space compared to picopt's
