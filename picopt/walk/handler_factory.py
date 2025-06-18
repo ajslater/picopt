@@ -1,5 +1,7 @@
 """Return a handler for a path."""
 
+from traceback import print_exc
+
 from confuse.templates import AttrDict
 from treestamps import Grovestamps
 
@@ -67,7 +69,6 @@ class HandlerFactory(DetectFormat):
                 f"getting repack container handler for {path_info.full_output_name()}",
                 exc,
             )
-            from traceback import print_exc
 
             print_exc()
         if (
@@ -102,7 +103,6 @@ class HandlerFactory(DetectFormat):
             self._printer.warn(
                 f"getting handler for {path_info.full_output_name()}", exc
             )
-            from traceback import print_exc
 
             print_exc()
             file_format = None

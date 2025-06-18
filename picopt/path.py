@@ -47,10 +47,10 @@ class PathInfo:
         self,
         path_info=None,
         top_path: Path | None = None,
-        convert: bool | None = None,
-        is_case_sensitive: bool | None = None,
         container_parents: tuple[str, ...] | None = None,
         *,
+        convert: bool | None = None,
+        is_case_sensitive: bool | None = None,
         noop: bool = False,
     ):
         """Copy from path_info or override with arg."""
@@ -104,9 +104,9 @@ class PathInfo:
         self._copy_constructor(
             path_info,
             top_path,
-            convert,
-            is_case_sensitive,
             container_parents,
+            convert=convert,
+            is_case_sensitive=is_case_sensitive,
             noop=noop,
         )
 

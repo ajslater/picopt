@@ -1,6 +1,7 @@
 """Run pictures through image specific external optimizers."""
 
 import sys
+import traceback
 from argparse import Action, ArgumentParser, Namespace, RawDescriptionHelpFormatter
 from importlib.metadata import PackageNotFoundError, version
 
@@ -340,7 +341,6 @@ def main(args: tuple[str, ...] | None = None):
         sys.exit(1)
     except Exception as exc:
         printer.error("", exc)
-        import traceback
 
         traceback.print_exception(exc)
         sys.exit(1)
