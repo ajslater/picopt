@@ -18,7 +18,7 @@ dependencies = [
   "typing-extensions>=4.13.2",
   "Pillow>=9.5",
 ]
-version = "5.1.0"
+version = "5.1.1"
 description = "A multi format lossless image optimizer that uses external tools"
 readme = "README.md"
 keywords = ["image", "png", "jpg", "cbz", "cbr"]
