@@ -22,7 +22,6 @@ RUN npm install --global svgo
 WORKDIR /app
 COPY bin bin
 COPY packages packages
-RUN bin/mozjpeg.sh
 # hadolint ignore=DL3059
 RUN bin/pngout.sh
 

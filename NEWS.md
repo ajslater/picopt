@@ -1,5 +1,9 @@
 # 📰 Picopt News
 
+## v5.2.0
+
+- MozJpeg is now an internal python module. External mozjpeg & jpegtran support removed.
+
 ## v5.1.1
 
 - Fix verbosity default too high.
