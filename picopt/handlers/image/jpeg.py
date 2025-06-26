@@ -3,7 +3,9 @@
 from io import BytesIO
 from typing import BinaryIO
 
+import mozjpeg_lossless_optimization
 import piexif
+from mozjpeg_lossless_optimization import COPY_MARKERS
 from PIL.JpegImagePlugin import JpegImageFile
 
 from picopt.formats import MPO_FILE_FORMAT, FileFormat
@@ -21,23 +23,18 @@ class Jpeg(ImageHandler):
     SUFFIXES: tuple[str, ...] = (".jpg", ".jpeg", ".mpo")
     OUTPUT_FILE_FORMAT = FileFormat(OUTPUT_FORMAT_STR, lossless=False, animated=False)
     INPUT_FILE_FORMATS = frozenset({OUTPUT_FILE_FORMAT})
-    PROGRAMS: tuple[tuple[str, ...], ...] = (("mozjpeg", "jpegtran", "pil2jpeg"),)
-    _JPEGTRAN_ARGS_PREFIX = ("-optimize", "-progressive")
+    PROGRAMS: tuple[tuple[str, ...], ...] = (("internal_mozjpeg", "pil2jpeg"),)
     # PIL Cannot save jpegs losslessly
 
-    def _jpegtran(self, exec_args: tuple[str, ...], input_buffer: BinaryIO) -> BytesIO:
-        """Run the jpegtran type program."""
-        copy_arg = "all" if self.config.keep_metadata else "none"
-        args = (*exec_args, *self._JPEGTRAN_ARGS_PREFIX, "-copy", copy_arg)
-        return self.run_ext(args, input_buffer)
-
-    def mozjpeg(self, exec_args: tuple[str, ...], input_buffer: BinaryIO) -> BytesIO:
-        """Create argument list for mozjpeg."""
-        return self._jpegtran(exec_args, input_buffer)
-
-    def jpegtran(self, exec_args: tuple[str, ...], input_buffer: BinaryIO) -> BytesIO:
-        """Create argument list for jpegtran."""
-        return self._jpegtran(exec_args, input_buffer)
+    def internal_mozjpeg(
+        self, _exec_args: tuple[str, ...], input_buffer: BinaryIO
+    ) -> BytesIO:
+        """Use mozjpeg-lossless-optimization."""
+        copy = COPY_MARKERS.ALL if self.config.keep_metadata else COPY_MARKERS.NONE
+        optimized = mozjpeg_lossless_optimization.optimize(
+            input_buffer.read(), copy=copy
+        )
+        return BytesIO(optimized)
 
     def _mpo2jpeg_get_frame(self, input_buffer: BinaryIO) -> bytes:
         """Get Primary JPEG Offsets."""

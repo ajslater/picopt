@@ -22,7 +22,7 @@ FNS = MappingProxyType(
         "test_mpo.jpeg": (
             7106225,
             7106225,
-            ("jpeg", 5963686),
+            ("jpeg", 5963704),
             ("jpeg", 6450372),
         ),
     }
@@ -53,7 +53,7 @@ class TestMPO(BaseTest):
         path = (self.TMP_ROOT / fn).with_suffix("." + suffix)
         assert path.stat().st_size == size
 
-    def test_convert_to_jpeg_disable_external(self, fn: str) -> None:
+    def test_convert_to_jpeg_disable_internal_mozjpeg(self, fn: str) -> None:
         """Test convert to Jpeg from MPO."""
         args = (
             PROGRAM_NAME,
@@ -62,7 +62,7 @@ class TestMPO(BaseTest):
             "-c",
             "JPEG",
             "-D",
-            "mozjpeg,jpegtran",
+            "internal_mozjpeg",
             str(self.TMP_ROOT),
         )
         cli.main(args)

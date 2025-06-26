@@ -504,6 +504,61 @@ wheels = [
 ]
 
 [[package]]
+name = "mozjpeg-lossless-optimization"
+version = "1.3.1"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "cffi" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/78/91/caf3c022a328691b228a348aa3233402aab7a828f03a05d9bd95a73cd0d7/mozjpeg_lossless_optimization-1.3.1.tar.gz", hash = "sha256:15658b0b5083d9105db37ba7f8fe3b8bb0c184bec683e563f8986e870650a9c0", size = 1079078, upload-time = "2025-06-26T13:16:31.069Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/53/20/2bf0213a9f1bf24027c265416235a7f9bcec425b04471b11d862a0ec737c/mozjpeg_lossless_optimization-1.3.1-cp310-cp310-macosx_10_9_x86_64.whl", hash = "sha256:3f71a9a384eedafb9f07107dea70a1e87dcfb319660f8a4609eadb4c165d7d3d", size = 94374, upload-time = "2025-06-26T13:15:20.117Z" },
+    { url = "https://files.pythonhosted.org/packages/d1/15/ebd5fe72a56c84718e2cd479d66950c4cd8218650ebf8623375afc7d9ec7/mozjpeg_lossless_optimization-1.3.1-cp310-cp310-macosx_11_0_arm64.whl", hash = "sha256:cf29d9a739635f702e49cc3a2c926169084ee94024675aef09e32e2b4affec0c", size = 112808, upload-time = "2025-06-26T13:15:21.379Z" },
+    { url = "https://files.pythonhosted.org/packages/e7/c4/4b28e6e9b42e132ff9c89827f5c93196f02827b982d7f53033cba3593215/mozjpeg_lossless_optimization-1.3.1-cp310-cp310-manylinux2010_i686.manylinux2014_i686.manylinux_2_12_i686.manylinux_2_17_i686.whl", hash = "sha256:886630b37fbfc2194f5da80e642780ede67ff08195eebeaad61a2134b011d119", size = 124023, upload-time = "2025-06-26T13:15:22.279Z" },
+    { url = "https://files.pythonhosted.org/packages/2a/d1/9f49959e5f9ebd0246dd3184a6af168c40d0e3c26666da335e38bc76142a/mozjpeg_lossless_optimization-1.3.1-cp310-cp310-manylinux2014_aarch64.manylinux_2_17_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:188428bd0b50092793f64ce0ca39c0b69740f56132289ef73a0403ef6f2dc6ce", size = 138891, upload-time = "2025-06-26T13:15:23.537Z" },
+    { url = "https://files.pythonhosted.org/packages/f3/77/72fdfe8166b53fe2b848332d539af02c38d3664214f0ab20b792fc15dea2/mozjpeg_lossless_optimization-1.3.1-cp310-cp310-manylinux2014_armv7l.manylinux_2_17_armv7l.manylinux_2_31_armv7l.whl", hash = "sha256:91049e7319c7f50149be11bd3546bdc3424d82f7424d4770b09d9946c7e1a544", size = 124622, upload-time = "2025-06-26T13:15:24.443Z" },
+    { url = "https://files.pythonhosted.org/packages/49/94/2c85c96796efad2719ed8c15134af5ec9253c20ec0b7495813d0f0e6bd95/mozjpeg_lossless_optimization-1.3.1-cp310-cp310-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:63fa88dcd78292166eafbe9ea042a466c56cd0754b1b72f5ac6dc5f3a0787f25", size = 142424, upload-time = "2025-06-26T13:15:25.391Z" },
+    { url = "https://files.pythonhosted.org/packages/56/61/9a16ffb4b8f893109b8e56e59036d7424721eb5d78b51b6ae0b14802f5dd/mozjpeg_lossless_optimization-1.3.1-cp310-cp310-musllinux_1_2_aarch64.whl", hash = "sha256:15d5f7c5e40c9f25aedcd3b723818c2ddc768ff935b2ccc0aaedbdda22115d5f", size = 140209, upload-time = "2025-06-26T13:15:26.68Z" },
+    { url = "https://files.pythonhosted.org/packages/d2/21/daf4bf1b1e8bdc201efdb51e0fa2a30cdc8b026a1987d316f550f755954e/mozjpeg_lossless_optimization-1.3.1-cp310-cp310-musllinux_1_2_armv7l.whl", hash = "sha256:23435215368a8d73701e94b7ef5df18fdc2a00e9334d653f4233f3a0f470d31b", size = 121625, upload-time = "2025-06-26T13:15:27.948Z" },
+    { url = "https://files.pythonhosted.org/packages/67/34/bb82e06cb344b1efd93916e81a8a268441efd5cdcadd59df12b0dabb4e93/mozjpeg_lossless_optimization-1.3.1-cp310-cp310-musllinux_1_2_i686.whl", hash = "sha256:fade44e6a9a7997271ebe43bec17ce68552a65c248b073f01ed41a3ca6e82fff", size = 116924, upload-time = "2025-06-26T13:15:29.117Z" },
+    { url = "https://files.pythonhosted.org/packages/f7/e1/7a5f7d0e65628597ef24a093233dd749d2473195cd2c0591e2b526964f7c/mozjpeg_lossless_optimization-1.3.1-cp310-cp310-musllinux_1_2_x86_64.whl", hash = "sha256:f44c9f2ae699f16ecfcec1a8312c675d67bcfca26ea7a280a4ff55246d06b9f0", size = 112084, upload-time = "2025-06-26T13:15:30.083Z" },
+    { url = "https://files.pythonhosted.org/packages/56/8e/7c8d77f35844187ba39f5f79956afe6e52b7039e19bdb9432ab8158211e1/mozjpeg_lossless_optimization-1.3.1-cp310-cp310-win_amd64.whl", hash = "sha256:bf654f44c65c5a9bb3609acf2fbc6ac9ef7d16c07f9e2abe3e68cb4f7bde246c", size = 64578, upload-time = "2025-06-26T13:15:30.945Z" },
+    { url = "https://files.pythonhosted.org/packages/e3/03/b58b31f5af8dc12650ef59314eeae2bfd5aebfcb15e0f0c6c66429c5e85f/mozjpeg_lossless_optimization-1.3.1-cp311-cp311-macosx_10_9_x86_64.whl", hash = "sha256:4e7becf0cb7a3190ddfdd5640d854962fb55baf0e35403926070c11104b3c95f", size = 94373, upload-time = "2025-06-26T13:15:31.801Z" },
+    { url = "https://files.pythonhosted.org/packages/0c/2c/d079d767ad7907e46fc23e2f9674c6fbd87f65a606455ed29d1f59001f40/mozjpeg_lossless_optimization-1.3.1-cp311-cp311-macosx_11_0_arm64.whl", hash = "sha256:14ee2e5961e0788d0e5dd8b172cf86c846816648f856797e23a9a6b7fafa57c7", size = 112807, upload-time = "2025-06-26T13:15:33.73Z" },
+    { url = "https://files.pythonhosted.org/packages/a3/11/4b9debf0fef0a0a994e5e30c5de833c6a52037f2829f8d136a228c08cbdd/mozjpeg_lossless_optimization-1.3.1-cp311-cp311-manylinux2010_i686.manylinux2014_i686.manylinux_2_12_i686.manylinux_2_17_i686.whl", hash = "sha256:e704364a6dffc58bb9853ee947c7b28a154a1d38dd0316ba125a0c23aa95b27c", size = 124040, upload-time = "2025-06-26T13:15:35.026Z" },
+    { url = "https://files.pythonhosted.org/packages/71/ac/c9efca7120c5e8ddc7c4ee76d10cb24d39bc37448acd67138679422bb9c7/mozjpeg_lossless_optimization-1.3.1-cp311-cp311-manylinux2014_aarch64.manylinux_2_17_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:ced7587aca7bca61b595ecf9166dd364a875752d4aa6921ae7349c9d11492dcd", size = 138916, upload-time = "2025-06-26T13:15:35.941Z" },
+    { url = "https://files.pythonhosted.org/packages/be/04/3f43bcdf62e26f399748dcca80bb2d334e9fd9f94657876ad90d7c8a843b/mozjpeg_lossless_optimization-1.3.1-cp311-cp311-manylinux2014_armv7l.manylinux_2_17_armv7l.manylinux_2_31_armv7l.whl", hash = "sha256:3d7c3ee693993b866d57c3a7222dfa8ba6d9e939eec871a133752e868fee05b1", size = 124670, upload-time = "2025-06-26T13:15:36.978Z" },
+    { url = "https://files.pythonhosted.org/packages/60/75/0497bf16a270ae23178d19777953d82ad7ac15e7704e8b05c2d3792b2593/mozjpeg_lossless_optimization-1.3.1-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:d56fd4beb616e6592446f275f10671d6aaae9a34e724f30da5837dbf32315ebf", size = 142423, upload-time = "2025-06-26T13:15:37.882Z" },
+    { url = "https://files.pythonhosted.org/packages/31/46/1895b064d1b0f2c3b2178eeea2d5bfbc20617bf13b9c0ac9c1c4e7ce9bac/mozjpeg_lossless_optimization-1.3.1-cp311-cp311-musllinux_1_2_aarch64.whl", hash = "sha256:3f43a93a93152ab6f3230d68edb9f108448fd7dd000a50c6a770382a9a8ccc84", size = 140212, upload-time = "2025-06-26T13:15:38.802Z" },
+    { url = "https://files.pythonhosted.org/packages/b9/5a/59d7002a74bd23ff577ad7f0ccc2384f95b462bc489215d8ab8a034edc0a/mozjpeg_lossless_optimization-1.3.1-cp311-cp311-musllinux_1_2_armv7l.whl", hash = "sha256:af8b1e31a83b65f4d2b95d0632f58f0d37a13eeda780029a8523fa5032ae2f28", size = 121603, upload-time = "2025-06-26T13:15:39.836Z" },
+    { url = "https://files.pythonhosted.org/packages/76/ca/e3c8ae20a6f7a94416e3763b1fe97ce6fc06a017e160e7e03da1846f81cf/mozjpeg_lossless_optimization-1.3.1-cp311-cp311-musllinux_1_2_i686.whl", hash = "sha256:8e07d8d8326e1a9e022730a147002b6dae2864e053e4833218553069a682b627", size = 116938, upload-time = "2025-06-26T13:15:41.016Z" },
+    { url = "https://files.pythonhosted.org/packages/d2/98/2c895e37a6246c940768c672003a8e6067ab5233fa9415f2470a32044604/mozjpeg_lossless_optimization-1.3.1-cp311-cp311-musllinux_1_2_x86_64.whl", hash = "sha256:bb6f7eb5880c351d7e5b83b6a857a60adb67366623d354d86f19ddb43e8f62bc", size = 112093, upload-time = "2025-06-26T13:15:42.291Z" },
+    { url = "https://files.pythonhosted.org/packages/d2/bd/1d43da1e11e1daca1e97f080fffdf6c3178fd56b306dc75c7639691af5ed/mozjpeg_lossless_optimization-1.3.1-cp311-cp311-win_amd64.whl", hash = "sha256:9eb9fcc297bb767c2026d71ff68d0ccd0bcd30e8527e8826b249412e08837e5e", size = 64574, upload-time = "2025-06-26T13:15:43.208Z" },
+    { url = "https://files.pythonhosted.org/packages/99/d7/d9838f83c43f835ce9461f3b66aa18c8a1c788fcb518e830c9a9e1081be3/mozjpeg_lossless_optimization-1.3.1-cp312-cp312-macosx_10_13_x86_64.whl", hash = "sha256:a611f62fb93db994c422b0b53bffe8aac5981b4e1c849930ac103f60435a5afe", size = 94380, upload-time = "2025-06-26T13:15:44.062Z" },
+    { url = "https://files.pythonhosted.org/packages/b1/72/63b6e04d69cce3a6eacc8e0ba6db6861c0caac77afa23f85ddb951dd88d0/mozjpeg_lossless_optimization-1.3.1-cp312-cp312-macosx_11_0_arm64.whl", hash = "sha256:dfc50e66f023fa3587b370031f6480bfc90019f29cf528d33d42c1e016ea86d3", size = 112823, upload-time = "2025-06-26T13:15:45.387Z" },
+    { url = "https://files.pythonhosted.org/packages/8a/d3/6bc7dbd37d84595191a19b9b4a37aa82b53993f042decf6a7eedd183f211/mozjpeg_lossless_optimization-1.3.1-cp312-cp312-manylinux2010_i686.manylinux2014_i686.manylinux_2_12_i686.manylinux_2_17_i686.whl", hash = "sha256:ffaf34cafac566d5121d87bb9351e0191b7b7753fe4c48daba925af32453fb27", size = 124278, upload-time = "2025-06-26T13:15:47.383Z" },
+    { url = "https://files.pythonhosted.org/packages/0b/71/bd4d36c97f7dd136311a56057cb16801843b3bf06c00da6d0f8daff2c04e/mozjpeg_lossless_optimization-1.3.1-cp312-cp312-manylinux2014_aarch64.manylinux_2_17_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:270ec652ddda6a64a6cdca46d570e8e0e5450037ffa88dd2cb2bdf2631c9bda1", size = 139184, upload-time = "2025-06-26T13:15:48.275Z" },
+    { url = "https://files.pythonhosted.org/packages/61/91/ee12d7b88c35799a47e9c3bb70a6b9ab0809cce175954c5af35da7a0525b/mozjpeg_lossless_optimization-1.3.1-cp312-cp312-manylinux2014_armv7l.manylinux_2_17_armv7l.manylinux_2_31_armv7l.whl", hash = "sha256:3a955a1abedcef23c15ad6112fd821a5014a9467298e68363d9297332d58c87e", size = 124936, upload-time = "2025-06-26T13:15:49.48Z" },
+    { url = "https://files.pythonhosted.org/packages/5c/e7/5361f842a70253d5f71a441d277566b19ba529bdaa0522c2d36a11e7ba98/mozjpeg_lossless_optimization-1.3.1-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:66bb0384474d1641504d237946cc962b05b4b5b6edec288ea4bf6eb830385bbc", size = 142694, upload-time = "2025-06-26T13:15:50.774Z" },
+    { url = "https://files.pythonhosted.org/packages/8e/66/cdd7d25f313c9742f8a5ea46c03b1b4b995e3c31dd143a0babc12c1a4584/mozjpeg_lossless_optimization-1.3.1-cp312-cp312-musllinux_1_2_aarch64.whl", hash = "sha256:2747bedd0ca3db0e9bb72f9092a04c5c15fdb23c5909e7eb5ded68aa11756fde", size = 140436, upload-time = "2025-06-26T13:15:51.745Z" },
+    { url = "https://files.pythonhosted.org/packages/19/ae/7ea50d7e55e940b97c19b60913e353478fc472255c1468237c5561d0523f/mozjpeg_lossless_optimization-1.3.1-cp312-cp312-musllinux_1_2_armv7l.whl", hash = "sha256:11ebedfcf96eccd24483c37f3130ca395378bc30b86b03cc80e0d4cbb9de682c", size = 121781, upload-time = "2025-06-26T13:15:52.992Z" },
+    { url = "https://files.pythonhosted.org/packages/9b/4d/1178dcbdbbeae76a67d2311946c23cf181001c0985c15ffa98dad33faf6a/mozjpeg_lossless_optimization-1.3.1-cp312-cp312-musllinux_1_2_i686.whl", hash = "sha256:8d78dc43e226d35422a05f67409124e3149c5fbd24d36065dcfc0c1d70492908", size = 117085, upload-time = "2025-06-26T13:15:53.874Z" },
+    { url = "https://files.pythonhosted.org/packages/84/a4/0e9871153088d82a1787e663c9ed1e724cf16648f2176445d03b9e0f5eb8/mozjpeg_lossless_optimization-1.3.1-cp312-cp312-musllinux_1_2_x86_64.whl", hash = "sha256:8bc9d16453218426e3fab4cbedb22b2048b3edb4c9d5428e22b39c7d0fa7d453", size = 112393, upload-time = "2025-06-26T13:15:54.751Z" },
+    { url = "https://files.pythonhosted.org/packages/04/08/e93d8ba1034cdb544dd03b7f151133f5bd8e6597e34647684030a08d6f5c/mozjpeg_lossless_optimization-1.3.1-cp312-cp312-win_amd64.whl", hash = "sha256:b45f85a968dfe266edaa7ecf4fd5dca0feaa218ce6b73e0cd5fdb93175fcc255", size = 64593, upload-time = "2025-06-26T13:15:55.99Z" },
+    { url = "https://files.pythonhosted.org/packages/53/96/bddfcca4cc279fbf2b2c696e7b07b5719f34d91cc79dfa552009c64a209d/mozjpeg_lossless_optimization-1.3.1-cp313-cp313-macosx_10_13_x86_64.whl", hash = "sha256:0d97a3be030a33af6d35d4b21da202af9b21dd25fad44739bc2fcb27754a05e7", size = 94380, upload-time = "2025-06-26T13:15:56.87Z" },
+    { url = "https://files.pythonhosted.org/packages/b9/62/2d686f34a513f376e1d41922eb42b80f92bace6d9e43ba217d75a3eaadef/mozjpeg_lossless_optimization-1.3.1-cp313-cp313-macosx_11_0_arm64.whl", hash = "sha256:d244678bc76b3bfccb45f4dfe373830da5772c1d79a79653249f7591334a9e09", size = 112823, upload-time = "2025-06-26T13:15:57.717Z" },
+    { url = "https://files.pythonhosted.org/packages/31/88/67ad710d65ff71c725dd69f79f43effe9e7ed136ac780a7556a7be4281b5/mozjpeg_lossless_optimization-1.3.1-cp313-cp313-manylinux2010_i686.manylinux2014_i686.manylinux_2_12_i686.manylinux_2_17_i686.whl", hash = "sha256:050cdbfdca2b90008a0fe66586c1051dad6b6bc7a7614d7f85cbd7e80b9cb056", size = 124218, upload-time = "2025-06-26T13:15:58.686Z" },
+    { url = "https://files.pythonhosted.org/packages/c3/a7/eac806a96f34f26dce954397d5baef3eb95f20aa4856d4abd710da729c89/mozjpeg_lossless_optimization-1.3.1-cp313-cp313-manylinux2014_aarch64.manylinux_2_17_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:3d7145a9c49bce5d9343d8acc0046fd691f06b5633197b43c1040728de9159a6", size = 139177, upload-time = "2025-06-26T13:15:59.555Z" },
+    { url = "https://files.pythonhosted.org/packages/7a/a9/d061ba01634aba04f50230c9f6efd3c9c6d2dbde093621ff3165712f61a9/mozjpeg_lossless_optimization-1.3.1-cp313-cp313-manylinux2014_armv7l.manylinux_2_17_armv7l.manylinux_2_31_armv7l.whl", hash = "sha256:627cef5757ffe658777e96b4d3bd223cc7d246ac91b0b252d34952e0403dd362", size = 124832, upload-time = "2025-06-26T13:16:00.465Z" },
+    { url = "https://files.pythonhosted.org/packages/24/81/b4d7391ab2a2c2ac372c9af5aa0e9bdfdca35bb3f0aec6475b2d4eefeadb/mozjpeg_lossless_optimization-1.3.1-cp313-cp313-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:5872ebbe618be5aec14106e29e682169cc84f2ff39b5b3c9da96e9c1685b9a27", size = 142688, upload-time = "2025-06-26T13:16:01.911Z" },
+    { url = "https://files.pythonhosted.org/packages/4c/e7/abfcb563d288c20014d55236f815cf9da27bc16a405081a40c3a3862f966/mozjpeg_lossless_optimization-1.3.1-cp313-cp313-musllinux_1_2_aarch64.whl", hash = "sha256:087292f48605dbe9bdce49c5cc35e80099dc13f7a1dec5b9acd52a8ca62ef03b", size = 140413, upload-time = "2025-06-26T13:16:03.219Z" },
+    { url = "https://files.pythonhosted.org/packages/7e/25/71b1cec42de834476135786a9edb3281ab482fac4fcdc016659995858305/mozjpeg_lossless_optimization-1.3.1-cp313-cp313-musllinux_1_2_armv7l.whl", hash = "sha256:4d57dba37e70804b0e460c6f494efc2e15123b1d122c5c7fb4f21655b4e33c40", size = 121778, upload-time = "2025-06-26T13:16:04.551Z" },
+    { url = "https://files.pythonhosted.org/packages/7e/3c/d3cc09ac13dc193dae24cbcabdebaef9adaf5368a45c140efd922c16b0cb/mozjpeg_lossless_optimization-1.3.1-cp313-cp313-musllinux_1_2_i686.whl", hash = "sha256:8a20dbd2d002a38568ea1294dce7b2ead2b2830bbb087dba2df6c2dfeb968be5", size = 117077, upload-time = "2025-06-26T13:16:05.563Z" },
+    { url = "https://files.pythonhosted.org/packages/da/a5/f474cdd82268c31ee6ca9e8427bd0aa3ff88d09ae2dc5d2dbc7300382d6f/mozjpeg_lossless_optimization-1.3.1-cp313-cp313-musllinux_1_2_x86_64.whl", hash = "sha256:a112ae020230e95ae86c582714f63bc8b8fe66eca18c0f2726a055aa3ac65e35", size = 112388, upload-time = "2025-06-26T13:16:06.444Z" },
+    { url = "https://files.pythonhosted.org/packages/8b/1f/0dedab10eb6209d1c07695d5a326944e0aff52f532588c9a80ecd01fda05/mozjpeg_lossless_optimization-1.3.1-cp313-cp313-win_amd64.whl", hash = "sha256:34b20d98e287cc091ed711530c268d299b734e6d7bb7a70531c5c6f93947af50", size = 64592, upload-time = "2025-06-26T13:16:07.508Z" },
+]
+
+[[package]]
 name = "msgpack"
 version = "1.1.1"
 source = { registry = "https://pypi.org/simple" }
@@ -605,13 +660,14 @@ wheels = [
 
 [[package]]
 name = "picopt"
-version = "5.1.1"
+version = "5.2.0"
 source = { editable = "." }
 dependencies = [
     { name = "confuse" },
     { name = "defusedxml" },
     { name = "filetype" },
     { name = "humanize" },
+    { name = "mozjpeg-lossless-optimization" },
     { name = "piexif" },
     { name = "pillow" },
     { name = "py7zr" },
@@ -647,6 +703,7 @@ requires-dist = [
     { name = "defusedxml", specifier = ">=0.7.1,<1.0.0" },
     { name = "filetype", specifier = ">=1.2.0,<2.0.0" },
     { name = "humanize", specifier = ">=4.0.0,<5.0.0" },
+    { name = "mozjpeg-lossless-optimization", specifier = ">=1.3.1" },
     { name = "piexif", specifier = ">=1.1.3,<2.0.0" },
     { name = "pillow", specifier = ">=9.5" },
     { name = "py7zr", specifier = ">=1.0.0,<2.0.0" },
