@@ -2,7 +2,8 @@
 
 ## v5.2.0
 
-- MozJpeg is now an internal python module. External mozjpeg & jpegtran support removed.
+- MozJpeg is now an internal python module. External mozjpeg & jpegtran support
+  removed.
 
 ## v5.1.1
 

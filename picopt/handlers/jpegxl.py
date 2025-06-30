@@ -4,7 +4,7 @@ from io import BytesIO
 from types import MappingProxyType
 from typing import BinaryIO
 
-import pillow_jxl  # noqa: F401, type: ignore
+import pillow_jxl  # noqa: F401, # pyright: ignore[reportUnusedImport]
 from PIL import Image
 from pillow_jxl.JpegXLImagePlugin import JXLImageFile
 from termcolor import cprint
@@ -20,7 +20,7 @@ class JpegXL(ImageHandler):
     """JPEG XL format class."""
 
     OUTPUT_FORMAT_STR = str(JXLImageFile.format)
-    OUTPUT_FILE_FORMAT = FileFormat(OUTPUT_FORMAT_STR, False, False)
+    OUTPUT_FILE_FORMAT = FileFormat(OUTPUT_FORMAT_STR, lossless=False, animated=False)
     INPUT_FILE_FORMATS = frozenset({OUTPUT_FILE_FORMAT})
     PROGRAMS = (("pil2jpegxl",),)
     PIL2_KWARGS = MappingProxyType(
@@ -47,7 +47,9 @@ class JpegXL(ImageHandler):
 class JpegXLLossless(JpegXL):
     """JPEG XL format class."""
 
-    OUTPUT_FILE_FORMAT = FileFormat(JpegXL.OUTPUT_FORMAT_STR, True, False)
+    OUTPUT_FILE_FORMAT = FileFormat(
+        JpegXL.OUTPUT_FORMAT_STR, lossless=True, animated=False
+    )
     PIL2_KWARGS = MappingProxyType(
         {"lossless": True, "effort": 9, "format": JpegXL.OUTPUT_FORMAT_STR}
     )
