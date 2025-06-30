@@ -7,10 +7,9 @@ from io import BytesIO
 
 from PIL import ImageCms
 from PIL.JpegImagePlugin import JpegImageFile
-from termcolor import cprint
 
-APP1_SECTION_DELIMETER = b"\x00"
-XAP_MARKER = b"http://ns.adobe.com/xap/1.0/"
+_APP1_SECTION_DELIMETER = b"\x00"
+_XAP_MARKER = b"http://ns.adobe.com/xap/1.0/"
 
 
 def _get_xmp(info, image, path_name):
@@ -21,10 +20,8 @@ def _get_xmp(info, image, path_name):
                 if xmp := image.getxmp():
                     info["xmp"] = xmp
     except Exception as exc:
-        cprint(
-            f"WARNING: Failed to extract xmp data for {path_name} {exc}",
-            "yellow",
-        )
+        reason = f"Failed to extract xmp data for {path_name} {exc}"
+        raise ValueError(reason) from exc
 
 
 def _get_exif_bytes(info, image, path_name):
@@ -34,17 +31,15 @@ def _get_exif_bytes(info, image, path_name):
             if exif := image.getexif():
                 info["exif_bytes"] = exif.tobytes()
     except Exception as exc:
-        cprint(
-            f"WARNING: Failed to extract exif bytes data for {path_name} {exc}",
-            "yellow",
-        )
+        reason = f"Failed to extract exif bytes data for {path_name} {exc}"
+        raise ValueError(reason) from exc
 
 
 def extract_info_for_webp(keep_metadata, info, image, path_info):
     """Extract info manually for webp later in handler."""
     if not keep_metadata:
         return
-    full_name = path_info.full_name()
+    full_name = path_info.full_output_name()
     _get_xmp(info, image, full_name)
     _get_exif_bytes(info, image, full_name)
 
@@ -75,14 +70,14 @@ def webp_convert_info_metadata(config, info):
 
 def get_jpeg_xmp(image: JpegImageFile) -> str | None:
     """Get raw jpeg xml from Pillow."""
-    # XXX This only seems to get some XMP data. xmp-tool finds more.
+    # This only seems to get some XMP data. xmp-tool finds more.
     xmp = None
     # Copied from PIL JpegImageFile
-    for segment, content in image.applist:  # type: ignore
+    for segment, content in image.applist:
         if segment == "APP1":
-            sections = content.split(APP1_SECTION_DELIMETER)
+            sections = content.split(_APP1_SECTION_DELIMETER)
             marker, xmp_tags = sections[:2]
-            if marker == XAP_MARKER:
+            if marker == _XAP_MARKER:
                 xmp = xmp_tags.decode()
                 break
     return xmp

@@ -1,19 +1,20 @@
 """Test comic format."""
 
 import platform
+from pathlib import Path
 from types import MappingProxyType
 
+import pytest
+
 from picopt import PROGRAM_NAME, cli
-from tests import get_test_dir
-from tests.integration.base_test_images import BaseTestImagesDir
+from tests import IMAGES_DIR, get_test_dir
+from tests.integration.base import BaseTest
 
 __all__ = ()
 FNS = {
     "07themecamplist.pdf": (93676, 93676, ("pdf", 93676), ("pdf", 93676)),
-    "test_animated_gif.gif": (16383, 16358, ("png", 13389), ("webp", 11894)),
-    "test_animated_png.png": (63435, 63435, ("png", 63435), ("webp", 53430)),
-    "test_animated_webp.webp": (13610, 12178, ("webp", 12178), ("webp", 12178)),
-    "test_png.png": (7967, 4149, ("png", 4149), ("webp", 3870)),
+    "test_animated_webp.webp": (13610, 12174, ("webp", 12174), ("webp", 12174)),
+    "test_png.png": (7967, 4150, ("png", 4150), ("webp", 3870)),
     "test_pre-optimized_jpg.jpg": (
         22664,
         22664,
@@ -29,17 +30,34 @@ FNS = {
         ("webp", 3798),
         ("webp", 3798),
     ),
-    "mri.tif": (230578, 230578, ("png", 131743), ("webp", 114740)),
+    "mri.tif": (230578, 230578, ("png", 129479), ("webp", 116954)),
     "test_webp_lossy.webp": (2764, 2764, ("webp", 2764), ("webp", 2764)),
-    "test_bmp.bmp": (141430, 141430, ("png", 67236), ("webp", 47524)),
     "test_png_16rgba.png": (3435, 2097, ("png", 2097), ("webp", 1142)),
-    "test_pnm.pnm": (27661, 27661, ("png", 15510), ("webp", 12808)),
     "test_jpg.jpg": (97373, 87913, ("jpg", 87913), ("jpg", 87913)),
 }
 if platform.system() == "Darwin":
     FNS.update(
         {
-            "test_gif.gif": (138952, 138944, ("png", 112137), ("webp", 107924)),
+            "test_animated_gif.gif": (16383, 16358, ("png", 24255), ("webp", 11856)),
+            "test_animated_png.png": (63435, 63058, ("png", 63058), ("webp", 52864)),
+            "test_gif.gif": (138952, 138944, ("png", 112290), ("webp", 108058)),
+            "test_pre-optimized_png.png": (
+                256572,
+                256572,
+                ("png", 256572),
+                ("webp", 197088),
+            ),
+            "eight.tif": (59640, 59640, ("png", 30585), ("webp", 25012)),
+            "test_bmp.bmp": (141430, 141430, ("png", 67236), ("webp", 47436)),
+            "test_pnm.pnm": (27661, 27661, ("png", 15510), ("webp", 12758)),
+        }
+    )
+else:
+    FNS.update(
+        {
+            "test_animated_gif.gif": (16383, 16358, ("png", 24255), ("webp", 11866)),
+            "test_animated_png.png": (63435, 63058, ("png", 63058), ("webp", 52864)),
+            "test_gif.gif": (138952, 138944, ("png", 112290), ("webp", 107924)),
             "test_pre-optimized_png.png": (
                 256572,
                 256572,
@@ -47,19 +65,8 @@ if platform.system() == "Darwin":
                 ("webp", 197726),
             ),
             "eight.tif": (59640, 59640, ("png", 30585), ("webp", 24974)),
-        }
-    )
-else:
-    FNS.update(
-        {
-            "test_gif.gif": (138952, 138944, ("png", 112137), ("webp", 107952)),
-            "test_pre-optimized_png.png": (
-                256572,
-                256572,
-                ("png", 256572),
-                ("webp", 197680),
-            ),
-            "eight.tif": (59640, 59640, ("png", 30585), ("webp", 24982)),
+            "test_bmp.bmp": (141430, 141430, ("png", 67236), ("webp", 47524)),
+            "test_pnm.pnm": (27661, 27661, ("png", 15510), ("webp", 12808)),
         }
     )
 
@@ -77,36 +84,38 @@ NEAR_LOSSLESS_FNS = MappingProxyType(
 )
 
 
-class TestImagesDir(BaseTestImagesDir):
+@pytest.mark.parametrize("fn", FNS)
+class TestImagesDir(BaseTest):
     """Test images dir."""
 
-    FNS = FNS
-    TMP_ROOT = get_test_dir()
+    TMP_ROOT: Path = get_test_dir()
+    SOURCE_DIR: Path = IMAGES_DIR
+    FNS: MappingProxyType[str, tuple] = MappingProxyType(FNS)
 
-    def test_no_convert(self) -> None:
+    def test_no_convert(self, fn: str) -> None:
         """Test no convert."""
         args = (PROGRAM_NAME, "-rvvx SVG", str(self.TMP_ROOT))
         cli.main(args)
-        for name, sizes in self.FNS.items():
-            path = self.TMP_ROOT / name
-            assert path.stat().st_size == sizes[1]
+        path = self.TMP_ROOT / fn
+        size = FNS[fn][1]
+        assert path.stat().st_size == size
 
-    def test_convert_to_png(self) -> None:
+    def test_convert_to_png(self, fn: str) -> None:
         """Test convert to PNG."""
         args = (
             PROGRAM_NAME,
-            "-rvvx",
+            "-rvvbx",
             "BMP,PPM,SVG,TIFF",
             "-c",
             "PNG",
             str(self.TMP_ROOT),
         )
         cli.main(args)
-        for name, sizes in self.FNS.items():
-            path = (self.TMP_ROOT / name).with_suffix("." + sizes[2][0])
-            assert path.stat().st_size == sizes[2][1]
+        suffix, size = FNS[fn][2]
+        path = (self.TMP_ROOT / fn).with_suffix("." + suffix)
+        assert path.stat().st_size == size
 
-    def test_convert_to_webp(self) -> None:
+    def test_convert_to_webp(self, fn: str) -> None:
         """Test convert to WEBP."""
         args = (
             PROGRAM_NAME,
@@ -117,15 +126,18 @@ class TestImagesDir(BaseTestImagesDir):
             str(self.TMP_ROOT),
         )
         cli.main(args)
-        for name, sizes in self.FNS.items():
-            path = (self.TMP_ROOT / name).with_suffix("." + sizes[3][0])
-            assert path.stat().st_size == sizes[3][1]
+        suffix, size = FNS[fn][3]
+        path = (self.TMP_ROOT / fn).with_suffix("." + suffix)
+        assert path.stat().st_size == size
 
 
-class TestNearLosslessImageDir(BaseTestImagesDir):
-    FNS = NEAR_LOSSLESS_FNS
+@pytest.mark.parametrize("fn", NEAR_LOSSLESS_FNS)
+class TestNearLosslessImageDir(BaseTest):
+    TMP_ROOT: Path = get_test_dir()
+    SOURCE_DIR: Path = IMAGES_DIR
+    FNS: MappingProxyType[str, tuple] = NEAR_LOSSLESS_FNS
 
-    def test_convert_to_webp_near_lossless(self) -> None:
+    def test_convert_to_webp_near_lossless(self, fn: str) -> None:
         """Test convert to WEBP."""
         args = (
             PROGRAM_NAME,
@@ -134,6 +146,6 @@ class TestNearLosslessImageDir(BaseTestImagesDir):
             str(self.TMP_ROOT),
         )
         cli.main(args)
-        for name, sizes in self.FNS.items():
-            path = (self.TMP_ROOT / name).with_suffix("." + sizes[3][0])
-            assert path.stat().st_size == sizes[3][1]
+        suffix, size = self.FNS[fn][3]
+        path = (self.TMP_ROOT / fn).with_suffix("." + suffix)
+        assert path.stat().st_size == size

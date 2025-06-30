@@ -15,20 +15,23 @@ def test_png_bit_depth() -> None:
     """Test PNG bit depth."""
     with TEST_SRC_PATH.open("rb") as png_file:
         res = png_bit_depth(png_file)
-    assert res == 8  # noqa PLR2004
+    assert res == 8  # noqa: PLR2004
 
 
 def test_png_bit_depth_16() -> None:
     """Test PNG bit depth 16."""
     with TEST_SRC_PATH_16.open("rb") as png_file:
         res = png_bit_depth(png_file)
-    assert res == 16  # noqa PLR2004
+    assert res == 16  # noqa: PLR2004
 
 
 def test_png_bit_depth_invalid() -> None:
     """Test PNG bit depth invalid."""
-    with TEST_SRC_PATH_JPG.open("rb") as jpg_file:
-        res = png_bit_depth(jpg_file)
+    try:
+        with TEST_SRC_PATH_JPG.open("rb") as jpg_file:
+            res = png_bit_depth(jpg_file)
+    except ValueError:
+        res = None
     assert res is None
 
 

@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
-"""Determine if a webp is lossless.
+"""
+Determine if a webp is lossless.
 
 This should be a part of Pillow
 https://developers.google.com/speed/webp/docs/webp_lossless_bitstream_specification
@@ -13,9 +14,9 @@ from picopt.pillow.header import ImageHeader
 
 # RIFF_HEADER = ImageHeader(0, b"RIFF"))
 # WEBP_HEADER = ImageHeader(8, b"WEBP"))
-VP8_HEADER = ImageHeader(12, b"VP8")
-VP8L_HEADER = b"VP8L"
-SEARCH_LEN = 128
+_VP8_HEADER = ImageHeader(12, b"VP8")
+_VP8L_HEADER = b"VP8L"
+_SEARCH_LEN = 128
 
 
 def is_lossless(input_buffer: BytesIO | BufferedReader) -> bool:
@@ -28,7 +29,7 @@ def is_lossless(input_buffer: BytesIO | BufferedReader) -> bool:
         else input_buffer
     )
 
-    if not VP8_HEADER.compare(buffer):
+    if not _VP8_HEADER.compare(buffer):
         result = False
     else:
         x = buffer.read(1)
@@ -38,9 +39,9 @@ def is_lossless(input_buffer: BytesIO | BufferedReader) -> bool:
             finder = (
                 buffer
                 if isinstance(buffer, mmap)
-                else bytearray(buffer.read(SEARCH_LEN))
-            )  # type: ignore
-            result = finder.find(VP8L_HEADER) != -1  # type: ignore
+                else bytearray(buffer.read(_SEARCH_LEN))
+            )
+            result = finder.find(_VP8L_HEADER) != -1
         else:
             result = False
 
@@ -51,11 +52,11 @@ def is_lossless(input_buffer: BytesIO | BufferedReader) -> bool:
 
 def main() -> None:
     """Stand alone cli tool for getting lossless status."""
-    import sys
+    import sys  # noqa: PLC0415
 
     with Path(sys.argv[1]).open("rb") as f:
         lossless = is_lossless(f)
-    print(lossless)  # noqa T201
+    print(lossless)  # noqa: T201
 
 
 if __name__ == "__main__":

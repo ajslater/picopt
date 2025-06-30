@@ -4,7 +4,8 @@ import shutil
 from datetime import datetime, timezone
 from types import MappingProxyType
 
-from ruamel.yaml import YAML
+from ruamel.yaml import YAML, SafeRepresenter
+from treestamps.tree.config import TreestampsConfig
 
 from picopt import PROGRAM_NAME, cli
 from tests import IMAGES_DIR, get_test_dir
@@ -32,7 +33,7 @@ DEFAULT_CONFIG = {
     "symlinks": True,
 }
 
-TREESTAMPS_CONFIG = {"ignore": [], "symlinks": True}
+TREESTAMPS_CONFIG = {"ignore": frozenset(), "symlinks": True}
 
 
 class TestTimestamps:
@@ -43,7 +44,12 @@ class TestTimestamps:
         """Assert sizes."""
         for name, sizes in FNS.items():
             path = root / name
-            assert path.stat().st_size == sizes[index]
+            old_size = sizes[index]
+            new_size = path.stat().st_size
+            if old_size != new_size:
+                print(name, old_size)
+                print(path, new_size)
+            assert old_size == new_size
 
     def setup_method(self) -> None:
         """Set up method."""
@@ -54,7 +60,6 @@ class TestTimestamps:
 
     def teardown_method(self) -> None:
         """Tear down method."""
-        print(sorted(TMP_ROOT.iterdir()))  # T201
         assert TIMESTAMPS_PATH.exists()
         assert not WAL_PATH.exists()
         shutil.rmtree(TMP_ROOT, ignore_errors=True)
@@ -67,13 +72,18 @@ class TestTimestamps:
         if config is None:
             config = DEFAULT_CONFIG
         ts_config = {**TREESTAMPS_CONFIG}
-        for key in TREESTAMPS_CONFIG:
-            ts_config[key] = config[key]
+        config = TreestampsConfig.normalize_config(config)
+        ts_config = TreestampsConfig.normalize_config(ts_config)
         yaml = {"config": config, "treestamps_config": ts_config, str(path): ts}
-        YAML().dump(yaml, TIMESTAMPS_PATH)
+
+        yaml_obj = YAML()
+        yaml_obj.representer.add_representer(frozenset, SafeRepresenter.represent_set)
+        yaml_obj.representer.add_representer(
+            MappingProxyType, SafeRepresenter.represent_dict
+        )
+        yaml_obj.dump(yaml, TIMESTAMPS_PATH)
         assert TIMESTAMPS_PATH.exists()
         assert not WAL_PATH.exists()
-        print(yaml)
 
     def test_no_timestamp(self) -> None:
         """Test no timestamp."""
@@ -143,18 +153,24 @@ class TestTimestamps:
         if config is None:
             config = DEFAULT_CONFIG
         ts_config = {**TREESTAMPS_CONFIG}
-        for key in TREESTAMPS_CONFIG:
-            ts_config[key] = config[key]
+        config = TreestampsConfig.normalize_config(config)
+        ts_config = TreestampsConfig.normalize_config(ts_config)
         yaml = {
             "config": config,
             "treestamps_config": ts_config,
             "wal": [{str(path): ts}],
         }
-        YAML().dump(yaml, WAL_PATH)
+        yaml_obj = YAML()
+        yaml_obj.representer.add_representer(frozenset, SafeRepresenter.represent_set)
+        yaml_obj.representer.add_representer(
+            MappingProxyType, SafeRepresenter.represent_dict
+        )
+        yaml_obj.dump(yaml, WAL_PATH)
+        print(WAL_PATH.read_text())
 
     def test_timestamp_read_journal(self):
         """Test timestamp read journal."""
         self._write_wal(TMP_FN)
-        args = (PROGRAM_NAME, "-rtvvvx SVG", TMP_FN)
+        args = (PROGRAM_NAME, "-rtvvvx", "SVG", TMP_FN)
         cli.main(args)
         self._assert_sizes(0)

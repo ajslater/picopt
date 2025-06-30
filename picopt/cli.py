@@ -1,33 +1,49 @@
 """Run pictures through image specific external optimizers."""
 
 import sys
+import traceback
 from argparse import Action, ArgumentParser, Namespace, RawDescriptionHelpFormatter
 from importlib.metadata import PackageNotFoundError, version
 
 from confuse.exceptions import ConfigError
-from termcolor import colored, cprint
+from termcolor import colored
+from typing_extensions import override
 
-from picopt import PROGRAM_NAME, walk
-from picopt.config import ALL_FORMAT_STRS, DEFAULT_HANDLERS, get_config
+from picopt import PROGRAM_NAME
+from picopt.config import PicoptConfig
+from picopt.config.consts import (
+    ALL_FORMAT_STRS,
+    ARCHIVE_CONVERT_FROM_FORMAT_STRS,
+    CB_CONVERT_FROM_FORMAT_STRS,
+    DEFAULT_HANDLERS,
+    LOSSLESS_IMAGE_CONVERT_TO_FORMAT_STRS,
+)
 from picopt.exceptions import PicoptError
-from picopt.handlers.jpegxl import JpegXLLossless
-from picopt.handlers.png import Png
-from picopt.handlers.webp import WebPLossless
-from picopt.handlers.zip import Cbr, Rar
+from picopt.handlers.container.archive.zip import Cbz, Zip
+from picopt.printer import Printer
+from picopt.walk.walk import Walk
 
 _DEFAULT_FORMAT_STRS = frozenset(
     [handler_cls.OUTPUT_FORMAT_STR for handler_cls in DEFAULT_HANDLERS]
 )
 _LIST_DELIMETER = ","
-try:
-    VERSION = version(PROGRAM_NAME)
-except PackageNotFoundError:
-    VERSION = "test"
+
+
+def _get_version():
+    try:
+        v = version(PROGRAM_NAME)
+    except PackageNotFoundError:
+        v = "test"
+    return v
+
+
+VERSION = _get_version()
 
 
 class SplitArgsAction(Action):
     """Convert csv string from argparse to a list."""
 
+    @override
     def __call__(self, _parser, namespace, values, _option_string=None):
         """Split values string into list."""
         if isinstance(values, str):
@@ -35,25 +51,57 @@ class SplitArgsAction(Action):
         setattr(namespace, self.dest, values)
 
 
-def _comma_join(formats: frozenset[str]) -> str:
+def _comma_join(
+    formats: frozenset[str] | tuple[str, ...],
+    *,
+    space=True,
+    final_and=False,
+) -> str:
     """Sort and join a sequence into a human readable string."""
-    return ", ".join(sorted(formats))
+    formats = tuple(sorted(formats))
+    if len(formats) == 2:  # noqa: PLR2004
+        return " or ".join(formats)
+    if final_and:
+        final = formats[-1]
+        formats = formats[:-1]
+    else:
+        final = ""
+    delimiter = ","
+    if space:
+        delimiter += " "
+    result = delimiter.join(formats)
+    if final:
+        result += f"{delimiter} and {final}"
+    return result
+
+
+COLOR_KEY = (
+    ("skipped", "dark_grey", []),
+    ("skipped by timestamp", "light_green", ["dark", "bold"]),
+    ("copied archive contents unchanged", "green", []),
+    ("optimized bigger than original", "light_blue", ["bold"]),
+    ("noop on dry run", "dark_grey", ["bold"]),
+    ("optimized in same format", "white", []),
+    ("converted to another format", "light_cyan", []),
+    ("packed into archive", "light_grey", []),
+    ("consumed timestamp from archive", "magenta", []),
+    ("WARNING", "light_yellow", []),
+    ("ERROR", "light_red", []),
+)
+
+
+def get_dot_color_key():
+    """Create dot color key."""
+    epilogue = "Progress dot colors:\n"
+    for text, color, attrs in COLOR_KEY:
+        epilogue += "\t" + colored(text, color, attrs=attrs) + "\n"
+    return epilogue
 
 
 def get_arguments(params: tuple[str, ...] | None = None) -> Namespace:
     """Parse the command line."""
     description = "Losslessly optimizes and optionally converts images."
-    epilog = (
-        "progress colors:",
-        colored("skipped", "white", attrs=["dark"]),
-        colored("skipped by timestamp", "green"),
-        colored("optimization bigger than original", "blue", attrs=["bold"]),
-        "optimized",
-        colored("converted format", "cyan"),
-        colored("warning", "yellow"),
-        colored("error", "red"),
-    )
-    epilog = "\n  ".join(epilog)
+    epilog = get_dot_color_key()
     parser = ArgumentParser(
         description=description,
         epilog=epilog,
@@ -73,9 +121,12 @@ def get_arguments(params: tuple[str, ...] | None = None) -> Namespace:
         "-v",
         "--verbose",
         action="count",
+        default=1,
         dest="verbose",
-        help="Display more output. Can be used multiple times for "
-        "increasingly noisy output.",
+        help=(
+            "Display more output. Can be used multiple times for "
+            "increasingly noisy output."
+        ),
     )
     parser.add_argument(
         "-q",
@@ -90,9 +141,11 @@ def get_arguments(params: tuple[str, ...] | None = None) -> Namespace:
         "--formats",
         action=SplitArgsAction,
         dest="formats",
-        help="Only optimize images of the specified "
-        f"comma delimited formats from: {_comma_join(ALL_FORMAT_STRS)}. "
-        f"Defaults to {_comma_join(_DEFAULT_FORMAT_STRS)}",
+        help=(
+            "Only optimize images of the specified "
+            f"comma delimited formats from: {_comma_join(ALL_FORMAT_STRS)}. "
+            f"Defaults to {_comma_join(_DEFAULT_FORMAT_STRS, space=False)}"
+        ),
     )
     parser.add_argument(
         "-x",
@@ -106,12 +159,14 @@ def get_arguments(params: tuple[str, ...] | None = None) -> Namespace:
         "--convert-to",
         action=SplitArgsAction,
         dest="convert_to",
-        help="A list of formats to convert to. Lossless images may convert to"
-        f" {WebPLossless.OUTPUT_FORMAT_STR},"
-        f" {Png.OUTPUT_FORMAT_STR} or  {JpegXLLossless.OUTPUT_FORMAT_STR}."
-        f" {Rar.INPUT_FORMAT_STR} archives"
-        f" may convert to {Rar.OUTPUT_FORMAT_STR} or {Cbr.OUTPUT_FORMAT_STR}."
-        " By default formats are not converted to other formats.",
+        help=(
+            "A list of formats to convert to. "
+            "By default formats are not converted to other formats. "
+            f"Lossless images may convert to {_comma_join(LOSSLESS_IMAGE_CONVERT_TO_FORMAT_STRS)}.\n"
+            f"{_comma_join(ARCHIVE_CONVERT_FROM_FORMAT_STRS, final_and=True)} archives "
+            f"may convert to {Zip.OUTPUT_FORMAT_STR}.\n"
+            f"{_comma_join(CB_CONVERT_FROM_FORMAT_STRS, final_and=True)} may convert to {Cbz.OUTPUT_FORMAT_STR}."
+        ),
     )
     parser.add_argument(
         "-n",
@@ -138,7 +193,15 @@ def get_arguments(params: tuple[str, ...] | None = None) -> Namespace:
         "--ignore",
         action=SplitArgsAction,
         dest="ignore",
-        help="Comma dilenated list of globs to ignore.",
+        help="Comma delimited list of case sensitive patterns to ignore. Use '*' as a wildcard.",
+    )
+    parser.add_argument(
+        "-I",
+        "--no-default-ignores",
+        dest="ignore_defaults",
+        default=True,
+        action="store_false",
+        help="Do not ignore dotfiles and sparsebundles. By default they are ignored.",
     )
     parser.add_argument(
         "-b",
@@ -152,8 +215,10 @@ def get_arguments(params: tuple[str, ...] | None = None) -> Namespace:
         "--timestamps",
         action="store_true",
         dest="timestamps",
-        help="Record the optimization time in a timestamps file. "
-        "Do not optimize files that are older than their timestamp record.",
+        help=(
+            "Record the optimization time in a timestamps file. "
+            "Do not optimize files that are older than their timestamp record."
+        ),
     )
     parser.add_argument(
         "-N",
@@ -168,15 +233,17 @@ def get_arguments(params: tuple[str, ...] | None = None) -> Namespace:
         "--after",
         action="store",
         dest="after",
-        help="Only optimize files after the specified timestamp. "
-        "Supersedes recorded timestamp files. Can be an epoch number or "
-        "datetime string",
+        help=(
+            "Only optimize files after the specified timestamp. "
+            "Supersedes recorded timestamp files. Can be an epoch number or "
+            "datetime string"
+        ),
     )
     parser.add_argument(
-        "-T",
-        "--test",
+        "-d",
+        "--dry_run",
         action="store_true",
-        dest="test",
+        dest="dry_run",
         help="Report how much would be saved, but do not replace files.",
     )
     parser.add_argument(
@@ -199,8 +266,10 @@ def get_arguments(params: tuple[str, ...] | None = None) -> Namespace:
         type=int,
         action="store",
         dest="jobs",
-        help="Number of parallel jobs to run simultaneously. Defaults "
-        "to number of available cores.",
+        help=(
+            "Number of parallel jobs to run simultaneously. Defaults "
+            "to number of available cores."
+        ),
     )
     parser.add_argument(
         "-C",
@@ -245,32 +314,26 @@ def get_arguments(params: tuple[str, ...] | None = None) -> Namespace:
         params = params[1:]
 
     pns = parser.parse_args(params)
-
-    # increment verbose
-    if pns.verbose is not None and pns.verbose > 0:
-        pns.verbose += 1
-
     return Namespace(picopt=pns)
 
 
 def main(args: tuple[str, ...] | None = None):
     """Process command line arguments and walk inputs."""
+    printer = Printer(2)
     try:
         arguments = get_arguments(args)
 
-        config = get_config(arguments)
-        wob = walk.Walk(config)
-        totals = wob.run()
-        totals.report()
+        config = PicoptConfig(printer).get_config(arguments)
+        walker = Walk(config)
+        walker.walk()
     except ConfigError as err:
-        cprint(f"ERROR: {err}", "red")
+        printer.error("", err)
         sys.exit(78)
     except PicoptError as err:
-        cprint(f"ERROR: {err}", "red")
+        printer.error("", err)
         sys.exit(1)
     except Exception as exc:
-        cprint(f"ERROR: {exc}", "red")
-        import traceback
+        printer.error("", exc)
 
         traceback.print_exception(exc)
         sys.exit(1)

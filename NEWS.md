@@ -1,10 +1,53 @@
 # 📰 Picopt News
 
-## v4.0.3
+## v5.2.0
+
+- MozJpeg is now an internal python module. External mozjpeg & jpegtran support removed.
+
+## v5.1.1
+
+- Fix verbosity default too high.
+
+## v5.1.0
+
+- Use gif2webp to convert GIFs to WebP. It saves space compared to picopt's
+  custom method.
+
+## v5.0.1
+
+- Fix crash converting animated images with bad duration metadata.
+
+## v5.0.0
+
+- Alert!
+  - Timestamps options changed, invalidating old timestamps. On your first run
+    in a path with picopt 5.0 you may use the `-N` option to ignore the old
+    timestamp's config differences.
+- Fixes
+  - Fix tif & animated gifs were not converted to pngs when specified.
+  - Fix --ignore option wildcards and performance.
+  - --ignore is now case insensitive on case insenstitive filesystems
+- Features
+  - Picopt learned to optimize 7-Zip and Tar Archives.
+  - Ignore dotfiles by default. Disable with -I.
+  - -T --test option becomes -d --dry-run
+  - colors changed.
+- Performance
+  - Archives skipped without unpacking contents if all contents are skippable.
+  - Animated pngs better optimized with oxipng
+  - Faster scanning for legacy timestamps on startup.
+- Dev
+  - Updated treestamps
+  - uv build system
+
+## v4.0.4
 
 - Pillow 11 support.
 - Better jpeg xmp preservation.
 - Fix crash on reporting some errors.
+- README Redhat installation and spelling fixes by @bpepple
+
+## v4.0.3 - Bad release
 
 ## v4.0.2
 

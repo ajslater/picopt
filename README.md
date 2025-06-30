@@ -26,7 +26,7 @@ their current format.
 ### Lossless Images
 
 Lossless WebP images are smaller than PNG, much smaller than GIF and, of course,
-a great deal smaller thein uncompressed bitmaps like BMP. As such the best
+a great deal smaller than uncompressed bitmaps like BMP. As such the best
 practice is probably to convert all lossless images to WebP Lossless as now all
 major browsers support it. The only downside is that decoding WebP Lossless
 takes on average 50% more CPU than PNG. All major desktop and mobile browsers
@@ -42,7 +42,7 @@ substitute.
 
 ### Conversion
 
-By default picopt does not convert images between formats. You must turn on
+By default, picopt does not convert images between formats. You must turn on
 conversion to PNG or WebP explicitly.
 
 ## 🖼️ <a name="formats">Formats</a>
@@ -73,14 +73,12 @@ picopt -x BMP -c WEBP big_old.bmp
 
 ### JPEG
 
-To optimize JPEG images at all picopt needs one of
-[mozjpeg](https://github.com/mozilla/mozjpeg) or
-[jpegtran](http://jpegclub.org/jpegtran/) on the path. in order of preference.
+Picopt uses an internal mozjpeg python module to optimize JPEG images.
 
 ### PNG & APNG
 
-Picopt uses an internal oxipng python module to to optimize PNG images and
-convert other lossless formats to PNG picopt. The external
+Picopt uses an internal oxipng python module to optimize PNG images and convert
+other lossless formats to PNG picopt. The external
 [pngout](http://advsys.net/ken/utils.htm) tool can provide a small extra bit of
 compression.
 
@@ -99,6 +97,20 @@ WebP lossless formats are optimized with
 with the internal optimizer if not. cwebp provides significant improvements over
 the internal optimizer.
 
+When configured to convert GIFS to WebP, Animated GIFs are converted to WebP
+with the [gif2webp](https://developers.google.com/speed/webp/docs/gif2webp)
+binary if it exists. It is normally distributed as part of the webp package.
+
+#### Experimental option
+
+This experimental options is activated with an environment variable.
+
+Set `PICOPT_ENABLE_IMG2WEBP=1` to make picopt optimize animated WebPs and
+convert animated PNGs to webp with the
+[img2webp](https://developers.google.com/speed/webp/docs/img2webp) binary. In my
+experiments img2webp has performed worse than picopt's custom algorithm using
+PIL & cwebp
+
 ### SVG
 
 Picopt can only optimize SVGs if [svgo](https://github.com/svg/svgo) is on the
@@ -106,7 +118,7 @@ path.
 
 ### MPO (Experimental)
 
-Picopt can extract the primary image from an multi JPEG MPO that also contains
+Picopt can extract the primary image from a multi JPEG MPO that also contains
 thumbnails and convert the file to an ordinary JPEG. Picopt will also optimize
 this image if it can. To enable this you must run with `-x MPO -c JPEG`
 Steroscopic MPOs should have no primary image tagged in the MPO directory and be
@@ -174,7 +186,7 @@ See mozjepg, pngout & svgo install instructions below
 <!-- eslint-skip -->
 
 ```sh
-yum install gifsicle python-imaging libwebp-tools
+dnf install gifsicle python3-pillow libwebp-tools
 ```
 
 if you don't want to install mozjpeg using the instructions below then use
@@ -183,7 +195,7 @@ jpegtran:
 <!-- eslint-skip -->
 
 ```sh
-yum install libjpeg-progs
+dnf install libjpeg-turbo-utils
 ```
 
 See mozjepg, pngout & svgo install instructions below
@@ -201,19 +213,6 @@ pip install picopt
 Picopt will perform optimization on most lossless formats without using external
 programs, but much more compression is possible if these external programs are
 on your path.
-
-### mozjpeg
-
-mozjpeg offers better compression than libjpeg-progs jpegtran. It may or may not
-be packaged for your \*nix, but even when it is, picopt requires that its
-separately compiled version of jpegtran be symlinked to 'mozjpeg' somewhere in
-the path.
-
-Instructions for installing on macOS are given above. Some near recent binaries
-for Windows and Debian x86
-[can be found here](https://mozjpeg.codelove.de/binaries.html). Most Linux
-distributions still require a more manual install as elucidated here on
-[Casey Hoffer's blog](https://www.caseyhofford.com/2019/05/01/improved-image-compression-install-mozjpeg-on-ubuntu-server/)
 
 ### pngout
 
