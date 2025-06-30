@@ -41,6 +41,7 @@ from picopt.handlers.container.archive.zip import (
 from picopt.handlers.handler import INTERNAL, Handler
 from picopt.handlers.image.gif import Gif, GifAnimated
 from picopt.handlers.image.jpeg import Jpeg
+from picopt.handlers.image.jpegxl import JpegXL, JpegXLLossless
 from picopt.handlers.image.png import Png, PngAnimated
 from picopt.handlers.image.svg import Svg
 from picopt.handlers.image.webp import Gif2WebPAnimatedLossless, WebPLossless
@@ -85,7 +86,7 @@ _FORMAT_HANDLERS = MappingProxyType(
         **_LOSSLESS_CONVERTIBLE_FORMAT_HANDLERS,
         **_LOSSLESS_CONVERTIBLE_ANIMATED_FORMAT_HANDLERS,
         Gif.OUTPUT_FILE_FORMAT: FileFormatHandlers(
-            convert=(WebPLossless, Png),
+            convert=(JpegXLLossless, WebPLossless, Png),
             native=(Gif,),
         ),
         GifAnimated.OUTPUT_FILE_FORMAT: FileFormatHandlers(
@@ -96,16 +97,33 @@ _FORMAT_HANDLERS = MappingProxyType(
             ),
             native=(GifAnimated,),
         ),
-        MPO_FILE_FORMAT: FileFormatHandlers(convert=(Jpeg,)),
-        Jpeg.OUTPUT_FILE_FORMAT: FileFormatHandlers(native=(Jpeg,)),
+        MPO_FILE_FORMAT: FileFormatHandlers(
+            convert=(
+                JpegXL,
+                Jpeg,
+            )
+        ),
+        Jpeg.OUTPUT_FILE_FORMAT: FileFormatHandlers(native=(Jpeg,), convert=(JpegXL,)),
+        JpegXL.OUTPUT_FILE_FORMAT: FileFormatHandlers(
+            native=(JpegXL,),
+        ),
+        JpegXLLossless.OUTPUT_FILE_FORMAT: FileFormatHandlers(
+            native=(JpegXLLossless,),
+        ),
         Png.OUTPUT_FILE_FORMAT: FileFormatHandlers(
-            convert=(WebPLossless,), native=(Png,)
+            convert=(
+                JpegXLLossless,
+                WebPLossless,
+            ),
+            native=(Png,),
         ),
         PngAnimated.OUTPUT_FILE_FORMAT: FileFormatHandlers(
             convert=(*IMG2WEBP_ANIMATED_LOSSLESS_HANDLERS, PILPackWebPAnimatedLossless),
             native=(PngAnimated,),
         ),
-        WebPLossless.OUTPUT_FILE_FORMAT: FileFormatHandlers(native=(WebPLossless,)),
+        WebPLossless.OUTPUT_FILE_FORMAT: FileFormatHandlers(
+            native=(WebPLossless,), convert=(JpegXLLossless,)
+        ),
         PILPackWebPAnimatedLossless.OUTPUT_FILE_FORMAT: FileFormatHandlers(
             native=(*IMG2WEBP_ANIMATED_LOSSLESS_HANDLERS, PILPackWebPAnimatedLossless),
         ),

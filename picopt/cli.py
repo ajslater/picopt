@@ -20,6 +20,7 @@ from picopt.config.consts import (
 )
 from picopt.exceptions import PicoptError
 from picopt.handlers.container.archive.zip import Cbz, Zip
+from picopt.handlers.image.jpegxl import JpegXL
 from picopt.printer import Printer
 from picopt.walk.walk import Walk
 
@@ -162,6 +163,7 @@ def get_arguments(params: tuple[str, ...] | None = None) -> Namespace:
         help=(
             "A list of formats to convert to. "
             "By default formats are not converted to other formats. "
+            f"JPEG images may convert to {JpegXL.OUTPUT_FORMAT_STR}. "
             f"Lossless images may convert to {_comma_join(LOSSLESS_IMAGE_CONVERT_TO_FORMAT_STRS)}.\n"
             f"{_comma_join(ARCHIVE_CONVERT_FROM_FORMAT_STRS, final_and=True)} archives "
             f"may convert to {Zip.OUTPUT_FORMAT_STR}.\n"

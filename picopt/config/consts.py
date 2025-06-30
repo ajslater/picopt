@@ -30,6 +30,7 @@ from picopt.handlers.container.archive.zip import (
 )
 from picopt.handlers.image.gif import Gif, GifAnimated
 from picopt.handlers.image.jpeg import Jpeg
+from picopt.handlers.image.jpegxl import JpegXL, JpegXLLossless
 from picopt.handlers.image.png import Png, PngAnimated
 from picopt.handlers.image.svg import Svg
 from picopt.handlers.image.webp import Gif2WebPAnimatedLossless, WebPLossless
@@ -39,6 +40,7 @@ IMG2WEBP_ANIMATED_LOSSLESS_HANDLERS = (
     (Img2WebPAnimatedLossless,) if os.environ.get("PICOPT_ENABLE_IMG2WEBP") else ()
 )
 _LOSSLESS_IMAGE_CONVERT_TO_HANDLERS = (
+    JpegXLLossless,
     Png,
     PngAnimated,
     WebPLossless,
@@ -50,11 +52,7 @@ _LOSSLESS_IMAGE_CONVERT_TO_HANDLERS = (
 LOSSLESS_IMAGE_CONVERT_TO_FORMAT_STRS = frozenset(
     {cls.OUTPUT_FORMAT_STR for cls in _LOSSLESS_IMAGE_CONVERT_TO_HANDLERS}
 )
-_OTHER_CONVERT_TO_HANDLERS = (
-    Zip,
-    Cbz,
-    Jpeg,
-)
+_OTHER_CONVERT_TO_HANDLERS = (Zip, Cbz, Jpeg, JpegXL)
 
 CONVERT_TO_FORMAT_STRS = frozenset(
     {cls.OUTPUT_FORMAT_STR for cls in _OTHER_CONVERT_TO_HANDLERS}
