@@ -707,7 +707,7 @@ requires-dist = [
     { name = "mozjpeg-lossless-optimization", specifier = ">=1.3.1" },
     { name = "piexif", specifier = ">=1.1.3,<2.0.0" },
     { name = "pillow", specifier = ">=9.5" },
-    { name = "pillow-jxl-plugin", specifier = ">=1.3.0" },
+    { name = "pillow-jxl-plugin", specifier = ">=1.3.3" },
     { name = "py7zr", specifier = ">=1.0.0,<2.0.0" },
     { name = "pyoxipng", specifier = ">=9.0.0,<10.0.0" },
     { name = "python-dateutil", specifier = ">=2.8,<3.0" },
