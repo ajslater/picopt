@@ -6,7 +6,7 @@ optimizer utility that can use external tools for even better optimizing.
 Picopt will optionally drop hidden timestamps at the root of your image
 directories to avoid reoptimizing images picopt has already optimized.
 
-## 💭 <a name="philosophy">Conversion Philosophy</a>
+## 💭 Conversion Philosophy
 
 ### Warning
 
@@ -45,7 +45,7 @@ substitute.
 By default, picopt does not convert images between formats. You must turn on
 conversion to PNG or WebP explicitly.
 
-## 🖼️ <a name="formats">Formats</a>
+## 🖼️ Formats
 
 - By default picopt will optimize GIF, JPEG, PNG, and WEBP images.
 - Picopt can optionally optimize SVG images, ZIP, ePub, and CBZ containers.
@@ -141,7 +141,7 @@ Picopt uncompresses, optimizes and rezips
 aware that CBR rar archives may only be rezipped into CBZs instead of CBR. Comic
 book archive optimization is not turned on by default to prevent surprises.
 
-## 📦 <a name="install">Install</a>
+## 📦 Install
 
 ### System Dependencies
 
@@ -254,7 +254,7 @@ Or you can install svgo with npm:
 npm install -G svgo
 ```
 
-## ⌨️ <a name="usage">Usage Examples</a>
+## ⌨️ Use Examples
 
 Optimize all JPEG files in a directory:
 
@@ -341,12 +341,12 @@ have to remember the last time I did this:
 picopt -rSt -D '2013 June 1 14:00' 'Pictures/iPhoto Library'
 ```
 
-## 📦 <a name="package">Packages</a>
+## 📦 Packages
 
 - [PyPI](https://pypi.python.org/pypi/picopt/)
 - [Arch Linux](https://aur.archlinux.org/packages/picopt/)
 
-## 👀 <a name="alternatives">Alternatives</a>
+## 👀 Alternatives
 
 - [imagemin](https://github.com/imagemin/imagemin-cli) looks to be an all in one
   cli and gui solution with bundled libraries, so no awkward dependencies.
