@@ -1,10 +1,15 @@
-# picopt
+# Picopt
 
 A multi-format, recursive, multiprocessor aware, command line, lossless image
 optimizer utility that can use external tools for even better optimizing.
 
 Picopt will optionally drop hidden timestamps at the root of your image
 directories to avoid reoptimizing images picopt has already optimized.
+
+## 📰 News
+
+Picopt has a [NEWS file](NEWS.md) for changes that might be of interest to
+users.
 
 ## 💭 Conversion Philosophy
 
@@ -354,3 +359,7 @@ picopt -rSt -D '2013 June 1 14:00' 'Pictures/iPhoto Library'
 - [Imageoptim](http://imageoptim.com/) is an all-in-one OS X GUI image
   optimizer. Imageoptim command line usage is possible with
   [an external program](https://code.google.com/p/imageoptim/issues/detail?can=2&start=0&num=100&q=&colspec=ID%20Type%20Status%20Priority%20Milestone%20Owner%20Summary%20Stars&groupby=&sort=&id=39).
+
+## 🛠️ Development
+
+Picopt code is hosted at [Github](https://github.com/ajslater/picopt)
