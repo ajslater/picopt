@@ -4,19 +4,19 @@ requires-python = "<4.0,>=3.10"
 authors = [{ name = "AJ Slater", email = "aj@slater.net" }]
 license = { text = "GPL-3.0-only" }
 dependencies = [
-  "confuse<3.0.0,>=2.0.0",
-  "defusedxml<1.0.0,>=0.7.1",
-  "filetype<2.0.0,>=1.2.0",
-  "humanize<5.0.0,>=4.0.0",
-  "mozjpeg-lossless-optimization>=1.3.1",
-  "piexif<2.0.0,>=1.1.3",
-  "py7zr<2.0.0,>=1.0.0",
-  "pyoxipng<10.0.0,>=9.0.0",
-  "python-dateutil<3.0,>=2.8",
-  "rarfile<5.0,>=4.0",
-  "ruamel-yaml<1.0.0,>=0.18.5",
-  "treestamps<3.0.0,>=2.2.6",
-  "typing-extensions>=4.13.2",
+  "confuse~=2.0",
+  "defusedxml~=0.7",
+  "filetype~=1.2",
+  "humanize~=4.12",
+  "mozjpeg-lossless-optimization~=1.3.1",
+  "piexif~=1.1",
+  "py7zr~=1.0",
+  "pyoxipng~=9.1",
+  "python-dateutil~=2.8",
+  "rarfile~=4.0",
+  "ruamel-yaml~=0.18",
+  "treestamps~=2.2.6",
+  "typing-extensions~=4.13",
   "Pillow>=9.5",
 ]
 version = "5.2.0"
