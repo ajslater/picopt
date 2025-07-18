@@ -11,6 +11,10 @@ directories to avoid reoptimizing images picopt has already optimized.
 Picopt has a [NEWS file](NEWS.md) for changes that might be of interest to
 users.
 
+## 🕸️ HTML Docs
+
+[HTML formatted docs are available here](https://picopt.readthedocs.io)
+
 ## 💭 Conversion Philosophy
 
 ### Warning
