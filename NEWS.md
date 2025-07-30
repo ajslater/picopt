@@ -21,25 +21,25 @@
 ## v5.0.0
 
 - Alert!
-  - Timestamps options changed, invalidating old timestamps. On your first run
-    in a path with picopt 5.0 you may use the `-N` option to ignore the old
-    timestamp's config differences.
+    - Timestamps options changed, invalidating old timestamps. On your first run
+      in a path with picopt 5.0 you may use the `-N` option to ignore the old
+      timestamp's config differences.
 - Fixes
-  - Fix tif & animated gifs were not converted to pngs when specified.
-  - Fix --ignore option wildcards and performance.
-  - --ignore is now case insensitive on case insenstitive filesystems
+    - Fix tif & animated gifs were not converted to pngs when specified.
+    - Fix --ignore option wildcards and performance.
+    - --ignore is now case insensitive on case insenstitive filesystems
 - Features
-  - Picopt learned to optimize 7-Zip and Tar Archives.
-  - Ignore dotfiles by default. Disable with -I.
-  - -T --test option becomes -d --dry-run
-  - colors changed.
+    - Picopt learned to optimize 7-Zip and Tar Archives.
+    - Ignore dotfiles by default. Disable with -I.
+    - -T --test option becomes -d --dry-run
+    - colors changed.
 - Performance
-  - Archives skipped without unpacking contents if all contents are skippable.
-  - Animated pngs better optimized with oxipng
-  - Faster scanning for legacy timestamps on startup.
+    - Archives skipped without unpacking contents if all contents are skippable.
+    - Animated pngs better optimized with oxipng
+    - Faster scanning for legacy timestamps on startup.
 - Dev
-  - Updated treestamps
-  - uv build system
+    - Updated treestamps
+    - uv build system
 
 ## v4.0.4
 
@@ -61,34 +61,36 @@
 ## v4.0.0
 
 - Alert!
-  - Timestamps options changed, invalidating old timestamps. On your first run
-    in a path with picopt 4.0 use the `-N` option to ignoring the old timestamp.
+    - Timestamps options changed, invalidating old timestamps. On your first run
+      in a path with picopt 4.0 use the `-N` option to ignoring the old
+      timestamp.
 - Features
-  - Support optimizing SVG with svgo.
-  - Support converting more lossless formats to PNG & WEBP: CUR, DIB, FITS, IMT,
-    PCX, PIXAR, PSD, QOI, SGI, SPIDER, SUN, TGA, XBM, XPM.
-  - Support converting animated formats to animated PNG.
-  - Support converting losslessly converting MPO to JPEG (choose primary image)
-  - Internal oxipng replaces external optipng for png compression.
-  - Better support for preserving EXIF, ICC_PROFILE, & XMP data across
-    optimization and conversion.
-  - `--destroy-metadata` option becomes `--strip-metadata`
-  - `--near-lossless` option for lossless WebP.
-  - `--preserve` file attributes after optimization.
-  - `--disable-programs` option.
-  - ~25% faster due to avoiding disk io.
+    - Support optimizing SVG with svgo.
+    - Support converting more lossless formats to PNG & WEBP: CUR, DIB, FITS,
+      IMT, PCX, PIXAR, PSD, QOI, SGI, SPIDER, SUN, TGA, XBM, XPM.
+    - Support converting animated formats to animated PNG.
+    - Support converting losslessly converting MPO to JPEG (choose primary
+      image)
+    - Internal oxipng replaces external optipng for png compression.
+    - Better support for preserving EXIF, ICC_PROFILE, & XMP data across
+      optimization and conversion.
+    - `--destroy-metadata` option becomes `--strip-metadata`
+    - `--near-lossless` option for lossless WebP.
+    - `--preserve` file attributes after optimization.
+    - `--disable-programs` option.
+    - ~25% faster due to avoiding disk io.
 - Fixes
-  - wal file would write illegal key names and fail to load for some files.
+    - wal file would write illegal key names and fail to load for some files.
 - Dev
-  - walk.run now returns totals instead of running report on them.
+    - walk.run now returns totals instead of running report on them.
 
 ## v3.3.7
 
 - Fix
-  - Remove Lossy WebP optimization. Wasn't optimal.
-  - Fix non zero exit code on success.
+    - Remove Lossy WebP optimization. Wasn't optimal.
+    - Fix non zero exit code on success.
 - Features
-  - Improve WebP optimization.
+    - Improve WebP optimization.
 
 ## v3.3.6
 
@@ -208,29 +210,29 @@
 ## v3.0.0
 
 - Formats
-  - WebP lossless, lossy and animated support.
-  - Gain support for .zip archives
-  - EPub support. ePub contents are never converted.
-  - TIFF support
+    - WebP lossless, lossy and animated support.
+    - Gain support for .zip archives
+    - EPub support. ePub contents are never converted.
+    - TIFF support
 - Timestamps
-  - Timestamps are now kept in .picopt_treestamps.yaml files.
-  - Picopt will convert and clean up old style timestamps.
-  - Timestamps are now recorded after optimizing every image for each image
-    individually instead of directories, preserving progress.
-  - Timestamps record configuration. Running with a new config invalidates
-    non-matching timestamps.
+    - Timestamps are now kept in .picopt_treestamps.yaml files.
+    - Picopt will convert and clean up old style timestamps.
+    - Timestamps are now recorded after optimizing every image for each image
+      individually instead of directories, preserving progress.
+    - Timestamps record configuration. Running with a new config invalidates
+      non-matching timestamps.
 - Configuration
-  - .picoptrc.yaml files can configure options
-  - Changed cli option names.
-  - Removed cli args for manually disabling programs
-  - Faster checking for external programs
+    - .picoptrc.yaml files can configure options
+    - Changed cli option names.
+    - Removed cli args for manually disabling programs
+    - Faster checking for external programs
 - Fall back to Pillow optimization if better external programs not found.
 - Colored terminal output.
 - Fixes
-  - Cleans up old temporary files from aborted picopt runs.
-  - Fix condition where new files in an old archive were not processed.
-  - optiping optimization level changed to o5
-  - Exif & icc metadata preserved in all formats much better by default.
+    - Cleans up old temporary files from aborted picopt runs.
+    - Fix condition where new files in an old archive were not processed.
+    - optiping optimization level changed to o5
+    - Exif & icc metadata preserved in all formats much better by default.
 
 ## v2.2.1
 
