@@ -36,10 +36,10 @@ classifiers = [
   "Typing :: Typed",
 ]
 
-Source = "https://github.com/ajslater/picopt"
-Issues = "https://github.com/ajslater/picopt/issues"
-homepage = "https://github.com/ajslater/picopt"
+[project.urls]
 documentation = "https://picopt.readthedocs.io"
+Issues = "https://github.com/ajslater/picopt/issues"
+repository = "https://github.com/ajslater/picopt"
 
 [project.scripts]
 picopt = "picopt.cli:main"
