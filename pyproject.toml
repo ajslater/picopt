@@ -36,10 +36,9 @@ classifiers = [
 ]
 
 [project.urls]
-Source = "https://github.com/ajslater/picopt"
+documentation = "https://picopt.readthedocs.io"
 Issues = "https://github.com/ajslater/picopt/issues"
-homepage = "https://github.com/ajslater/picopt"
-documentation = "https://github.com/ajslater/picopt"
+repository = "https://github.com/ajslater/picopt"
 
 [project.scripts]
 picopt = "picopt.cli:main"
