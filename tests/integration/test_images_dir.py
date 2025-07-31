@@ -34,7 +34,7 @@ FNS = {
         ("jpg", 22664),
         ("jxl", 20711),
     ),
-    "test_svg.svg": (5393, 4871, ("svg", 4871), ("svg", 4871), ("svg", 5393)),
+    "test_svg.svg": (5393, 4871, ("svg", 4871), ("svg", 4871), ("svg", 4871)),
     "test_txt.txt": (6, 6, ("txt", 6), ("txt", 6), ("txt", 6)),
     "test_webp_lossless.webp": (
         5334,
@@ -93,15 +93,27 @@ if platform.system() == "Darwin":
                 ("webp", 197088),
                 ("jxl", 186092),
             ),
-            "eight.tif": (59640, 59640, ("png", 30585), ("webp", 25012), ("jxl", 0)),
+            "eight.tif": (
+                59640,
+                59640,
+                ("png", 30585),
+                ("webp", 25012),
+                ("jxl", 21996),
+            ),
             "test_bmp.bmp": (
                 141430,
                 141430,
                 ("png", 67236),
                 ("webp", 47436),
-                ("jxl", 0),
+                ("jxl", 41218),
             ),
-            "test_pnm.pnm": (27661, 27661, ("png", 15510), ("webp", 12758), ("jxl", 0)),
+            "test_pnm.pnm": (
+                27661,
+                27661,
+                ("png", 15510),
+                ("webp", 12758),
+                ("jxl", 12107),
+            ),
         }
     )
 else:  # Linux
@@ -223,7 +235,8 @@ class TestImagesDir(BaseTest):
     def test_convert_to_jxl(self, fn: str) -> None:
         args = (
             PROGRAM_NAME,
-            "-rvv",
+            "-rvvx",
+            "BMP,PPM,SVG,TIFF",
             "-c",
             "JXL",
             str(self.TMP_ROOT),
