@@ -65,7 +65,7 @@ class FileFormatHandlers:
 # Handlers for formats are listed in priority order
 _LOSSLESS_CONVERTIBLE_FORMAT_HANDLERS = MappingProxyType(
     {
-        ffmt: FileFormatHandlers(convert=(WebPLossless, Png))
+        ffmt: FileFormatHandlers(convert=(JpegXLLossless, WebPLossless, Png))
         for ffmt in CONVERTIBLE_PIL_FILE_FORMATS
     }
 )
@@ -73,6 +73,7 @@ _LOSSLESS_CONVERTIBLE_ANIMATED_FORMAT_HANDLERS = MappingProxyType(
     {
         ffmt: FileFormatHandlers(
             convert=(
+                JpegXLLossless,
                 *IMG2WEBP_ANIMATED_LOSSLESS_HANDLERS,
                 PILPackWebPAnimatedLossless,
                 PngAnimated,
@@ -91,6 +92,7 @@ _FORMAT_HANDLERS = MappingProxyType(
         ),
         GifAnimated.OUTPUT_FILE_FORMAT: FileFormatHandlers(
             convert=(
+                JpegXLLossless,
                 Gif2WebPAnimatedLossless,
                 PILPackWebPAnimatedLossless,
                 PngAnimated,
@@ -118,7 +120,11 @@ _FORMAT_HANDLERS = MappingProxyType(
             native=(Png,),
         ),
         PngAnimated.OUTPUT_FILE_FORMAT: FileFormatHandlers(
-            convert=(*IMG2WEBP_ANIMATED_LOSSLESS_HANDLERS, PILPackWebPAnimatedLossless),
+            convert=(
+                JpegXLLossless,
+                *IMG2WEBP_ANIMATED_LOSSLESS_HANDLERS,
+                PILPackWebPAnimatedLossless,
+            ),
             native=(PngAnimated,),
         ),
         WebPLossless.OUTPUT_FILE_FORMAT: FileFormatHandlers(
