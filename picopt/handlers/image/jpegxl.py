@@ -6,6 +6,7 @@ from typing import BinaryIO
 
 import pillow_jxl  # noqa: F401, # pyright: ignore[reportUnusedImport]
 from PIL import Image
+from pillow_jxl import JpegXLImagePlugin
 from pillow_jxl.JpegXLImagePlugin import JXLImageFile
 from termcolor import cprint
 
@@ -36,7 +37,15 @@ class JpegXL(ImageHandler):
         jpegxl_data = BytesIO()
         try:
             with Image.open(input_buffer) as im:
-                im.save(jpegxl_data, **self.PIL2_KWARGS)
+                # HACK for unsupported modes
+                # https://github.com/Isotr0py/pillow-jpegxl-plugin/blob/main/pillow_jxl/JpegXLImagePlugin.py#L139
+                # if _save() NotImplementedError still exists.
+                if im.mode not in JpegXLImagePlugin._VALID_JXL_MODES:  # noqa: SLF001
+                    cim = im.convert("RGB")
+                else:
+                    cim = im
+                with cim:
+                    cim.save(jpegxl_data, **self.PIL2_KWARGS)
         except Exception as exc:
             cprint(f"WARNING: could not save JPEG XL: {exc}", "yellow")
 

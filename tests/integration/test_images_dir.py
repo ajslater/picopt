@@ -50,7 +50,7 @@ FNS = {
         ("webp", 3798),
         ("webp", 3798),
     ),
-    "mri.tif": (230578, 230578, ("png", 129479), ("webp", 116954), ("jxl", 0)),
+    "mri.tif": (230578, 230578, ("png", 129479), ("webp", 116954), ("jxl", 4182)),
     "test_webp_lossy.webp": (
         2764,
         2764,
@@ -70,7 +70,7 @@ if platform.system() == "Darwin":
                 16358,
                 ("png", 24255),
                 ("webp", 11856),
-                ("jxl", 0),
+                ("jxl", 3438),
             ),
             "test_animated_png.png": (
                 63435,
@@ -84,7 +84,7 @@ if platform.system() == "Darwin":
                 138944,
                 ("png", 112290),
                 ("webp", 108058),
-                ("jxl", 0),
+                ("jxl", 114836),
             ),
             "test_pre-optimized_png.png": (
                 256572,
