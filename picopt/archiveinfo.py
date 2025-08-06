@@ -76,14 +76,20 @@ class ArchiveInfo:
     def datetime(self):
         """Return mtime as a datetime."""
         if self._dttm is None:
+            dttm = None
             if isinstance(self.info, ZipInfo):
                 if date_time := self.info.date_time:
-                    self._dttm = datetime(*date_time, tzinfo=timezone.utc)
+                    dttm = datetime(*date_time)  # noqa: DTZ001 # ty: ignore[missing-argument]
             elif isinstance(self.info, TarInfo):
-                self._dttm = datetime.fromtimestamp(self.info.mtime, tz=timezone.utc)
+                dttm = datetime.fromtimestamp(self.info.mtime, tz=timezone.utc)
             elif isinstance(self.info, SevenZipInfo):
-                self._dttm = self.info.creationtime
+                dttm = self.info.creationtime
             elif dttm := self.info.mtime:  # RarInfo
+                pass
+
+            if dttm:
+                if not dttm.tzinfo:
+                    dttm.replace(tzinfo=timezone.utc)
                 self._dttm = dttm
         return self._dttm
 

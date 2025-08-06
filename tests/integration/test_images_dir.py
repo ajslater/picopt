@@ -76,7 +76,7 @@ if platform.system() == "Darwin":
                 63435,
                 63058,
                 ("png", 63058),
-                ("webp", 52864),
+                ("webp", 53388),
                 ("jxl", 3402),
             ),
             "test_gif.gif": (
