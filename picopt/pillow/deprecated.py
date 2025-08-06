@@ -8,7 +8,7 @@ from io import BytesIO
 from PIL import ImageCms
 from PIL.JpegImagePlugin import JpegImageFile
 
-_APP1_SECTION_DELIMETER = b"\x00"
+_APP1_SECTION_DELIMITER = b"\x00"
 _XAP_MARKER = b"http://ns.adobe.com/xap/1.0/"
 
 
@@ -47,7 +47,7 @@ def extract_info_for_webp(keep_metadata, info, image, path_info):
 def _xmp_to_bytes(xmp_dict):
     """Convert xmp from dict to bytes for webp."""
     # Create an XMP metadata object
-    xmp_meta = ImageCms.XMPMeta()
+    xmp_meta = ImageCms.XMPMeta()  # ty: ignore[unresolved-attribute]
     xmp_meta.from_dict(xmp_dict)
 
     # Serialize the XMP metadata to a byte stream
@@ -75,7 +75,7 @@ def get_jpeg_xmp(image: JpegImageFile) -> str | None:
     # Copied from PIL JpegImageFile
     for segment, content in image.applist:
         if segment == "APP1":
-            sections = content.split(_APP1_SECTION_DELIMETER)
+            sections = content.split(_APP1_SECTION_DELIMITER)
             marker, xmp_tags = sections[:2]
             if marker == _XAP_MARKER:
                 xmp = xmp_tags.decode()
