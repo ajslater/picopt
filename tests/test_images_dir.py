@@ -45,10 +45,10 @@ FNS = {
     ),
     "test_webp_lossless_pre-optimized.webp": (
         3798,
-        3798,
-        ("webp", 3798),
-        ("webp", 3798),
-        ("webp", 3798),
+        3794,
+        ("webp", 3794),
+        ("webp", 3794),
+        ("jxl", 4172),
     ),
     "mri.tif": (230578, 230578, ("png", 129479), ("webp", 116954), ("jxl", 4182)),
     "test_webp_lossy.webp": (
@@ -60,7 +60,7 @@ FNS = {
     ),
     "test_png_16rgba.png": (3435, 2097, ("png", 2097), ("webp", 1142), ("jxl", 1053)),
     "test_jpg.jpg": (97373, 87913, ("jpg", 87913), ("jpg", 87913), ("jxl", 16237)),
-    "test_jxl.jxl": (77911, 77911, ("png", 178100), ("webp", 77911), ("jxl", 77911)),
+    "test_jxl.jxl": (77911, 77911, ("png", 178100), ("webp", 0), ("jxl", 77911)),
 }
 if platform.system() == "Darwin":
     FNS.update(
@@ -83,35 +83,35 @@ if platform.system() == "Darwin":
                 138952,
                 138944,
                 ("png", 112290),
-                ("webp", 108058),
+                ("webp", 107972),
                 ("jxl", 114836),
             ),
             "test_pre-optimized_png.png": (
                 256572,
                 256572,
                 ("png", 256572),
-                ("webp", 197088),
+                ("webp", 197084),
                 ("jxl", 186092),
             ),
             "eight.tif": (
                 59640,
                 59640,
                 ("png", 30585),
-                ("webp", 25012),
+                ("webp", 24988),
                 ("jxl", 21996),
             ),
             "test_bmp.bmp": (
                 141430,
                 141430,
                 ("png", 67236),
-                ("webp", 47436),
+                ("webp", 47384),
                 ("jxl", 41218),
             ),
             "test_pnm.pnm": (
                 27661,
                 27661,
                 ("png", 15510),
-                ("webp", 12758),
+                ("webp", 12728),
                 ("jxl", 12107),
             ),
         }
@@ -179,8 +179,8 @@ NEAR_LOSSLESS_FNS = MappingProxyType(
             3798,
             3798,
             ("webp", 3798),
-            ("webp", 3798),
-            ("jxl", 0),
+            ("webp", 3794),
+            ("jxl", 4172),
         ),
     }
 )
@@ -221,7 +221,7 @@ class TestImagesDir(BaseTest):
         """Test convert to WEBP."""
         args = (
             PROGRAM_NAME,
-            "-rvvx",
+            "-rvvbx",
             "BMP,PPM,SVG,TIFF",
             "-c",
             "WEBP",
@@ -235,7 +235,7 @@ class TestImagesDir(BaseTest):
     def test_convert_to_jxl(self, fn: str) -> None:
         args = (
             PROGRAM_NAME,
-            "-rvvx",
+            "-rvvbx",
             "BMP,PPM,SVG,TIFF",
             "-c",
             "JXL",
@@ -257,7 +257,7 @@ class TestNearLosslessImageDir(BaseTest):
         """Test convert to WEBP."""
         args = (
             PROGRAM_NAME,
-            "-rvvvnc",
+            "-rvvvbnc",
             "WEBP",
             str(self.TMP_ROOT),
         )
@@ -270,7 +270,7 @@ class TestNearLosslessImageDir(BaseTest):
         """Test convert to JPEGXL."""
         args = (
             PROGRAM_NAME,
-            "-rvvvnc",
+            "-rvvvbnc",
             "JXL",
             str(self.TMP_ROOT),
         )
