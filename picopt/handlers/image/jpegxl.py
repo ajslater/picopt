@@ -41,6 +41,10 @@ class JpegXL(ImageHandler):
                 # https://github.com/Isotr0py/pillow-jpegxl-plugin/blob/main/pillow_jxl/JpegXLImagePlugin.py#L139
                 # if _save() NotImplementedError still exists.
                 if im.mode not in JpegXLImagePlugin._VALID_JXL_MODES:  # noqa: SLF001
+                    if self.config.verbose > 1:
+                        cprint(
+                            f"WARNING: Converting JPEGXL color mode from to {im.mode} RGB"
+                        )
                     cim = im.convert("RGB")
                 else:
                     cim = im
