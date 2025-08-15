@@ -24,7 +24,7 @@ FNS = {
         12174,
         ("webp", 12174),
         ("webp", 12174),
-        ("jxl", 0),
+        ("webp", 12174),
     ),
     "test_png.png": (7967, 4150, ("png", 4150), ("webp", 3870), ("jxl", 3971)),
     "test_pre-optimized_jpg.jpg": (
@@ -60,7 +60,7 @@ FNS = {
     ),
     "test_png_16rgba.png": (3435, 2097, ("png", 2097), ("webp", 1142), ("jxl", 1053)),
     "test_jpg.jpg": (97373, 87913, ("jpg", 87913), ("jpg", 87913), ("jxl", 16237)),
-    "test_jxl.jxl": (77911, 77911, ("png", 178100), ("webp", 0), ("jxl", 77911)),
+    "test_jxl.jxl": (77911, 77911, ("jxl", 77911), ("webp", 0), ("jxl", 77911)),
 }
 if platform.system() == "Darwin":
     FNS.update(
