@@ -1,5 +1,6 @@
 """JPEG format."""
 
+from copy import copy
 from io import BytesIO
 from types import MappingProxyType
 from typing import BinaryIO
@@ -48,8 +49,12 @@ class JpegXL(ImageHandler):
                     cim = im.convert("RGB")
                 else:
                     cim = im
+                args = dict(copy(self.PIL2_KWARGS))
+                if not self.config.keep_metadata:
+                    cim.info = {}
+                    args["exif"] = {}
                 with cim:
-                    cim.save(jpegxl_data, **self.PIL2_KWARGS)
+                    cim.save(jpegxl_data, **args)
         except Exception as exc:
             cprint(f"WARNING: could not save JPEG XL: {exc}", "yellow")
 
