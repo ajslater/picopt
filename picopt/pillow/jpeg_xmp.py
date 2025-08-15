@@ -3,7 +3,7 @@
 
 import struct
 
-_APP1_SECTION_DELIMETER = b"\x00"
+_APP1_SECTION_DELIMITER = b"\x00"
 _XAP_MARKER = b"http://ns.adobe.com/xap/1.0/"
 _SOI_MARKER = b"\xff\xd8"
 _EOI_MARKER = b"\xff\xe1"
@@ -18,9 +18,9 @@ def set_jpeg_xmp(jpeg_data: bytes, xmp: str) -> bytes:
         raise ValueError(reason)
     xmp_bytes = (
         _XAP_MARKER
-        + _APP1_SECTION_DELIMETER
+        + _APP1_SECTION_DELIMITER
         + xmp.encode("utf-8")
-        + _APP1_SECTION_DELIMETER
+        + _APP1_SECTION_DELIMITER
     )
     return (
         bytes(jpeg_buffer[: soi_index + len(_SOI_MARKER)])
