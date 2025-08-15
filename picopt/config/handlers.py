@@ -92,7 +92,6 @@ _FORMAT_HANDLERS = MappingProxyType(
         ),
         GifAnimated.OUTPUT_FILE_FORMAT: FileFormatHandlers(
             convert=(
-                JpegXLLossless,
                 Gif2WebPAnimatedLossless,
                 PILPackWebPAnimatedLossless,
                 PngAnimated,
@@ -110,6 +109,10 @@ _FORMAT_HANDLERS = MappingProxyType(
             native=(JpegXL,),
         ),
         JpegXLLossless.OUTPUT_FILE_FORMAT: FileFormatHandlers(
+            convert=(
+                JpegXLLossless,
+                WebPLossless,
+            ),
             native=(JpegXLLossless,),
         ),
         Png.OUTPUT_FILE_FORMAT: FileFormatHandlers(
@@ -121,14 +124,17 @@ _FORMAT_HANDLERS = MappingProxyType(
         ),
         PngAnimated.OUTPUT_FILE_FORMAT: FileFormatHandlers(
             convert=(
-                JpegXLLossless,
                 *IMG2WEBP_ANIMATED_LOSSLESS_HANDLERS,
                 PILPackWebPAnimatedLossless,
             ),
             native=(PngAnimated,),
         ),
         WebPLossless.OUTPUT_FILE_FORMAT: FileFormatHandlers(
-            native=(WebPLossless,), convert=(JpegXLLossless,)
+            native=(WebPLossless,),
+            convert=(
+                WebPLossless,
+                JpegXLLossless,
+            ),
         ),
         PILPackWebPAnimatedLossless.OUTPUT_FILE_FORMAT: FileFormatHandlers(
             native=(*IMG2WEBP_ANIMATED_LOSSLESS_HANDLERS, PILPackWebPAnimatedLossless),
