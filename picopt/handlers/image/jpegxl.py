@@ -58,7 +58,7 @@ class JpegXL(ImageHandler):
 
 
 class JpegXLLossless(JpegXL):
-    """JPEG XL format class."""
+    """JPEG XL Lossless format class."""
 
     OUTPUT_FILE_FORMAT = FileFormat(
         JpegXL.OUTPUT_FORMAT_STR, lossless=True, animated=False
