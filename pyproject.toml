@@ -2,7 +2,7 @@
 name = "picopt"
 requires-python = "<4.0,>=3.10"
 authors = [{ name = "AJ Slater", email = "aj@slater.net" }]
-license = { text = "GPL-3.0-only" }
+license = "GPL-3.0-only"
 dependencies = [
   "confuse~=2.0",
   "defusedxml~=0.7",
