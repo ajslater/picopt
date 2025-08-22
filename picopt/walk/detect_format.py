@@ -32,6 +32,7 @@ from picopt.handlers.container.archive.zip import (
     EPub,
     Zip,
 )
+from picopt.handlers.image.jpegxl import JpegXLLossless
 from picopt.handlers.image.svg import Svg
 from picopt.handlers.image.webp import WebPLossless
 from picopt.handlers.mixins import NonPILIdentifierMixin
@@ -77,7 +78,7 @@ def _extract_image_info(
             if image_format_str:
                 # It's a rare thing if an info key is an int tuple?
                 info: dict[str, Any] = image.info if keep_metadata else {}  # pyright: ignore[reportAssignmentType]
-                animated = getattr(image, "is_animated", False)
+                animated = info.get("animated", getattr(image, "is_animated", False))
                 info["animated"] = animated
                 if animated and (n_frames := getattr(image, "n_frames", None)):
                     info["n_frames"] = n_frames
@@ -97,7 +98,16 @@ def _is_lossless(
     info: Mapping[str, Any],
 ) -> bool:
     """Determine if image format is lossless."""
-    if image_format_str == WebPLossless.OUTPUT_FORMAT_STR:
+    if image_format_str == JpegXLLossless.OUTPUT_FORMAT_STR:
+        # TODO detect lossless here
+        # (possibly) lossless == info.uses_original_profile == !meta.xyb_encoded
+        # Not !meta.xyb_encoded is only a probably lossless signal.
+        # Possibly two kinds of lossless:
+        #   JPEG reversible, unsure how to detect.
+        #      obviously this is only lossless from JPEG onward.
+        #   and lossless to jpegxllossless, again unsure how to detect.
+        lossless = info.get("uses_original_profile", False)
+    elif image_format_str == WebPLossless.OUTPUT_FORMAT_STR:
         lossless = is_lossless(path_info.fp_or_buffer())
     elif image_format_str == TiffImageFile.format:
         lossless = info.get("compression") in TIFF_LOSSLESS_COMPRESSION
