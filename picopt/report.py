@@ -142,7 +142,7 @@ class Totals:
     def report(self) -> None:
         """Report the total number and percent of bytes saved."""
         if self._config.verbose == 1:
-            print("")  # noqa: T201
+            print()  # noqa: T201
         if self.bytes_in:
             self._report_bytes_in()
         else:
