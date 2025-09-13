@@ -33,12 +33,12 @@ export const CONFIGS = {
     ...eslintPluginComments.recommended,
     ...eslintPluginCompat.configs[FLAT_RECOMMENDED],
     ...eslintPluginDepend.configs[FLAT_RECOMMENDED],
-    ...eslintPluginImport.flatConfigs.recommended,
+    ...eslintPluginImport.flatConfigs.all,
     ...eslintPluginNoUnsanitized.configs.recommended,
-    ...eslintPluginPromise.configs[FLAT_RECOMMENDED],
-    ...eslintPluginRegexp.configs[FLAT_RECOMMENDED],
-    ...eslintPluginSonarjs.configs.recommended,
-    ...eslintPluginUnicorn.configs.recommended,
+    ...eslintPluginPromise.configs[FLAT_ALL],
+    ...eslintPluginRegexp.configs[FLAT_ALL],
+    ...eslintPluginSonarjs.configs.all,
+    ...eslintPluginUnicorn.configs.all,
     plugins: {
       depend: eslintPluginDepend,
       "no-secrets": eslintPluginNoSecrets,
@@ -51,7 +51,7 @@ export const CONFIGS = {
       ecmaVersion: "latest",
     },
     rules: {
-      "array-func/prefer-array-from": "off", // for modern browsers the spread operator, as preferred by unicorn, works fine.
+      "@stylistic/multiline-comment-style": "off", // Multiple bugs with this rule
       "max-params": ["warn", 4],
       "no-console": "warn",
       "no-debugger": "warn",
@@ -59,14 +59,6 @@ export const CONFIGS = {
       "security/detect-object-injection": "off",
       "simple-import-sort/exports": "warn",
       "simple-import-sort/imports": "warn",
-      "space-before-function-paren": "off",
-      "unicorn/filename-case": [
-        "error",
-        { case: "kebabCase", ignore: [".*.md"] },
-      ],
-      "unicorn/prefer-node-protocol": "off",
-      "unicorn/prevent-abbreviations": "off",
-      "unicorn/switch-case-braces": ["warn", "avoid"],
     },
   },
 };
@@ -92,9 +84,9 @@ export default defineConfig([
       "typings/",
     ],
   },
-  eslintPluginPrettierRecommended,
   eslintPluginSecurity.configs.recommended,
   eslintPluginStylistic.configs.all,
+  eslintPluginPrettierRecommended,
   {
     languageOptions: {
       globals: {
