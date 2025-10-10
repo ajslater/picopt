@@ -1,5 +1,5 @@
 # hadolint ignore=DL3007
-FROM nikolaik/python-nodejs:latest
+FROM nikolaik/python-nodejs:python3.13-nodejs24
 ENV DEBIAN_FRONTEND=noninteractive
 
 COPY debian.sources /etc/apt/sources.list.d/
@@ -7,11 +7,11 @@ COPY debian.sources /etc/apt/sources.list.d/
 RUN apt-get update \
   && apt-get upgrade -y \
   && apt-get install -y --no-install-recommends \
-    curl \
-    gifsicle \
-    shellcheck \
-    unrar \
-    webp \
+  curl \
+  gifsicle \
+  shellcheck \
+  unrar \
+  webp \
   && apt-get clean \
   && rm -rf /var/lib/apt/lists/*
 
