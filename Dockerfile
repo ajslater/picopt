@@ -1,4 +1,4 @@
-FROM ubuntu:oracular
+FROM ubuntu:questing
 
 ENV DEBIAN_FRONTEND noninteractive
 
@@ -6,11 +6,11 @@ ENV DEBIAN_FRONTEND noninteractive
 RUN apt-get update \
   && apt-get upgrade -y \
   && apt-get install -y --no-install-recommends \
-    gifsicle \
-    libjpeg-progs \
-    python3-pip \
-    unrar \
-    webp \
+  gifsicle \
+  libjpeg-progs \
+  python3-pip \
+  unrar \
+  webp \
   && apt-get clean \
   && rm -rf /var/lib/apt/lists/*
 

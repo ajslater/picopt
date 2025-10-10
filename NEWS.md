@@ -1,5 +1,10 @@
 # 📰 Picopt News
 
+## v5.2.1
+
+- The confuse library dependency doesn't support Python 3.14. So neither does
+  picopt :(
+
 ## v5.2.0
 
 - MozJpeg is now an internal python module. External mozjpeg & jpegtran support
