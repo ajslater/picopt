@@ -2,7 +2,7 @@
 FROM nikolaik/python-nodejs:latest
 ENV DEBIAN_FRONTEND=noninteractive
 
-# COPY debian.sources /etc/apt/sources.list.d/
+COPY debian.sources /etc/apt/sources.list.d/
 # hadolint ignore=DL3008
 RUN apt-get update \
   && apt-get upgrade -y \
