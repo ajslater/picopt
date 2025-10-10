@@ -25,48 +25,44 @@ FNS = {
     "test_txt.txt": (6, 6, ("txt", 6), ("txt", 6)),
     "test_webp_lossless.webp": (5334, 3870, ("webp", 3870), ("webp", 3870)),
     "test_webp_lossless_pre-optimized.webp": (
-        3798,
-        3798,
-        ("webp", 3798),
-        ("webp", 3798),
+        3794,
+        3794,
+        ("webp", 3794),
+        ("webp", 3794),
     ),
     "mri.tif": (230578, 230578, ("png", 129479), ("webp", 116954)),
     "test_webp_lossy.webp": (2764, 2764, ("webp", 2764), ("webp", 2764)),
     "test_png_16rgba.png": (3435, 2097, ("png", 2097), ("webp", 1142)),
     "test_jpg.jpg": (97373, 87913, ("jpg", 87913), ("jpg", 87913)),
+    "eight.tif": (59640, 59640, ("png", 30585), ("webp", 24988)),
+    "test_bmp.bmp": (141430, 141430, ("png", 67236), ("webp", 47384)),
+    "test_pnm.pnm": (27661, 27661, ("png", 15510), ("webp", 12728)),
+    "test_gif.gif": (138952, 138944, ("png", 112290), ("webp", 107972)),
 }
 if platform.system() == "Darwin":
     FNS.update(
         {
-            "test_animated_gif.gif": (16383, 16358, ("png", 24255), ("webp", 11856)),
-            "test_animated_png.png": (63435, 63058, ("png", 63058), ("webp", 53388)),
-            "test_gif.gif": (138952, 138944, ("png", 112290), ("webp", 108058)),
+            "test_animated_gif.gif": (16383, 16358, ("png", 16582), ("webp", 11856)),
+            "test_animated_png.png": (63435, 61393, ("png", 61393), ("webp", 53388)),
             "test_pre-optimized_png.png": (
                 256572,
                 256572,
                 ("png", 256572),
-                ("webp", 197088),
+                ("webp", 197084),
             ),
-            "eight.tif": (59640, 59640, ("png", 30585), ("webp", 25012)),
-            "test_bmp.bmp": (141430, 141430, ("png", 67236), ("webp", 47436)),
-            "test_pnm.pnm": (27661, 27661, ("png", 15510), ("webp", 12758)),
         }
     )
 else:
     FNS.update(
         {
-            "test_animated_gif.gif": (16383, 16358, ("png", 24255), ("webp", 11866)),
-            "test_animated_png.png": (63435, 63058, ("png", 63058), ("webp", 52864)),
-            "test_gif.gif": (138952, 138944, ("png", 112290), ("webp", 107924)),
+            "test_animated_gif.gif": (16383, 16358, ("png", 16582), ("webp", 11856)),
+            "test_animated_png.png": (63435, 61393, ("png", 61393), ("webp", 53388)),
             "test_pre-optimized_png.png": (
                 256572,
                 256572,
                 ("png", 256572),
                 ("webp", 197726),
             ),
-            "eight.tif": (59640, 59640, ("png", 30585), ("webp", 24974)),
-            "test_bmp.bmp": (141430, 141430, ("png", 67236), ("webp", 47524)),
-            "test_pnm.pnm": (27661, 27661, ("png", 15510), ("webp", 12808)),
         }
     )
 
@@ -75,10 +71,10 @@ NEAR_LOSSLESS_FNS = MappingProxyType(
         "test_png_16rgba.png": (3435, 2097, ("png", 2097), ("webp", 728)),
         "test_webp_lossless.webp": (5334, 3870, ("webp", 3870), ("webp", 2044)),
         "test_webp_lossless_pre-optimized.webp": (
-            3798,
-            3798,
-            ("webp", 3798),
-            ("webp", 3798),
+            3794,
+            3794,
+            ("webp", 3794),
+            ("webp", 3794),
         ),
     }
 )
