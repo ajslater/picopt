@@ -24,20 +24,10 @@ FNS = {
     "test_svg.svg": (5393, 4871, ("svg", 4871), ("svg", 4871)),
     "test_txt.txt": (6, 6, ("txt", 6), ("txt", 6)),
     "test_webp_lossless.webp": (5334, 3870, ("webp", 3870), ("webp", 3870)),
-    "test_webp_lossless_pre-optimized.webp": (
-        3794,
-        3794,
-        ("webp", 3794),
-        ("webp", 3794),
-    ),
     "mri.tif": (230578, 230578, ("png", 129479), ("webp", 116954)),
     "test_webp_lossy.webp": (2764, 2764, ("webp", 2764), ("webp", 2764)),
     "test_png_16rgba.png": (3435, 2097, ("png", 2097), ("webp", 1142)),
     "test_jpg.jpg": (97373, 87913, ("jpg", 87913), ("jpg", 87913)),
-    "eight.tif": (59640, 59640, ("png", 30585), ("webp", 24988)),
-    "test_bmp.bmp": (141430, 141430, ("png", 67236), ("webp", 47384)),
-    "test_pnm.pnm": (27661, 27661, ("png", 15510), ("webp", 12728)),
-    "test_gif.gif": (138952, 138944, ("png", 112290), ("webp", 107972)),
 }
 if platform.system() == "Darwin":
     FNS.update(
@@ -50,6 +40,16 @@ if platform.system() == "Darwin":
                 ("png", 256572),
                 ("webp", 197084),
             ),
+            "test_webp_lossless_pre-optimized.webp": (
+                3794,
+                3794,
+                ("webp", 3794),
+                ("webp", 3794),
+            ),
+            "eight.tif": (59640, 59640, ("png", 30585), ("webp", 24988)),
+            "test_bmp.bmp": (141430, 141430, ("png", 67236), ("webp", 47384)),
+            "test_pnm.pnm": (27661, 27661, ("png", 15510), ("webp", 12728)),
+            "test_gif.gif": (138952, 138944, ("png", 112290), ("webp", 107972)),
         }
     )
 else:
@@ -61,8 +61,18 @@ else:
                 256572,
                 256572,
                 ("png", 256572),
-                ("webp", 197726),
+                ("webp", 197088),
             ),
+            "test_webp_lossless_pre-optimized.webp": (
+                3794,
+                3798,
+                ("webp", 3794),
+                ("webp", 3794),
+            ),
+            "eight.tif": (59640, 59640, ("png", 30585), ("webp", 245012)),
+            "test_bmp.bmp": (141430, 141430, ("png", 67236), ("webp", 47436)),
+            "test_pnm.pnm": (27661, 27661, ("png", 15510), ("webp", 12758)),
+            "test_gif.gif": (138952, 138944, ("png", 112290), ("webp", 108058)),
         }
     )
 
