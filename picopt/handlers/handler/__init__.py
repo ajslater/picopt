@@ -65,7 +65,7 @@ class Handler(ABC, HandlerCleanup):
         *,
         input_path_tmp: bool,
         output_path_tmp: bool,
-    ) -> BinaryIO:
+    ) -> BytesIO:
         """Run EXTERNAL program that lacks stdin/stdout streaming."""
         if input_path_tmp and input_path:
             with input_path.open("wb") as input_tmp_file, input_buffer:
@@ -83,12 +83,11 @@ class Handler(ABC, HandlerCleanup):
         if input_path_tmp and input_path:
             input_path.unlink(missing_ok=True)
 
+        output_buffer = BytesIO(output_path.read_bytes())
         if output_path_tmp:
-            output_buffer = BytesIO(output_path.read_bytes())
             output_path.unlink(missing_ok=True)
         else:
             self.working_path: Path = output_path
-            output_buffer = output_path.open("rb")
         return output_buffer
 
     @abstractmethod

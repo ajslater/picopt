@@ -1,4 +1,4 @@
-# picopt
+# Picopt
 
 A multi-format, recursive, multiprocessor aware, command line, lossless image
 optimizer utility that can use external tools for even better optimizing.
@@ -6,7 +6,16 @@ optimizer utility that can use external tools for even better optimizing.
 Picopt will optionally drop hidden timestamps at the root of your image
 directories to avoid reoptimizing images picopt has already optimized.
 
-## 💭 <a name="philosophy">Conversion Philosophy</a>
+## 📰 News
+
+Picopt has a [NEWS file](NEWS.md) for changes that might be of interest to
+users.
+
+## 🕸️ HTML Docs
+
+[HTML formatted docs are available here](https://picopt.readthedocs.io)
+
+## 💭 Conversion Philosophy
 
 ### Warning
 
@@ -45,7 +54,7 @@ substitute.
 By default, picopt does not convert images between formats. You must turn on
 conversion to PNG or WebP explicitly.
 
-## 🖼️ <a name="formats">Formats</a>
+## 🖼️ Formats
 
 - By default picopt will optimize GIF, JPEG, PNG, and WEBP images.
 - Picopt can optionally optimize SVG images, ZIP, ePub, and CBZ containers.
@@ -141,7 +150,7 @@ Picopt uncompresses, optimizes and rezips
 aware that CBR rar archives may only be rezipped into CBZs instead of CBR. Comic
 book archive optimization is not turned on by default to prevent surprises.
 
-## 📦 <a name="install">Install</a>
+## 📦 Install
 
 ### System Dependencies
 
@@ -254,7 +263,7 @@ Or you can install svgo with npm:
 npm install -G svgo
 ```
 
-## ⌨️ <a name="usage">Usage Examples</a>
+## ⌨️ Use Examples
 
 Optimize all JPEG files in a directory:
 
@@ -341,12 +350,12 @@ have to remember the last time I did this:
 picopt -rSt -D '2013 June 1 14:00' 'Pictures/iPhoto Library'
 ```
 
-## 📦 <a name="package">Packages</a>
+## 📦 Packages
 
 - [PyPI](https://pypi.python.org/pypi/picopt/)
 - [Arch Linux](https://aur.archlinux.org/packages/picopt/)
 
-## 👀 <a name="alternatives">Alternatives</a>
+## 👀 Alternatives
 
 - [imagemin](https://github.com/imagemin/imagemin-cli) looks to be an all in one
   cli and gui solution with bundled libraries, so no awkward dependencies.
@@ -354,3 +363,7 @@ picopt -rSt -D '2013 June 1 14:00' 'Pictures/iPhoto Library'
 - [Imageoptim](http://imageoptim.com/) is an all-in-one OS X GUI image
   optimizer. Imageoptim command line usage is possible with
   [an external program](https://code.google.com/p/imageoptim/issues/detail?can=2&start=0&num=100&q=&colspec=ID%20Type%20Status%20Priority%20Milestone%20Owner%20Summary%20Stars&groupby=&sort=&id=39).
+
+## 🛠️ Development
+
+Picopt code is hosted at [Github](https://github.com/ajslater/picopt)
