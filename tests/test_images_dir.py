@@ -8,7 +8,7 @@ import pytest
 
 from picopt import PROGRAM_NAME, cli
 from tests import IMAGES_DIR, get_test_dir
-from tests.integration.base import BaseTest
+from tests.base import BaseTest
 
 __all__ = ()
 FNS = {
