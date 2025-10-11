@@ -66,10 +66,10 @@ else:
             "test_webp_lossless_pre-optimized.webp": (
                 3794,
                 3798,
-                ("webp", 3794),
-                ("webp", 3794),
+                ("webp", 3798),
+                ("webp", 3798),
             ),
-            "eight.tif": (59640, 59640, ("png", 30585), ("webp", 245012)),
+            "eight.tif": (59640, 59640, ("png", 30585), ("webp", 25012)),
             "test_bmp.bmp": (141430, 141430, ("png", 67236), ("webp", 47436)),
             "test_pnm.pnm": (27661, 27661, ("png", 15510), ("webp", 12758)),
             "test_gif.gif": (138952, 138944, ("png", 112290), ("webp", 108058)),
