@@ -86,9 +86,9 @@ class PicoptConfig(ConfigHandlers):
             return
 
         try:
-            timestamp = float(after)  # pyright: ignore[reportArgumentType]
+            timestamp = float(after)
         except ValueError:
-            after_dt = parse(after)  # pyright: ignore[reportArgumentType]
+            after_dt = parse(after)
             timestamp = time.mktime(after_dt.timetuple())
 
         config["after"].set(timestamp)
@@ -133,10 +133,10 @@ class PicoptConfig(ConfigHandlers):
 
     def _set_ignore(self, config: Subview) -> None:
         """Compute ignore regexp."""
-        ignore_list: list = config["ignore"].get(list)  # pyright: ignore[reportAssignmentType]
+        ignore_list: list = config["ignore"].get(list)
         ignore_list = sorted(frozenset(ignore_list))
-        ignore_defaults: bool = config["ignore_defaults"].get(bool)  # pyright: ignore[reportAssignmentType]
-        verbose: int = config["verbose"].get(int)  # pyright: ignore[reportAssignmentType]
+        ignore_defaults: bool = config["ignore_defaults"].get(bool)
+        verbose: int = config["verbose"].get(int)
         ignore_regexp, ignore_single_stars = self._get_ignore_regexp(
             ignore_list, verbose, ignore_defaults=ignore_defaults
         )
@@ -157,11 +157,11 @@ class PicoptConfig(ConfigHandlers):
             and not config["list_only"].get(bool)
         )
         config["timestamps"].set(timestamps)
-        verbose: int = config["verbose"].get(int)  # pyright: ignore[reportAssignmentType]
+        verbose: int = config["verbose"].get(int)
         if verbose > 1:
             if timestamps:
                 roots = set()
-                paths: Iterable = config["paths"].get(list)  # pyright: ignore[reportAssignmentType]
+                paths: Iterable = config["paths"].get(list)
                 for path_str in paths:
                     path = Path(path_str)
                     if path.is_dir():

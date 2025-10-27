@@ -24,7 +24,7 @@ FNS = {
     "test_svg.svg": (5393, 4871, ("svg", 4871), ("svg", 4871)),
     "test_txt.txt": (6, 6, ("txt", 6), ("txt", 6)),
     "test_webp_lossless.webp": (5334, 3870, ("webp", 3870), ("webp", 3870)),
-    "mri.tif": (230578, 230578, ("png", 129479), ("webp", 116954)),
+    "mri.tif": (230578, 230578, ("png", 129479), ("webp", 114710)),
     "test_webp_lossy.webp": (2764, 2764, ("webp", 2764), ("webp", 2764)),
     "test_png_16rgba.png": (3435, 2097, ("png", 2097), ("webp", 1142)),
     "test_jpg.jpg": (97373, 87913, ("jpg", 87913), ("jpg", 87913)),

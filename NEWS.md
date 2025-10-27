@@ -1,5 +1,9 @@
 # 📰 Picopt News
 
+## v5.2.2
+
+- Support Python 3.14
+
 ## v5.2.1
 
 - The confuse library dependency doesn't support Python 3.14. So neither does

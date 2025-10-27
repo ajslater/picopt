@@ -172,7 +172,7 @@ class ConfigHandlers(ConfigCWebP):
     def _get_config_set(config: Subview, *keys: str) -> frozenset[str]:
         val_list = []
         for key in keys:
-            val_list += config[key].get(list) if key in config else []  # pyright: ignore[reportOperatorIssue]
+            val_list += config[key].get(list) if key in config else []
         return frozenset(val.upper() for val in val_list)
 
     @staticmethod
@@ -278,7 +278,7 @@ class ConfigHandlers(ConfigCWebP):
 
         handled_format_strs = set()
         convert_format_strs = {}
-        disabled_programs_list: list | None = config["disable_programs"].get(list)  # pyright: ignore[reportAssignmentType]
+        disabled_programs_list: list | None = config["disable_programs"].get(list)
         disabled_programs = (
             frozenset(disabled_programs_list) if disabled_programs_list else frozenset()
         )
@@ -311,7 +311,7 @@ class ConfigHandlers(ConfigCWebP):
         config["computed"]["convert_handlers"].set(convert_handlers)
         config["computed"]["handler_stages"].set(handler_stages)
         config["computed"]["is_modern_cwebp"].set(is_modern_cwebp)
-        verbose: int = config["verbose"].get(int)  # pyright: ignore[reportAssignmentType]
+        verbose: int = config["verbose"].get(int)
         self._print_formats_config(
             verbose,
             handled_format_strs,
