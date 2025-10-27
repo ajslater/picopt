@@ -60,7 +60,7 @@
     "eslint-plugin-sonarjs": "^3.0.1",
     "eslint-plugin-switch-case": "^3.0.1",
     "eslint-plugin-toml": "^0.12.0",
-    "eslint-plugin-unicorn": "^61.0.2",
+    "eslint-plugin-unicorn": "^62.0.0",
     "eslint-plugin-yml": "^1.16.0",
     "prettier": "^3.4.2",
     "prettier-plugin-packagejson": "^2.5.6",

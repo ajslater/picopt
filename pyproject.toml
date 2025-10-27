@@ -12,7 +12,7 @@ classifiers = [
   "Typing :: Typed",
 ]
 dependencies = [
-  "confuse~=2.0",
+  "confuse~=2.1",
   "defusedxml~=0.7",
   "filetype~=1.2",
   "humanize~=4.12",
@@ -25,14 +25,14 @@ dependencies = [
   "ruamel-yaml~=0.18",
   "treestamps~=2.2",
   "typing-extensions~=4.13",
-  "Pillow>=9.5",
+  "Pillow>=12.0",
 ]
 description = "A multi format lossless image optimizer that uses external tools"
 keywords = ["image", "png", "jpg", "cbz", "cbr"]
 license = { text = "GPL-3.0-only" }
 name = "picopt"
 readme = "README.md"
-requires-python = "<3.14,>=3.10"
+requires-python = ">=3.10"
 version = "5.2.1"
 
 [project.urls]
