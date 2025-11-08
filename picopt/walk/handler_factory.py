@@ -9,7 +9,6 @@ from picopt.formats import FileFormat
 from picopt.handlers.container import ContainerHandler, PackingContainerHandler
 from picopt.handlers.container.archive import ArchiveHandler, PackingArchiveHandler
 from picopt.handlers.handler import Handler
-from picopt.handlers.mixins import PrepareInfoMixin
 from picopt.path import PathInfo
 from picopt.walk.detect_format import DetectFormat
 
@@ -111,8 +110,7 @@ class HandlerFactory(DetectFormat):
         handler = None
         if handler_cls and file_format:
             kwargs = {}
-            if issubclass(handler_cls, PrepareInfoMixin):
-                kwargs["info"] = info
+            kwargs["info"] = info
             if issubclass(handler_cls, ContainerHandler):
                 repack_handler_class = self._get_repack_handler_class(
                     path_info, file_format

@@ -4,7 +4,7 @@ from collections.abc import Mapping
 from contextlib import suppress
 from typing import Any, BinaryIO
 
-from PIL import Image, UnidentifiedImageError
+from PIL import Image, ImageSequence, UnidentifiedImageError
 from PIL.TiffImagePlugin import TiffImageFile
 
 from picopt.formats import (
@@ -79,8 +79,19 @@ def _extract_image_info(
                 info: dict[str, Any] = image.info if keep_metadata else {}  # pyright: ignore[reportAssignmentType]
                 animated = getattr(image, "is_animated", False)
                 info["animated"] = animated
-                if animated and (n_frames := getattr(image, "n_frames", None)):
+                if animated and (n_frames := getattr(image, "n_frames", 0)):
                     info["n_frames"] = n_frames
+
+                    # Durations for webp are frequently just not found by PIL.
+                    durations = {}
+                    for frame_index, frame in enumerate(
+                        ImageSequence.Iterator(image), start=1
+                    ):
+                        duration = frame.info.get("duration", None)
+                        if duration is not None:
+                            durations[frame_index] = duration
+                    if durations:
+                        info["durations"] = durations
                 with suppress(AttributeError):
                     info["mpinfo"] = image.mpinfo  # pyright: ignore[reportAttributeAccessIssue]
         image.close()  # for animated images
