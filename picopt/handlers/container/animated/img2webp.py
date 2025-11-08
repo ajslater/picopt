@@ -12,13 +12,13 @@ from PIL.WebPImagePlugin import WebPImageFile
 from typing_extensions import override
 
 from picopt.formats import MODERN_CWEBP_FORMATS, FileFormat
-from picopt.handlers.container.animated import ImageAnimated
+from picopt.handlers.container.animated.webpbase import WebpAnimatedBase
 from picopt.handlers.image.png import PngAnimated
 from picopt.handlers.image.webp import WebPBase
 from picopt.path import PathInfo
 
 
-class Img2WebPAnimatedBase(ImageAnimated, ABC):
+class Img2WebPAnimatedBase(WebpAnimatedBase, ABC):
     """Animated WebP container."""
 
     OUTPUT_FORMAT_STR: str = WebPBase.OUTPUT_FORMAT_STR
@@ -36,7 +36,6 @@ class Img2WebPAnimatedBase(ImageAnimated, ABC):
         # advanced
         "-sharp_yuv",
     )
-    WORKING_ID: str = PROGRAMS[0][0]
 
     def __init__(self, config: AttrDict, *args, **kwargs):
         """Initialize extra input formats."""
@@ -76,7 +75,8 @@ class Img2WebPAnimatedBase(ImageAnimated, ABC):
         return buffer
 
     def _get_output_path(self):
-        output_path = self.get_working_path(f".{self.WORKING_ID}-output")
+        working_id = self.get_working_id()
+        output_path = self.get_working_path(f".{working_id}-output")
         output_path_tmp = bool(self.path_info.path)
         return output_path, output_path_tmp
 

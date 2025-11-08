@@ -18,6 +18,7 @@ from picopt.formats import (
     FileFormat,
 )
 from picopt.handlers.container.animated.webp import PILPackWebPAnimatedLossless
+from picopt.handlers.container.animated.webpmux import WebPMuxAnimatedLossless
 from picopt.handlers.container.archive.rar import (
     Cbr,
     Rar,
@@ -73,6 +74,7 @@ _LOSSLESS_CONVERTIBLE_ANIMATED_FORMAT_HANDLERS = MappingProxyType(
         ffmt: FileFormatHandlers(
             convert=(
                 *IMG2WEBP_ANIMATED_LOSSLESS_HANDLERS,
+                WebPMuxAnimatedLossless,
                 PILPackWebPAnimatedLossless,
                 PngAnimated,
             )
@@ -106,8 +108,12 @@ _FORMAT_HANDLERS = MappingProxyType(
             native=(PngAnimated,),
         ),
         WebPLossless.OUTPUT_FILE_FORMAT: FileFormatHandlers(native=(WebPLossless,)),
-        PILPackWebPAnimatedLossless.OUTPUT_FILE_FORMAT: FileFormatHandlers(
-            native=(*IMG2WEBP_ANIMATED_LOSSLESS_HANDLERS, PILPackWebPAnimatedLossless),
+        WebPMuxAnimatedLossless.OUTPUT_FILE_FORMAT: FileFormatHandlers(
+            native=(
+                WebPMuxAnimatedLossless,
+                *IMG2WEBP_ANIMATED_LOSSLESS_HANDLERS,
+                PILPackWebPAnimatedLossless,
+            )
         ),
         Svg.OUTPUT_FILE_FORMAT: FileFormatHandlers(native=(Svg,)),
         # Archives
