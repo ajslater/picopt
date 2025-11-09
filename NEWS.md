@@ -1,6 +1,6 @@
 # 📰 Picopt News
 
-## v5.3
+## v5.3.0
 
 - Use webpmux if available to unpack and repack animated webp images.
 - Fix Animated WebP images:
