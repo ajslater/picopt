@@ -8,7 +8,6 @@ from types import MappingProxyType
 
 from confuse import Subview
 
-from picopt.config.consts import IMG2WEBP_ANIMATED_LOSSLESS_HANDLERS
 from picopt.config.cwebp import ConfigCWebP
 from picopt.formats import (
     CONVERTIBLE_PIL_ANIMATED_FILE_FORMATS,
@@ -17,6 +16,7 @@ from picopt.formats import (
     MPO_FILE_FORMAT,
     FileFormat,
 )
+from picopt.handlers.container.animated.img2webp import Img2WebPAnimatedLossless
 from picopt.handlers.container.animated.webp import PILPackWebPAnimatedLossless
 from picopt.handlers.container.animated.webpmux import WebPMuxAnimatedLossless
 from picopt.handlers.container.archive.rar import (
@@ -73,7 +73,7 @@ _LOSSLESS_CONVERTIBLE_ANIMATED_FORMAT_HANDLERS = MappingProxyType(
     {
         ffmt: FileFormatHandlers(
             convert=(
-                *IMG2WEBP_ANIMATED_LOSSLESS_HANDLERS,
+                Img2WebPAnimatedLossless,
                 WebPMuxAnimatedLossless,
                 PILPackWebPAnimatedLossless,
                 PngAnimated,
@@ -93,6 +93,7 @@ _FORMAT_HANDLERS = MappingProxyType(
         GifAnimated.OUTPUT_FILE_FORMAT: FileFormatHandlers(
             convert=(
                 Gif2WebPAnimatedLossless,
+                Img2WebPAnimatedLossless,
                 PILPackWebPAnimatedLossless,
                 PngAnimated,
             ),
@@ -104,14 +105,14 @@ _FORMAT_HANDLERS = MappingProxyType(
             convert=(WebPLossless,), native=(Png,)
         ),
         PngAnimated.OUTPUT_FILE_FORMAT: FileFormatHandlers(
-            convert=(*IMG2WEBP_ANIMATED_LOSSLESS_HANDLERS, PILPackWebPAnimatedLossless),
+            convert=(Img2WebPAnimatedLossless, PILPackWebPAnimatedLossless),
             native=(PngAnimated,),
         ),
         WebPLossless.OUTPUT_FILE_FORMAT: FileFormatHandlers(native=(WebPLossless,)),
         WebPMuxAnimatedLossless.OUTPUT_FILE_FORMAT: FileFormatHandlers(
             native=(
                 WebPMuxAnimatedLossless,
-                *IMG2WEBP_ANIMATED_LOSSLESS_HANDLERS,
+                Img2WebPAnimatedLossless,
                 PILPackWebPAnimatedLossless,
             )
         ),

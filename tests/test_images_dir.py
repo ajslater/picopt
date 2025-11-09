@@ -12,8 +12,9 @@ from tests.base import BaseTest
 
 __all__ = ()
 FNS = {
+    # orig, no convert, convert, webp
     "07themecamplist.pdf": (93676, 93676, ("pdf", 93676), ("pdf", 93676)),
-    "test_animated_webp.webp": (13610, 12174, ("webp", 12174), ("webp", 12174)),
+    "test_animated_webp.webp": (11856, 11856, ("webp", 11856), ("webp", 11856)),
     "test_png.png": (7967, 4150, ("png", 4150), ("webp", 3870)),
     "test_pre-optimized_jpg.jpg": (
         22664,
@@ -33,7 +34,7 @@ if platform.system() == "Darwin":
     FNS.update(
         {
             "test_animated_gif.gif": (16383, 16358, ("png", 16582), ("webp", 11856)),
-            "test_animated_png.png": (63435, 61393, ("png", 61393), ("webp", 53388)),
+            "test_animated_png.png": (63435, 61393, ("png", 61393), ("webp", 52972)),
             "test_pre-optimized_png.png": (
                 256572,
                 256572,
