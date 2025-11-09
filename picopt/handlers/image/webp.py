@@ -104,8 +104,8 @@ class WebPLossless(WebPBase):
     INPUT_FILE_FORMATS = frozenset({OUTPUT_FILE_FORMAT, Png.OUTPUT_FILE_FORMAT})
     WEBP_ARGS_PREFIX: tuple[str, ...] = (
         # https://groups.google.com/a/webmproject.org/g/webp-discuss/c/0GmxDmlexek
-        "-lossless",
         *WebPBase.WEBP_ARGS_PREFIX,
+        "-lossless",
         # advanced
         "-sharp_yuv",
         # additional
