@@ -1,9 +1,12 @@
 """WebP format."""
 
+import os
 from abc import ABC
 from io import BytesIO
+from pathlib import Path
+from tempfile import mkstemp
 from types import MappingProxyType
-from typing import TYPE_CHECKING, BinaryIO
+from typing import BinaryIO
 
 from confuse import AttrDict
 from PIL.WebPImagePlugin import WebPImageFile
@@ -13,9 +16,6 @@ from picopt.formats import MODERN_CWEBP_FORMATS, FileFormat
 from picopt.handlers.image import ImageHandler
 from picopt.handlers.image.gif import GifAnimated
 from picopt.handlers.image.png import Png
-
-if TYPE_CHECKING:
-    from pathlib import Path
 
 
 class WebPBase(ImageHandler, ABC):
@@ -56,9 +56,13 @@ class WebPBase(ImageHandler, ABC):
 
     def _get_input_path(self, input_buffer: BinaryIO):
         input_path_tmp = isinstance(input_buffer, BytesIO)
-        input_path: Path | None = (
-            self.get_working_path() if input_path_tmp else self.path_info.path
-        )
+        if input_path_tmp:
+            wp = self.get_working_path()
+            fp, input_path = mkstemp(prefix=wp.name + ".", suffix=self.output_suffix)
+            os.close(fp)
+            input_path = Path(input_path)
+        else:
+            input_path = self.path_info.path
         if not input_path:
             reason = "No input path for cwebp"
             raise ValueError(reason)

@@ -7,7 +7,8 @@
     - Sometimes being repacked in reverse frame order.
     - Sometimes degrading quality.
     - Sometimes dropping frames.
-- Use python temporary directory for unpacking animated webp images.
+- Use secure python temporary directory for unpacking animated webp images and
+  chaining webp conversion input.
 - Use img2webp if available for animated conversion to webp from png.
 - Use memory buffers instead of disk for webp output.
 
