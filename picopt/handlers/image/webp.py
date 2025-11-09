@@ -31,10 +31,11 @@ class WebPBase(ImageHandler, ABC):
         "100",
         "-m",
         "6",
+        "-o",
+        "-",
         # logging,
         "-quiet",
     )
-    WORKING_ID: str = PROGRAMS[0][0]
     ADD_MODERN_CWEBP_FORMATS: bool = True
 
     def __init__(self, config: AttrDict, *args, **kwargs):
@@ -56,19 +57,12 @@ class WebPBase(ImageHandler, ABC):
     def _get_input_path(self, input_buffer: BinaryIO):
         input_path_tmp = isinstance(input_buffer, BytesIO)
         input_path: Path | None = (
-            self.get_working_path(f".{self.WORKING_ID}-input")
-            if input_path_tmp
-            else self.path_info.path
+            self.get_working_path() if input_path_tmp else self.path_info.path
         )
         if not input_path:
             reason = "No input path for cwebp"
             raise ValueError(reason)
         return input_path, input_path_tmp
-
-    def _get_output_path(self):
-        output_path = self.get_working_path(f".{self.WORKING_ID}-output")
-        output_path_tmp = bool(self.path_info.path)
-        return output_path, output_path_tmp
 
     def _cwebp(
         self,
@@ -80,18 +74,15 @@ class WebPBase(ImageHandler, ABC):
         args = [*exec_args]
         self._add_webp_args(args, opts)
         input_path, input_path_tmp = self._get_input_path(input_buffer)
-        output_path, output_path_tmp = self._get_output_path()
 
-        args += [str(input_path), "-o", str(output_path)]
+        args += [str(input_path)]
         # If python cwebp gains enough options to beat this or
-        #     or cwebp gains stdin or stdout powers we can be rid of this
+        #     or cwebp gains stdin powers we can be rid of this
         return self.run_ext_fs(
             tuple(args),
             input_buffer,
             input_path,
-            output_path,
             input_path_tmp=input_path_tmp,
-            output_path_tmp=output_path_tmp,
         )
 
     def cwebp(

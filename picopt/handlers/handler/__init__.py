@@ -27,17 +27,14 @@ class Handler(ABC, HandlerCleanup):
                 raise ValueError(reason)
 
         input_buffer.seek(0)
-        result = subprocess.run(  # noqa: S603
-            args,
-            check=True,
-            input=input_buffer.read(),
-            stdout=subprocess.PIPE,
+        proc = subprocess.run(  # noqa: S603
+            args, check=True, input=input_buffer.read(), capture_output=True
         )
-        return BytesIO(result.stdout)
+        return BytesIO(proc.stdout)
 
-    def get_working_path(self, identifier_suffix: str) -> Path:
+    def get_working_path(self) -> Path:
         """Return a working path with a custom suffix."""
-        # Only used by cwebp because it needs to use disk
+        # Only used by webp handlers because they need disk file inputs
         if container_parents := self.path_info.container_parents:
             # The first entry is a real file on disk.
             path_head = container_parents[0]
@@ -49,10 +46,12 @@ class Handler(ABC, HandlerCleanup):
         else:
             path = self.original_path
 
-        suffixes = [*self.original_path.suffixes, self.WORKING_SUFFIX]
-        if identifier_suffix:
-            suffixes.append(identifier_suffix)
-        suffixes.append(self.output_suffix)
+        suffixes = (
+            *self.original_path.suffixes,
+            self.WORKING_SUFFIX,
+            "." + self.PROGRAMS[0][0],
+            self.output_suffix,
+        )
         suffix = "".join(suffixes)
         return path.with_suffix(suffix)
 
@@ -61,10 +60,10 @@ class Handler(ABC, HandlerCleanup):
         args: tuple[str, ...],
         input_buffer: BinaryIO,
         input_path: Path | None,
-        output_path: Path,
         *,
+        output_path: Path | None = None,  # unused by webp
         input_path_tmp: bool,
-        output_path_tmp: bool,
+        output_path_tmp: bool = False,  # unused by webp
     ) -> BytesIO:
         """Run EXTERNAL program that lacks stdin/stdout streaming."""
         if input_path_tmp and input_path:
@@ -72,22 +71,20 @@ class Handler(ABC, HandlerCleanup):
                 input_buffer.seek(0)
                 input_tmp_file.write(input_buffer.read())
 
-        subprocess.run(  # noqa: S603
+        proc = subprocess.run(  # noqa: S603
             args,  # type: ignore[reportArgumentType]
             check=True,
-            text=True,
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.PIPE,
+            capture_output=True,
         )
 
         if input_path_tmp and input_path:
             input_path.unlink(missing_ok=True)
 
-        output_buffer = BytesIO(output_path.read_bytes())
-        if output_path_tmp:
+        if output_path_tmp and output_path:
+            output_buffer = BytesIO(output_path.read_bytes())
             output_path.unlink(missing_ok=True)
         else:
-            self.working_path: Path = output_path
+            output_buffer = BytesIO(proc.stdout)
         return output_buffer
 
     @abstractmethod

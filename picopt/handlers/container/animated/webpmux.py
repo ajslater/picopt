@@ -55,21 +55,16 @@ class WebPMuxAnimatedBase(WebpAnimatedBase):
                 result[i] = 100
         return result
 
-    def get_frame_path(self, index: int):
-        """Get the frame temporary file path."""
-        frame_num = str(index).zfill(self.frame_index_width)
-        return self.working_tmp_dir / f"frame_{frame_num}.webp"
-
     @override
     def walk(self) -> Generator[PathInfo]:
         """Unpack animated image frames with webpmux."""
         self._printer.container_unpacking(self.path_info)
+        self.set_working_dir()
+        self.set_frame_index_width()
         frame_index = 1
         extracted_frames: list[str] = []
-        self.set_working_dir(self.get_working_id())
         container_parents = self.path_info.container_path_history()
         n_frames = self.info["n_frames"]
-        self.frame_index_width = len(str(n_frames))
         for frame_index in range(1, n_frames + 1):
             frame_path = self.get_frame_path(frame_index)
             try:
