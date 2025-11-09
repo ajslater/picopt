@@ -138,19 +138,21 @@ omit = [
   "vulture_ignorelist.py",
 ]
 
-[tool.pytest.ini_options]
-addopts = """
-  --junitxml=test-results/pytest/junit.xml
-  -ra
-  --strict-config
-  --strict-markers
-  --cov
-  --cov-append
-  --cov-report=html
-  --cov-report=term
-"""
+[tool.pytest]
+minversion = "9.0"
+addopts = [
+  "--junitxml=test-results/pytest/junit.xml",
+  "-ra",
+  "--strict-config",
+  "--strict-markers",
+  "--cov",
+  "--cov-append",
+  "--cov-report=html",
+  "--cov-report=term",
+]
 junit_family = "xunit2"
-testpaths = "tests"
+strict = true
+testpaths = ["tests"]
 
 [tool.radon]
 exclude = "*~,.*,.*/*,__pycache__/*,dist/*,node_modules/*,test-results/*,typings/*"
