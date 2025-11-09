@@ -82,7 +82,7 @@ class TestContainersDir(BaseTest):
             print(f"{path_size=} != {size=}")
         assert cond
 
-    def test_containers_no_convert(self, fn: str) -> None:
+    def test_containers_convert_webp_no_convert_container(self, fn: str) -> None:
         """Test containers no convert."""
         path = TMP_ROOT / fn
         args = (*NO_CONVERT_ARGS, str(path))
@@ -100,7 +100,7 @@ class TestContainersDir(BaseTest):
         else:
             assert path_size == size
 
-    def test_containers_convert_to_zip(self, fn: str) -> None:
+    def test_containers_only_convert_to_zip(self, fn: str) -> None:
         """Test containers convert to zip."""
         sizes = FNS[fn]
         path = TMP_ROOT / fn
