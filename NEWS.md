@@ -1,5 +1,14 @@
 # 📰 Picopt News
 
+## v5.3
+
+- Use webpmux if available to unpack and repack animated webp images.
+- Fix Animated WebP images:
+    - Sometimes being repacked in reverse frame order.
+    - Sometimes degrading quality.
+    - Sometimes dropping frames.
+- Use python temporary directory for unpacking animated webp images.
+
 ## v5.2.2
 
 - Support Python 3.14
