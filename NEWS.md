@@ -8,6 +8,7 @@
     - Sometimes degrading quality.
     - Sometimes dropping frames.
 - Use python temporary directory for unpacking animated webp images.
+- Use img2webp if available for animated conversion to webp from png.
 
 ## v5.2.2
 
