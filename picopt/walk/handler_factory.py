@@ -57,7 +57,7 @@ class HandlerFactory(DetectFormat):
         """Get the repack handler class or none if not configured."""
         repack_handler_class: type[PackingContainerHandler] | None = None
         try:
-            repack_handler_class = (  # pyright: ignore[reportAssignmentType]
+            repack_handler_class = (  # pyright: ignore[reportAssignmentType], # ty: ignore[invalid-assignment]
                 self._create_handler_get_handler_class(
                     file_format,
                     convert=path_info.convert,

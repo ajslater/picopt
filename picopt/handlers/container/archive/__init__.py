@@ -41,7 +41,7 @@ class ArchiveHandler(NonPILIdentifierMixin, ContainerHandler, ABC):
 
     @classmethod
     @abstractmethod
-    def _is_archive(cls, _path: Path | BytesIO) -> bool:
+    def _is_archive(cls, path: Path | BytesIO) -> bool:
         raise NotImplementedError
 
     @staticmethod
