@@ -113,7 +113,7 @@ class ArchiveHandler(NonPILIdentifierMixin, ContainerHandler, ABC):
                 non_treestamp_entries.append(archiveinfo)
                 continue
             yaml_str = self._archive_readfile(archive, archiveinfo)
-            archive_sub_path = self.path_info.archive_psuedo_path() / path.parent
+            archive_sub_path = self.path_info.archive_pseudo_path() / path.parent
             self._timestamps.loads(archive_sub_path, yaml_str)
             if self._skipper:
                 self._printer.consumed_timestamp(path)

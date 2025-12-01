@@ -132,7 +132,7 @@ class PathInfo:
         self._mtime: float | None = None
         self._name: str | None = None
         self._archive_pretty_name: str | None = None
-        self._archive_psuedo_path: Path | None = None
+        self._archive_pseudo_path: Path | None = None
         self._suffix: str | None = None
         self._container_path_history: tuple[str, ...] | None = None
         self.original_name: str = self.name()
@@ -231,7 +231,7 @@ class PathInfo:
 
         # Clear caches that use _name
         self._name = self._suffix = self._container_path_history = None
-        self._archive_pretty_name = self._archive_psuedo_path = None
+        self._archive_pretty_name = self._archive_pseudo_path = None
 
     def container_path_history(self) -> tuple[str, ...]:
         """Collect container parents plus this path's name."""
@@ -247,14 +247,14 @@ class PathInfo:
             )
         return self._archive_pretty_name
 
-    def archive_psuedo_path(self) -> Path:
+    def archive_pseudo_path(self) -> Path:
         """Return a psudeo path of container history for skipping inside archives."""
-        if self._archive_psuedo_path is None:
+        if self._archive_pseudo_path is None:
             path = Path()
             for child in self.container_path_history():
                 path = path / child
-            self._archive_psuedo_path = path
-        return self._archive_psuedo_path
+            self._archive_pseudo_path = path
+        return self._archive_pseudo_path
 
     def suffix(self) -> str:
         """Return first suffix or tar+ suffix."""
