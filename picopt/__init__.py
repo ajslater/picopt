@@ -5,6 +5,6 @@ from os import environ
 PROGRAM_NAME = "picopt"
 
 if environ.get("PYTHONDEVMODE"):
-    from icecream import install
+    from icecream import install  # pyright: ignore[reportPrivateImportUsage]
 
     install()

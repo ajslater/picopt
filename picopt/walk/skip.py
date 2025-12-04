@@ -61,7 +61,7 @@ class WalkSkipper:
             reason = f"{legacy}timestamp"
         elif is_path_ignored(
             self._config,
-            path_info.archive_psuedo_path(),
+            path_info.archive_pseudo_path(),
             ignore_case=path_info.is_case_sensitive,
         ):
             reason = "ignored"
@@ -102,7 +102,7 @@ class WalkSkipper:
     def _get_walk_after(self, path_info: PathInfo):
         if self._config.after is not None:
             walk_after = self._config.after
-        elif self._timestamps and (api := path_info.archive_psuedo_path()):
+        elif self._timestamps and (api := path_info.archive_pseudo_path()):
             timestamps = self._timestamps.get(path_info.top_path, {})
             walk_after = timestamps.get(api)
         else:

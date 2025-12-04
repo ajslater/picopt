@@ -4,7 +4,7 @@ from collections.abc import Mapping
 from contextlib import suppress
 from typing import Any, BinaryIO
 
-from PIL import Image, UnidentifiedImageError
+from PIL import Image, ImageSequence, UnidentifiedImageError
 from PIL.TiffImagePlugin import TiffImageFile
 
 from picopt.formats import (
@@ -57,14 +57,35 @@ _NON_PIL_HANDLERS: tuple[type[NonPILIdentifierMixin], ...] = (
 )
 
 
+def _extract_image_info_from_image(image, *, keep_metadata: bool):
+    image_format_str = image.format
+    if not image_format_str:
+        return
+    # It's a rare thing if an info key is an int tuple?
+    info: dict[str, Any] = image.info if keep_metadata else {}
+    animated = getattr(image, "is_animated", False)
+    info["animated"] = animated
+    if animated and (n_frames := getattr(image, "n_frames", 0)):
+        info["n_frames"] = n_frames
+
+        # Durations for webp are frequently just not found by PIL.
+        durations = {}
+        for frame_index, frame in enumerate(ImageSequence.Iterator(image), start=1):
+            duration = frame.info.get("duration", None)
+            if duration is not None:
+                durations[frame_index] = duration
+        if durations:
+            info["durations"] = durations
+    with suppress(AttributeError):
+        info["mpinfo"] = image.mpinfo
+
+
 def _extract_image_info(
     path_info: PathInfo, *, keep_metadata: bool
 ) -> tuple[str | None, dict[str, Any]]:
     """Get image format and info from a file."""
     image_format_str = None
     info = {}
-    n_frames = 1
-    animated = False
     try:
         fp = path_info.path_or_buffer()
         with Image.open(fp) as image:
@@ -78,12 +99,13 @@ def _extract_image_info(
             if image_format_str:
                 # It's a rare thing if an info key is an int tuple?
                 info: dict[str, Any] = image.info if keep_metadata else {}  # pyright: ignore[reportAssignmentType]
-                animated = info.get("animated", getattr(image, "is_animated", False))
+                animated = getattr(image, "is_animated", False)
                 info["animated"] = animated
                 if animated and (n_frames := getattr(image, "n_frames", None)):
                     info["n_frames"] = n_frames
                 with suppress(AttributeError):
                     info["mpinfo"] = image.mpinfo  # pyright: ignore[reportAttributeAccessIssue]
+            _extract_image_info_from_image(image, keep_metadata=keep_metadata)
         image.close()  # for animated images
         if isinstance(fp, BinaryIO):
             fp.close()

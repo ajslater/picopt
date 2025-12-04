@@ -8,7 +8,6 @@ from types import MappingProxyType
 
 from confuse import Subview
 
-from picopt.config.consts import IMG2WEBP_ANIMATED_LOSSLESS_HANDLERS
 from picopt.config.cwebp import ConfigCWebP
 from picopt.formats import (
     CONVERTIBLE_PIL_ANIMATED_FILE_FORMATS,
@@ -17,7 +16,9 @@ from picopt.formats import (
     MPO_FILE_FORMAT,
     FileFormat,
 )
+from picopt.handlers.container.animated.img2webp import Img2WebPAnimatedLossless
 from picopt.handlers.container.animated.webp import PILPackWebPAnimatedLossless
+from picopt.handlers.container.animated.webpmux import WebPMuxAnimatedLossless
 from picopt.handlers.container.archive.rar import (
     Cbr,
     Rar,
@@ -74,7 +75,8 @@ _LOSSLESS_CONVERTIBLE_ANIMATED_FORMAT_HANDLERS = MappingProxyType(
         ffmt: FileFormatHandlers(
             convert=(
                 JpegXLLossless,
-                *IMG2WEBP_ANIMATED_LOSSLESS_HANDLERS,
+                Img2WebPAnimatedLossless,
+                WebPMuxAnimatedLossless,
                 PILPackWebPAnimatedLossless,
                 PngAnimated,
             )
@@ -93,6 +95,7 @@ _FORMAT_HANDLERS = MappingProxyType(
         GifAnimated.OUTPUT_FILE_FORMAT: FileFormatHandlers(
             convert=(
                 Gif2WebPAnimatedLossless,
+                Img2WebPAnimatedLossless,
                 PILPackWebPAnimatedLossless,
                 PngAnimated,
             ),
@@ -123,21 +126,18 @@ _FORMAT_HANDLERS = MappingProxyType(
             native=(Png,),
         ),
         PngAnimated.OUTPUT_FILE_FORMAT: FileFormatHandlers(
-            convert=(
-                *IMG2WEBP_ANIMATED_LOSSLESS_HANDLERS,
-                PILPackWebPAnimatedLossless,
-            ),
+            convert=(Img2WebPAnimatedLossless, PILPackWebPAnimatedLossless),
             native=(PngAnimated,),
         ),
         WebPLossless.OUTPUT_FILE_FORMAT: FileFormatHandlers(
-            native=(WebPLossless,),
-            convert=(
-                WebPLossless,
-                JpegXLLossless,
-            ),
+            native=(WebPLossless, JpegXLLossless)
         ),
-        PILPackWebPAnimatedLossless.OUTPUT_FILE_FORMAT: FileFormatHandlers(
-            native=(*IMG2WEBP_ANIMATED_LOSSLESS_HANDLERS, PILPackWebPAnimatedLossless),
+        WebPMuxAnimatedLossless.OUTPUT_FILE_FORMAT: FileFormatHandlers(
+            native=(
+                WebPMuxAnimatedLossless,
+                Img2WebPAnimatedLossless,
+                PILPackWebPAnimatedLossless,
+            )
         ),
         Svg.OUTPUT_FILE_FORMAT: FileFormatHandlers(native=(Svg,)),
         # Archives
@@ -202,7 +202,7 @@ class ConfigHandlers(ConfigCWebP):
     def _get_config_set(config: Subview, *keys: str) -> frozenset[str]:
         val_list = []
         for key in keys:
-            val_list += config[key].get(list) if key in config else []  # pyright: ignore[reportOperatorIssue]
+            val_list += config[key].get(list) if key in config else []
         return frozenset(val.upper() for val in val_list)
 
     @staticmethod
@@ -308,7 +308,7 @@ class ConfigHandlers(ConfigCWebP):
 
         handled_format_strs = set()
         convert_format_strs = {}
-        disabled_programs_list: list | None = config["disable_programs"].get(list)  # pyright: ignore[reportAssignmentType]
+        disabled_programs_list: list | None = config["disable_programs"].get(list)
         disabled_programs = (
             frozenset(disabled_programs_list) if disabled_programs_list else frozenset()
         )
@@ -341,7 +341,7 @@ class ConfigHandlers(ConfigCWebP):
         config["computed"]["convert_handlers"].set(convert_handlers)
         config["computed"]["handler_stages"].set(handler_stages)
         config["computed"]["is_modern_cwebp"].set(is_modern_cwebp)
-        verbose: int = config["verbose"].get(int)  # pyright: ignore[reportAssignmentType]
+        verbose: int = config["verbose"].get(int)
         self._print_formats_config(
             verbose,
             handled_format_strs,

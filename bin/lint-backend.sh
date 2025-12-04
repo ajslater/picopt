@@ -28,7 +28,7 @@ if [ "$(uname)" = "Darwin" ]; then
   # Hadolint & shfmt are difficult to install on linux
   # shellcheck disable=2035
   hadolint *Dockerfile
-  shellharden ./**/*.sh
+  shellharden --check ./**/*.sh
   # subdirs aren't copied into docker builder
   # .env files aren't copied into docker
   shellcheck --external-sources ./**/*.sh

@@ -1,9 +1,9 @@
 """Animated WebP Image Handler."""
 
 from abc import ABC
+from collections.abc import Generator
 from io import BytesIO
 from itertools import zip_longest
-from pathlib import Path
 from types import MappingProxyType
 from typing import Any, BinaryIO
 
@@ -12,13 +12,13 @@ from PIL.WebPImagePlugin import WebPImageFile
 from typing_extensions import override
 
 from picopt.formats import MODERN_CWEBP_FORMATS, FileFormat
-from picopt.handlers.container.animated import ImageAnimated
+from picopt.handlers.container.animated.webpbase import WebpAnimatedBase
 from picopt.handlers.image.png import PngAnimated
 from picopt.handlers.image.webp import WebPBase
 from picopt.path import PathInfo
 
 
-class Img2WebPAnimatedBase(ImageAnimated, ABC):
+class Img2WebPAnimatedBase(WebpAnimatedBase, ABC):
     """Animated WebP container."""
 
     OUTPUT_FORMAT_STR: str = WebPBase.OUTPUT_FORMAT_STR
@@ -33,10 +33,11 @@ class Img2WebPAnimatedBase(ImageAnimated, ABC):
         "100",
         "-m",
         "6",
+        "-o",
+        "-",
         # advanced
         "-sharp_yuv",
     )
-    WORKING_ID: str = PROGRAMS[0][0]
 
     def __init__(self, config: AttrDict, *args, **kwargs):
         """Initialize extra input formats."""
@@ -48,17 +49,23 @@ class Img2WebPAnimatedBase(ImageAnimated, ABC):
     @override
     def _unpack_frame(self, frame, frame_index: int, frame_info: dict) -> PathInfo:
         self.populate_frame_info(frame, frame_info)
-        working_path = self.get_working_path(".img2webp-input")
+        container_parents = self.path_info.container_path_history()
         path_info = PathInfo(
             path_info=self.path_info,
             frame=frame_index,
-            container_parents=self.path_info.container_path_history(),
+            container_parents=container_parents,
             noop=True,
         )
-        frame_path = Path(str(working_path) + "." + path_info.name())
+        frame_path = self.get_frame_path(frame_index)
         frame.save(frame_path, **self.PIL2_FRAME_KWARGS)
         self._frame_paths.append(frame_path)
         return path_info
+
+    @override
+    def walk(self) -> Generator[PathInfo]:
+        self.set_working_dir()
+        self.set_frame_index_width()
+        return super().walk()
 
     @override
     def _walk_finish(self):
@@ -75,11 +82,6 @@ class Img2WebPAnimatedBase(ImageAnimated, ABC):
         self._printer.container_repacking_done()
         return buffer
 
-    def _get_output_path(self):
-        output_path = self.get_working_path(f".{self.WORKING_ID}-output")
-        output_path_tmp = bool(self.path_info.path)
-        return output_path, output_path_tmp
-
     def img2webp(self, opts: tuple[str, ...]) -> BinaryIO:
         """Optimize using img2webp."""
         args = ["img2webp"]
@@ -88,9 +90,6 @@ class Img2WebPAnimatedBase(ImageAnimated, ABC):
             args.extend(opts)
         input_path = self.path_info.path
         input_path_tmp = False
-        output_path, output_path_tmp = self._get_output_path()
-
-        args.extend(["-o", str(output_path)])
 
         duration = self.frame_info.get("duration", [])
 
@@ -111,9 +110,7 @@ class Img2WebPAnimatedBase(ImageAnimated, ABC):
             tuple(args),
             input_buffer,
             input_path,
-            output_path,
             input_path_tmp=input_path_tmp,
-            output_path_tmp=output_path_tmp,
         )
 
     def _get_opts(self) -> tuple[str, ...]:

@@ -1,5 +1,26 @@
 # 📰 Picopt News
 
+## v5.3.0
+
+- Use webpmux if available to unpack and repack animated webp images.
+- Fix Animated WebP images:
+    - Sometimes being repacked in reverse frame order.
+    - Sometimes degrading quality.
+    - Sometimes dropping frames.
+- Use secure python temporary directory for unpacking animated webp images and
+  chaining webp conversion input.
+- Use img2webp if available for animated conversion to webp from png.
+- Use memory buffers instead of disk for webp output.
+
+## v5.2.2
+
+- Support Python 3.14
+
+## v5.2.1
+
+- The confuse library dependency doesn't support Python 3.14. So neither does
+  picopt :(
+
 ## v5.2.0
 
 - MozJpeg is now an internal python module. External mozjpeg & jpegtran support
