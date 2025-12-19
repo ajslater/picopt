@@ -35,10 +35,10 @@ install-all: install-deps
 	uv sync --no-install-project --all-extras
 
 .PHONY: clean
-## Clean pycaches
+## Clean caches
 ## @category Build
 clean:
-	 ./bin/clean-pycache.sh
+	 ./bin/clean.sh
 
 .PHONY: build
 ## Build package
