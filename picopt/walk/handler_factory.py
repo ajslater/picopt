@@ -83,14 +83,7 @@ class HandlerFactory(DetectFormat):
 
         return repack_handler_class
 
-    def create_handler(
-        self,
-        path_info: PathInfo,
-        timestamps: Grovestamps | None = None,
-    ) -> Handler | None:
-        """Return a handler for the image format."""
-        if path_info.noop:
-            return None
+    def _create_handler_get_class_and_format(self, path_info):
         # This is the consumer of config._format_handlers
         handler_cls: type[Handler] | None = None
         try:
@@ -107,10 +100,24 @@ class HandlerFactory(DetectFormat):
             print_exc()
             file_format = None
             info = {}
+        return file_format, handler_cls, info
 
-        handler = None
-        if not (handler_cls and file_format):
-            return handler
+    def create_handler(
+        self,
+        path_info: PathInfo,
+        timestamps: Grovestamps | None = None,
+    ) -> Handler | None:
+        """Return a handler for the image format."""
+        if path_info.noop:
+            return None
+
+        file_format, handler_cls, info = self._create_handler_get_class_and_format(
+            path_info
+        )
+
+        if not handler_cls or not file_format:
+            return None
+
         kwargs = {}
         if issubclass(handler_cls, PrepareInfoMixin):
             kwargs["info"] = info
@@ -123,16 +130,14 @@ class HandlerFactory(DetectFormat):
                 if issubclass(handler_cls, ArchiveHandler):
                     kwargs["timestamps"] = timestamps
             else:
-                handler_cls = None
+                return None
 
-        if handler_cls:
-            handler = handler_cls(
-                self._config,
-                path_info,
-                input_file_format=file_format,
-                **kwargs,
-            )
-        return handler
+        return handler_cls(
+            self._config,
+            path_info,
+            input_file_format=file_format,
+            **kwargs,
+        )
 
     def create_repack_handler(
         self,
