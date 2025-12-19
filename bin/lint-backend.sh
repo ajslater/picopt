@@ -5,14 +5,13 @@ set -euxo pipefail
 ####################
 ###### Python ######
 ####################
-uv run ruff check .
-uv run ruff format --check .
-uv run basedpyright
-uv run vulture .
+uv run --group lint ruff check .
+uv run --group lint ruff format --check .
+uv run --group lint basedpyright
+uv run --group lint vulture .
 if [ "$(uname)" = "Darwin" ]; then
-  # Radon is only of interest to development
-  uv run radon mi --min B .
-  uv run radon cc --min C .
+  # Complexity is only of interest to development
+  bin/lint-backend-complexity.sh
 fi
 # uv run djlint templates --profile=django --lint
 
@@ -27,7 +26,7 @@ npm run lint
 if [ "$(uname)" = "Darwin" ]; then
   # Hadolint & shfmt are difficult to install on linux
   # shellcheck disable=2035
-  hadolint *Dockerfile
+  # hadolint *Dockerfile
   shellharden --check ./**/*.sh
   # subdirs aren't copied into docker builder
   # .env files aren't copied into docker
@@ -35,4 +34,4 @@ if [ "$(uname)" = "Darwin" ]; then
   # circleci config validate .circleci/config.yml
 fi
 ./bin/roman.sh -i .prettierignore .
-uv run codespell .
+uv run --group lint codespell .

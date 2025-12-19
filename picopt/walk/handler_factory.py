@@ -109,28 +109,29 @@ class HandlerFactory(DetectFormat):
             info = {}
 
         handler = None
-        if handler_cls and file_format:
-            kwargs = {}
-            if issubclass(handler_cls, PrepareInfoMixin):
-                kwargs["info"] = info
-            if issubclass(handler_cls, ContainerHandler):
-                repack_handler_class = self._get_repack_handler_class(
-                    path_info, file_format
-                )
-                if repack_handler_class:
-                    kwargs["repack_handler_class"] = repack_handler_class
-                    if issubclass(handler_cls, ArchiveHandler):
-                        kwargs["timestamps"] = timestamps
-                else:
-                    handler_cls = None
+        if not (handler_cls and file_format):
+            return handler
+        kwargs = {}
+        if issubclass(handler_cls, PrepareInfoMixin):
+            kwargs["info"] = info
+        if issubclass(handler_cls, ContainerHandler):
+            repack_handler_class = self._get_repack_handler_class(
+                path_info, file_format
+            )
+            if repack_handler_class:
+                kwargs["repack_handler_class"] = repack_handler_class
+                if issubclass(handler_cls, ArchiveHandler):
+                    kwargs["timestamps"] = timestamps
+            else:
+                handler_cls = None
 
-            if handler_cls:
-                handler = handler_cls(
-                    self._config,
-                    path_info,
-                    input_file_format=file_format,
-                    **kwargs,
-                )
+        if handler_cls:
+            handler = handler_cls(
+                self._config,
+                path_info,
+                input_file_format=file_format,
+                **kwargs,
+            )
         return handler
 
     def create_repack_handler(
