@@ -94,6 +94,7 @@ def _extract_image_info(
             fp.close()
         fp = path_info.path_or_buffer()
         with Image.open(fp) as image:
+            image_format_str = image.format
             _extract_image_info_from_image(image, keep_metadata=keep_metadata)
         image.close()  # for animated images
         if isinstance(fp, BinaryIO):
