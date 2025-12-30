@@ -120,7 +120,7 @@ skip = ".*,*~,./dist,./node_modules,./package.json,./package-lock.json,./uv.lock
 
 [tool.complexipy]
 failed = true
-paths = ["."]
+paths = ["picopt", "tests"]
 
 [tool.coverage.html]
 directory = "test-results/coverage"

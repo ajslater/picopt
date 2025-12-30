@@ -57,13 +57,15 @@ _NON_PIL_HANDLERS: tuple[type[NonPILIdentifierMixin], ...] = (
 )
 
 
-def _extract_image_info_from_image(image, *, keep_metadata: bool):
+def _extract_image_info_from_image(image, info: dict[str, Any], *, keep_metadata: bool):
     image_format_str = image.format
     if not image_format_str:
         return
     # It's a rare thing if an info key is an int tuple?
-    info: dict[str, Any] = image.info if keep_metadata else {}
+    if keep_metadata:
+        info.update(image.info)
     animated = getattr(image, "is_animated", False)
+    n_frames = getattr(image, "n_frames", 0)
     info["animated"] = animated
     if animated and (n_frames := getattr(image, "n_frames", 0)):
         info["n_frames"] = n_frames
@@ -105,7 +107,7 @@ def _extract_image_info(
                     info["n_frames"] = n_frames
                 with suppress(AttributeError):
                     info["mpinfo"] = image.mpinfo  # pyright: ignore[reportAttributeAccessIssue]
-            _extract_image_info_from_image(image, keep_metadata=keep_metadata)
+            _extract_image_info_from_image(image, info, keep_metadata=keep_metadata)
         image.close()  # for animated images
         if isinstance(fp, BinaryIO):
             fp.close()
