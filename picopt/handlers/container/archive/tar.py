@@ -70,7 +70,7 @@ class Tar(PackingArchiveHandler):
 
     @override
     def _archive_for_write(self, output_buffer: BytesIO) -> TarFile:
-        return tar_open(  # pyright: ignore[reportCallIssue]
+        return tar_open(  # pyright: ignore[reportCallIssue], # ty: ignore[no-matching-overload]
             mode=self.WRITE_MODE,  # pyright: ignore[reportArgumentType]
             fileobj=output_buffer,
             **self.COMPRESS_KWARGS,

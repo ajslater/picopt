@@ -128,14 +128,14 @@ class PackingContainerHandlerMixin(ABC):
 
     def optimize(self) -> BinaryIO:
         """Run pack_into."""
-        self._printer.container_repacking(self.path_info)  # pyright: ignore[reportAttributeAccessIssue]
+        self._printer.container_repacking(self.path_info)  # pyright: ignore[reportAttributeAccessIssue], # ty: ignore[unresolved-attribute]
         buffer = self.pack_into()
-        self._printer.container_repacking_done()  # pyright: ignore[reportAttributeAccessIssue]
+        self._printer.container_repacking_done()  # pyright: ignore[reportAttributeAccessIssue], # ty: ignore[unresolved-attribute]
         return buffer
 
     def repack(self) -> ReportStats:
         """Create a new container and clean up the tmp dir."""
-        return self.optimize_wrapper()  # pyright: ignore[reportAttributeAccessIssue]
+        return self.optimize_wrapper()  # pyright: ignore[reportAttributeAccessIssue],  # ty: ignore[unresolved-attribute]
 
 
 class PackingContainerHandler(PackingContainerHandlerMixin, ContainerHandler, ABC):
