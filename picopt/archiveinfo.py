@@ -3,7 +3,7 @@
 from datetime import datetime, timezone
 from operator import attrgetter
 from pathlib import Path
-from tarfile import DIRTYPE, TarInfo
+from tarfile import DIRTYPE, REGTYPE, SYMTYPE, TarInfo
 from zipfile import ZipInfo
 
 from py7zr import FileInfo as SevenZipInfo
@@ -147,24 +147,37 @@ class ArchiveInfo:
         """Convert to SevenZip FileInfo."""
         if isinstance(self.info, SevenZipInfo):
             info = self.info
-        elif isinstance(self.info, ZipInfo | RarInfo):
+        else:
+            if isinstance(self.info, ZipInfo):
+                filename = self.info.filename
+                is_dir = self.info.is_dir()
+                # X is_file = self.info.is_file() # python 3.11?
+                is_file = not is_dir
+                # X is_symlink = self.info.is_symlink() # python 3.13
+                is_symlink = False
+            elif isinstance(self.info, RarInfo):
+                filename = self.info.filename
+                is_dir = self.info.is_dir()
+                is_file = self.info.is_file()
+                is_symlink = self.info.is_symlink()
+            else:  # TarInfo
+                filename = self.info.name
+                is_dir = self.info.type == DIRTYPE
+                is_file = self.info.type == REGTYPE
+                is_symlink = self.info.type == SYMTYPE
+            if filename is None:
+                reason = (
+                    f"Cannot create 7zr file, filename is None in source: {self.info}"
+                )
+                raise ValueError(reason)
             info = SevenZipInfo(
-                self.info.filename,
-                SevenZipInfoDefaults.compressed,
-                SevenZipInfoDefaults.uncompressed,
-                SevenZipInfoDefaults.archivable,
-                self.info.is_dir(),
-                self.datetime(),
-                SevenZipInfoDefaults.crc32,
-            )
-        else:  # TarInfo
-            is_dir = self.info.type == DIRTYPE
-            info = SevenZipInfo(
-                self.info.name,
+                filename,
                 SevenZipInfoDefaults.compressed,
                 SevenZipInfoDefaults.uncompressed,
                 SevenZipInfoDefaults.archivable,
                 is_dir,
+                is_file,
+                is_symlink,
                 self.datetime(),
                 SevenZipInfoDefaults.crc32,
             )
