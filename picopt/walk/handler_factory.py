@@ -148,7 +148,7 @@ class HandlerFactory(DetectFormat):
         # handler input_file_format is only for images so it doesn't matter what this is.
         repack_handler_class: type[PackingContainerHandler] = (  # pyright: ignore[reportAssignmentType] # ty: ignore[invalid-assignment]
             unpack_handler.repack_handler_class
-        )  # type: ignore[reportAssignmentType]
+        )
         if unpack_handler.__class__ == repack_handler_class and isinstance(
             unpack_handler, PackingContainerHandler
         ):

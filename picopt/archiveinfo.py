@@ -79,7 +79,7 @@ class ArchiveInfo:
             dttm = None
             if isinstance(self.info, ZipInfo):
                 if date_time := self.info.date_time:
-                    dttm = datetime(*date_time)  # noqa: DTZ001 # ty: ignore[missing-argument]
+                    dttm = datetime(*date_time)  # noqa: DTZ001
             elif isinstance(self.info, TarInfo):
                 dttm = datetime.fromtimestamp(self.info.mtime, tz=timezone.utc)
             elif isinstance(self.info, SevenZipInfo):
