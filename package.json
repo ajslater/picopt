@@ -71,7 +71,7 @@
     "eslint-plugin-security": "^3.0.0",
     "eslint-plugin-simple-import-sort": "^12.1.1",
     "eslint-plugin-sonarjs": "^3.0.1",
-    "eslint-plugin-toml": "^0.12.0",
+    "eslint-plugin-toml": "^1.0.0",
     "eslint-plugin-unicorn": "^62.0.0",
     "eslint-plugin-yml": "^1.19.1",
     "prettier": "^3.4.2",
