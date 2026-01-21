@@ -135,20 +135,18 @@ export default defineConfig([
       "prettier/prettier": ["warn", { parser: "markdown" }],
     },
   },
-  ...eslintPluginToml.configs[FLAT_BASE],
+  ...eslintPluginToml.configs.recommended,
   {
     files: ["**/*.toml", "**/*.md/*.toml"],
     rules: {
-      ...eslintPluginToml.configs[FLAT_RECOMMENDED].rules,
       "prettier/prettier": ["error", { parser: "toml" }],
     },
   },
-  ...eslintPluginYml.configs[FLAT_BASE],
+  ...eslintPluginYml.configs.standard,
+  ...eslintPluginYml.configs.prettier,
   {
     files: ["**/*.yaml", "**/*.yml", "**/*.md/*.yaml"],
     rules: {
-      ...eslintPluginYml.configs[FLAT_RECOMMENDED].rules,
-      ...eslintPluginYml.configs["flat/prettier"].rules,
       "prettier/prettier": ["error", { parser: "yaml" }],
     },
   },
