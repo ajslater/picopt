@@ -4,7 +4,7 @@ import re
 import time
 from argparse import Namespace
 from pathlib import Path
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 
 from confuse import Configuration, MappingTemplate, Subview
 from confuse.templates import (
@@ -176,7 +176,7 @@ class PicoptConfig(ConfigHandlers):
 
     def get_config(
         self, args: Namespace | None = None, modname=PROGRAM_NAME
-    ) -> AttrDict[str, Any]:
+    ) -> AttrDict:
         """Get the config dict, layering env and args over defaults."""
         config = Configuration(PROGRAM_NAME, modname=modname, read=False)
         config.read()
