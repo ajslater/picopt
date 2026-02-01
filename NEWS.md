@@ -1,5 +1,10 @@
 # 📰 Picopt News
 
+## v5.3.1
+
+- Fix incompatibility with Confuse v2.2.0
+- Pin to Confuse v2.1.0 due to typing issues with Confuse v2.2.0
+
 ## v5.3.0
 
 - Use webpmux if available to unpack and repack animated webp images.
@@ -48,7 +53,7 @@
 - Fixes
     - Fix tif & animated gifs were not converted to pngs when specified.
     - Fix --ignore option wildcards and performance.
-    - --ignore is now case insensitive on case insenstitive filesystems
+    - \--ignore is now case insensitive on case insenstitive filesystems
 - Features
     - Picopt learned to optimize 7-Zip and Tar Archives.
     - Ignore dotfiles by default. Disable with -I.
@@ -99,7 +104,7 @@
     - `--near-lossless` option for lossless WebP.
     - `--preserve` file attributes after optimization.
     - `--disable-programs` option.
-    - ~25% faster due to avoiding disk io.
+    - \~25% faster due to avoiding disk io.
 - Fixes
     - wal file would write illegal key names and fail to load for some files.
 - Dev
