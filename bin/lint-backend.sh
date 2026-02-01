@@ -7,7 +7,7 @@ set -euxo pipefail
 ####################
 uv run --group lint ruff check .
 uv run --group lint ruff format --check .
-uv run --group lint basedpyright
+uv run --group lint --group test basedpyright
 uv run --group lint vulture .
 if [ "$(uname)" = "Darwin" ]; then
   # Complexity is only of interest to development
