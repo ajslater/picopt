@@ -191,7 +191,4 @@ class PicoptConfig(ConfigHandlers):
         self._set_timestamps(config_program)
         self.set_format_handler_map(config_program)
         ad = config.get(_TEMPLATE)
-        if not isinstance(ad, AttrDict):
-            msg = "Not a valid config"
-            raise TypeError(msg)
         return ad.picopt

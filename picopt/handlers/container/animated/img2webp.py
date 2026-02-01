@@ -106,8 +106,9 @@ class Img2WebPAnimatedBase(WebpAnimatedBase, ABC):
         args.extend(frame_args)
 
         input_buffer = BytesIO()
+        cmd = tuple(args)
         return self.run_ext_fs(
-            tuple(args),
+            cmd,
             input_buffer,
             input_path,
             input_path_tmp=input_path_tmp,

@@ -57,7 +57,7 @@ class HandlerFactory(DetectFormat):
         """Get the repack handler class or none if not configured."""
         repack_handler_class: type[PackingContainerHandler] | None = None
         try:
-            repack_handler_class = (  # pyright: ignore[reportAssignmentType]
+            repack_handler_class = (  # pyright: ignore[reportAssignmentType], # ty: ignore[invalid-assignment]
                 self._create_handler_get_handler_class(
                     file_format,
                     convert=path_info.convert,
@@ -83,14 +83,7 @@ class HandlerFactory(DetectFormat):
 
         return repack_handler_class
 
-    def create_handler(
-        self,
-        path_info: PathInfo,
-        timestamps: Grovestamps | None = None,
-    ) -> Handler | None:
-        """Return a handler for the image format."""
-        if path_info.noop:
-            return None
+    def _create_handler_get_class_and_format(self, path_info):
         # This is the consumer of config._format_handlers
         handler_cls: type[Handler] | None = None
         try:
@@ -107,31 +100,44 @@ class HandlerFactory(DetectFormat):
             print_exc()
             file_format = None
             info = {}
+        return file_format, handler_cls, info
 
-        handler = None
-        if handler_cls and file_format:
-            kwargs = {}
-            if issubclass(handler_cls, PrepareInfoMixin):
-                kwargs["info"] = info
-            if issubclass(handler_cls, ContainerHandler):
-                repack_handler_class = self._get_repack_handler_class(
-                    path_info, file_format
-                )
-                if repack_handler_class:
-                    kwargs["repack_handler_class"] = repack_handler_class
-                    if issubclass(handler_cls, ArchiveHandler):
-                        kwargs["timestamps"] = timestamps
-                else:
-                    handler_cls = None
+    def create_handler(
+        self,
+        path_info: PathInfo,
+        timestamps: Grovestamps | None = None,
+    ) -> Handler | None:
+        """Return a handler for the image format."""
+        if path_info.noop:
+            return None
 
-            if handler_cls:
-                handler = handler_cls(
-                    self._config,
-                    path_info,
-                    input_file_format=file_format,
-                    **kwargs,
-                )
-        return handler
+        file_format, handler_cls, info = self._create_handler_get_class_and_format(
+            path_info
+        )
+
+        if not handler_cls or not file_format:
+            return None
+
+        kwargs = {}
+        if issubclass(handler_cls, PrepareInfoMixin):
+            kwargs["info"] = info
+        if issubclass(handler_cls, ContainerHandler):
+            repack_handler_class = self._get_repack_handler_class(
+                path_info, file_format
+            )
+            if repack_handler_class:
+                kwargs["repack_handler_class"] = repack_handler_class
+                if issubclass(handler_cls, ArchiveHandler):
+                    kwargs["timestamps"] = timestamps
+            else:
+                return None
+
+        return handler_cls(
+            self._config,
+            path_info,
+            input_file_format=file_format,
+            **kwargs,
+        )
 
     def create_repack_handler(
         self,
@@ -142,7 +148,7 @@ class HandlerFactory(DetectFormat):
         # handler input_file_format is only for images so it doesn't matter what this is.
         repack_handler_class: type[PackingContainerHandler] = (  # pyright: ignore[reportAssignmentType] # ty: ignore[invalid-assignment]
             unpack_handler.repack_handler_class
-        )  # type: ignore[reportAssignmentType]
+        )
         if unpack_handler.__class__ == repack_handler_class and isinstance(
             unpack_handler, PackingContainerHandler
         ):

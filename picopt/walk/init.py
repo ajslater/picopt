@@ -36,7 +36,7 @@ class WalkInit:
         """Initialize."""
         self._config: AttrDict = config
         top_paths = []
-        paths: list[Path] = sorted(frozenset(self._config.paths))
+        paths: tuple[Path, ...] = tuple(sorted(frozenset(self._config.paths)))
         for path in paths:
             if path.is_symlink() and not self._config.symlinks:
                 continue

@@ -63,7 +63,7 @@ class PrepareInfoMixin:
             self._prepare_info_webp()
         elif format_str == PngImageFile.format:
             self._prepare_info_png()
-        if self.config.keep_metadata:  # pyright: ignore[reportAttributeAccessIssue]
+        if self.config.keep_metadata:  # pyright: ignore[reportAttributeAccessIssue], # ty: ignore[unresolved-attribute]
             info = self.info
         else:
             info = {}

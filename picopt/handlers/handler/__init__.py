@@ -72,7 +72,7 @@ class Handler(ABC, HandlerCleanup):
                 input_tmp_file.write(input_buffer.read())
 
         proc = subprocess.run(  # noqa: S603
-            args,  # type: ignore[reportArgumentType]
+            args,
             check=True,
             capture_output=True,
         )

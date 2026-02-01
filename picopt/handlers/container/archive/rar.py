@@ -47,7 +47,7 @@ class Rar(ArchiveHandler):
         return archive.read(archiveinfo.filename)
 
     @override
-    def _set_comment(self, archive: RarFile) -> None:  # type: ignore[reportIncompatibleMethodOverride]
+    def _set_comment(self, archive: RarFile) -> None:
         """Set the comment from the archive."""
         if archive.comment:
             self.comment: bytes | None = archive.comment.encode()

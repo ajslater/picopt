@@ -42,9 +42,8 @@ class WebPMuxAnimatedBase(WebpAnimatedBase):
 
     def _extract_timing(self, num_frames: int):
         """Extract timing info."""
-        info = self.run(
-            ("webpmux", "-info", str(self.original_path)),
-        )
+        cmd = ("webpmux", "-info", str(self.original_path))
+        info = self.run(cmd)
         durations: list[str] = re.findall(r"frame \d+: (\d+) ms", str(info.stdout))
         result = {}
         if durations:
@@ -110,7 +109,6 @@ class WebPMuxAnimatedBase(WebpAnimatedBase):
                 frame_path = str(self.get_frame_path(frame_index))
                 cmd += ["-frame", frame_path, f"+{dur}"]
             cmd += ["-loop", "0", "-o", "-"]
-
             proc = self.run(cmd)
             return BytesIO(proc.stdout)
         finally:

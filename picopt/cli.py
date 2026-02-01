@@ -3,7 +3,9 @@
 import sys
 import traceback
 from argparse import Action, ArgumentParser, Namespace, RawDescriptionHelpFormatter
+from collections.abc import Sequence
 from importlib.metadata import PackageNotFoundError, version
+from typing import Any
 
 from confuse.exceptions import ConfigError
 from termcolor import colored
@@ -26,7 +28,7 @@ from picopt.walk.walk import Walk
 _DEFAULT_FORMAT_STRS = frozenset(
     [handler_cls.OUTPUT_FORMAT_STR for handler_cls in DEFAULT_HANDLERS]
 )
-_LIST_DELIMETER = ","
+_LIST_DELIMITER = ","
 
 
 def _get_version():
@@ -44,10 +46,16 @@ class SplitArgsAction(Action):
     """Convert csv string from argparse to a list."""
 
     @override
-    def __call__(self, _parser, namespace, values, _option_string=None):
+    def __call__(
+        self,
+        parser: ArgumentParser,
+        namespace: Namespace,
+        values: str | Sequence[Any] | None,
+        option_string: str | None = None,
+    ):
         """Split values string into list."""
         if isinstance(values, str):
-            values = tuple(sorted(values.strip().split(_LIST_DELIMETER)))
+            values = tuple(sorted(values.strip().split(_LIST_DELIMITER)))
         setattr(namespace, self.dest, values)
 
 

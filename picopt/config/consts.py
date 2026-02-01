@@ -51,9 +51,13 @@ _OTHER_CONVERT_TO_HANDLERS = (
     Jpeg,
 )
 
-CONVERT_TO_FORMAT_STRS = frozenset(
-    {cls.OUTPUT_FORMAT_STR for cls in _OTHER_CONVERT_TO_HANDLERS}
-    | LOSSLESS_IMAGE_CONVERT_TO_FORMAT_STRS
+CONVERT_TO_FORMAT_STRS = tuple(
+    sorted(
+        frozenset(
+            {cls.OUTPUT_FORMAT_STR for cls in _OTHER_CONVERT_TO_HANDLERS}
+            | LOSSLESS_IMAGE_CONVERT_TO_FORMAT_STRS
+        )
+    )
 )
 ARCHIVE_CONVERT_FROM_FORMAT_STRS = tuple(
     sorted({cls.INPUT_FORMAT_STR for cls in (Rar, SevenZip, Tar, TarGz, TarBz, TarXz)})
@@ -100,11 +104,13 @@ _INPUT_ONLY_HANDLERS = frozenset({Rar, Cbr})
 _HANDLER_OUTPUT_FORMAT_STRS = frozenset(
     [cls.OUTPUT_FORMAT_STR for cls in _ALL_HANDLERS - _INPUT_ONLY_HANDLERS]
 )
-ALL_FORMAT_STRS: frozenset[str] = (
-    _HANDLER_OUTPUT_FORMAT_STRS
-    | _ARCHIVE_CONVERTIBLE_FORMAT_STRS
-    | LOSSLESS_FORMAT_STRS
-    | {MPO_FILE_FORMAT.format_str}
+ALL_FORMAT_STRS: tuple[str, ...] = tuple(
+    sorted(
+        _HANDLER_OUTPUT_FORMAT_STRS
+        | _ARCHIVE_CONVERTIBLE_FORMAT_STRS
+        | LOSSLESS_FORMAT_STRS
+        | {MPO_FILE_FORMAT.format_str}
+    )
 )
 TIMESTAMPS_CONFIG_KEYS = {
     "bigger",
