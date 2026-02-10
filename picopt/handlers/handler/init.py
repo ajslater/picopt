@@ -43,9 +43,7 @@ class HandlerInit:
         self._printer: Printer = Printer(self.config.verbose)
 
         # Paths
-        self.original_path: Path = (
-            path_info.path if path_info.path else Path(path_info.name())
-        )
+        self.original_path: Path = path_info.path or Path(path_info.name())
         self.working_path: Path = self.original_path
 
         # Suffixes

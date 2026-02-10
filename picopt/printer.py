@@ -36,7 +36,7 @@ class Printer:
             end = ""
         elif not self._after_newline and not force_continue_line:
             message = "\n" + message
-        attrs = attrs if attrs else []
+        attrs = attrs or []
         cprint(message, color, attrs=attrs, end=end, flush=True)
         self._after_newline = bool(end)
 

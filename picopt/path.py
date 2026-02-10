@@ -175,7 +175,7 @@ class PathInfo:
 
     def path_or_buffer(self) -> Path | BytesIO:
         """Return a the path or the buffered data."""
-        return self.path if self.path else self._buffer()
+        return self.path or self._buffer()
 
     def fp_or_buffer(self) -> BufferedReader | BytesIO:
         """Return an file pointer for chunking or buffer."""
