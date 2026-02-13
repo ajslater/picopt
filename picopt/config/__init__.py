@@ -73,7 +73,7 @@ _TEMPLATE = MappingTemplate(
         )
     }
 )
-_MULTIPLE_STARS_RE = re.compile(r"\*+")
+_MULTIPLE_STARS_RE: re.Pattern[str] = re.compile(r"\*+")
 _DEFAULT_IGNORE_REGEXPS = (r"^\.", r"\/\.", r"\.sparsebundle$")
 
 
@@ -119,7 +119,9 @@ class PicoptConfig(ConfigHandlers):
 
         return r"|".join(ignore_regexps), ignore_single_stars
 
-    def _print_ignores(self, ignore_single_stars: list[str], *, ignore_defaults: bool):
+    def _print_ignores(
+        self, ignore_single_stars: list[str], *, ignore_defaults: bool
+    ) -> None:
         ignore_text = ""
         if ignore_single_stars:
             ignore_text = "Ignoring: "

@@ -55,7 +55,7 @@ class OldTimestamps:
         self._import_old_parent_timestamps()
         self._import_old_child_timestamps()
 
-    def __init__(self, config: AttrDict, timestamps: Treestamps):
+    def __init__(self, config: AttrDict, timestamps: Treestamps) -> None:
         """Hold new timestamp object."""
         self._config: AttrDict = config
         self._timestamps: Treestamps = timestamps

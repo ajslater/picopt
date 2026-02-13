@@ -35,11 +35,11 @@ def _gif_palette_index_to_rgb(
 class PrepareInfoMixin:
     """Prepare to write stored metadata."""
 
-    def set_info(self, info: Mapping[str, Any]):
+    def set_info(self, info: Mapping[str, Any]) -> None:
         """Set metadata."""
         self.info: dict[str, Any] = dict(info)  #  pyright: ignore[reportUninitializedInstanceVariable]
 
-    def _prepare_info_webp(self):
+    def _prepare_info_webp(self) -> None:
         """Transform info for webp."""
         background = self.info.pop("background", None)
         if isinstance(background, int):
@@ -47,7 +47,7 @@ class PrepareInfoMixin:
             rgb = _gif_palette_index_to_rgb(background)
             self.info["background"] = (*rgb, 0)
 
-    def _prepare_info_png(self):
+    def _prepare_info_png(self) -> None:
         """Transform info for png."""
         transparency = self.info.get("transparency")
         if isinstance(transparency, int):

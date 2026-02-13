@@ -31,7 +31,7 @@ _DEFAULT_FORMAT_STRS = frozenset(
 _LIST_DELIMITER = ","
 
 
-def _get_version():
+def _get_version() -> str:
     try:
         v = version(PROGRAM_NAME)
     except PackageNotFoundError:
@@ -52,7 +52,7 @@ class SplitArgsAction(Action):
         namespace: Namespace,
         values: str | Sequence[Any] | None,
         option_string: str | None = None,
-    ):
+    ) -> None:
         """Split values string into list."""
         if isinstance(values, str):
             values = tuple(sorted(values.strip().split(_LIST_DELIMITER)))
@@ -62,8 +62,8 @@ class SplitArgsAction(Action):
 def _comma_join(
     formats: frozenset[str] | tuple[str, ...],
     *,
-    space=True,
-    final_and=False,
+    space: bool = True,
+    final_and: bool = False,
 ) -> str:
     """Sort and join a sequence into a human readable string."""
     formats = tuple(sorted(formats))
@@ -98,7 +98,7 @@ COLOR_KEY = (
 )
 
 
-def get_dot_color_key():
+def get_dot_color_key() -> str:
     """Create dot color key."""
     epilogue = "Progress dot colors:\n"
     for text, color, attrs in COLOR_KEY:
@@ -325,7 +325,7 @@ def get_arguments(params: tuple[str, ...] | None = None) -> Namespace:
     return Namespace(picopt=pns)
 
 
-def main(args: tuple[str, ...] | None = None):
+def main(args: tuple[str, ...] | None = None) -> None:
     """Process command line arguments and walk inputs."""
     printer = Printer(2)
     try:

@@ -27,18 +27,18 @@ class WalkSkipper:
         timestamps: Grovestamps | None = None,
         *,
         in_archive: bool = False,
-    ):
+    ) -> None:
         """Initialize."""
         self._config: AttrDict = config
         self._timestamps: Grovestamps | None = timestamps
         self._in_archive: bool = in_archive
         self._printer: Printer = printer
 
-    def set_timestamps(self, timestamps: Grovestamps):
+    def set_timestamps(self, timestamps: Grovestamps) -> None:
         """Reset the timestamps after they've been established."""
         self._timestamps = timestamps
 
-    def _log_skip(self, reason: str, path_info: PathInfo, *, warn: bool):
+    def _log_skip(self, reason: str, path_info: PathInfo, *, warn: bool) -> None:
         if not reason:
             return
         if warn:

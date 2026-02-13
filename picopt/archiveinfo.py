@@ -4,6 +4,7 @@ from datetime import datetime, timezone
 from operator import attrgetter
 from pathlib import Path
 from tarfile import DIRTYPE, REGTYPE, SYMTYPE, TarInfo
+from typing import TypeAlias
 from zipfile import ZipInfo
 
 from py7zr import FileInfo as SevenZipInfo
@@ -12,7 +13,7 @@ from rarfile import RarInfo
 _DATETIME_ATTRGETTER = attrgetter(
     "year", "month", "day", "hour", "minute", "second", "microsecond"
 )
-ArchiveInfoType = TarInfo | RarInfo | ZipInfo | SevenZipInfo
+ArchiveInfoType: TypeAlias = TarInfo | RarInfo | ZipInfo | SevenZipInfo
 
 
 class SevenZipInfoDefaults:
@@ -27,7 +28,7 @@ class SevenZipInfoDefaults:
 class ArchiveInfo:
     """Archive Info Converter."""
 
-    def __init__(self, info: ArchiveInfoType):
+    def __init__(self, info: ArchiveInfoType) -> None:
         """Store the source info."""
         self.info: ArchiveInfoType = info
         self._filename: str | None = None
@@ -48,7 +49,7 @@ class ArchiveInfo:
                 self._filename = self.info.name or ""
         return self._filename
 
-    def rename(self, filename: str | Path):
+    def rename(self, filename: str | Path) -> None:
         """Rename archiveinfo."""
         filename = str(filename)
         if isinstance(self.info, ZipInfo | SevenZipInfo):
@@ -73,7 +74,7 @@ class ArchiveInfo:
                 self._is_dir = bool(self.info.is_directory)
         return self._is_dir
 
-    def datetime(self):
+    def datetime(self) -> datetime | None:
         """Return mtime as a datetime."""
         if self._dttm is None:
             dttm = None
@@ -93,7 +94,7 @@ class ArchiveInfo:
                 self._dttm = dttm
         return self._dttm
 
-    def mtime(self):
+    def mtime(self) -> float | None:
         """Return Modified Timestamp."""
         if self._mtime is None:
             if isinstance(self.info, SevenZipInfo | ZipInfo | RarInfo):
@@ -104,7 +105,7 @@ class ArchiveInfo:
                 self._mtime = self.info.mtime
         return self._mtime
 
-    def to_zipinfo(self):
+    def to_zipinfo(self) -> ZipInfo:
         """Convert to ZipInfo."""
         if isinstance(self.info, ZipInfo):
             info = self.info
@@ -115,19 +116,16 @@ class ArchiveInfo:
             if self.info.date_time:
                 kwargs["date_time"] = self.info.date_time
             info = ZipInfo(**kwargs)
-        elif isinstance(self.info, TarInfo | SevenZipInfo):  # pyright: ignore[reportUnnecessaryIsInstance]
+        else:  # isinstance(self.info, TarInfo | SevenZipInfo):
             date_time = _DATETIME_ATTRGETTER(self.datetime())
             info = ZipInfo(filename=self.filename(), date_time=date_time)
-        else:
-            reason = f"{self.info} cannot be converted to ZipInfo"
-            raise TypeError(reason)
         return info
 
-    def to_tarinfo(self):
+    def to_tarinfo(self) -> TarInfo:
         """Convert to TarInfo."""
         if isinstance(self.info, TarInfo):
             info = self.info
-        elif isinstance(self.info, RarInfo | SevenZipInfo | ZipInfo):  # pyright: ignore[reportUnnecessaryIsInstance]
+        else:  # isinstance(self.info, RarInfo | SevenZipInfo | ZipInfo):
             kwargs = {}
             if isinstance(self.info, ZipInfo | RarInfo):
                 if name := self.filename():
@@ -138,9 +136,6 @@ class ArchiveInfo:
             mtime = self.mtime()
             if mtime is not None:
                 info.mtime = mtime
-        else:
-            reason = f"{self.info} cannot be converted to TarInfo"
-            raise TypeError(reason)
         return info
 
     def to_sevenzipinfo(self):

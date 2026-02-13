@@ -38,13 +38,13 @@ class WebPBase(ImageHandler, ABC):
     )
     ADD_MODERN_CWEBP_FORMATS: bool = True
 
-    def __init__(self, config: AttrDict, *args, **kwargs):
+    def __init__(self, config: AttrDict, *args, **kwargs) -> None:
         """Initialize extra input formats."""
         super().__init__(config, *args, **kwargs)
         if self.ADD_MODERN_CWEBP_FORMATS and config.computed.is_modern_cwebp:
             self._input_file_formats |= MODERN_CWEBP_FORMATS
 
-    def _add_webp_args(self, args: list[str], opts: tuple[str, ...] | None):
+    def _add_webp_args(self, args: list[str], opts: tuple[str, ...] | None) -> None:
         if opts:
             args.extend(opts)
         args.extend(self.WEBP_ARGS_PREFIX)
@@ -121,7 +121,7 @@ class WebPLossless(WebPBase):
     _NEAR_LOSSLESS_OPTS: tuple[str, ...] = ("-near_lossless", "0")
 
     @override
-    def _add_webp_args(self, args, opts):
+    def _add_webp_args(self, args: list[str], opts: tuple[str, ...] | None) -> None:
         super()._add_webp_args(args, opts)
         if self.config.near_lossless:
             args.extend(self._NEAR_LOSSLESS_OPTS)

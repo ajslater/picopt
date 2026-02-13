@@ -139,7 +139,7 @@ _FORMAT_HANDLERS = MappingProxyType(
 class ConfigHandlers(ConfigCWebP):
     """Config Handlers."""
 
-    def __init__(self, printer: Printer | None = None):
+    def __init__(self, printer: Printer | None = None) -> None:
         """Initialize printer."""
         self._printer: Printer = printer or Printer(2)
 

@@ -50,7 +50,7 @@ class HandlerCleanup(HandlerInit):
         else:
             self.working_path.replace(self.final_path)
 
-    def _cleanup_filesystem_cleanup_original_path(self):
+    def _cleanup_filesystem_cleanup_original_path(self) -> None:
         """Remove original path if the file has a new name."""
         compare_final_str = str(self.final_path)
         compare_original_str = str(self.original_path)
@@ -61,7 +61,7 @@ class HandlerCleanup(HandlerInit):
         if compare_final_str != compare_original_str:
             self.original_path.unlink(missing_ok=True)
 
-    def _cleanup_filesystem_preserve_stats(self):
+    def _cleanup_filesystem_preserve_stats(self) -> None:
         if not self.config.preserve:
             return
         stat = self.path_info.stat()

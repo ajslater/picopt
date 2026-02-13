@@ -29,7 +29,7 @@ class ImageAnimated(PrepareInfoMixin, PackingContainerHandler, ABC):
     PIL2_KWARGS: MappingProxyType[str, Any] = MappingProxyType({})
     CONTAINER_TYPE: str = "Animated Image"
 
-    def __init__(self, *args, info: Mapping[str, Any], **kwargs):
+    def __init__(self, *args, info: Mapping[str, Any], **kwargs) -> None:
         """Set image metadata."""
         super().__init__(*args, **kwargs)
         self.set_info(info)
@@ -41,7 +41,7 @@ class ImageAnimated(PrepareInfoMixin, PackingContainerHandler, ABC):
         return cls.OUTPUT_FILE_FORMAT
 
     @staticmethod
-    def populate_frame_info(frame, frame_info: dict):
+    def populate_frame_info(frame, frame_info: dict) -> None:
         """Populate the frame info from the frame."""
         for key in ANIMATED_INFO_KEYS:
             value = frame.info.get(key)
@@ -74,7 +74,7 @@ class ImageAnimated(PrepareInfoMixin, PackingContainerHandler, ABC):
             )
 
     @staticmethod
-    def _fix_duration(frame_info: dict, index: int):
+    def _fix_duration(frame_info: dict, index: int) -> None:
         """Fix bad duration entries."""
         duration = frame_info.get("duration")
         if duration is None:
@@ -84,7 +84,7 @@ class ImageAnimated(PrepareInfoMixin, PackingContainerHandler, ABC):
             mean_duration = mean(duration)
             duration.extend([mean_duration] * num_missing_durations)
 
-    def _save_frame_info(self, frame_info: dict[str, Any]):
+    def _save_frame_info(self, frame_info: dict[str, Any]) -> None:
         for key in tuple(frame_info):
             value = frame_info[key]
             if value is not None:

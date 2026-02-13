@@ -26,7 +26,7 @@ class ImageHandler(PrepareInfoMixin, Handler, ABC):
     )
     _EMPTY_EXEC_ARGS: tuple[str, tuple[str, ...]] = ("", ())
 
-    def __init__(self, *args, info: Mapping[str, Any], **kwargs):
+    def __init__(self, *args, info: Mapping[str, Any], **kwargs) -> None:
         """Save image info metadata."""
         super().__init__(*args, **kwargs)
         # For image metadata preservation

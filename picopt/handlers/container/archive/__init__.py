@@ -33,7 +33,7 @@ class ArchiveHandler(NonPILIdentifierMixin, ContainerHandler, ABC):
     CONVERT_CHILDREN: bool = True
     CONTAINER_TYPE: str = "Archive"
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, **kwargs) -> None:
         """Init Archive Treestamps."""
         super().__init__(*args, **kwargs)
         self._skip_path_infos = set()
@@ -121,7 +121,7 @@ class ArchiveHandler(NonPILIdentifierMixin, ContainerHandler, ABC):
 
         return tuple(non_treestamp_entries)
 
-    def _copy_unchanged_files(self, archive):
+    def _copy_unchanged_files(self, archive) -> None:
         """Copy unchanged paths into results."""
         while len(self._skip_path_infos):
             path_info = self._skip_path_infos.pop()
@@ -146,7 +146,9 @@ class ArchiveHandler(NonPILIdentifierMixin, ContainerHandler, ABC):
         self._walk_finish()
 
     @override
-    def _hydrate_optimized_path_info(self, path_info: PathInfo, report: ReportStats):
+    def _hydrate_optimized_path_info(
+        self, path_info: PathInfo, report: ReportStats
+    ) -> None:
         """Rename archive files that changed."""
         super()._hydrate_optimized_path_info(path_info, report)
         original_path = path_info.name()
@@ -156,7 +158,7 @@ class ArchiveHandler(NonPILIdentifierMixin, ContainerHandler, ABC):
             self._do_repack = True
 
     @override
-    def optimize_contents(self):
+    def optimize_contents(self) -> None:
         """Remove data structures that are no longer used."""
         super().optimize_contents()
         self._skip_path_infos = set()
@@ -175,7 +177,7 @@ class PackingArchiveHandler(PackingContainerHandlerMixin, ArchiveHandler, ABC):
         comment: bytes | None = None,
         optimized_contents: set[PathInfo] | None = None,
         **kwargs,
-    ):
+    ) -> None:
         """Copy optimized contents from previous handler."""
         super().__init__(*args, **kwargs)
         self.init_repack(comment, optimized_contents)
@@ -188,7 +190,7 @@ class PackingArchiveHandler(PackingContainerHandlerMixin, ArchiveHandler, ABC):
     def _pack_info_one_file(self, archive, path_info):
         raise NotImplementedError
 
-    def _archive_write(self, archive):
+    def _archive_write(self, archive) -> None:
         while self._optimized_contents:
             path_info = self._optimized_contents.pop()
             self._pack_info_one_file(archive, path_info)

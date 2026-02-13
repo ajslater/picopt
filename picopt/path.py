@@ -14,7 +14,7 @@ from picopt.archiveinfo import ArchiveInfo
 
 _CONTAINER_PATH_DELIMETER = ":"
 _LOWERCASE_TESTNAME = ".picopt_case_sensitive_test"
-_UPPERCASE_TESTNAME = _LOWERCASE_TESTNAME.upper()
+_UPPERCASE_TESTNAME: str = _LOWERCASE_TESTNAME.upper()
 # Special case only supported double suffixes prevents heaps of false signals for
 # other multiple suffix types.
 DOUBLE_SUFFIX = ".tar"
@@ -52,7 +52,7 @@ class PathInfo:
         convert: bool | None = None,
         is_case_sensitive: bool | None = None,
         noop: bool = False,
-    ):
+    ) -> None:
         """Copy from path_info or override with arg."""
         if top_path:
             self.top_path: Path = top_path
@@ -99,7 +99,7 @@ class PathInfo:
         archiveinfo: ZipInfo | RarInfo | TarInfo | SevenZipInfo | None = None,
         data: bytes | None = None,
         noop: bool = False,
-    ):
+    ) -> None:
         """Initialize."""
         self._copy_constructor(
             path_info,
@@ -165,7 +165,7 @@ class PathInfo:
                     self._data = fp.read()
         return self._data
 
-    def set_data(self, data: bytes):
+    def set_data(self, data: bytes) -> None:
         """Set the data."""
         self._data = data
 

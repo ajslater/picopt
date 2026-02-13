@@ -1,7 +1,7 @@
 """Walk the directory trees and files and call the optimizers."""
 
 import traceback
-from multiprocessing.pool import ApplyResult
+from multiprocessing.pool import ApplyResult, AsyncResult
 from pathlib import Path
 
 from treestamps import Treestamps
@@ -79,7 +79,7 @@ class Walk(HandlerFactory):
             timestamps = self._timestamps[dir_path_info.top_path]
             timestamps.set(dir_path, compact=True)
 
-    def _walk_container(self, unpack_handler: ContainerHandler):
+    def _walk_container(self, unpack_handler: ContainerHandler) -> None:
         """Walk the container."""
         for path_info in unpack_handler.walk():
             container_result = None
@@ -106,7 +106,7 @@ class Walk(HandlerFactory):
             result = self._pool.apply_async(handler.error, args=args)
         return result
 
-    def _handle_file(self, handler):
+    def _handle_file(self, handler) -> None | AsyncResult:
         """Call the correct walk or pool apply for the handler."""
         if not handler:
             return None

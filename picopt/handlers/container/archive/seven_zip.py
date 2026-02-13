@@ -31,7 +31,7 @@ class SevenZip(PackingArchiveHandler):
     ARCHIVE_CLASS: ArchiveClassType = SevenZipFile
     INFO_CLASS: ArchiveInfoClassType = SevenZipInfo
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, **kwargs) -> None:
         """Add a py7zr factory for reading from RAM."""
         super().__init__(*args, **kwargs)
         self._factory: BytesIOFactory = BytesIOFactory(maxsize)
@@ -67,7 +67,7 @@ class SevenZip(PackingArchiveHandler):
         return SevenZipFile(output_buffer, mode="x")
 
     @override
-    def _pack_info_one_file(self, archive, path_info):
+    def _pack_info_one_file(self, archive, path_info) -> None:
         """Add one file to the new archive."""
         data = BytesIO(path_info.data())
         arcname = path_info.archiveinfo.filename()

@@ -105,7 +105,7 @@ class ReportStats(ReportStatBase):
 class Totals:
     """Totals for final report."""
 
-    def __init__(self, config: AttrDict, printer: Printer):
+    def __init__(self, config: AttrDict, printer: Printer) -> None:
         """Initialize Totals."""
         self.bytes_in: int = 0
         self.bytes_out: int = 0
