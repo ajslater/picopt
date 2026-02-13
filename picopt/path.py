@@ -43,7 +43,7 @@ def is_path_ignored(config: AttrDict, path: str | Path, *, ignore_case: bool):
 class PathInfo:
     """Path Info object, mostly for passing down walk."""
 
-    def _copy_constructor(  # noqa: PLR0913
+    def _copy_constructor(
         self,
         path_info=None,
         top_path: Path | None = None,
