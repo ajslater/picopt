@@ -101,7 +101,7 @@ class PicoptConfig(ConfigHandlers):
         verbose: int,
         *,
         ignore_defaults: bool,
-    ):
+    ) -> tuple[str, list]:
         ignore_regexps = []
         if ignore_defaults:
             ignore_regexps += _DEFAULT_IGNORE_REGEXPS

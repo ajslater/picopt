@@ -33,7 +33,7 @@ license = { text = "GPL-3.0-only" }
 name = "picopt"
 readme = "README.md"
 requires-python = ">=3.10"
-version = "5.3.1"
+version = "5.3.2"
 
 [project.urls]
 News = "https://picopt.readthedocs.io/news/"
@@ -47,6 +47,7 @@ picopt = "picopt.cli:main"
 [dependency-groups]
 dev = [
   "icecream~=2.1",
+  "infer-types>=1.0.0",
   "neovim>=0.3,<1.0",
   "pyclean~=3.1",
   "toml-cli>=0.7,<1.0",

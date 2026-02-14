@@ -1,5 +1,9 @@
 # 📰 Picopt News
 
+## v5.3.2
+
+- Add type hints and py.typed sentinel file.
+
 ## v5.3.1
 
 - Fix incompatibility with Confuse v2.2.0

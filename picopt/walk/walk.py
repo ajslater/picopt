@@ -120,7 +120,7 @@ class Walk(HandlerFactory):
             raise TypeError(msg)
         return result
 
-    def _create_handler(self, path_info: PathInfo):
+    def _create_handler(self, path_info: PathInfo) -> Handler | None:
         handler = self.create_handler(path_info, self._timestamps)
         if handler is None:
             return None

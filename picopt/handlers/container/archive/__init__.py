@@ -18,8 +18,10 @@ from picopt.handlers.container import ContainerHandler, PackingContainerHandlerM
 from picopt.handlers.mixins import NonPILIdentifierMixin
 from picopt.path import PathInfo
 from picopt.report import ReportStats
+from picopt.walk.skip import WalkSkipper
 
-ArchiveClassType = type[ZipFile | TarFile | SevenZipFile | RarFile]
+ArchiveClass = ZipFile | TarFile | SevenZipFile | RarFile
+ArchiveClassType = type[ArchiveClass]
 ArchiveInfoClassType = type[ZipInfo | TarInfo | SevenZipInfo | RarInfo]
 
 
@@ -29,7 +31,7 @@ class ArchiveHandler(NonPILIdentifierMixin, ContainerHandler, ABC):
     INPUT_FORMAT_STR: str = "UNINMPLEMENTED"
     INPUT_FILE_FORMAT = FileFormat(INPUT_FORMAT_STR)
     INPUT_FILE_FORMATS = frozenset({INPUT_FILE_FORMAT})
-    ARCHIVE_CLASS: type[ZipFile | TarFile | SevenZipFile | RarFile] = ZipFile
+    ARCHIVE_CLASS: ArchiveClassType = ZipFile
     CONVERT_CHILDREN: bool = True
     CONTAINER_TYPE: str = "Archive"
 
@@ -62,7 +64,7 @@ class ArchiveHandler(NonPILIdentifierMixin, ContainerHandler, ABC):
             fmt = super().identify_format(path_info)
         return fmt
 
-    def _get_archive(self):
+    def _get_archive(self) -> ArchiveClass:
         """Use the handler's archive class for this archive."""
         archive = self.ARCHIVE_CLASS(self.original_path, "r")
         if not archive:
@@ -73,7 +75,7 @@ class ArchiveHandler(NonPILIdentifierMixin, ContainerHandler, ABC):
     def _set_comment(self, archive) -> None:
         """NoOp for many archive formats."""
 
-    def _create_path_info(self, archiveinfo, data: bytes | None = None):
+    def _create_path_info(self, archiveinfo, data: bytes | None = None) -> PathInfo:
         return PathInfo(
             path_info=self.path_info,
             archiveinfo=archiveinfo,
@@ -82,7 +84,7 @@ class ArchiveHandler(NonPILIdentifierMixin, ContainerHandler, ABC):
             container_parents=self.path_info.container_path_history(),
         )
 
-    def _is_archive_path_skip(self, path_info: PathInfo):
+    def _is_archive_path_skip(self, path_info: PathInfo) -> WalkSkipper | None | bool:
         return self._skipper and (
             self._skipper.is_walk_file_skip(path_info)
             or self._skipper.is_older_than_timestamp(path_info)

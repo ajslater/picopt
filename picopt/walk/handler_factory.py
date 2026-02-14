@@ -1,6 +1,8 @@
 """Return a handler for a path."""
 
+from collections.abc import Mapping
 from traceback import print_exc
+from typing import Any
 
 from confuse.templates import AttrDict
 from treestamps import Grovestamps
@@ -83,7 +85,9 @@ class HandlerFactory(DetectFormat):
 
         return repack_handler_class
 
-    def _create_handler_get_class_and_format(self, path_info):
+    def _create_handler_get_class_and_format(
+        self, path_info
+    ) -> tuple[FileFormat | None, type[Handler] | None, Mapping[str, Any]]:
         # This is the consumer of config._format_handlers
         handler_cls: type[Handler] | None = None
         try:

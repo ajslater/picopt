@@ -33,7 +33,7 @@ def is_path_case_sensitive(dirpath: Path) -> bool:
     return result
 
 
-def is_path_ignored(config: AttrDict, path: str | Path, *, ignore_case: bool):
+def is_path_ignored(config: AttrDict, path: str | Path, *, ignore_case: bool) -> bool:
     """Match path against the ignore regexp."""
     ignore = config.computed.ignore
     ignore = ignore.ignore_case if ignore_case else ignore.case
@@ -43,7 +43,7 @@ def is_path_ignored(config: AttrDict, path: str | Path, *, ignore_case: bool):
 class PathInfo:
     """Path Info object, mostly for passing down walk."""
 
-    def _copy_constructor(
+    def _copy_constructor(  # noqa: PLR0913
         self,
         path_info=None,
         top_path: Path | None = None,

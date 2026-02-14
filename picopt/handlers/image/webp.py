@@ -54,7 +54,7 @@ class WebPBase(ImageHandler, ABC):
         else:
             args.append("none")
 
-    def _get_input_path(self, input_buffer: BinaryIO):
+    def _get_input_path(self, input_buffer: BinaryIO) -> tuple:
         input_path_tmp = isinstance(input_buffer, BytesIO)
         if input_path_tmp:
             wp = self.get_working_path()

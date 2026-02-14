@@ -63,7 +63,7 @@ class Tar(PackingArchiveHandler):
         return archive.getmembers()
 
     @override
-    def _archive_readfile(self, archive, archiveinfo):
+    def _archive_readfile(self, archive, archiveinfo) -> bytes:
         if buf := archive.extractfile(archiveinfo):
             return buf.read()
         return b""

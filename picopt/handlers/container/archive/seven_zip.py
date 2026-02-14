@@ -47,7 +47,7 @@ class SevenZip(PackingArchiveHandler):
         return archive.list()
 
     @override
-    def _archive_readfile(self, archive, archiveinfo):
+    def _archive_readfile(self, archive, archiveinfo) -> bytes | None:
         """Read file into memory."""
         sevenzipinfo = archiveinfo
         if sevenzipinfo.is_directory:
@@ -57,11 +57,11 @@ class SevenZip(PackingArchiveHandler):
         archive.extract(targets=[filename], factory=self._factory)
         data = self._factory.products.get(filename)
         if not data:
-            return data
+            return None
         return data.read()
 
     @override
-    def _archive_for_write(self, output_buffer: BytesIO):
+    def _archive_for_write(self, output_buffer: BytesIO) -> SevenZipFile:
         # It seems onerous with py7zr to extract the compression filters used to make
         # the archive, so remembering it will not be supported until py7zr makes it easy.
         return SevenZipFile(output_buffer, mode="x")

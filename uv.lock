@@ -25,12 +25,37 @@ wheels = [
 ]
 
 [[package]]
+name = "astroid"
+version = "4.1.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "typing-extensions", marker = "python_full_version < '3.11'" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/b0/79/f1e971b3700bcc24c09b3f0d47745d8404675a74afc10b32df8e4929dfdc/astroid-4.1.0.tar.gz", hash = "sha256:e2fbab37f205a651e6a168cb1e9a6a10677f6fa6a1c21833d113999855b04259", size = 412160, upload-time = "2026-02-09T02:19:57.705Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/3f/38/b2becedff0bef4af9ff474b82e2dcaefca608b6d24753d0b460c94003d91/astroid-4.1.0-py3-none-any.whl", hash = "sha256:2f8263bc7a33cbe8fc2bf5a3d37cfa8327a3284bf4afe3f47f5f0debba638e36", size = 279168, upload-time = "2026-02-09T02:19:55.89Z" },
+]
+
+[[package]]
 name = "asttokens"
 version = "3.0.1"
 source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/be/a5/8e3f9b6771b0b408517c82d97aed8f2036509bc247d46114925e32fe33f0/asttokens-3.0.1.tar.gz", hash = "sha256:71a4ee5de0bde6a31d64f6b13f2293ac190344478f081c3d1bccfcf5eacb0cb7", size = 62308, upload-time = "2025-11-15T16:43:48.578Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/d2/39/e7eaf1799466a4aef85b6a4fe7bd175ad2b1c6345066aa33f1f58d4b18d0/asttokens-3.0.1-py3-none-any.whl", hash = "sha256:15a3ebc0f43c2d0a50eeafea25e19046c68398e487b9f1f5b517f7c0f40f976a", size = 27047, upload-time = "2025-11-15T16:43:16.109Z" },
+]
+
+[[package]]
+name = "astypes"
+version = "0.2.6"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "astroid" },
+    { name = "typeshed-client" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/41/80/7028efe25d789b020170cc5937f6d2162a2a53604aa3914d9b03707f9390/astypes-0.2.6.tar.gz", hash = "sha256:7bfb49dc207890587cd3d1b2fe57c61aa378fb0603a3590ab5e1c1c78b24e387", size = 13595, upload-time = "2023-03-17T07:58:00.716Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/1c/9f/087a31145a2b63ce01deb60e160eac29c700562921b43a7cfbbd0daf3bce/astypes-0.2.6-py3-none-any.whl", hash = "sha256:4274e83a80c616f400d05678f9b8bc8143a94e544bbfa02906cc5805d990bf13", size = 10312, upload-time = "2023-03-17T07:57:57.945Z" },
 ]
 
 [[package]]
@@ -822,6 +847,29 @@ wheels = [
 ]
 
 [[package]]
+name = "importlib-resources"
+version = "6.5.2"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/cf/8c/f834fbf984f691b4f7ff60f50b514cc3de5cc08abfc3295564dd89c5e2e7/importlib_resources-6.5.2.tar.gz", hash = "sha256:185f87adef5bcc288449d98fb4fba07cea78bc036455dd44c5fc4a2fe78fed2c", size = 44693, upload-time = "2025-01-03T18:51:56.698Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/a4/ed/1f1afb2e9e7f38a545d628f864d562a5ae64fe6f7a10e28ffb9b185b4e89/importlib_resources-6.5.2-py3-none-any.whl", hash = "sha256:789cfdc3ed28c78b67a06acb8126751ced69a3d5f79c095a98298cd8a760ccec", size = 37461, upload-time = "2025-01-03T18:51:54.306Z" },
+]
+
+[[package]]
+name = "infer-types"
+version = "1.0.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "astroid" },
+    { name = "astypes" },
+    { name = "typeshed-client" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/ab/00/bce897ae055f60e805485ccf64a0b74767ed397195a48e9e220c63bfa41f/infer_types-1.0.0.tar.gz", hash = "sha256:a7d09a87431bccf73c30983b7918803bf4fe066df053aecf35ab293aad9a0c2b", size = 14569, upload-time = "2023-03-17T10:51:25.94Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/3a/29/9b412805f930bae4dd60babef9be5677a033e00f3c0b3b40e64e6f3224cb/infer_types-1.0.0-py3-none-any.whl", hash = "sha256:98ac8ff060061d56736e13238945b835c5c90eef7fc17f42adf9dded26b94f29", size = 11154, upload-time = "2023-03-17T10:51:23.705Z" },
+]
+
+[[package]]
 name = "inflate64"
 version = "1.0.4"
 source = { registry = "https://pypi.org/simple" }
@@ -1358,7 +1406,7 @@ wheels = [
 
 [[package]]
 name = "picopt"
-version = "5.3.1"
+version = "5.3.2"
 source = { editable = "." }
 dependencies = [
     { name = "confuse" },
@@ -1380,6 +1428,7 @@ dependencies = [
 [package.dev-dependencies]
 dev = [
     { name = "icecream" },
+    { name = "infer-types" },
     { name = "neovim" },
     { name = "pyclean" },
     { name = "toml-cli" },
@@ -1426,6 +1475,7 @@ requires-dist = [
 [package.metadata.requires-dev]
 dev = [
     { name = "icecream", specifier = "~=2.1" },
+    { name = "infer-types", specifier = ">=1.0.0" },
     { name = "neovim", specifier = ">=0.3,<1.0" },
     { name = "pyclean", specifier = "~=3.1" },
     { name = "toml-cli", specifier = ">=0.7,<1.0" },
@@ -2408,6 +2458,19 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/fe/41/4f8eb1ce08688a9e3e23709ed07089ccdeaf95b93745bfb768c6da71197d/types_python_dateutil-2.9.0.20260124.tar.gz", hash = "sha256:7d2db9f860820c30e5b8152bfe78dbdf795f7d1c6176057424e8b3fdd1f581af", size = 16596, upload-time = "2026-01-24T03:18:42.975Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/5a/c2/aa5e3f4103cc8b1dcf92432415dde75d70021d634ecfd95b2e913cf43e17/types_python_dateutil-2.9.0.20260124-py3-none-any.whl", hash = "sha256:f802977ae08bf2260142e7ca1ab9d4403772a254409f7bbdf652229997124951", size = 18266, upload-time = "2026-01-24T03:18:42.155Z" },
+]
+
+[[package]]
+name = "typeshed-client"
+version = "2.8.2"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "importlib-resources" },
+    { name = "typing-extensions" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/fe/3e/4074d3505b4700a6bf13cb1bb2d1848bb8c78e902e3f9fe5916274c5d284/typeshed_client-2.8.2.tar.gz", hash = "sha256:9d8e29fb74574d87bf9a719f77131dc40f2aeea20e97d25d4a3dc2cc30debd31", size = 501617, upload-time = "2025-07-16T01:49:49.299Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/11/db/e7474719e90062df673057e865f94f67da2d0b4f671d8051020c74962c77/typeshed_client-2.8.2-py3-none-any.whl", hash = "sha256:4cf886d976c777689cd31889f13abf5bfb7797c82519b07e5969e541380c75ee", size = 760467, upload-time = "2025-07-16T01:49:47.758Z" },
 ]
 
 [[package]]

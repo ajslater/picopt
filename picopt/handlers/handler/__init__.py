@@ -55,7 +55,7 @@ class Handler(ABC, HandlerCleanup):
         suffix = "".join(suffixes)
         return path.with_suffix(suffix)
 
-    def run_ext_fs(
+    def run_ext_fs(  # noqa: PLR0913
         self,
         args: tuple[str, ...],
         input_buffer: BinaryIO,

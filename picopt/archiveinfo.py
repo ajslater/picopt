@@ -8,6 +8,7 @@ from typing import TypeAlias
 from zipfile import ZipInfo
 
 from py7zr import FileInfo as SevenZipInfo
+from py7zr.py7zr import FileInfo
 from rarfile import RarInfo
 
 _DATETIME_ATTRGETTER = attrgetter(
@@ -63,7 +64,7 @@ class ArchiveInfo:
         # clear filename cache
         self._filename = None
 
-    def is_dir(self):
+    def is_dir(self) -> bool:
         """Is a directory."""
         if self._is_dir is None:
             if isinstance(self.info, ZipInfo | RarInfo):
@@ -138,7 +139,7 @@ class ArchiveInfo:
                 info.mtime = mtime
         return info
 
-    def to_sevenzipinfo(self):
+    def to_sevenzipinfo(self) -> FileInfo:
         """Convert to SevenZip FileInfo."""
         if isinstance(self.info, SevenZipInfo):
             info = self.info

@@ -40,7 +40,7 @@ class Rar(ArchiveHandler):
         return archive.infolist()
 
     @override
-    def _archive_readfile(self, archive, archiveinfo):
+    def _archive_readfile(self, archive, archiveinfo) -> bytes:
         if archiveinfo.is_dir():
             # Rarfile empty directories throw
             return b""

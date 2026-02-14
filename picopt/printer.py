@@ -15,7 +15,7 @@ class Printer:
         self._verbose: int = verbose
         self._after_newline: bool = True
 
-    def _message(
+    def _message(  # noqa:  PLR0913
         self,
         message: str,
         color: str = "white",
