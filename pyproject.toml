@@ -1,14 +1,13 @@
 [project]
-authors = [{ name = "AJ Slater", email = "aj@slater.net" }]
 classifiers = [
-  "Topic :: Internet :: WWW/HTTP :: Site Management",
-  "Topic :: Multimedia :: Graphics :: Graphics Conversion",
-  "Operating System :: OS Independent",
   "Development Status :: 5 - Production/Stable",
+  "Environment :: Console",
   "Intended Audience :: Developers",
   "Intended Audience :: System Administrators",
-  "Environment :: Console",
+  "Operating System :: OS Independent",
   "Programming Language :: Python :: 3 :: Only",
+  "Topic :: Internet :: WWW/HTTP :: Site Management",
+  "Topic :: Multimedia :: Graphics :: Graphics Conversion",
   "Typing :: Typed",
 ]
 dependencies = [
@@ -18,6 +17,7 @@ dependencies = [
   "humanize~=4.12",
   "mozjpeg-lossless-optimization~=1.3",
   "piexif~=1.1",
+  "Pillow>=12.0",
   "py7zr~=1.0",
   "pyoxipng~=9.1",
   "python-dateutil~=2.8",
@@ -25,15 +25,17 @@ dependencies = [
   "ruamel-yaml>=0.18,<1.0",
   "treestamps~=2.2",
   "typing-extensions~=4.13",
-  "Pillow>=12.0",
 ]
 description = "A multi format lossless image optimizer that uses external tools"
-keywords = ["image", "png", "jpg", "cbz", "cbr"]
+keywords = ["cbr", "cbz", "image", "jpg", "png"]
+readme = "README.md"
 license = { text = "GPL-3.0-only" }
 name = "picopt"
-readme = "README.md"
 requires-python = ">=3.10"
 version = "5.3.2"
+[[project.authors]]
+name = "AJ Slater"
+email = "aj@slater.net"
 
 [project.urls]
 News = "https://picopt.readthedocs.io/news/"
@@ -47,46 +49,76 @@ picopt = "picopt.cli:main"
 [dependency-groups]
 dev = [
   "icecream~=2.1",
-  "infer-types>=1.0.0",
+  "infer-types~=1.0.0",
   "neovim>=0.3,<1.0",
   "pyclean~=3.1",
+  "semver>=3.0.4",
   "toml-cli>=0.7,<1.0",
+  "tomlkit~=0.14",
 ]
+build = []
 lint = [
-  "basedpyright~=1.30",
+  "basedpyright~=1.38",
   "codespell~=2.4",
   "complexipy~=5.1",
+  "icecream~=2.1",
   "radon[toml]~=6.0",
   "ruff>=0.13,<1.0",
   "ty>=0.0.4,<1.0",
   "types-python-dateutil~=2.9",
   "vulture~=2.3",
 ]
-test = ["coverage[toml]~=7.0", "pytest-cov~=7.0", "pytest-gitignore~=1.3"]
-docs = ["mkapi~=4.4", "mkdocs~=1.6", "mkdocs-minify-plugin~=0.8"]
+test = [
+  "coverage[toml]~=7.0",
+  "pytest-asyncio~=1.0",
+  "pytest-cov~=7.0",
+  "pytest-gitignore~=1.3",
+]
+docs = ["mkapi~=4.4", "mkdocs-minify-plugin~=0.8", "mkdocs~=1.6"]
+ci = ["requests~=2.32"]
 
 [build-system]
-requires = ["uv_build~=0.8.7"]
+requires = ["uv_build~=0.10.0"]
 build-backend = "uv_build"
 
 [tool.uv.build-backend]
 module-root = ""
 source-include = [
-  ".circlci/**",
   ".*ignore",
+  ".circlci/**",
+  ".env.platforms",
+  ".picopt_treestamps.yaml",
+  ".readthedocs.yaml",
+  ".remarkignore",
   ".shellcheckrc",
+  "Makefile",
+  "NEWS.md",
   "bin/**",
+  "ci/**",
+  "compose.yaml",
+  "docs/DOCKER.md",
+  "docs/NEWS",
+  "docs/NEWS.md",
+  "docs/README.md",
+  "docs/WINDOWS.md",
+  "docs/requirements.txt",
+  "docs/style.css",
+  "docs/style.material.css",
+  "docs/style.mkdocs.css",
+  "docs/style.readthedocs.css",
   "eslint.config.js",
   "frontend/**",
-  "Makefile",
+  "img/**",
+  "mkdocks.yml",
+  "mock_comics/**",
   "package-lock.json",
   "package.json",
   "tests/**",
   "uv.lock",
   "vulture_ignorelist.py",
 ]
-source-exclude = ["**/*\\~", "**/.DS_Store"]
-wheel-exclude = []
+source-exclude = ["**/*\\~", "**/.DS_Store", "frontend/node_modules"]
+wheel-exclude = ["**/*\\~", "**/.DS_Store"]
 
 [tool.basedpyright]
 exclude = [
@@ -94,6 +126,9 @@ exclude = [
   "**/__pycache__",
   "**/node_modules",
   "dist",
+  "frontend",
+  "site",
+  "site",
   "test-results",
   "typings",
   "vulture_ignorelist.py",
@@ -107,24 +142,34 @@ reportIncompatibleUnannotatedOverride = true
 reportMissingParameterType = false
 reportMissingTypeArgument = false
 reportMissingTypeStubs = false
-reportPrivateUsage = false # ruff does this
+reportPrivateUsage = false
 reportUnannotatedClassAttribute = false
 reportUnknownArgumentType = false
+reportUnknownLambdaType = "hint"
 reportUnknownMemberType = false
 reportUnknownParameterType = false
 reportUnknownVariableType = false
 reportUnusedCallResult = false
-reportUnusedParameter = false # ruff does this
+reportUnusedParameter = false
 
 [tool.codespell]
-builtin = "clear,rare,code"
+builtin = "clear,code,rare"
 check-hidden = true
-ignore-words-list = "thead"
-skip = ".*,*~,./dist,./node_modules,./package.json,./package-lock.json,./uv.lock,./test-results"
+ignore-words-list = "coverd,falsy,ro,searchd,thead,versio,ws"
+skip = "*~,.*,./dist,./node_modules,./package-lock.json,./package.json,./test-results,./uv.lock,/uv.lock"
 
 [tool.complexipy]
 failed = true
 paths = ["picopt", "tests"]
+exclude = [
+  "*/.*",
+  "frontend",
+  "node_modules",
+  "site",
+  "test-results",
+  "typings",
+  "vulture_ignorelist.py",
+]
 
 [tool.coverage.html]
 directory = "test-results/coverage"
@@ -137,7 +182,9 @@ omit = [
   "*/.*",
   "*__pycache__*",
   "dist/*",
+  "frontend/*",
   "node_modules/*",
+  "site/*",
   "test-results/*",
   "typings/*",
   "vulture_ignorelist.py",
@@ -159,115 +206,128 @@ junit_family = "xunit2"
 strict = true
 testpaths = ["tests"]
 
+[tool.pytest.ini_options]
+asyncio_mode = "strict"
+addopts = """
+    --junit-xml=test-results/pytest/results.xml
+    -ra
+    --strict-config
+    --strict-markers
+    --cov
+    --cov-append
+    --cov-report=html
+    --cov-report=term
+"""
+junit_family = "xunit2"
+testpaths = "tests"
+pythonpath = ["."]
+
 [tool.radon]
-exclude = "*~,.*,.*/*,__pycache__/*,dist/*,node_modules/*,test-results/*,typings/*"
+exclude = "*~,.*,.*/*,__pycache__/*,config/*,dist/*,frontend/*,node_modules/*,site/*,test-results/*,typings/*"
 
 [tool.ruff]
+builtins = ["ic"]
 extend-exclude = [
   "**/.*",
   "**/__pycache__",
   "dist",
+  "frontend",
+  "site",
   "test-results",
   "typings",
   "vulture_ignorelist.py",
 ]
+show-fixes = true
 target-version = "py310"
 
 [tool.ruff.lint]
 extend-ignore = [
-  "BLE001",  # catch bare exception
-  "COM812",  # missing trailing comma
-  "COM819",  # prohibit trailing comma
-  "D203",    # blank line before class docstring
-  "D206",    # formatted
-  "D212",    # first line multi line docstring.
-  "E111",    # formatted
-  "E114",    # formatted
-  "E117",    # over-indented
-  "E501",    # 88 char line
-  "ISC001",  # formatted
-  "PERF203", # try block in loop 
-  "S101",    # assert
-  "W191",    # formatted
+  "BLE001",
+  "COM812",
+  "COM819",
+  "D203",
+  "D206",
+  "D212",
+  "E111",
+  "E114",
+  "E117",
+  "E501",
+  "ISC001",
+  "PERF203",
+  "S101",
+  "W191",
 ]
 extend-select = [
-  # "AIR",
-  "ERA",
-  # "FAST",
-  # ########
-  # flake8 #
-  # ########
-  "YTT",
-  # "ANN",
-  "ASYNC",
-  "S",
-  "BLE",
-  "FBT",
-  "B",
   "A",
-  "COM",
+  "ARG",
+  "ASYNC",
+  "B",
+  "BLE",
   "C4",
-  # "CPY",
-  "DTZ",
-  "T10",
+  "C90",
+  "COM",
+  "D",
   "DJ",
+  "DTZ",
+  "E",
   "EM",
+  "ERA",
   "EXE",
-  "FIX",
+  "F",
   "FA",
+  "FBT",
+  "FIX",
+  "FLY",
+  "FURB",
+  "I",
+  "ICN",
+  "INP",
   "INT",
   "ISC",
-  "ICN",
   "LOG",
-  # "G",
-  "INP",
-  "PIE",
-  "PYI",
-  "T20",
-  "PT",
-  # "Q", Formatted
-  "RSE",
-  "RET",
-  "SLF",
-  "SIM",
-  "SLOT",
-  "TID",
-  # "TD",
-  "TC",
-  "ARG",
-  "PTH",
-  # ############
-  # end flake8 #
-  # ############
-  "FLY",
-  "I",
-  "C90",
-  # "NPY",
-  # "PD",
   "N",
   "PERF",
-  "E",
-  "W",
-  # "DOC",
-  "D",
-  "F",
   "PGH",
+  "PIE",
   "PLE",
   "PLR",
   "PLW",
-  "UP",
-  "FURB",
+  "PT",
+  "PTH",
+  "PYI",
+  "RET",
+  "RSE",
   "RUF",
+  "S",
+  "SIM",
+  "SLF",
+  "SLOT",
+  "T10",
+  "T20",
+  "TC",
+  "TID",
   "TRY",
+  "UP",
+  "W",
+  "YTT",
 ]
 external = ["V101"]
-task-tags = ["TODO", "FIXME", "XXX", "http", "HACK"]
+task-tags = ["FIXME", "HACK", "TODO", "XXX", "http"]
 
-[tool.ruff.lint.per-file-ignores]
-"tests/*" = ["SLF001", "T201", "T203"]
+[tool.ruff.lint.flake8-self]
+ignore-names = ["_meta"]
+
+[tool.ruff.lint.flake8-unused-arguments]
+ignore-variadic-names = true
 
 [tool.ruff.lint.pycodestyle]
 ignore-overlong-task-comments = true
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["D101", "D102", "SLF001", "T201", "T203"]
+
+[tool.ruff.lint.pylint]
+max-args = 8
 
 [tool.ty.environment]
 python = "./.venv"
@@ -279,10 +339,17 @@ exclude = [
   "**/__pycache__",
   "**/node_modules",
   "dist",
+  "frontend",
+  "site",
   "test-results",
   "typings",
   "vulture_ignorelist.py",
 ]
+
+[tool.typos.default.extend-words]
+bookmarkd = "bookmarkd"
+coverd = "coverd"
+versio = "versio"
 
 [tool.vulture]
 exclude = [
@@ -290,7 +357,10 @@ exclude = [
   "*/__pycache__*",
   "*/node_modules*",
   "dist/",
+  "frontend/",
+  "site",
   "test-results/",
+  "test_results/",
   "typings/",
 ]
 min_confidence = 61

@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 # Run a docker compose service and return its exit code
 set -euo pipefail
 SERVICE=$1

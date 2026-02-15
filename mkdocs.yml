@@ -1,11 +1,11 @@
-site_name: Picopt
-site_author: AJ
-site_description: Lossless Image Optimizer
-theme:
-  name: mkdocs
-  color_mode: dark
-  strict: true
-
+extra_css:
+  - style.css
+markdown_extensions:
+  - smarty
+  - toc:
+      permalink: true
+nav:
+  - NEWS.md
 plugins:
   - minify:
       minify_html: true
@@ -17,11 +17,10 @@ plugins:
       css_files:
         - style.css
   - search
-markdown_extensions:
-  - smarty
-  - toc:
-      permalink: true
-extra_css:
-  - style.css
-nav:
-  - NEWS.md
+site_author: AJ
+site_description: Lossless Image Optimizer
+site_name: Picopt
+theme:
+  color_mode: dark
+  name: mkdocs
+  strict: true
