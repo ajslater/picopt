@@ -21,6 +21,16 @@ from typing import Any
 import semver
 
 SEMVER_LEN = 3
+DEPENDENCY_KEYS = frozenset(
+    {
+        "dependencies",
+        "devDependencies",
+        "peerDependencies",
+        "optionalDependencies",
+        "bundledDependencies",
+        "bundleDependencies",
+    }
+)
 
 
 def extract_version_from_range(version_str: str) -> str | None:
@@ -163,28 +173,6 @@ def merge_dependency_versions(base_version: str, update_version: str) -> str:
     return result_version
 
 
-def is_dependency_key(key: str) -> bool:
-    """
-    Check if a key is a dependency-related key.
-
-    Args:
-        key: The key to check
-
-    Returns:
-        True if the key is a dependency key
-
-    """
-    dependency_keys = {
-        "dependencies",
-        "devDependencies",
-        "peerDependencies",
-        "optionalDependencies",
-        "bundledDependencies",
-        "bundleDependencies",
-    }
-    return key in dependency_keys
-
-
 def merge_dependencies(base: dict[str, str], updates: dict[str, str]) -> dict[str, str]:
     """
     Merge two dependency dictionaries with semver-aware version selection.
@@ -219,11 +207,7 @@ def _deep_merge_value(key, value, result, list_strategy):
     base_val = result[key]
 
     # Special handling for dependency objects
-    if (
-        is_dependency_key(key)
-        and isinstance(base_val, dict)
-        and isinstance(value, dict)
-    ):
+    if key in DEPENDENCY_KEYS:
         result[key] = merge_dependencies(base_val, value)
 
     # Both values are dictionaries - recurse
@@ -232,10 +216,17 @@ def _deep_merge_value(key, value, result, list_strategy):
 
     # Both values are lists - apply strategy
     elif isinstance(base_val, list) and isinstance(value, list):
-        if list_strategy == "append":
-            result[key] = base_val + value
-        else:  # replace
-            result[key] = value
+        # overrides is a list of dicts that might not even benefit
+        #   from merging and sorting
+        # Merging and sorting a list of dicts is pretty complicated.
+        #   If I had to with overrides I'd make a special key from
+        #   the files key.
+        if list_strategy == "merge":
+            value = base_val + value
+            if key != "overrides":
+                value = set(value)
+        if key != "overrides":
+            result[key] = sorted(value)
 
     # Otherwise, the new value overwrites the old
     else:
@@ -360,8 +351,8 @@ Dependency Merging:
 
     parser.add_argument(
         "--list-strategy",
-        choices=["replace", "append"],
-        default="replace",
+        choices=["merge", "replace"],
+        default="merge",
         help="How to handle array merging: replace (default) or append",
     )
 

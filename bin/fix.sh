@@ -25,6 +25,8 @@ shellharden --replace ./**/*.sh
 #######################
 ###### Dockerfile #####
 #######################
-if [ "$(find . -type f -name '*Dockerfile' -print -quit)" != "" ]; then
-  dockerfmt ./*Dockerfile --write
+mapfile -t dockerfiles < <(find . -type f -name '*Dockerfile' -print -quit)
+if [ ${#dockerfiles[@]} -gt 0 ]; then
+  # shellcheck disable=SC2035
+  dockerfmt --write "${dockerfiles[@]}"
 fi

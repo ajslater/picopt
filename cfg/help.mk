@@ -56,50 +56,50 @@ help:
 	@cat ${MAKEFILE_LIST} \
 	| tr '\t' '    ' \
 	| sed -n -e "/^## / { \
-		h; \
-		s/.*/##/; \
-		:doc" \
-		-e "H; \
-		n; \
-		s|^##   *\(.*\)|$(doc_tag_start)$(doc_tag_indented_start)\1$(doc_tag_indented_end)$(doc_tag_end)|; \
-		s|^## *\(.*\)|$(doc_tag_start)\1$(doc_tag_end)|; \
-		t doc" \
-		-e "s| *#[^#].*||; " \
-		-e "s|^\(define *\)\($(variable_regex)\)$(variable_assignment_regex)\($(value_regex)\)|$(global_variable_tag_start)\2$(global_variable_tag_end)$(value_tag_start)\3$(value_tag_end)|;" \
-		-e "s|^\($(variable_regex)\)$(variable_assignment_regex)\($(value_regex)\)|$(global_variable_tag_start)\1$(global_variable_tag_end)$(value_tag_start)\2$(value_tag_end)|;" \
-		-e "s|^\($(target_regex)\) *: *\(\($(variable_regex)\)$(variable_assignment_regex)\($(value_regex)\)\)|$(target_variable_tag_start)\1$(target_variable_tag_end)$(variable_tag_start)\3$(variable_tag_end)$(value_tag_start)\4$(value_tag_end)|;" \
-		-e "s|^\($(target_regex)\) *: *\($(target_regex)\( *$(target_regex)\)*\) *\(\| *\( *$(target_regex)\)*\)|$(target_tag_start)\1$(target_tag_end)$(prerequisites_tag_start)\2$(prerequisites_tag_end)|;" \
-		-e "s|^\($(target_regex)\) *: *\($(target_regex)\( *$(target_regex)\)*\)|$(target_tag_start)\1$(target_tag_end)$(prerequisites_tag_start)\2$(prerequisites_tag_end)|;" \
-		-e "s|^\($(target_regex)\) *: *\(\| *\( *$(target_regex)\)*\)|$(target_tag_start)\1$(target_tag_end)|;" \
-		-e "s|^\($(target_regex)\) *: *|$(target_tag_start)\1$(target_tag_end)|;" \
-		-e " \
-		G; \
-		s|## *\(.*\) *##|$(doc_tag_start)\1$(doc_tag_end)|; \
-		s|\\n||g;" \
-		-e "/$(category_annotation_regex)/!s|.*|$(default_category_tag_start)$(DEFAULT_CATEGORY)$(default_category_tag_end)&|" \
-		-e "s|^\(.*\)$(doc_tag_start)$(category_annotation_regex)\($(category_regex)\)$(doc_tag_end)|$(category_tag_start)\2$(category_tag_end)\1|" \
-		-e "p; \
+	h; \
+	s/.*/##/; \
+	:doc" \
+	-e "H; \
+	n; \
+	s|^##   *\(.*\)|$(doc_tag_start)$(doc_tag_indented_start)\1$(doc_tag_indented_end)$(doc_tag_end)|; \
+	s|^## *\(.*\)|$(doc_tag_start)\1$(doc_tag_end)|; \
+	t doc" \
+	-e "s| *#[^#].*||; " \
+	-e "s|^\(define *\)\($(variable_regex)\)$(variable_assignment_regex)\($(value_regex)\)|$(global_variable_tag_start)\2$(global_variable_tag_end)$(value_tag_start)\3$(value_tag_end)|;" \
+	-e "s|^\($(variable_regex)\)$(variable_assignment_regex)\($(value_regex)\)|$(global_variable_tag_start)\1$(global_variable_tag_end)$(value_tag_start)\2$(value_tag_end)|;" \
+	-e "s|^\($(target_regex)\) *: *\(\($(variable_regex)\)$(variable_assignment_regex)\($(value_regex)\)\)|$(target_variable_tag_start)\1$(target_variable_tag_end)$(variable_tag_start)\3$(variable_tag_end)$(value_tag_start)\4$(value_tag_end)|;" \
+	-e "s|^\($(target_regex)\) *: *\($(target_regex)\( *$(target_regex)\)*\) *\(\| *\( *$(target_regex)\)*\)|$(target_tag_start)\1$(target_tag_end)$(prerequisites_tag_start)\2$(prerequisites_tag_end)|;" \
+	-e "s|^\($(target_regex)\) *: *\($(target_regex)\( *$(target_regex)\)*\)|$(target_tag_start)\1$(target_tag_end)$(prerequisites_tag_start)\2$(prerequisites_tag_end)|;" \
+	-e "s|^\($(target_regex)\) *: *\(\| *\( *$(target_regex)\)*\)|$(target_tag_start)\1$(target_tag_end)|;" \
+	-e "s|^\($(target_regex)\) *: *|$(target_tag_start)\1$(target_tag_end)|;" \
+	-e " \
+	G; \
+	s|## *\(.*\) *##|$(doc_tag_start)\1$(doc_tag_end)|; \
+	s|\\n||g;" \
+	-e "/$(category_annotation_regex)/!s|.*|$(default_category_tag_start)$(DEFAULT_CATEGORY)$(default_category_tag_end)&|" \
+	-e "s|^\(.*\)$(doc_tag_start)$(category_annotation_regex)\($(category_regex)\)$(doc_tag_end)|$(category_tag_start)\2$(category_tag_end)\1|" \
+	-e "p; \
 	}" \
-	| sort  \
+	| sort \
 	| sed -n \
-		-e "s|$(default_category_tag_start)|$(category_tag_start)|" \
-		-e "s|$(default_category_tag_end)|$(category_tag_end)|" \
-		-e "{G; s|\($(category_tag_start)$(category_regex)$(category_tag_end)\)\(.*\)\n\1|\2|; s|\n.*||; H; }" \
-		-e "s|$(category_tag_start)||" \
-		-e "s|$(category_tag_end)|:\n|" \
-		-e "s|$(target_variable_tag_start)|$(target_tag_start)|" \
-		-e "s|$(target_variable_tag_end)|$(target_tag_end)|" \
-		-e "s|$(target_tag_start)|    $(cyan)|" \
-		-e "s|$(target_tag_end)|$(end) |" \
-		-e "s|$(prerequisites_tag_start).*$(prerequisites_tag_end)||" \
-		-e "s|$(variable_tag_start)|$(green)|g" \
-		-e "s|$(variable_tag_end)|$(end)|" \
-		-e "s|$(global_variable_tag_start)|    $(green)|g" \
-		-e "s|$(global_variable_tag_end)|$(end)|" \
-		-e "s|$(value_tag_start)| (default: $(red)|" \
-		-e "s|$(value_tag_end)|$(end))|" \
-		-e "s|$(doc_tag_indented_start)|$(grayb)|g" \
-		-e "s|$(doc_tag_indented_end)|$(end)|g" \
-		-e "s|$(doc_tag_start)|\n        |g" \
-		-e "s|$(doc_tag_end)||g" \
-		-e "p"
+	-e "s|$(default_category_tag_start)|$(category_tag_start)|" \
+	-e "s|$(default_category_tag_end)|$(category_tag_end)|" \
+	-e "{G; s|\($(category_tag_start)$(category_regex)$(category_tag_end)\)\(.*\)\n\1|\2|; s|\n.*||; H; }" \
+	-e "s|$(category_tag_start)||" \
+	-e "s|$(category_tag_end)|:\n|" \
+	-e "s|$(target_variable_tag_start)|$(target_tag_start)|" \
+	-e "s|$(target_variable_tag_end)|$(target_tag_end)|" \
+	-e "s|$(target_tag_start)|    $(cyan)|" \
+	-e "s|$(target_tag_end)|$(end) |" \
+	-e "s|$(prerequisites_tag_start).*$(prerequisites_tag_end)||" \
+	-e "s|$(variable_tag_start)|$(green)|g" \
+	-e "s|$(variable_tag_end)|$(end)|" \
+	-e "s|$(global_variable_tag_start)|    $(green)|g" \
+	-e "s|$(global_variable_tag_end)|$(end)|" \
+	-e "s|$(value_tag_start)| (default: $(red)|" \
+	-e "s|$(value_tag_end)|$(end))|" \
+	-e "s|$(doc_tag_indented_start)|$(grayb)|g" \
+	-e "s|$(doc_tag_indented_end)|$(end)|g" \
+	-e "s|$(doc_tag_start)|\n        |g" \
+	-e "s|$(doc_tag_end)||g" \
+	-e "p"

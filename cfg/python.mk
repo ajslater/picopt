@@ -1,58 +1,49 @@
 export MERGE_PYTHON=1
 
+.PHONY: clean
+## Clean python caches
+## @category Clean
+clean::
+	find . -name "__pycache__" -print0 | xargs -0 rm -rf
+	rm -rf .coverage
+
 .PHONY: install-deps-pip
 ## Update pip and install node packages
 ## @category Install
 install-deps-pip: install-deps-npm
 	pip install --upgrade pip
 
-.PHONY: install
+.PHONY: install-prod
 ## Install for production
 ## @category Install
 install-prod: install-deps-pip
 	uv sync --no-install-project --no-dev
 
-.PHONY: install-dev
-## Install dev requirements
+.PHONY: install
+## Install with dev and all extras and groups
 ## @category Install
-install-dev: install-deps-pip
-	uv sync --no-install-project
-
-.PHONY: install-all
-## Install with all extras
-## @category Install
-install-all: install-deps-pip
-	uv sync --no-install-project --all-extras
-
-.PHONY: clean
-## Clean caches
-## @category Build
-clean::
-	find . -name "__pycache__" -print0 | xargs -0 rm -rf
-	rm -rf .coverage
-
-.PHONY: build
-## Build package
-## @category Build
-build:
-	uv build
-
-.PHONY: publish
-## Publish package to pypi
-## @category Deploy
-publish:
-	uv publish
+install:: install-deps-pip
+	uv sync --no-install-project --all-extras --all-groups --all-packages
 
 .PHONY: update-python
 ## Update python dependencies
 ## @category Update
 update-python:
-	./bin/update-deps-python.sh
+	./bin/update-deps-python.sh || true
 
 .PHONY: update
 ## Update dependencies
 ## @category Update
 update:: update-python update-npm
+
+## Show version. Use V variable to set version
+## @category Update
+V :=
+.PHONY: version
+## Show or set project version
+## @category Update
+version:
+	bin/version.sh $(V)
 
 .PHONY: fix
 ## Fix python lint errors
@@ -79,7 +70,7 @@ complexity:
 	./bin/lint-complexity.sh
 
 .PHONY: lint
-## Lint python 
+## Lint python
 ## @category Lint
 lint::
 	./bin/lint-python.sh
@@ -105,11 +96,16 @@ T :=
 test::
 	./bin/test-python.sh $(T)
 
-## Show version. Use V variable to set version
-## @category Update
-V :=
-.PHONY: version
-## Show or set project version
-## @category Update
-version:
-	bin/version.sh $(V)
+ifndef OVERRIDE_BUILD
+.PHONY: build
+## Build package
+## @category Build
+build::
+	uv build
+endif
+
+.PHONY: publish
+## Publish package to pypi
+## @category Deploy
+publish:
+	uv publish

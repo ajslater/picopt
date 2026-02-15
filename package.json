@@ -8,13 +8,15 @@
   },
   "browserslist": [
     "> 1%",
-    "last 2 versions",
     "Firefox ESR",
-    "not op_mini all",
-    "not dead"
+    "last 2 versions",
+    "not dead",
+    "not op_mini all"
   ],
   "prettier": {
     "plugins": [
+      "@prettier/plugin-xml",
+      "prettier-plugin-nginx",
       "prettier-plugin-packagejson",
       "prettier-plugin-sh",
       "prettier-plugin-toml"
@@ -36,6 +38,14 @@
         "options": {
           "parser": "sh"
         }
+      },
+      {
+        "files": [
+          "**/nginx/http.d/**/*.conf"
+        ],
+        "options": {
+          "parser": "nginx"
+        }
       }
     ]
   },
@@ -43,8 +53,8 @@
     "plugins": [
       "gfm",
       "preset-lint-consistent",
-      "preset-lint-recommended",
       "preset-lint-markdown-style-guide",
+      "preset-lint-recommended",
       "preset-prettier"
     ]
   },
@@ -52,6 +62,7 @@
     "@eslint-community/eslint-plugin-eslint-comments": "^4.4.1",
     "@eslint/json": "^1.0.0",
     "@fsouza/prettierd": "^0.27.0",
+    "@prettier/plugin-xml": "^3.4.2",
     "@stylistic/eslint-plugin": "^5.2.2",
     "eslint": "^9.39.2",
     "eslint_d": "^14.3.0",

@@ -1,16 +1,27 @@
 SHELL := /usr/bin/env bash
 
+.PHONY: clean
+## Clean caches
+## @category Clean
+clean::
+	 rm -rf .*cache
+
 .PHONY: install-deps-npm
-## Update pip and install node packages
+## Update and install node packages
 ## @category Install
 install-deps-npm:
 	npm install
+
+.PHONY: install
+## Install
+## @category Install
+install:: install-deps-npm
 
 .PHONY: update-npm
 ## Update npm dependencies
 ## @category Update
 update-npm:
-	./bin/update-deps-npm.sh
+	./bin/update-deps-npm.sh || true
 
 .PHONY: update
 ## Update dependencies
@@ -22,12 +33,6 @@ update:: update-npm
 ## @category Update
 update-devenv:
 	bin/update-devenv.sh
-
-.PHONY: kill-eslint_d
-## Kill eslint daemon
-## @category Lint
-kill-eslint_d:
-	bin/kill-eslint_d.sh
 
 .PHONY: fix
 ## Fix lint errors
@@ -41,23 +46,14 @@ fix::
 lint::
 	./bin/lint.sh
 
-## Test
-## @category Test
-T :=
-.PHONY: test
-## Run Tests. Use T variable to run specific tests
-## @category Test
-test::
-	./bin/test.sh $(T)
+.PHONY: kill-eslint_d
+## Kill eslint daemon
+## @category Lint
+kill-eslint_d:
+	bin/kill-eslint_d.sh
 
 .PHONY: news
 ## Show recent NEWS
 ## @category Deploy
 news:
 	head -40 NEWS.md
-
-.PHONY: clean
-## Clean caches
-## @category Build
-clean::
-	 rm -rf .*cache

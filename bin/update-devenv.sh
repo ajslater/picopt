@@ -11,19 +11,20 @@ mkdir -pv bin cfg
 bin/copy-new-files.sh "$DEVENV_SRC"/bin bin
 bin/copy-new-files.sh "$DEVENV_SRC"/cfg cfg
 bin/merge-dotfiles.sh "$DEVENV_SRC"/templates .
-bin/merge_package_json.py "$DEVENV_SRC"/templates/package.json package.json -o package.json
+uv run bin/merge_package_json.py "$DEVENV_SRC"/templates/package.json package.json -o package.json
 fix_files=(package.json)
 if [ "${MERGE_PYTHON:-}" != "" ]; then
-  bin/merge_toml.py "$DEVENV_SRC"/templates/pyproject-template.toml pyproject.toml -o pyproject.toml
+  uv run bin/merge_toml.py "$DEVENV_SRC"/templates/pyproject-template.toml pyproject.toml -o pyproject.toml
   fix_files+=(pyproject.toml)
 fi
 if [ "${MERGE_DOCS:-}" != "" ]; then
-  bin/merge_yaml.py "$DEVENV_SRC"/templates/.readthedocs.yaml .readthedocs.yaml -o .readthedocs.yaml
-  bin/merge_yaml.py "$DEVENV_SRC"/templates/mkdocs.yml mkdocs.yml -o mkdocs.yml
+  uv run bin/merge_yaml.py "$DEVENV_SRC"/templates/.readthedocs.yaml .readthedocs.yaml -o .readthedocs.yaml
+  uv run bin/merge_yaml.py "$DEVENV_SRC"/templates/mkdocs.yml mkdocs.yml -o mkdocs.yml
   fix_files+=(.readthedocs.yaml mkdocs.yml)
 fi
 
 # Fix Merged
+npm update
 npx eslint_d --cache --fix "${fix_files[@]}"
 npx prettier --write "${fix_files[@]}"
 
