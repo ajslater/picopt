@@ -1496,7 +1496,7 @@ dev = [
     { name = "infer-types", specifier = "~=1.0.0" },
     { name = "neovim", specifier = ">=0.3,<1.0" },
     { name = "pyclean", specifier = "~=3.1" },
-    { name = "semver", specifier = ">=3.0.4" },
+    { name = "semver", specifier = "~=3.0.4" },
     { name = "toml-cli", specifier = ">=0.7,<1.0" },
     { name = "tomlkit", specifier = "~=0.14" },
 ]
