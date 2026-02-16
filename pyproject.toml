@@ -192,34 +192,21 @@ omit = [
 
 [tool.pytest]
 minversion = "9.0"
+asyncio_mode = "strict"
 addopts = [
-  "--junitxml=test-results/pytest/junit.xml",
-  "-ra",
-  "--strict-config",
-  "--strict-markers",
   "--cov",
   "--cov-append",
   "--cov-report=html",
   "--cov-report=term",
+  "--junit-xml=test-results/pytest/results.xml",
+  "--junitxml=test-results/pytest/junit.xml",
+  "--strict-config",
+  "--strict-markers",
+  "-ra",
 ]
 junit_family = "xunit2"
 strict = true
 testpaths = ["tests"]
-
-[tool.pytest.ini_options]
-asyncio_mode = "strict"
-addopts = """
-    --junit-xml=test-results/pytest/results.xml
-    -ra
-    --strict-config
-    --strict-markers
-    --cov
-    --cov-append
-    --cov-report=html
-    --cov-report=term
-"""
-junit_family = "xunit2"
-testpaths = "tests"
 pythonpath = ["."]
 
 [tool.radon]
