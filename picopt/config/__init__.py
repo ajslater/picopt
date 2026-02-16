@@ -50,6 +50,7 @@ _TEMPLATE = MappingTemplate(
                 "symlinks": bool,
                 "timestamps": bool,
                 "timestamps_check_config": bool,
+                "timestamps_use_archive": bool,
                 "verbose": Integer(),
                 "computed": Optional(
                     MappingTemplate(

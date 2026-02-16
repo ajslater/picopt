@@ -237,6 +237,14 @@ def get_arguments(params: tuple[str, ...] | None = None) -> Namespace:
         help="Do not compare program config options with loaded timestamps.",
     )
     parser.add_argument(
+        "-E",
+        "--timestamps-use-archive",
+        dest="timestamps_use_archive",
+        action="store_true",
+        default=False,
+        help="Use the archive file timestamp instead of archive entry timestamps for all archive entries.",
+    )
+    parser.add_argument(
         "-A",
         "--after",
         action="store",

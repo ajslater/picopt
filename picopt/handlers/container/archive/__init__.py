@@ -18,7 +18,6 @@ from picopt.handlers.container import ContainerHandler, PackingContainerHandlerM
 from picopt.handlers.mixins import NonPILIdentifierMixin
 from picopt.path import PathInfo
 from picopt.report import ReportStats
-from picopt.walk.skip import WalkSkipper
 
 ArchiveClass = ZipFile | TarFile | SevenZipFile | RarFile
 ArchiveClassType = type[ArchiveClass]
@@ -84,10 +83,13 @@ class ArchiveHandler(NonPILIdentifierMixin, ContainerHandler, ABC):
             container_parents=self.path_info.container_path_history(),
         )
 
-    def _is_archive_path_skip(self, path_info: PathInfo) -> WalkSkipper | None | bool:
-        return self._skipper and (
+    def _is_archive_path_skip(self, path_info: PathInfo) -> bool:
+        return bool(self._skipper) and (
             self._skipper.is_walk_file_skip(path_info)
-            or self._skipper.is_older_than_timestamp(path_info)
+            or (
+                not self.config.timestamps_use_archive
+                and self._skipper.is_older_than_timestamp(path_info)
+            )
         )
 
     def _walk_one_entry(self, archive, archiveinfo) -> PathInfo | None:
