@@ -39,7 +39,7 @@ class Img2WebPAnimatedBase(WebpAnimatedBase, ABC):
         "-sharp_yuv",
     )
 
-    def __init__(self, config: AttrDict, *args, **kwargs):
+    def __init__(self, config: AttrDict, *args, **kwargs) -> None:
         """Initialize extra input formats."""
         super().__init__(config, *args, **kwargs)
         if config.computed.is_modern_cwebp:
@@ -68,7 +68,7 @@ class Img2WebPAnimatedBase(WebpAnimatedBase, ABC):
         return super().walk()
 
     @override
-    def _walk_finish(self):
+    def _walk_finish(self) -> None:
         self._do_repack = True
         if not self.config.verbose:
             return

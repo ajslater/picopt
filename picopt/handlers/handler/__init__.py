@@ -10,7 +10,7 @@ from typing import BinaryIO
 from picopt.handlers.handler.cleanup import HandlerCleanup
 from picopt.report import ReportStats
 
-WORKING_PATH_TRANS_TABLE = str.maketrans(dict.fromkeys(" /", "_"))
+WORKING_PATH_TRANS_TABLE: dict[int, str] = str.maketrans(dict.fromkeys(" /", "_"))
 INTERNAL: str = "internal"
 
 
@@ -55,7 +55,7 @@ class Handler(ABC, HandlerCleanup):
         suffix = "".join(suffixes)
         return path.with_suffix(suffix)
 
-    def run_ext_fs(  # noqa: PLR0913
+    def run_ext_fs(
         self,
         args: tuple[str, ...],
         input_buffer: BinaryIO,

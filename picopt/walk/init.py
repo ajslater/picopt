@@ -21,7 +21,7 @@ if TYPE_CHECKING:
 class WalkInit:
     """Initialization."""
 
-    def _validate_top_paths(self):
+    def _validate_top_paths(self) -> None:
         """Init Run."""
         # Validate top_paths
         if not self._top_paths:

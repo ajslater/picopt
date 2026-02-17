@@ -31,7 +31,7 @@ class SevenZip(PackingArchiveHandler):
     ARCHIVE_CLASS: ArchiveClassType = SevenZipFile
     INFO_CLASS: ArchiveInfoClassType = SevenZipInfo
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, **kwargs) -> None:
         """Add a py7zr factory for reading from RAM."""
         super().__init__(*args, **kwargs)
         self._factory: BytesIOFactory = BytesIOFactory(maxsize)
@@ -47,7 +47,7 @@ class SevenZip(PackingArchiveHandler):
         return archive.list()
 
     @override
-    def _archive_readfile(self, archive, archiveinfo):
+    def _archive_readfile(self, archive, archiveinfo) -> bytes | None:
         """Read file into memory."""
         sevenzipinfo = archiveinfo
         if sevenzipinfo.is_directory:
@@ -57,17 +57,17 @@ class SevenZip(PackingArchiveHandler):
         archive.extract(targets=[filename], factory=self._factory)
         data = self._factory.products.get(filename)
         if not data:
-            return data
+            return None
         return data.read()
 
     @override
-    def _archive_for_write(self, output_buffer: BytesIO):
+    def _archive_for_write(self, output_buffer: BytesIO) -> SevenZipFile:
         # It seems onerous with py7zr to extract the compression filters used to make
         # the archive, so remembering it will not be supported until py7zr makes it easy.
         return SevenZipFile(output_buffer, mode="x")
 
     @override
-    def _pack_info_one_file(self, archive, path_info):
+    def _pack_info_one_file(self, archive, path_info) -> None:
         """Add one file to the new archive."""
         data = BytesIO(path_info.data())
         arcname = path_info.archiveinfo.filename()

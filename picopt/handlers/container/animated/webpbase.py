@@ -10,14 +10,14 @@ from picopt.handlers.container.animated import ImageAnimated
 class WebpAnimatedBase(ImageAnimated, ABC):
     """Base class for WebpAnimated Images."""
 
-    def set_working_dir(self):
+    def set_working_dir(self) -> None:
         """Return a working directory with a custom suffix."""
         working_path = self.get_working_path()
         suffix = str(hash(str(working_path.parent))) + "-"
         suffix += str(working_path.name)
         self.working_tmp_dir = Path(mkdtemp(suffix=suffix))
 
-    def set_frame_index_width(self):
+    def set_frame_index_width(self) -> None:
         """Set the frame index zfill width for frame filenames."""
         n_frames = self.info["n_frames"]
         self.frame_index_width = len(str(n_frames))

@@ -3,6 +3,7 @@ __pycache__
 .circleci
 .git
 .venv
+*Dockerfile
 /node_modules
 /test-results
 /tests/**/*.json

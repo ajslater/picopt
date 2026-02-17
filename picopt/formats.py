@@ -35,7 +35,7 @@ class FileFormat:
     archive: bool = False
 
     @override
-    def __repr__(self):
+    def __repr__(self) -> str:
         """Represent format as a string."""
         parts = [self.format_str]
         if self.archive:
@@ -53,7 +53,7 @@ class FileFormat:
 MPO_FILE_FORMAT = FileFormat(str(MpoImageFile.format), lossless=False, animated=True)
 SVG_FORMAT_STR = "SVG"
 TIFF_FILE_FORMAT = FileFormat(str(TiffImageFile.format), lossless=True, animated=False)
-TIFF_LOSSLESS_COMPRESSION = frozenset(
+TIFF_LOSSLESS_COMPRESSION: frozenset[str | None] = frozenset(
     {
         None,
         "group3",
@@ -72,8 +72,10 @@ TIFF_LOSSLESS_COMPRESSION = frozenset(
 )
 PNGINFO_XMP_KEY = "XML:com.adobe.xmp"
 PPM_FILE_FORMAT = FileFormat(str(PpmImageFile.format), lossless=True, animated=False)
-MODERN_CWEBP_FORMATS = frozenset({PPM_FILE_FORMAT, TIFF_FILE_FORMAT})
-MODERN_CWEBP_FORMAT_STRS = frozenset(
+MODERN_CWEBP_FORMATS: frozenset[FileFormat] = frozenset(
+    {PPM_FILE_FORMAT, TIFF_FILE_FORMAT}
+)
+MODERN_CWEBP_FORMAT_STRS: frozenset[str] = frozenset(
     sorted(fmt.format_str for fmt in MODERN_CWEBP_FORMATS)
 )
 
@@ -131,7 +133,7 @@ _CONVERTABLE_PIL_ANIMATED_IMAGE_FILES = (
 _CONVERTIBLE_PIL_ANIMATED_FORMAT_STRS: frozenset[str] = frozenset(
     {str(img_file.format) for img_file in _CONVERTABLE_PIL_ANIMATED_IMAGE_FILES}
 )
-CONVERTIBLE_PIL_ANIMATED_FILE_FORMATS = frozenset(
+CONVERTIBLE_PIL_ANIMATED_FILE_FORMATS: frozenset[FileFormat] = frozenset(
     {
         FileFormat(format_str, lossless=True, animated=True)
         for format_str in _CONVERTIBLE_PIL_ANIMATED_FORMAT_STRS

@@ -56,7 +56,9 @@ _NON_PIL_HANDLERS: tuple[type[NonPILIdentifierMixin], ...] = (
 )
 
 
-def _extract_image_info_from_image(image, info: dict[str, Any], *, keep_metadata: bool):
+def _extract_image_info_from_image(
+    image, info: dict[str, Any], *, keep_metadata: bool
+) -> None:
     image_format_str = image.format
     if not image_format_str:
         return

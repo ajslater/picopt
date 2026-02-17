@@ -23,7 +23,7 @@ class HandlerInit:
     PROGRAMS: tuple[tuple[str, ...], ...] = ()
     WORKING_SUFFIX: str = f".{PROGRAM_NAME}-tmp"
 
-    def _compute_final_path(self):
+    def _compute_final_path(self) -> Path:
         """Compute the final path even if it the original has multiple suffixes."""
         final_path = self.original_path.with_suffix("")
         if final_path.suffix == DOUBLE_SUFFIX:
@@ -36,16 +36,14 @@ class HandlerInit:
         config: AttrDict,
         path_info: PathInfo,
         input_file_format: FileFormat,
-    ):
+    ) -> None:
         """Initialize handler."""
         self.config: AttrDict = config
         self.path_info: PathInfo = path_info
         self._printer: Printer = Printer(self.config.verbose)
 
         # Paths
-        self.original_path: Path = (
-            path_info.path if path_info.path else Path(path_info.name())
-        )
+        self.original_path: Path = path_info.path or Path(path_info.name())
         self.working_path: Path = self.original_path
 
         # Suffixes

@@ -22,7 +22,7 @@ class Zip(PackingArchiveHandler):
     PROGRAMS = ((INTERNAL,),)
     ARCHIVE_CLASS: ArchiveClassType = ZipFile
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, **kwargs) -> None:
         """Init delete_filenames."""
         super().__init__(*args, **kwargs)
 
@@ -51,7 +51,7 @@ class Zip(PackingArchiveHandler):
         return ZipFile(output_buffer, "x", compression=ZIP_DEFLATED, compresslevel=9)
 
     @override
-    def _pack_info_one_file(self, archive, path_info):
+    def _pack_info_one_file(self, archive, path_info) -> None:
         """Add one file to the new archive."""
         zipinfo = path_info.archiveinfo.to_zipinfo()
         if not self.config.keep_metadata and (

@@ -48,7 +48,7 @@ class ContainerHandler(Handler, ABC):
         timestamps: Grovestamps | None = None,
         repack_handler_class: Handler | None = None,
         **kwargs,
-    ):
+    ) -> None:
         """Initialize unpack tasks and ."""
         super().__init__(*args, **kwargs)
         # Config gets modified later for pickling protection for containers
@@ -64,7 +64,7 @@ class ContainerHandler(Handler, ABC):
         self._optimized_contents: set[PathInfo] = set()
         self._do_repack: bool = False
 
-    def is_do_repack(self):
+    def is_do_repack(self) -> bool:
         """Return if any changes were made and we should repack."""
         return self._do_repack
 
@@ -78,7 +78,9 @@ class ContainerHandler(Handler, ABC):
             self._tasks[path_info] = mp_result
             self._do_repack = True
 
-    def _hydrate_optimized_path_info(self, path_info: PathInfo, report: ReportStats):
+    def _hydrate_optimized_path_info(
+        self, path_info: PathInfo, report: ReportStats
+    ) -> None:
         """Replace path_info data."""
         if report.data:
             path_info.set_data(report.data)
@@ -119,7 +121,7 @@ class PackingContainerHandlerMixin(ABC):
         self,
         comment: bytes | None = None,
         optimized_contents: set[PathInfo] | None = None,
-    ):
+    ) -> None:
         """Initialize repack instance variables."""
         if comment:
             self.comment: bytes | None = comment
@@ -147,7 +149,7 @@ class PackingContainerHandler(PackingContainerHandlerMixin, ContainerHandler, AB
         comment: bytes | None = None,
         optimized_contents: set[PathInfo] | None = None,
         **kwargs,
-    ):
+    ) -> None:
         """Copy optimized contents from previous handler."""
         super().__init__(*args, **kwargs)
         self.init_repack(comment, optimized_contents)

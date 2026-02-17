@@ -50,6 +50,7 @@ _TEMPLATE = MappingTemplate(
                 "symlinks": bool,
                 "timestamps": bool,
                 "timestamps_check_config": bool,
+                "timestamps_ignore_archive_entry_mtimes": bool,
                 "verbose": Integer(),
                 "computed": Optional(
                     MappingTemplate(
@@ -73,7 +74,7 @@ _TEMPLATE = MappingTemplate(
         )
     }
 )
-_MULTIPLE_STARS_RE = re.compile(r"\*+")
+_MULTIPLE_STARS_RE: re.Pattern[str] = re.compile(r"\*+")
 _DEFAULT_IGNORE_REGEXPS = (r"^\.", r"\/\.", r"\.sparsebundle$")
 
 
@@ -101,7 +102,7 @@ class PicoptConfig(ConfigHandlers):
         verbose: int,
         *,
         ignore_defaults: bool,
-    ):
+    ) -> tuple[str, list]:
         ignore_regexps = []
         if ignore_defaults:
             ignore_regexps += _DEFAULT_IGNORE_REGEXPS
@@ -119,7 +120,9 @@ class PicoptConfig(ConfigHandlers):
 
         return r"|".join(ignore_regexps), ignore_single_stars
 
-    def _print_ignores(self, ignore_single_stars: list[str], *, ignore_defaults: bool):
+    def _print_ignores(
+        self, ignore_single_stars: list[str], *, ignore_defaults: bool
+    ) -> None:
         ignore_text = ""
         if ignore_single_stars:
             ignore_text = "Ignoring: "

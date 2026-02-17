@@ -19,7 +19,8 @@ from picopt.handlers.mixins import NonPILIdentifierMixin
 from picopt.path import PathInfo
 from picopt.report import ReportStats
 
-ArchiveClassType = type[ZipFile | TarFile | SevenZipFile | RarFile]
+ArchiveClass = ZipFile | TarFile | SevenZipFile | RarFile
+ArchiveClassType = type[ArchiveClass]
 ArchiveInfoClassType = type[ZipInfo | TarInfo | SevenZipInfo | RarInfo]
 
 
@@ -29,11 +30,11 @@ class ArchiveHandler(NonPILIdentifierMixin, ContainerHandler, ABC):
     INPUT_FORMAT_STR: str = "UNINMPLEMENTED"
     INPUT_FILE_FORMAT = FileFormat(INPUT_FORMAT_STR)
     INPUT_FILE_FORMATS = frozenset({INPUT_FILE_FORMAT})
-    ARCHIVE_CLASS: type[ZipFile | TarFile | SevenZipFile | RarFile] = ZipFile
+    ARCHIVE_CLASS: ArchiveClassType = ZipFile
     CONVERT_CHILDREN: bool = True
     CONTAINER_TYPE: str = "Archive"
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, **kwargs) -> None:
         """Init Archive Treestamps."""
         super().__init__(*args, **kwargs)
         self._skip_path_infos = set()
@@ -62,7 +63,7 @@ class ArchiveHandler(NonPILIdentifierMixin, ContainerHandler, ABC):
             fmt = super().identify_format(path_info)
         return fmt
 
-    def _get_archive(self):
+    def _get_archive(self) -> ArchiveClass:
         """Use the handler's archive class for this archive."""
         archive = self.ARCHIVE_CLASS(self.original_path, "r")
         if not archive:
@@ -73,7 +74,7 @@ class ArchiveHandler(NonPILIdentifierMixin, ContainerHandler, ABC):
     def _set_comment(self, archive) -> None:
         """NoOp for many archive formats."""
 
-    def _create_path_info(self, archiveinfo, data: bytes | None = None):
+    def _create_path_info(self, archiveinfo, data: bytes | None = None) -> PathInfo:
         return PathInfo(
             path_info=self.path_info,
             archiveinfo=archiveinfo,
@@ -82,10 +83,13 @@ class ArchiveHandler(NonPILIdentifierMixin, ContainerHandler, ABC):
             container_parents=self.path_info.container_path_history(),
         )
 
-    def _is_archive_path_skip(self, path_info: PathInfo):
-        return self._skipper and (
+    def _is_archive_path_skip(self, path_info: PathInfo) -> bool:
+        return bool(self._skipper) and (
             self._skipper.is_walk_file_skip(path_info)
-            or self._skipper.is_older_than_timestamp(path_info)
+            or (
+                not self.config.timestamps_ignore_archive_entry_mtimes
+                and self._skipper.is_older_than_timestamp(path_info)
+            )
         )
 
     def _walk_one_entry(self, archive, archiveinfo) -> PathInfo | None:
@@ -121,7 +125,7 @@ class ArchiveHandler(NonPILIdentifierMixin, ContainerHandler, ABC):
 
         return tuple(non_treestamp_entries)
 
-    def _copy_unchanged_files(self, archive):
+    def _copy_unchanged_files(self, archive) -> None:
         """Copy unchanged paths into results."""
         while len(self._skip_path_infos):
             path_info = self._skip_path_infos.pop()
@@ -146,7 +150,9 @@ class ArchiveHandler(NonPILIdentifierMixin, ContainerHandler, ABC):
         self._walk_finish()
 
     @override
-    def _hydrate_optimized_path_info(self, path_info: PathInfo, report: ReportStats):
+    def _hydrate_optimized_path_info(
+        self, path_info: PathInfo, report: ReportStats
+    ) -> None:
         """Rename archive files that changed."""
         super()._hydrate_optimized_path_info(path_info, report)
         original_path = path_info.name()
@@ -156,7 +162,7 @@ class ArchiveHandler(NonPILIdentifierMixin, ContainerHandler, ABC):
             self._do_repack = True
 
     @override
-    def optimize_contents(self):
+    def optimize_contents(self) -> None:
         """Remove data structures that are no longer used."""
         super().optimize_contents()
         self._skip_path_infos = set()
@@ -175,7 +181,7 @@ class PackingArchiveHandler(PackingContainerHandlerMixin, ArchiveHandler, ABC):
         comment: bytes | None = None,
         optimized_contents: set[PathInfo] | None = None,
         **kwargs,
-    ):
+    ) -> None:
         """Copy optimized contents from previous handler."""
         super().__init__(*args, **kwargs)
         self.init_repack(comment, optimized_contents)
@@ -188,7 +194,7 @@ class PackingArchiveHandler(PackingContainerHandlerMixin, ArchiveHandler, ABC):
     def _pack_info_one_file(self, archive, path_info):
         raise NotImplementedError
 
-    def _archive_write(self, archive):
+    def _archive_write(self, archive) -> None:
         while self._optimized_contents:
             path_info = self._optimized_contents.pop()
             self._pack_info_one_file(archive, path_info)

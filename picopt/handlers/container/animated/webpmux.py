@@ -32,7 +32,7 @@ class WebPMuxAnimatedBase(WebpAnimatedBase):
     PROGRAMS = (("webpmux",),)
 
     @staticmethod
-    def run(cmd: list[str] | tuple[str, ...]):
+    def run(cmd: list[str] | tuple[str, ...]) -> subprocess.CompletedProcess[bytes]:
         """Run a shell command and raise on error."""
         return subprocess.run(  # noqa: S603
             cmd,
@@ -40,7 +40,7 @@ class WebPMuxAnimatedBase(WebpAnimatedBase):
             capture_output=True,
         )
 
-    def _extract_timing(self, num_frames: int):
+    def _extract_timing(self, num_frames: int) -> dict[int, int]:
         """Extract timing info."""
         cmd = ("webpmux", "-info", str(self.original_path))
         info = self.run(cmd)

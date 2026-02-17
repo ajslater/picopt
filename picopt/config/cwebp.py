@@ -12,7 +12,7 @@ class ConfigCWebP:
     """CWebP config."""
 
     @staticmethod
-    def _get_cwebp_version(handler_stages: dict):
+    def _get_cwebp_version(handler_stages: dict) -> str:
         """Get the version of cwebp."""
         cwebp_version = ""
         bin_path = handler_stages.get(WebPLossless, {}).get("cwebp")
