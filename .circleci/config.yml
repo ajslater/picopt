@@ -24,12 +24,11 @@ jobs:
           command: docker-compose up --exit-code-from picopt-build picopt-build
           name: Build
       - run:
-          command: echo $USER; ls -l; ls -l dist; chmod 644 dist/*; chown circleci:cirlceci -R dist
-          name: debug persist
+          command: sudo chown -R circleci:cirlceci dist
+          name: chown dist
       - persist_to_workspace:
           paths:
             - ./README.md
-            - ./bin
             - ./dist
             - ./pyproject.toml
           root: .
