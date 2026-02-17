@@ -238,8 +238,8 @@ def get_arguments(params: tuple[str, ...] | None = None) -> Namespace:
     )
     parser.add_argument(
         "-E",
-        "--timestamps-use-archive",
-        dest="timestamps_use_archive",
+        "--timestamps-ignore-archive-entry-mtimes",
+        dest="timestamps_ignore_archive_entry_mtimes",
         action="store_true",
         default=False,
         help="Use the archive file timestamp instead of archive entry timestamps for all archive entries.",

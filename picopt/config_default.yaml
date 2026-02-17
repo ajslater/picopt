@@ -18,5 +18,5 @@ picopt:
   symlinks: True
   timestamps: False
   timestamps_check_config: True
-  timestamps_use_archive: False
+  timestamps_ignore_archive_entry_mtimes: False
   verbose: 1

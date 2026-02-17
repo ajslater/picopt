@@ -87,7 +87,7 @@ class ArchiveHandler(NonPILIdentifierMixin, ContainerHandler, ABC):
         return bool(self._skipper) and (
             self._skipper.is_walk_file_skip(path_info)
             or (
-                not self.config.timestamps_use_archive
+                not self.config.timestamps_ignore_archive_entry_mtimes
                 and self._skipper.is_older_than_timestamp(path_info)
             )
         )
