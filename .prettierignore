@@ -10,5 +10,11 @@ __pycache__
 /tests/**/*.xml
 /tests/**/*.yaml
 dist
+node_modules
 package-lock.json
+test-results
+tests/**/*.json
+tests/**/*.xml
+tests/**/*.yaml
+tests/**/*.yml
 uv.lock
