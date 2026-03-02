@@ -1,5 +1,6 @@
 SHELL := /usr/bin/env bash
 DEVENV_SRC ?= ../devenv
+export DEVENV_SRC
 
 .PHONY: clean
 ## Clean caches
