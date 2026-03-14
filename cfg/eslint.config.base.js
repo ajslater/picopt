@@ -4,7 +4,6 @@ import eslintPluginComments from "@eslint-community/eslint-plugin-eslint-comment
 import eslintPluginStylistic from "@stylistic/eslint-plugin";
 import { defineConfig } from "eslint/config";
 import eslintConfigPrettier from "eslint-config-prettier";
-import eslintPluginArrayFunc from "eslint-plugin-array-func";
 import eslintPluginCompat from "eslint-plugin-compat";
 import eslintPluginDeMorgan from "eslint-plugin-de-morgan";
 import eslintPluginDepend from "eslint-plugin-depend";
@@ -14,9 +13,9 @@ import eslintPluginMath from "eslint-plugin-math";
 import * as eslintPluginMdx from "eslint-plugin-mdx";
 import eslintPluginNoSecrets from "eslint-plugin-no-secrets";
 import eslintPluginNoUnsanitized from "eslint-plugin-no-unsanitized";
-// import eslintPluginNoUseExtendNative from "eslint-plugin-no-use-extend-native";
+import eslintPluginNoUseExtendNative from "eslint-plugin-no-use-extend-native";
 import eslintPluginPrettierRecommended from "eslint-plugin-prettier/recommended";
-// import eslintPluginPromise from "eslint-plugin-promise";
+import eslintPluginPromise from "eslint-plugin-promise";
 import eslintPluginRegexp from "eslint-plugin-regexp";
 import eslintPluginSecurity from "eslint-plugin-security";
 import eslintPluginSimpleImportSort from "eslint-plugin-simple-import-sort";
@@ -32,7 +31,6 @@ export const FLAT_RECOMMENDED = "flat/recommended";
 export const CONFIGS = {
   js: {
     ...eslintJs.configs.recommended,
-    ...eslintPluginArrayFunc.configs.all,
     ...eslintPluginComments.recommended,
     ...eslintPluginCompat.configs[FLAT_RECOMMENDED],
     ...eslintPluginDeMorgan.configs.recommended,
@@ -40,7 +38,7 @@ export const CONFIGS = {
     ...eslintPluginImport.flatConfigs.all,
     ...eslintPluginMath.configs.recommended,
     ...eslintPluginNoUnsanitized.configs.recommended,
-    // ...eslintPluginPromise.configs[FLAT_ALL],
+    ...eslintPluginPromise.configs[FLAT_ALL],
     ...eslintPluginRegexp.configs.all,
     ...eslintPluginSonarjs.configs.all,
     ...eslintPluginUnicorn.configs.all,
@@ -52,11 +50,11 @@ export const CONFIGS = {
       unicorn: eslintPluginUnicorn,
     },
     languageOptions: {
-      // eslint-plugin-import sets this to 2018.
       ecmaVersion: "latest",
     },
     rules: {
       "@stylistic/multiline-comment-style": "off", // Multiple bugs with this rule
+      "import-x/order": "off",
       "max-params": ["warn", 4],
       "no-console": "warn",
       "no-debugger": "warn",
@@ -89,7 +87,7 @@ export default defineConfig([
       "typings/",
     ],
   },
-  // eslintPluginNoUseExtendNative.configs.recommended,
+  eslintPluginNoUseExtendNative.configs.recommended,
   eslintPluginSecurity.configs.recommended,
   eslintPluginStylistic.configs.all,
   eslintPluginPrettierRecommended,
