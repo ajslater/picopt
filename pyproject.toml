@@ -29,9 +29,9 @@ dependencies = [
 description = "A multi format lossless image optimizer that uses external tools"
 keywords = ["cbr", "cbz", "image", "jpg", "png"]
 readme = "README.md"
+requires-python = ">=3.10"
 license = { text = "GPL-3.0-only" }
 name = "picopt"
-requires-python = ">=3.10"
 version = "5.3.2"
 [[project.authors]]
 name = "AJ Slater"
