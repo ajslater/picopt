@@ -80,7 +80,7 @@ docs = ["mkapi~=4.4", "mkdocs-minify-plugin~=0.8", "mkdocs~=1.6"]
 ci = ["requests~=2.32"]
 
 [build-system]
-requires = ["uv_build~=0.10.0"]
+requires = ["uv_build~=0.11.2"]
 build-backend = "uv_build"
 
 [tool.uv.build-backend]
