@@ -1521,7 +1521,7 @@ requires-dist = [
     { name = "python-dateutil", specifier = "~=2.8" },
     { name = "rarfile", specifier = "~=4.0" },
     { name = "ruamel-yaml", specifier = ">=0.18,<1.0" },
-    { name = "treestamps", specifier = "~=2.2" },
+    { name = "treestamps", specifier = "~=2.3" },
     { name = "typing-extensions", specifier = "~=4.13" },
 ]
 
@@ -2484,16 +2484,16 @@ wheels = [
 
 [[package]]
 name = "treestamps"
-version = "2.3.0"
+version = "2.3.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "ruamel-yaml" },
     { name = "termcolor" },
     { name = "typing-extensions" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/d8/ee/de09e737786d73d7a22b576eb1680836c5d085a823ccdddcde6bb1f9ea9e/treestamps-2.3.0.tar.gz", hash = "sha256:012ff940e1a5bdd91b2079d914c82d5354e605af8fa161b3fb381914088d6c5e", size = 176382, upload-time = "2026-02-03T06:49:38.722Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/5f/30/c71488ee8f2e8eda84ac550706e8e9982bd5356bf0b0b54c54e6e0a55b70/treestamps-2.3.1.tar.gz", hash = "sha256:208952861d4a85d66758f0fc0a7fde33710425dbbb2f5db37545d43cc39af5b6", size = 178175, upload-time = "2026-04-01T00:53:02.819Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/9a/a1/10f0f3b094cff9589dded698115b9153b9015bd1592c7fcae6b6223ac80f/treestamps-2.3.0-py3-none-any.whl", hash = "sha256:de316179a862bd5a232cd1f11e34c738b82f3375d6096181059ecd887075f864", size = 12403, upload-time = "2026-02-03T06:49:39.584Z" },
+    { url = "https://files.pythonhosted.org/packages/fc/d3/3ce3f72c435f7c8557a454d3291dbb5f686172e3e7780d8471646a5922df/treestamps-2.3.1-py3-none-any.whl", hash = "sha256:ba6fc28051239c244108c7703522aec3464fccf8cc4779cd6c1b04546b429712", size = 14460, upload-time = "2026-04-01T00:53:04.08Z" },
 ]
 
 [[package]]
