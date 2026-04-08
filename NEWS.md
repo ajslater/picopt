@@ -1,5 +1,10 @@
 # 📰 Picopt News
 
+## v5.4.0
+
+- Picopt now skips writing timestamps if no other disk writing operation
+  occurred.
+
 ## v5.3.2
 
 - Add option --timestamps-ignore-archive-entry-mtimes.

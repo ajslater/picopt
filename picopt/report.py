@@ -45,6 +45,7 @@ class ReportStats(ReportStatBase):
         super().__init__(path, *args, **kwargs)
         self.saved: int = self.bytes_in - self.bytes_out
         self.converted: bool = converted
+        self.wrote_new: bool = bool(self.data)
 
     def _new_percent_saved(self) -> str:
         """Spit out how much space the optimization saved."""

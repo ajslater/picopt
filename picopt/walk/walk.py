@@ -21,8 +21,13 @@ class Walk(HandlerFactory):
         self,
         results: list[ApplyResult],
         top_path: Path,
-    ) -> None:
-        """Get the async results and total them."""
+    ) -> bool:
+        """
+        Get the async results and total them.
+
+        Returns weather timestamps should be dumped or not
+        """
+        dump_timestamps = False
         for result in results:
             final_result = result.get()
             if final_result.exc:
@@ -36,8 +41,10 @@ class Walk(HandlerFactory):
                 else:
                     self._totals.bytes_out += final_result.bytes_in
             if self._timestamps:
+                dump_timestamps |= final_result.wrote_new
                 timestamps = self._timestamps[top_path]
                 timestamps.set(final_result.path)
+        return dump_timestamps
 
     def walk_dir(self, dir_path_info: PathInfo) -> None:
         """Recursively optimize a directory."""
@@ -74,7 +81,7 @@ class Walk(HandlerFactory):
             dir_path_info.top_path,
         )
 
-        if self._timestamps:
+        if self._timestamps and dir_path:
             # Compact timestamps after every directory completes
             timestamps = self._timestamps[dir_path_info.top_path]
             timestamps.set(dir_path, compact=True)
@@ -170,6 +177,7 @@ class Walk(HandlerFactory):
 
         # Walk each top file
         top_results = {}
+        noop_top_paths: set[Path] = set()
         for top_path in self._top_paths:
             dirpath = Treestamps.get_dir(top_path)
             path_info = PathInfo(
@@ -177,6 +185,7 @@ class Walk(HandlerFactory):
             )
             result = self.walk_file(path_info)
             if not result:
+                noop_top_paths.add(top_path)
                 continue
             if dirpath not in top_results:
                 top_results[dirpath] = []
@@ -184,7 +193,9 @@ class Walk(HandlerFactory):
 
         # Finish
         for dirpath, results in top_results.items():
-            self._finish_results(results, dirpath)
+            dump_timestamps = self._finish_results(results, dirpath)
+            if not dump_timestamps:
+                noop_top_paths.add(dirpath)
 
         # Shut down multiprocessing
         self._pool.close()
@@ -193,7 +204,7 @@ class Walk(HandlerFactory):
         self._printer.done()
 
         if self._timestamps:
-            self._timestamps.dumpf()
+            self._timestamps.dumpf(noop_top_paths)
 
         self._totals.report()
         return self._totals

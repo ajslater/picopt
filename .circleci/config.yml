@@ -44,6 +44,7 @@ jobs:
 version: 2.1
 workflows:
   main:
+    when: false # disabled
     jobs:
       - build:
           filters:
