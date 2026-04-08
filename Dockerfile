@@ -1,27 +1,35 @@
-FROM ubuntu:questing
-
+# hadolint ignore=DL3007
+FROM nikolaik/python-nodejs:python3.14-nodejs24
 ENV DEBIAN_FRONTEND=noninteractive
 
+COPY debian.sources /etc/apt/sources.list.d/
 # hadolint ignore=DL3008
 RUN apt-get update \
     && apt-get upgrade -y \
     && apt-get install -y --no-install-recommends \
+        curl \
         gifsicle \
-        python3-pip \
+        shellcheck \
         unrar \
         webp \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
 # hadolint ignore=DL3016
-RUN npm install svgo
+RUN npm install --global svgo
 
-WORKDIR /
-COPY --chown=circleci:circleci bin bin
-COPY --chown=circleci:circleci packages packages
+WORKDIR /app
+COPY bin bin
+COPY packages packages
 # hadolint ignore=DL3059
 RUN bin/pngout.sh
 
-# hadolint ignore=DL3059,DL3013
-RUN pip3 install --no-cache-dir -U picopt
-CMD ["picopt", "-h"]
+COPY pyproject.toml uv.lock package.json package-lock.json ./
+RUN npm install
+
+COPY . .
+RUN mkdir -p test-results dist
+
+# Install
+# hadolint ignore=DL3059
+RUN uv sync
