@@ -32,6 +32,7 @@ from picopt.plugins.base.handler import Handler
 
 if TYPE_CHECKING:
     from collections.abc import Generator
+
     from confuse import AttrDict
     from treestamps import Grovestamps
 
@@ -99,7 +100,8 @@ class ContainerHandler(Handler, ABC):
     def hydrate_optimized_path_info(
         self, path_info: PathInfo, report: ReportStats
     ) -> None:
-        """Pull optimized bytes from a completed report back onto path_info.
+        """
+        Pull optimized bytes from a completed report back onto path_info.
 
         Subclasses (archive, PDF) override to handle renames.
         Called by the scheduler after each leaf completes.

@@ -432,9 +432,7 @@ class Scheduler:
                 parent.pending = max(0, parent.pending - 1)
                 return
             if report.exc is None:
-                parent.handler.hydrate_optimized_path_info(
-                    entry.job.path_info, report
-                )
+                parent.handler.hydrate_optimized_path_info(entry.job.path_info, report)
                 parent.handler.get_optimized_contents().add(entry.job.path_info)
                 if report.changed:
                     parent.had_work = True

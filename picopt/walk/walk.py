@@ -113,7 +113,7 @@ class Walk(HandlerFactory):
         except Exception as exc:
             traceback.print_exc()
             report = ReportStats(
-                path=path_info.path,
+                path=path_info.path or Path(),
                 bytes_in=path_info.bytes_in(),
                 exc=exc,
                 config=self._config,
