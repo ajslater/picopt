@@ -1,4 +1,27 @@
-"""Return a handler for a path."""
+"""
+Return a handler for a path.
+
+Reads the routing table from :mod:`picopt.plugins` (the registry) and the
+per-handler probed pipeline from ``config.computed.handler_stages`` (populated
+by :mod:`picopt.config.handlers` at startup).
+
+Handler-class selection rules for an input :class:`FileFormat` ``ff``:
+
+1. If the user asked for conversion (and either the format is not an archive
+   or the caller is asking for a *repack* handler), pick the first handler in
+   ``routes_by_format()[ff].convert`` whose pipeline was probed available at
+   config time and whose ``OUTPUT_FORMAT_STR`` is in the user's
+   ``--convert-to`` set. The pipeline-availability filter is what makes the
+   WebP convert chain ``(Img2WebP, WebPMux, PILPack)`` actually fall through
+   to ``PILPack`` when the external tools are missing.
+
+2. Otherwise, fall back to the native handler for that FileFormat, again only
+   if its pipeline is available.
+
+3. For repack callers, the chosen handler must additionally have ``CAN_PACK``
+   set, replacing the old ``isinstance(handler_cls, PackingContainerHandler |
+   PackingArchiveHandler)`` check.
+"""
 
 from collections.abc import Mapping
 from traceback import print_exc
@@ -7,72 +30,142 @@ from typing import Any
 from confuse.templates import AttrDict
 from treestamps import Grovestamps
 
+from picopt import plugins as registry
 from picopt.formats import FileFormat
-from picopt.handlers.container import ContainerHandler, PackingContainerHandler
-from picopt.handlers.container.archive import ArchiveHandler, PackingArchiveHandler
-from picopt.handlers.handler import Handler
-from picopt.handlers.mixins import PrepareInfoMixin
 from picopt.path import PathInfo
+from picopt.plugins.base import (
+    ArchiveHandler,
+    ContainerHandler,
+    Handler,
+    ImageHandler,
+)
 from picopt.walk.detect_format import DetectFormat
 
 
+def _is_pipeline_available(handler_cls: type[Handler], config: AttrDict) -> bool:
+    """
+    Whether the config-time probe found a workable pipeline for this handler.
+
+    A handler is "available" iff every tier in its ``PIPELINE`` produced a
+    selected tool. Handlers with an empty PIPELINE (e.g. archive handlers
+    that pack via Python libraries, or PILPack sentinels) are always
+    available — there is nothing to be missing.
+    """
+    if not handler_cls.PIPELINE:
+        return True
+    stages = config.computed.handler_stages.get(handler_cls)
+    if stages is None:
+        return False
+    return len(stages) == len(handler_cls.PIPELINE)
+
+
 class HandlerFactory(DetectFormat):
-    """Handler factor for walker."""
+    """Handler factory for walker."""
 
-    def _get_handler_class(
-        self, file_format: FileFormat, key: str
+    def _lookup_route(
+        self,
+        file_format,
+    ) -> tuple | None:
+        if not file_format:
+            return None
+        if file_format.format_str not in self._config.formats:
+            return None
+
+        routes = registry.routes_by_format()
+        entry = routes.get(file_format)
+        if entry is None:
+            return None
+        return entry
+
+    def _pick_handler_class_choose_converter(
+        self, candidate: type[Handler], convert_to: frozenset[str]
+    ):
+        if candidate.OUTPUT_FORMAT_STR not in convert_to:
+            return None
+        if not _is_pipeline_available(candidate, self._config):
+            return None
+        return candidate
+
+    def _pick_handler_class_converter(
+        self,
+        file_format: FileFormat | None,
+        convert_chain,
+        *,
+        convert: bool,
+        repack: bool,
     ) -> type[Handler] | None:
-        format_handlers = self._config.computed.get(key)
-        return format_handlers.get(file_format)
+        # Conversion path: archives only convert during the repack pass; for
+        # images we prefer the convert handler at first sight because it's
+        # often faster than translating through PIL.
+        if not file_format:
+            return None
+        handler_cls: type[Handler] | None = None
+        convert_to: frozenset[str] = frozenset(self._config.convert_to or ())
+        if convert and (not file_format.archive or repack):
+            for candidate in convert_chain:
+                if handler_cls := self._pick_handler_class_choose_converter(
+                    candidate, convert_to
+                ):
+                    break
+        return handler_cls
 
-    def _create_handler_get_handler_class(
+    def _pick_handler_class(
         self,
         file_format: FileFormat | None,
         *,
         convert: bool,
         repack: bool = False,
     ) -> type[Handler] | None:
-        handler_cls: type[Handler] | None = None
-        if file_format and file_format.format_str in self._config.formats:
-            if convert and (not file_format.archive or repack):
-                # For archives, conversion is done later with a different handler.
-                # For images it's often faster to use the optimizer's binary to convert
-                # instead of translating first with PIL.
-                handler_cls = self._get_handler_class(file_format, "convert_handlers")
-            if not handler_cls:
-                handler_cls = self._get_handler_class(file_format, "native_handlers")
+        """Return a handler class for the file format."""
+        entry = self._lookup_route(file_format)
+        if not entry:
+            return None
+        native, convert_chain = entry
+
+        handler_cls = self._pick_handler_class_converter(
+            file_format, convert_chain, convert=convert, repack=repack
+        )
+
+        # Native fallback.
+        if (
+            handler_cls is None
+            and native is not None
+            and _is_pipeline_available(native, self._config)
+        ):
+            handler_cls = native
+
+        # Repack callers need a packing-capable handler.
         if (
             repack
-            and handler_cls
-            and not issubclass(
-                handler_cls, PackingContainerHandler | PackingArchiveHandler
-            )
+            and handler_cls is not None
+            and not (issubclass(handler_cls, ContainerHandler) and handler_cls.CAN_PACK)
         ):
             handler_cls = None
+
         return handler_cls
 
     def _get_repack_handler_class(
         self,
         path_info: PathInfo,
         file_format: FileFormat,
-    ) -> type[PackingContainerHandler] | None:
-        """Get the repack handler class or none if not configured."""
-        repack_handler_class: type[PackingContainerHandler] | None = None
+    ) -> type[ContainerHandler] | None:
+        """Get the repack handler class or None if not configured."""
+        repack_handler_class: type[ContainerHandler] | None = None
         try:
-            repack_handler_class = (  # pyright: ignore[reportAssignmentType], # ty: ignore[invalid-assignment]
-                self._create_handler_get_handler_class(
-                    file_format,
-                    convert=path_info.convert,
-                    repack=True,
-                )
+            picked = self._pick_handler_class(
+                file_format,
+                convert=path_info.convert,
+                repack=True,
             )
+            if picked is not None and issubclass(picked, ContainerHandler):
+                repack_handler_class = picked
         except OSError as exc:
             self._printer.warn(
                 f"getting repack container handler for {path_info.full_output_name()}",
                 exc,
             )
-
             print_exc()
+
         if (
             not repack_handler_class
             and self._config.verbose > 1
@@ -80,19 +173,18 @@ class HandlerFactory(DetectFormat):
         ):
             fmt = str(file_format) if file_format else "unknown"
             self._printer.skip(
-                f"({fmt}) is not an enabled image or container.", path_info
+                f"({fmt}) is not an enabled image or container format.", path_info
             )
 
         return repack_handler_class
 
     def _create_handler_get_class_and_format(
-        self, path_info
+        self, path_info: PathInfo
     ) -> tuple[FileFormat | None, type[Handler] | None, Mapping[str, Any]]:
-        # This is the consumer of config._format_handlers
         handler_cls: type[Handler] | None = None
         try:
             file_format, info = self.detect_format(path_info)
-            handler_cls = self._create_handler_get_handler_class(
+            handler_cls = self._pick_handler_class(
                 file_format,
                 convert=path_info.convert,
             )
@@ -100,7 +192,6 @@ class HandlerFactory(DetectFormat):
             self._printer.warn(
                 f"getting handler for {path_info.full_output_name()}", exc
             )
-
             print_exc()
             file_format = None
             info = {}
@@ -122,8 +213,8 @@ class HandlerFactory(DetectFormat):
         if not handler_cls or not file_format:
             return None
 
-        kwargs = {}
-        if issubclass(handler_cls, PrepareInfoMixin):
+        kwargs: dict[str, Any] = {}
+        if issubclass(handler_cls, ImageHandler):
             kwargs["info"] = info
         if issubclass(handler_cls, ContainerHandler):
             repack_handler_class = self._get_repack_handler_class(
@@ -147,22 +238,19 @@ class HandlerFactory(DetectFormat):
         self,
         config: AttrDict,
         unpack_handler: ContainerHandler,
-    ) -> PackingContainerHandler:
-        """Return a handler to repack the container using optimized contents of the unpack handler."""
-        # handler input_file_format is only for images so it doesn't matter what this is.
-        repack_handler_class: type[PackingContainerHandler] = (  # pyright: ignore[reportAssignmentType] # ty: ignore[invalid-assignment]
+    ) -> ContainerHandler:
+        """Return a handler to repack the container using the optimized contents."""
+        repack_handler_class: type[ContainerHandler] | None = (
             unpack_handler.repack_handler_class
         )
-        if unpack_handler.__class__ == repack_handler_class and isinstance(
-            unpack_handler, PackingContainerHandler
+        if not repack_handler_class or (
+            unpack_handler.__class__ is repack_handler_class and unpack_handler.CAN_PACK
         ):
-            handler = unpack_handler
-        else:
-            handler = repack_handler_class(
-                config,
-                unpack_handler.path_info,
-                input_file_format=repack_handler_class.OUTPUT_FILE_FORMAT,
-                comment=unpack_handler.comment,
-                optimized_contents=unpack_handler.get_optimized_contents(),
-            )
-        return handler
+            return unpack_handler
+        return repack_handler_class(
+            config,
+            unpack_handler.path_info,
+            input_file_format=repack_handler_class.OUTPUT_FILE_FORMAT,
+            comment=unpack_handler.comment,
+            optimized_contents=unpack_handler.get_optimized_contents(),
+        )

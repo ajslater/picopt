@@ -1,328 +1,201 @@
-"""File Format Handlers Config."""
+"""
+Configure which handlers and tools are active for this run.
 
-import shutil
-import subprocess
-from collections.abc import ItemsView
-from dataclasses import dataclass, fields
-from types import MappingProxyType
+This module replaces the old ~330-line ``config/handlers.py`` with a single
+probe-and-select loop:
 
-from confuse import Subview
+    for each enabled handler:
+        for each tier in handler.PIPELINE:
+            pick the first Tool whose probe() returns available
+        if every tier produced a Tool:
+            store the chosen tuple in config.computed.handler_stages
 
-from picopt.config.cwebp import ConfigCWebP
-from picopt.formats import (
-    CONVERTIBLE_PIL_ANIMATED_FILE_FORMATS,
-    CONVERTIBLE_PIL_FILE_FORMATS,
-    MODERN_CWEBP_FORMAT_STRS,
-    MPO_FILE_FORMAT,
-    FileFormat,
-)
-from picopt.handlers.container.animated.img2webp import Img2WebPAnimatedLossless
-from picopt.handlers.container.animated.webp import PILPackWebPAnimatedLossless
-from picopt.handlers.container.animated.webpmux import WebPMuxAnimatedLossless
-from picopt.handlers.container.archive.rar import (
-    Cbr,
-    Rar,
-)
-from picopt.handlers.container.archive.seven_zip import (
-    Cb7,
-    SevenZip,
-)
-from picopt.handlers.container.archive.tar import (
-    Cbt,
-    Tar,
-    TarBz,
-    TarGz,
-    TarXz,
-)
-from picopt.handlers.container.archive.zip import (
-    Cbz,
-    EPub,
-    Zip,
-)
-from picopt.handlers.handler import INTERNAL, Handler
-from picopt.handlers.image.gif import Gif, GifAnimated
-from picopt.handlers.image.jpeg import Jpeg
-from picopt.handlers.image.png import Png, PngAnimated
-from picopt.handlers.image.svg import Svg
-from picopt.handlers.image.webp import Gif2WebPAnimatedLossless, WebPLossless
+Handlers whose pipeline can't be filled are simply absent from
+``handler_stages``; the routing layer (``walk/handler_factory.py``) reads
+that absence as "this handler is unavailable" and falls through the
+``Route.convert`` chain.
+
+The format → handler routing map is no longer built here at all — it lives
+in the registry as :func:`picopt.plugins.routes_by_format`.
+
+Important ordering invariant: ``CWebPTool.probe()`` mutates
+``WebPLossless.IS_MODERN_CWEBP`` as a side effect, and ``WebPLossless``
+instances read that flag in ``__init__`` to widen their accepted input
+formats. The probe loop runs at config-construction time, before
+:class:`Walk` ever instantiates a handler, so the side effect is always in
+place by the time it matters. Don't reorder.
+"""
+
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
+from picopt import plugins as registry
 from picopt.printer import Printer
 
+if TYPE_CHECKING:
+    from collections.abc import Iterable
 
-@dataclass
-class FileFormatHandlers:
-    """FileFormat handlers for a File FileFormat."""
+    from confuse import Subview
 
-    convert: tuple[type[Handler], ...] = ()
-    native: tuple[type[Handler], ...] = ()
-
-    def items(self) -> ItemsView[str, tuple[type[Handler], ...]]:
-        """Return both fields."""
-        return {
-            field.name: tuple(getattr(self, field.name)) for field in fields(self)
-        }.items()
+    from picopt.formats import FileFormat
+    from picopt.plugins.base import Handler, Tool
 
 
-# Handlers for formats are listed in priority order
-_LOSSLESS_CONVERTIBLE_FORMAT_HANDLERS = MappingProxyType(
-    {
-        ffmt: FileFormatHandlers(convert=(WebPLossless, Png))
-        for ffmt in CONVERTIBLE_PIL_FILE_FORMATS
-    }
-)
-_LOSSLESS_CONVERTIBLE_ANIMATED_FORMAT_HANDLERS = MappingProxyType(
-    {
-        ffmt: FileFormatHandlers(
-            convert=(
-                Img2WebPAnimatedLossless,
-                WebPMuxAnimatedLossless,
-                PILPackWebPAnimatedLossless,
-                PngAnimated,
+def _select_pipeline_for_handler(
+    handler_cls: type[Handler],
+    disabled_program_names: frozenset[str],
+) -> tuple[Tool, ...] | None:
+    """
+    Probe each tier of a handler's pipeline; return chosen tools or None.
+
+    Returns ``None`` if any tier has no available tool — that signals the
+    handler can't run on this machine. Returns the empty tuple for handlers
+    with an empty pipeline (e.g. archive packers that use only stdlib /
+    library code); those are unconditionally available.
+    """
+    if not handler_cls.PIPELINE:
+        return ()
+    chosen: list[Tool] = []
+    for tier in handler_cls.PIPELINE:
+        picked: Tool | None = None
+        for tool in tier:
+            if tool.name and tool.name in disabled_program_names:
+                continue
+            status = tool.probe()
+            if status.available:
+                picked = tool
+                break
+        if picked is None:
+            return None
+        chosen.append(picked)
+    return tuple(chosen)
+
+
+def _enabled_handler_classes(
+    requested_format_strs: frozenset[str],
+) -> Iterable[type[Handler]]:
+    """
+    Every handler whose OUTPUT_FORMAT_STR or input format is requested.
+
+    A handler is "in scope" for probing if any FileFormat it can receive
+    appears in the user's --formats / --extra-formats set, OR if its
+    OUTPUT_FORMAT_STR does. We probe everything in scope so the routing
+    layer has accurate availability info to fall back through.
+    """
+    for plugin in registry.iter_plugins():
+        for handler_cls in plugin.handlers:
+            handler_format_strs = {handler_cls.OUTPUT_FORMAT_STR}
+            handler_format_strs.update(
+                ff.format_str for ff in handler_cls.INPUT_FILE_FORMATS
             )
-        )
-        for ffmt in CONVERTIBLE_PIL_ANIMATED_FILE_FORMATS
-    }
-)
-_FORMAT_HANDLERS = MappingProxyType(
-    {
-        **_LOSSLESS_CONVERTIBLE_FORMAT_HANDLERS,
-        **_LOSSLESS_CONVERTIBLE_ANIMATED_FORMAT_HANDLERS,
-        Gif.OUTPUT_FILE_FORMAT: FileFormatHandlers(
-            convert=(WebPLossless, Png),
-            native=(Gif,),
-        ),
-        GifAnimated.OUTPUT_FILE_FORMAT: FileFormatHandlers(
-            convert=(
-                Gif2WebPAnimatedLossless,
-                Img2WebPAnimatedLossless,
-                PILPackWebPAnimatedLossless,
-                PngAnimated,
-            ),
-            native=(GifAnimated,),
-        ),
-        MPO_FILE_FORMAT: FileFormatHandlers(convert=(Jpeg,)),
-        Jpeg.OUTPUT_FILE_FORMAT: FileFormatHandlers(native=(Jpeg,)),
-        Png.OUTPUT_FILE_FORMAT: FileFormatHandlers(
-            convert=(WebPLossless,), native=(Png,)
-        ),
-        PngAnimated.OUTPUT_FILE_FORMAT: FileFormatHandlers(
-            convert=(Img2WebPAnimatedLossless, PILPackWebPAnimatedLossless),
-            native=(PngAnimated,),
-        ),
-        WebPLossless.OUTPUT_FILE_FORMAT: FileFormatHandlers(native=(WebPLossless,)),
-        WebPMuxAnimatedLossless.OUTPUT_FILE_FORMAT: FileFormatHandlers(
-            native=(
-                WebPMuxAnimatedLossless,
-                Img2WebPAnimatedLossless,
-                PILPackWebPAnimatedLossless,
-            )
-        ),
-        Svg.OUTPUT_FILE_FORMAT: FileFormatHandlers(native=(Svg,)),
-        # Archives
-        Zip.OUTPUT_FILE_FORMAT: FileFormatHandlers(native=(Zip,)),
-        Cbz.OUTPUT_FILE_FORMAT: FileFormatHandlers(native=(Cbz,)),
-        Rar.INPUT_FILE_FORMAT: FileFormatHandlers(native=(Rar,), convert=(Zip,)),
-        Cbr.INPUT_FILE_FORMAT: FileFormatHandlers(native=(Cbr,), convert=(Cbz,)),
-        EPub.OUTPUT_FILE_FORMAT: FileFormatHandlers(native=(EPub,)),
-        SevenZip.INPUT_FILE_FORMAT: FileFormatHandlers(
-            native=(SevenZip,), convert=(Zip,)
-        ),
-        Cb7.OUTPUT_FILE_FORMAT: FileFormatHandlers(native=(Cb7,), convert=(Cbz,)),
-        Tar.OUTPUT_FILE_FORMAT: FileFormatHandlers(native=(Tar,), convert=(Zip,)),
-        TarGz.OUTPUT_FILE_FORMAT: FileFormatHandlers(native=(TarGz,), convert=(Zip,)),
-        TarBz.OUTPUT_FILE_FORMAT: FileFormatHandlers(native=(TarBz,), convert=(Zip,)),
-        TarXz.OUTPUT_FILE_FORMAT: FileFormatHandlers(native=(TarXz,), convert=(Zip,)),
-        Cbt.INPUT_FILE_FORMAT: FileFormatHandlers(native=(Cbt,), convert=(Cbz,)),
-    }
-)
+            if handler_format_strs & requested_format_strs:
+                yield handler_cls
 
 
-class ConfigHandlers(ConfigCWebP):
-    """Config Handlers."""
+class ConfigHandlers:
+    """Build the per-handler pipeline selection from the merged config."""
 
     def __init__(self, printer: Printer | None = None) -> None:
         """Initialize printer."""
         self._printer: Printer = printer or Printer(2)
+
+    @staticmethod
+    def _get_config_set(config: Subview, *keys: str) -> frozenset[str]:
+        val_list: list[str] = []
+        for key in keys:
+            if key in config:
+                val_list += config[key].get(list) or []
+        return frozenset(val.upper() for val in val_list)
 
     def _print_formats_config(
         self,
         verbose: int,
         handled_format_strs: set[str],
         convert_format_strs: dict[str, set[str]],
-        cwebp_version: str,
-        *,
-        is_modern_cwebp: bool,
     ) -> None:
-        """Print verbose init messages."""
-        handled_format_list = ", ".join(sorted(handled_format_strs))
-        self._printer.config(f"Optimizing formats: {handled_format_list}")
-        for convert_to_format_str, format_strs in convert_format_strs.items():
-            convert_from_list = sorted(format_strs)
-            if not convert_from_list:
-                return
-            convert_from = ", ".join(convert_from_list)
-            self._printer.config(
-                f"Converting {convert_from} to {convert_to_format_str}"
-            )
-        if (
-            verbose > 1
-            and not is_modern_cwebp
-            and PILPackWebPAnimatedLossless.OUTPUT_FORMAT_STR in convert_format_strs
-        ):
-            to_webp_strs = MODERN_CWEBP_FORMAT_STRS & handled_format_strs
-            if to_webp_strs:
-                to_web_str = " & ".join(sorted(to_webp_strs))
-                self._printer.config(
-                    f"Converting {to_web_str} with an extra step for older cwebp {cwebp_version}",
-                )
+        if not verbose:
+            return
+        handled_list = ", ".join(sorted(handled_format_strs))
+        self._printer.config(f"Optimizing formats: {handled_list}")
+        for target, sources in convert_format_strs.items():
+            if not sources:
+                continue
+            from_list = ", ".join(sorted(sources))
+            self._printer.config(f"Converting {from_list} to {target}")
 
-    @staticmethod
-    def _get_config_set(config: Subview, *keys: str) -> frozenset[str]:
-        val_list = []
-        for key in keys:
-            val_list += config[key].get(list) if key in config else []
-        return frozenset(val.upper() for val in val_list)
+    def _set_format_handler_stages(
+        self,
+        handler_cls: type[Handler],
+        handler_stages,
+        disabled_program_names: frozenset[str],
+    ):
+        stages = _select_pipeline_for_handler(handler_cls, disabled_program_names)
+        if stages is not None:
+            handler_stages[handler_cls] = stages
 
-    @staticmethod
-    def _get_handler_stage_npx(program) -> tuple:
-        bin_path = shutil.which("npx")
-        exec_args = ()
-        if not bin_path:
-            return exec_args
-        exec_args_attempt = (bin_path, "--no", *program.split("_")[1:])
-        # Sucks but easiest way to determine if an npx prog exists is
-        # running it.
-        try:
-            subprocess.run(  # noqa: S603
-                exec_args_attempt,
-                check=True,
-                stdout=subprocess.DEVNULL,
-                stderr=subprocess.DEVNULL,
-            )
-            exec_args = exec_args_attempt
-        except (subprocess.CalledProcessError, FileNotFoundError, OSError):
-            pass
-        return exec_args
-
-    @classmethod
-    def _get_handler_stage(cls, disabled_programs, program) -> tuple | None:
-        exec_args = None
-        if program in disabled_programs:
-            pass
-        elif program.startswith(("pil2", INTERNAL)):
-            exec_args = ()
-        elif program.startswith("npx_"):
-            exec_args = cls._get_handler_stage_npx(program)
-        elif bin_path := shutil.which(program):  # pyright: ignore[reportDeprecated]
-            exec_args = (bin_path,)
-        return exec_args
-
-    @classmethod
-    def _get_handler_stages(
-        cls, handler_class: type[Handler], disabled_programs: frozenset
-    ) -> dict[str, tuple[str, ...]]:
-        """Get the program stages for each handler."""
-        stages = {}
-        for program_priority_list in handler_class.PROGRAMS:
-            for program in program_priority_list:
-                stage = cls._get_handler_stage(disabled_programs, program)
-                if stage is not None:
-                    stages[program] = stage
-                    break
-        return stages
-
-    @classmethod
-    def _set_format_handler_map_entry(  # noqa: PLR0913
-        cls,
-        handler_type: str,
-        handler_class: type[Handler],
-        convert_to: frozenset[str],
-        handler_stages: dict[type[Handler], dict[str, tuple[str, ...]]],
-        convert_format_strs: dict,
+    def _set_format_handled_strs_for_format(
+        self,
         file_format: FileFormat,
-        convert_handlers: dict[FileFormat, type[Handler]],
-        native_handlers: dict[FileFormat, type[Handler]],
-        handled_format_strs: set[str],
-        disabled_programs: frozenset,
-    ) -> bool:
-        """Create an entry for the format handler maps."""
-        if (
-            handler_type == "convert"
-            and handler_class.OUTPUT_FILE_FORMAT.format_str not in convert_to
-        ):
-            return False
-
-        # Get handler stages by class with caching
-        if handler_class not in handler_stages:
-            handler_stages[handler_class] = cls._get_handler_stages(
-                handler_class, disabled_programs
-            )
-        stages = handler_stages.get(handler_class)
-        if not stages:
-            return False
-
-        if handler_type == "convert":
-            if handler_class.OUTPUT_FORMAT_STR not in convert_format_strs:
-                convert_format_strs[handler_class.OUTPUT_FORMAT_STR] = set()
-            convert_format_strs[handler_class.OUTPUT_FORMAT_STR].add(
+        all_format_strs,
+        convert_chain,
+        convert_to,
+        handler_stages,
+        convert_format_strs,
+        handled_format_strs,
+        native,
+    ):
+        if file_format.format_str not in all_format_strs:
+            return
+        picked_via_convert = False
+        for candidate in convert_chain:
+            if candidate.OUTPUT_FORMAT_STR not in convert_to:
+                continue
+            if candidate not in handler_stages:
+                continue
+            convert_format_strs.setdefault(candidate.OUTPUT_FORMAT_STR, set()).add(
                 file_format.format_str
             )
-            convert_handlers[file_format] = handler_class
-        else:
-            native_handlers[file_format] = handler_class
-
-        handled_format_strs.add(file_format.format_str)
-        return True
+            handled_format_strs.add(file_format.format_str)
+            picked_via_convert = True
+            break
+        if not picked_via_convert and native is not None and native in handler_stages:
+            handled_format_strs.add(file_format.format_str)
 
     def set_format_handler_map(self, config: Subview) -> None:
-        """Create a format to handler map from config."""
+        """Probe handlers for the requested formats and store availability."""
         all_format_strs = self._get_config_set(config, "formats", "extra_formats")
         config["formats"].set(tuple(sorted(all_format_strs)))
         convert_to = self._get_config_set(config, "convert_to")
 
-        native_handlers: dict[FileFormat, type[Handler]] = {}
-        convert_handlers: dict[FileFormat, type[Handler]] = {}
-        handler_stages: dict[type[Handler], dict[str, tuple[str, ...]]] = {}
-
-        handled_format_strs = set()
-        convert_format_strs = {}
-        disabled_programs_list: list | None = config["disable_programs"].get(list)
-        disabled_programs = (
-            frozenset(disabled_programs_list) if disabled_programs_list else frozenset()
+        disabled_list: list[str] | None = config["disable_programs"].get(list)
+        disabled_program_names = (
+            frozenset(disabled_list) if disabled_list else frozenset()
         )
 
-        for file_format, possible_file_handlers in _FORMAT_HANDLERS.items():
-            if file_format.format_str not in all_format_strs:
-                continue
-            for (
-                handler_type,
-                possible_handler_classes,
-            ) in sorted(possible_file_handlers.items()):
-                for handler_class in possible_handler_classes:
-                    if self._set_format_handler_map_entry(
-                        handler_type,
-                        handler_class,
-                        convert_to,
-                        handler_stages,
-                        convert_format_strs,
-                        file_format,
-                        convert_handlers,
-                        native_handlers,
-                        handled_format_strs,
-                        disabled_programs,
-                    ):
-                        break
-
-        is_modern_cwebp, cwebp_version = self.is_cwebp_modern(handler_stages)
-
-        config["computed"]["native_handlers"].set(native_handlers)
-        config["computed"]["convert_handlers"].set(convert_handlers)
+        handler_stages: dict[type[Handler], tuple[Tool, ...]] = {}
+        for handler_cls in _enabled_handler_classes(all_format_strs):
+            self._set_format_handler_stages(
+                handler_cls, handler_stages, disabled_program_names
+            )
+        # Walk the routing table to compute the verbose-output summary. The
+        # routing layer will do this same lookup at runtime; we just mirror
+        # the result for the user-facing log.
+        handled_format_strs: set[str] = set()
+        convert_format_strs: dict[str, set[str]] = {}
+        routes = registry.routes_by_format()
+        for file_format, (native, convert_chain) in routes.items():
+            self._set_format_handled_strs_for_format(
+                file_format,
+                all_format_strs,
+                convert_chain,
+                convert_to,
+                handler_stages,
+                convert_format_strs,
+                handled_format_strs,
+                native,
+            )
         config["computed"]["handler_stages"].set(handler_stages)
-        config["computed"]["is_modern_cwebp"].set(is_modern_cwebp)
+
         verbose: int = config["verbose"].get(int)
-        self._print_formats_config(
-            verbose,
-            handled_format_strs,
-            convert_format_strs,
-            cwebp_version,
-            is_modern_cwebp=is_modern_cwebp,
-        )
+        self._print_formats_config(verbose, handled_format_strs, convert_format_strs)

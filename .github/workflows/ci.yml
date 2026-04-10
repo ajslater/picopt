@@ -1,0 +1,139 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main, develop]
+
+env:
+  BUILDER_IMAGE: ghcr.io/${{ github.repository }}/builder
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # ---------------------------------------------------------------------------
+  # Lint, Test, and Build
+  # ---------------------------------------------------------------------------
+  test:
+    name: Lint, Test & Build
+    runs-on: ubuntu-24.04
+    if: |
+      github.ref_name == 'main' && github.event_name == 'push' ||
+      github.base_ref == 'main' ||
+      (github.base_ref == 'develop' && github.head_ref == 'pre-release')
+    permissions:
+      contents: read
+      packages: write
+      checks: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          # Only fetch full history for the main push gate
+          fetch-depth: ${{ (github.ref_name == 'main' && github.event_name == 'push') && 0 || 1 }}
+
+      - name: Check for Redundant Tests & Existing Dist
+        id: gate
+        if: github.ref_name == 'main' && github.event_name == 'push'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+        run: bin/ci-download-dist-if-identical.sh
+
+      - name: Set up Docker Buildx
+        if: "!cancelled() && steps.gate.outputs.dist_found != 'true'"
+        uses: docker/setup-buildx-action@v4
+
+      - name: Log in to GHCR
+        if: "!cancelled() && steps.gate.outputs.dist_found != 'true'"
+        uses: docker/login-action@v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      # Build and cache the builder image in the registry
+      - name: Build builder image
+        if: "!cancelled() && steps.gate.outputs.dist_found != 'true'"
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          load: true
+          tags: picopt-ci:ci
+          cache-from: type=registry,ref=${{ env.BUILDER_IMAGE }}:cache
+          cache-to: type=registry,ref=${{ env.BUILDER_IMAGE }}:cache,mode=max
+
+      - name: Start Services
+        if: "!cancelled() && steps.gate.outputs.dist_found != 'true'"
+        run: |
+          mkdir -p dist test-results
+          docker compose up -d ci
+
+      - name: Lint
+        if: "!cancelled() && steps.gate.outputs.dist_found != 'true'"
+        run: docker exec picopt-ci make lint
+
+      - name: Tests
+        id: tests
+        if: "!cancelled() && steps.gate.outputs.dist_found != 'true'"
+        run: docker exec picopt-ci make test
+
+      - name: Upload Test Results
+        id: upload-tests
+        if: "!cancelled() && steps.tests.outcome != 'skipped'"
+        uses: actions/upload-artifact@v7
+        with:
+          name: test-results
+          path: "**/test-results/pytest/*.xml"
+
+      - name: Publish Test Report
+        if: "!cancelled() && steps.upload-tests.outcome == 'success'"
+        uses: mikepenz/action-junit-report@v6
+        with:
+          report_paths: "**/test-results/pytest/*.xml"
+
+      - name: Build Distribution
+        if: "!cancelled() && steps.gate.outputs.dist_found != 'true'"
+        run: docker exec picopt-ci make build
+
+      - name: Stop Services
+        if: "!cancelled() && steps.gate.outputs.dist_found != 'true'"
+        run: docker compose down
+
+      - name: Upload dist artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: python-dist
+          path: dist/
+          retention-days: 2
+
+  # ---------------------------------------------------------------------------
+  # Deploy to PyPI
+  # ---------------------------------------------------------------------------
+  deploy:
+    name: Deploy
+    needs: test
+    if: github.event_name == 'push' ||
+      (github.base_ref == 'develop' && github.head_ref == 'pre-release')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Download dist artifact
+        uses: actions/download-artifact@v8
+        with:
+          name: python-dist
+          path: dist/
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v8.0.0
+
+      - name: Publish to PyPI
+        run: uv publish
+        env:
+          UV_PUBLISH_TOKEN: ${{ secrets.PYPI_TOKEN }}

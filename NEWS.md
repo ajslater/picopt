@@ -1,5 +1,14 @@
 # 📰 Picopt News
 
+## v6.0.0
+
+- Picopt now recompresses PDFs and their image contents losslessly.
+- Picopt now skips writing timestamps if no other disk writing operation
+  occurred.
+- Picopt doctor command shows what optimization tools are available.
+- New architecture uses discoverable plugins to keep behavior contained in
+  plugin files rather than spread out across the codebase.
+
 ## v5.3.2
 
 - Add option --timestamps-ignore-archive-entry-mtimes.

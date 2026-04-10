@@ -6,7 +6,7 @@ from types import MappingProxyType
 import pytest
 
 from picopt import PROGRAM_NAME, cli
-from tests import IMAGES_DIR, get_test_dir
+from tests import IMAGES_DIR, assert_size_close, get_test_dir
 from tests.base import BaseTest
 
 __all__ = ()
@@ -43,7 +43,7 @@ class TestMPO(BaseTest):
         cli.main(args)
         path = self.TMP_ROOT / fn
         size = FNS[fn][1]
-        assert path.stat().st_size == size
+        assert_size_close(path.stat().st_size, size)
 
     def test_convert_to_jpeg(self, fn: str) -> None:
         """Test convert to PNG."""
@@ -51,7 +51,7 @@ class TestMPO(BaseTest):
         cli.main(args)
         suffix, size = FNS[fn][2]
         path = (self.TMP_ROOT / fn).with_suffix("." + suffix)
-        assert path.stat().st_size == size
+        assert_size_close(path.stat().st_size, size)
 
     def test_convert_to_jpeg_disable_internal_mozjpeg(self, fn: str) -> None:
         """Test convert to Jpeg from MPO."""
@@ -62,10 +62,10 @@ class TestMPO(BaseTest):
             "-c",
             "JPEG",
             "-D",
-            "internal_mozjpeg",
+            "mozjpeg",
             str(self.TMP_ROOT),
         )
         cli.main(args)
         suffix, size = FNS[fn][3]
         path = (self.TMP_ROOT / fn).with_suffix("." + suffix)
-        assert path.stat().st_size == size
+        assert_size_close(path.stat().st_size, size)

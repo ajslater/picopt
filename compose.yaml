@@ -1,4 +1,16 @@
 services:
+  ci:
+    build:
+      context: .
+      target: picopt-ci
+    image: picopt-ci:ci
+    container_name: picopt-ci
+    volumes:
+      - ./test-results:/app/test-results
+      - ./dist:/app/dist
+    environment:
+      - PYTHONUNBUFFERED=1
+    entrypoint: [sleep, infinity]
   picopt-build-builder:
     build:
       context: .

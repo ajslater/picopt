@@ -1,4 +1,5 @@
-export MERGE_PYTHON=1
+DEVENV_PYTHON := 1
+export DEVENV_PYTHON
 
 .PHONY: clean
 ## Clean python caches
@@ -10,7 +11,7 @@ clean::
 .PHONY: install-deps-pip
 ## Update pip and install node packages
 ## @category Install
-install-deps-pip: install-deps-npm
+install-deps-pip:
 	pip install --upgrade pip
 
 .PHONY: install-prod
@@ -34,34 +35,39 @@ update-python:
 .PHONY: update
 ## Update dependencies
 ## @category Update
-update:: update-python update-npm
+update:: update-python
 
 ## Show version. Use V variable to set version
 ## @category Update
 V :=
 .PHONY: version
-## Show or set project version
+## Show or set project version for python
 ## @category Update
-version:
-	bin/version.sh $(V)
+version::
+	bin/version-python.sh $(V)
+
+.PHONY: fix-python
+## Fix python lint errors
+## @category Fix
+fix-python:
+	./bin/fix-python.sh
 
 .PHONY: fix
 ## Fix python lint errors
 ## @category Fix
-fix::
-	./bin/fix-python.sh
+fix:: fix-python
 
 .PHONY: typecheck
 ## Static typecheck
 ## @category Lint
 typecheck:
-	uv run --group lint basedpyright .
+	uv run --group lint --group test --group build basedpyright .
 
 .PHONY: ty
 ## Static typecheck with ty
 ## @category Lint
 ty:
-	uv run --group lint ty check .
+	uv run --group lint --group test --group build ty check .
 
 .PHONY: complexity
 ## Lint backend complexity
@@ -69,11 +75,16 @@ ty:
 complexity:
 	./bin/lint-complexity.sh
 
+.PHONY: lint-python
+## Lint python
+## @category Lint
+lint-python:
+	./bin/lint-python.sh
+
 .PHONY: lint
 ## Lint python
 ## @category Lint
-lint::
-	./bin/lint-python.sh
+lint:: lint-python
 
 .PHONY: uml
 ## Create a UML class diagram
@@ -87,14 +98,17 @@ uml:
 cycle:
 	uvx pycycle --ignore node_modules,.venv --verbose --here
 
+T :=
+.PHONY: test-python
 ## Test Python
 ## @category Test
-T :=
+test-python:
+	./bin/test-python.sh $(T)
+
 .PHONY: test
 ## Run Python Tests. Use T variable to run specific tests
 ## @category Test
-test::
-	./bin/test-python.sh $(T)
+test:: test-python
 
 ifndef OVERRIDE_BUILD
 .PHONY: build
@@ -104,8 +118,10 @@ build::
 	uv build
 endif
 
+ifndef OVERRIDE_PUBLISH
 .PHONY: publish
 ## Publish package to pypi
 ## @category Deploy
 publish:
 	uv publish
+endif

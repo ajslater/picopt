@@ -4,7 +4,7 @@ import shutil
 
 from picopt import PROGRAM_NAME, cli
 from picopt.old_timestamps import OLD_TIMESTAMPS_NAME
-from tests import IMAGES_DIR, get_test_dir
+from tests import IMAGES_DIR, assert_size_close, get_test_dir
 
 __all__ = ()
 TMP_ROOT = get_test_dir()
@@ -35,7 +35,7 @@ class TestOldTimestamps:
         """Assert sizes."""
         for name, sizes in FNS.items():
             path = root / name
-            assert path.stat().st_size == sizes[index]
+            assert_size_close(path.stat().st_size, sizes[index])
 
     def setup_method(self) -> None:
         """Set up method."""

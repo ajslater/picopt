@@ -20,6 +20,7 @@ class ReportStatBase:
     bytes_out: int = 0
     exc: Exception | None = None
     data: bytes = b""
+    changed: bool = False
 
 
 class ReportStats(ReportStatBase):
@@ -119,20 +120,20 @@ class Totals:
             return
         bytes_saved = self.bytes_in - self.bytes_out
         percent_bytes_saved = bytes_saved / self.bytes_in * 100
-        msg = ""
-        if self._config.dry_run:
-            if percent_bytes_saved > 0:
-                msg += "Could save"
-            elif percent_bytes_saved == 0:
-                msg += "Could even out for"
-            else:
-                msg += "Could lose"
-        elif percent_bytes_saved > 0:
-            msg += "Saved"
-        elif percent_bytes_saved == 0:
-            msg += "Evened out"
-        else:
-            msg = "Lost"
+        sign = (percent_bytes_saved > 0) - (percent_bytes_saved < 0)
+        match (bool(self._config.dry_run), sign):
+            case (True, 1):
+                msg = "Could save"
+            case (True, 0):
+                msg = "Could even out for"
+            case (True, -1):
+                msg = "Could lose"
+            case (False, 1):
+                msg = "Saved"
+            case (False, 0):
+                msg = "Evened out"
+            case _:
+                msg = "Lost"
         natural_saved = naturalsize(bytes_saved)
         msg += f" a total of {natural_saved} or {percent_bytes_saved:.2f}%"
         self._printer.saved(msg)
