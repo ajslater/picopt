@@ -1,6 +1,6 @@
 """Walk initialization."""
 
-from multiprocessing.pool import Pool
+from concurrent.futures import ProcessPoolExecutor
 from typing import TYPE_CHECKING
 
 from confuse.templates import AttrDict
@@ -45,7 +45,9 @@ class WalkInit:
         self._validate_top_paths()
         self._printer: Printer = Printer(config.verbose)
         self._totals: Totals = Totals(config, self._printer)
-        self._pool: Pool = Pool(self._config.jobs) if self._config.jobs else Pool()
+        self._executor: ProcessPoolExecutor = ProcessPoolExecutor(
+            max_workers=self._config.jobs or None
+        )
         self._timestamps: Grovestamps | None = None  # reassigned at start of run
         self._skipper: WalkSkipper = WalkSkipper(config, self._printer)
 

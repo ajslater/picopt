@@ -24,7 +24,7 @@ dependencies = [
   "python-dateutil~=2.8",
   "rarfile~=4.0",
   "ruamel-yaml>=0.18,<1.0",
-  "treestamps~=2.5.1",
+  "treestamps~=2.5.2",
   "typing-extensions~=4.13",
 ]
 description = "A multi format lossless image optimizer that uses external tools"

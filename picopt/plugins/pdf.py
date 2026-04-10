@@ -447,7 +447,7 @@ class Pdf(ContainerHandler):
     # ------------------------------------------------------------ hydration
 
     @override
-    def _hydrate_optimized_path_info(
+    def hydrate_optimized_path_info(
         self, path_info: PathInfo, report: ReportStats
     ) -> None:
         """

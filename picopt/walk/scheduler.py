@@ -160,7 +160,7 @@ Job = UnpackJob | OptimizeLeafJob | RepackJob
 # --------------------------------------------------------------------- nodes
 
 
-@dataclass
+@dataclass(eq=False)
 class ContainerNode:
     """Bookkeeping for one container in the job tree."""
 
@@ -432,8 +432,9 @@ class Scheduler:
                 parent.pending = max(0, parent.pending - 1)
                 return
             if report.exc is None:
-                if report.data:
-                    entry.job.path_info.set_data(report.data)
+                parent.handler.hydrate_optimized_path_info(
+                    entry.job.path_info, report
+                )
                 parent.handler.get_optimized_contents().add(entry.job.path_info)
                 if report.changed:
                     parent.had_work = True
@@ -450,12 +451,12 @@ class Scheduler:
         self._write_timestamp(report, entry.job.path_info.top_path)
 
     def _handle_repack_failure(self, report, node):
-        if self._config.get("fail_fast"):
+        if self._config.fail_fast:
             self._totals.errors.append(report)
             report.report(self._printer)
             self._trigger_fail_fast(report.exc)
             return
-        if self._config.get("fail_fast_container"):
+        if self._config.fail_fast_container:
             # escalate to top-level container of this subtree
             root = node
             while root.parent is not None:
@@ -519,7 +520,13 @@ class Scheduler:
         if node.state is NodeState.REPACKING or node.state is NodeState.DONE:
             return
 
-        node.handler.set_do_repack(do_repack=node.had_work)
+        # Respect the handler's own _do_repack flag (set during walk) OR
+        # whether any child produced replacement bytes. Handlers like
+        # Img2WebPAnimated set _do_repack=True unconditionally during walk()
+        # because format conversion always requires repacking even when no
+        # individual child was "optimized".
+        if not node.handler.is_do_repack():
+            node.handler.set_do_repack(do_repack=node.had_work)
         if not node.handler.is_do_repack():
             # No work: synthesize a no-op completion so the parent chain
             # gets notified identically to a real repack.
