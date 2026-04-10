@@ -95,6 +95,10 @@ class ContainerHandler(Handler, ABC):
         """Whether any contained file changed and the container needs repacking."""
         return self._do_repack
 
+    def set_do_repack(self, *, do_repack: bool) -> None:
+        """Set the flag determining whether the container needs repack."""
+        self._do_repack = do_repack
+
     def set_task(self, path_info: PathInfo, mp_result: ApplyResult | None) -> None:
         """Store the multiprocessing result for one child path."""
         if mp_result is None:
