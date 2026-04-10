@@ -333,6 +333,18 @@ def get_arguments(params: tuple[str, ...] | None = None) -> Namespace:
         help="Disable a comma delineated list of external programs.",
     )
     parser.add_argument(
+        "--fail-fast",
+        action="store_true",
+        dest="fail_fast",
+        help="Stop all optimization on the first error encountered.",
+    )
+    parser.add_argument(
+        "--fail-fast-container",
+        action="store_true",
+        dest="fail_fast_container",
+        help="When an inner repack fails, fail the entire top-level container.",
+    )
+    parser.add_argument(
         "-V",
         "--version",
         action="version",
