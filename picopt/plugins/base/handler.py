@@ -257,11 +257,10 @@ class Handler(ABC):
 
     def _write_final_path(self, final_data_buffer: BinaryIO) -> None:
         if isinstance(final_data_buffer, BytesIO):
-            with self.final_path.open("wb") as final_file:
+            with self.working_path.open("wb") as working_path:
                 final_data_buffer.seek(0)
-                final_file.write(final_data_buffer.read())
-        else:
-            self.working_path.replace(self.final_path)
+                working_path.write(final_data_buffer.read())
+        self.working_path.replace(self.final_path)
 
     def _cleanup_original_path(self) -> None:
         final_norm = os.path.normcase(self.final_path)
