@@ -6,8 +6,7 @@ from pathlib import Path
 from confuse import AttrDict
 from treestamps import Grovestamps, Treestamps
 
-from picopt import PROGRAM_NAME
-from picopt.handlers.handler import Handler
+from picopt import PROGRAM_NAME, WORKING_SUFFIX
 from picopt.old_timestamps import OLD_TIMESTAMPS_NAME
 from picopt.path import PathInfo, is_path_ignored
 from picopt.printer import Printer
@@ -94,27 +93,22 @@ class WalkSkipper:
             return True
 
         path = path_info.path
-        if path and path.name.rfind(Handler.WORKING_SUFFIX) > -1:
+        if path and path.name.rfind(WORKING_SUFFIX) > -1:
             self._clean_up_working_files(path)
             return True
         return False
-
-    def _get_walk_after(self, path_info: PathInfo):
-        if self._config.after is not None:
-            walk_after = self._config.after
-        elif self._timestamps and (api := path_info.archive_pseudo_path()):
-            timestamps = self._timestamps.get(path_info.top_path, {})
-            walk_after = timestamps.get(api)
-        else:
-            walk_after = None
-        return walk_after
 
     def is_older_than_timestamp(
         self,
         path_info: PathInfo,
     ) -> bool:
         """Is the file older than the timestamp."""
-        walk_after = self._get_walk_after(path_info)
+        if self._config.after is not None:
+            walk_after = self._config.after
+        elif self._timestamps and (api := path_info.archive_pseudo_path()):
+            walk_after = self._timestamps.get(path_info.top_path, {}).get(api)
+        else:
+            walk_after = None
         if walk_after is None:
             return False
 

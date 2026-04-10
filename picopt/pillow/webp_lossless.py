@@ -21,8 +21,6 @@ _SEARCH_LEN = 128
 
 def is_lossless(input_buffer: BytesIO | BufferedReader) -> bool:
     """Compare header types against lossless types."""
-    result = True
-
     buffer: BytesIO | mmap = (
         mmap(input_buffer.fileno(), 0, access=ACCESS_READ)
         if isinstance(input_buffer, BufferedReader)

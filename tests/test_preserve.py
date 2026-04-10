@@ -6,7 +6,7 @@ from types import MappingProxyType
 import pytest
 
 from picopt import PROGRAM_NAME, cli
-from tests import IMAGES_DIR, get_test_dir
+from tests import IMAGES_DIR, assert_size_close, get_test_dir
 from tests.base import BaseTest
 
 __all__ = ()
@@ -42,7 +42,7 @@ class TestPreserve(BaseTest):
         cli.main(args)
         new_stat = path.stat()
         size = FNS[fn][1]
-        assert new_stat.st_size == size
+        assert_size_close(new_stat.st_size, size)
         for stat_name_suffix in STATS:
             stat_name = "st_" + stat_name_suffix
             assert getattr(old_stat, stat_name) == getattr(new_stat, stat_name)

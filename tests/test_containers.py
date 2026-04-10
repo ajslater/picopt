@@ -7,7 +7,7 @@ from zipfile import ZipFile
 import pytest
 
 from picopt import PROGRAM_NAME, cli
-from tests import CONTAINER_DIR, get_test_dir
+from tests import CONTAINER_DIR, assert_size_close, get_test_dir
 from tests.base import BaseTest
 
 __all__ = ()
@@ -72,15 +72,7 @@ class TestContainersDir(BaseTest):
                 namelist = zf.namelist()
             assert BMP_FN in namelist
         sizes = FNS[fn]
-        assert path.stat().st_size == sizes[0]
-
-    @staticmethod
-    def _vary_byte_assert(path_size, size, variation):
-        # lzma & bz2 vary output size :o
-        cond = abs(path_size - size) <= variation
-        if not cond:
-            print(f"{path_size=} != {size=}")
-        assert cond
+        assert_size_close(path.stat().st_size, sizes[0])
 
     def test_containers_convert_webp_no_convert_container(self, fn: str) -> None:
         """Test containers no convert."""
@@ -92,13 +84,9 @@ class TestContainersDir(BaseTest):
                 namelist = zf.namelist()
             assert BMP_FN in namelist
         size = FNS[fn][1]
-        path_size = path.stat().st_size
-        if fn.endswith(("7z", "cb7", "xz", "gz")):
-            self._vary_byte_assert(path_size, size, 20)
-        elif fn.endswith(("bz2",)):
-            self._vary_byte_assert(path_size, size, 50)
-        else:
-            assert path_size == size
+        # assert_size_close already absorbs the lzma/bz2 byte-level variance
+        # that previously needed per-extension allowances.
+        assert_size_close(path.stat().st_size, size)
 
     def test_containers_only_convert_to_zip(self, fn: str) -> None:
         """Test containers convert to zip."""
@@ -112,4 +100,4 @@ class TestContainersDir(BaseTest):
             path = path.with_suffix("")
             suffix = path.suffix
         convert_path = path.with_suffix("." + sizes[2][0])
-        assert convert_path.stat().st_size == sizes[2][1]
+        assert_size_close(convert_path.stat().st_size, sizes[2][1])

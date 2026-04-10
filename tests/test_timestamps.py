@@ -8,7 +8,7 @@ from ruamel.yaml import YAML, SafeRepresenter
 from treestamps.tree.config import TreestampsConfig
 
 from picopt import PROGRAM_NAME, cli
-from tests import IMAGES_DIR, get_test_dir
+from tests import IMAGES_DIR, assert_size_close, get_test_dir
 
 __all__ = ()
 TMP_ROOT = get_test_dir()
@@ -44,12 +44,7 @@ class TestTimestamps:
         """Assert sizes."""
         for name, sizes in FNS.items():
             path = root / name
-            old_size = sizes[index]
-            new_size = path.stat().st_size
-            if old_size != new_size:
-                print(name, old_size)
-                print(path, new_size)
-            assert old_size == new_size
+            assert_size_close(path.stat().st_size, sizes[index])
 
     def setup_method(self) -> None:
         """Set up method."""

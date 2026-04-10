@@ -12,7 +12,7 @@ from rarfile import RarInfo
 
 from picopt.archiveinfo import ArchiveInfo
 
-_CONTAINER_PATH_DELIMETER = ":"
+_CONTAINER_PATH_DELIMITER = ":"
 _LOWERCASE_TESTNAME = ".picopt_case_sensitive_test"
 _UPPERCASE_TESTNAME: str = _LOWERCASE_TESTNAME.upper()
 # Special case only supported double suffixes prevents heaps of false signals for
@@ -23,7 +23,6 @@ DOUBLE_SUFFIX = ".tar"
 def is_path_case_sensitive(dirpath: Path) -> bool:
     """Determine if a path is on a case sensitive filesystem."""
     lowercase_path = dirpath / _LOWERCASE_TESTNAME
-    result = False
     try:
         lowercase_path.touch()
         uppercase_path = dirpath / _UPPERCASE_TESTNAME
@@ -33,7 +32,7 @@ def is_path_case_sensitive(dirpath: Path) -> bool:
     return result
 
 
-def is_path_ignored(config: AttrDict, path: str | Path, *, ignore_case: bool) -> bool:
+def is_path_ignored(config: AttrDict, path: Path, *, ignore_case: bool) -> bool:
     """Match path against the ignore regexp."""
     ignore = config.computed.ignore
     ignore = ignore.ignore_case if ignore_case else ignore.case
@@ -42,6 +41,8 @@ def is_path_ignored(config: AttrDict, path: str | Path, *, ignore_case: bool) ->
 
 class PathInfo:
     """Path Info object, mostly for passing down walk."""
+
+    _UNSET = object()
 
     def _copy_constructor(
         self,
@@ -54,36 +55,28 @@ class PathInfo:
         noop: bool = False,
     ) -> None:
         """Copy from path_info or override with arg."""
-        if top_path:
-            self.top_path: Path = top_path
-        elif path_info:
-            self.top_path = path_info.top_path
-        else:
-            reason = "PathInfo requires a top_path argument."
-            raise ValueError(reason)
 
-        if convert is not None:
-            self.convert: bool = convert
-        elif path_info:
-            self.convert = path_info.convert
-        else:
-            reason = "PathInfo requires a convert argument."
-            raise ValueError(reason)
+        def pick(override, attr: str, default=self._UNSET):
+            """Resolve a field: explicit override > path_info > default > raise."""
+            if override is not None:
+                return override
+            if path_info is not None:
+                return getattr(path_info, attr)
+            if default is self._UNSET:
+                msg = f"PathInfo requires a {attr} argument."
+                raise ValueError(msg)
+            return default() if callable(default) else default  # ty: ignore[call-top-callable]
 
-        if is_case_sensitive is not None:
-            self.is_case_sensitive: bool = is_case_sensitive
-        elif path_info:
-            self.is_case_sensitive = path_info.is_case_sensitive
-        else:
-            self.is_case_sensitive = is_path_case_sensitive(self.top_path)
-
-        if container_parents is not None:
-            self.container_parents: tuple[str, ...] = container_parents
-        elif path_info:
-            self.container_parents = path_info.container_parents
-        else:
-            self.container_parents = ()
-
+        self.top_path: Path = pick(top_path, "top_path")  # pyright: ignore[reportAttributeAccessIssue]
+        self.convert: bool = pick(convert, "convert")  # pyright: ignore[reportAttributeAccessIssue]
+        self.is_case_sensitive: bool = pick(
+            is_case_sensitive,
+            "is_case_sensitive",
+            default=lambda: is_path_case_sensitive(self.top_path),
+        )
+        self.container_parents: tuple[str, ...] = pick(
+            container_parents, "container_parents", default=()
+        )
         self.noop = noop
 
     def __init__(  # noqa: PLR0913
@@ -127,7 +120,8 @@ class PathInfo:
 
         # always computed
         self._is_dir: bool | None = None
-        self._stat: stat_result | bool | None = None
+        self._stat: stat_result | None = None
+        self._stat_cached: bool = False
         self._bytes_in: int | None = None
         self._mtime: float | None = None
         self._name: str | None = None
@@ -149,10 +143,11 @@ class PathInfo:
 
         return self._is_dir
 
-    def stat(self) -> stat_result | bool:
+    def stat(self) -> stat_result | None:
         """Return fs_stat if possible."""
-        if self._stat is None:
-            self._stat = self.path.stat() if self.path else False
+        if not self._stat_cached:
+            self._stat = self.path.stat() if self.path else None
+            self._stat_cached = True
         return self._stat
 
     def data(self) -> bytes:
@@ -187,26 +182,20 @@ class PathInfo:
         """Return the length of the data."""
         if self._bytes_in is None:
             stat = self.stat()
-            if stat not in (False, True):
-                self._bytes_in = stat.st_size
-            else:
+            if stat is None:
                 self._bytes_in = len(self.data())
+            else:
+                self._bytes_in = stat.st_size
         return self._bytes_in
 
     def mtime(self) -> float:
         """Choose an mtime."""
         if self._mtime is None:
             if self.archiveinfo:
-                mtime = self.archiveinfo.mtime()
-                if mtime is None:
-                    mtime = 0.0
-                self._mtime = mtime
+                self._mtime = self.archiveinfo.mtime() or 0.0
             else:
                 stat = self.stat()
-                if stat and stat is not True:
-                    self._mtime = stat.st_mtime
-                else:
-                    self._mtime = 0.0
+                self._mtime = stat.st_mtime if stat is not None else 0.0
         return self._mtime
 
     def name(self) -> str:
@@ -242,7 +231,7 @@ class PathInfo:
     def full_output_name(self) -> str:
         """Full path string for output."""
         if self._archive_pretty_name is None:
-            self._archive_pretty_name = _CONTAINER_PATH_DELIMETER.join(
+            self._archive_pretty_name = _CONTAINER_PATH_DELIMITER.join(
                 self.container_path_history()
             )
         return self._archive_pretty_name

@@ -6,10 +6,8 @@ from pathlib import Path
 
 from treestamps import Treestamps
 
-from picopt.handlers.container import ContainerHandler
-from picopt.handlers.handler import Handler
-from picopt.handlers.image import ImageHandler
 from picopt.path import PathInfo
+from picopt.plugins.base import ContainerHandler, Handler, ImageHandler
 from picopt.report import ReportStats, Totals
 from picopt.walk.handler_factory import HandlerFactory
 
@@ -21,13 +19,12 @@ class Walk(HandlerFactory):
         self,
         results: list[ApplyResult],
         top_path: Path,
-    ) -> bool:
+    ) -> None:
         """
         Get the async results and total them.
 
         Returns weather timestamps should be dumped or not
         """
-        dump_timestamps = False
         for result in results:
             final_result = result.get()
             if final_result.exc:
@@ -40,11 +37,8 @@ class Walk(HandlerFactory):
                     self._totals.bytes_out += final_result.bytes_out
                 else:
                     self._totals.bytes_out += final_result.bytes_in
-            if self._timestamps:
-                dump_timestamps |= final_result.wrote_new
-                timestamps = self._timestamps[top_path]
-                timestamps.set(final_result.path)
-        return dump_timestamps
+            if self._timestamps and final_result.changed:
+                self._timestamps.set(top_path, final_result.path)
 
     def walk_dir(self, dir_path_info: PathInfo) -> None:
         """Recursively optimize a directory."""
@@ -83,8 +77,7 @@ class Walk(HandlerFactory):
 
         if self._timestamps and dir_path:
             # Compact timestamps after every directory completes
-            timestamps = self._timestamps[dir_path_info.top_path]
-            timestamps.set(dir_path, compact=True)
+            self._timestamps.compact(dir_path_info.top_path, dir_path)
 
     def _walk_container(self, unpack_handler: ContainerHandler) -> None:
         """Walk the container."""
@@ -105,6 +98,7 @@ class Walk(HandlerFactory):
             # Optimize
             handler.optimize_contents()
             # Repack
+            handler.clean_for_repack()
             handler = self.create_repack_handler(self._config, handler)
             result = self._pool.apply_async(handler.repack)
         except Exception as exc:
@@ -117,15 +111,15 @@ class Walk(HandlerFactory):
         """Call the correct walk or pool apply for the handler."""
         if not handler:
             return None
-        if isinstance(handler, ContainerHandler):
-            # Unpack inline, not in the pool, and walk immediately like dirs.
-            result = self._handle_container(handler)
-        elif isinstance(handler, ImageHandler):
-            result = self._pool.apply_async(handler.optimize_wrapper)
-        else:
-            msg = f"Bad picopt handler {handler}"
-            raise TypeError(msg)
-        return result
+        match handler:
+            case ContainerHandler():
+                # Unpack inline, not in the pool, and walk immediately like dirs.
+                return self._handle_container(handler)
+            case ImageHandler():
+                return self._pool.apply_async(handler.optimize_wrapper)
+            case _:
+                msg = f"Bad picopt handler {handler}"
+                raise TypeError(msg)
 
     def _create_handler(self, path_info: PathInfo) -> Handler | None:
         handler = self.create_handler(path_info, self._timestamps)
@@ -171,31 +165,28 @@ class Walk(HandlerFactory):
             result = self._pool.apply_async(ReportStats, (), apply_kwargs)
         return result
 
+    def _walk_top_path(self, top_path: Path, top_results: dict):
+        dirpath = Treestamps.get_dir(top_path)
+        path_info = PathInfo(
+            top_path=dirpath, convert=True, path=top_path, is_case_sensitive=None
+        )
+        result = self.walk_file(path_info)
+        if dirpath not in top_results:
+            top_results[dirpath] = []
+        if result is not None:
+            top_results[dirpath].append(result)
+
     def walk(self) -> Totals:
         """Optimize all configured files."""
         self._init_timestamps()
 
         # Walk each top file
         top_results = {}
-        noop_top_paths: set[Path] = set()
         for top_path in self._top_paths:
-            dirpath = Treestamps.get_dir(top_path)
-            path_info = PathInfo(
-                top_path=dirpath, convert=True, path=top_path, is_case_sensitive=None
-            )
-            result = self.walk_file(path_info)
-            if not result:
-                noop_top_paths.add(top_path)
-                continue
-            if dirpath not in top_results:
-                top_results[dirpath] = []
-            top_results[dirpath].append(result)
-
+            self._walk_top_path(top_path, top_results)
         # Finish
         for dirpath, results in top_results.items():
-            dump_timestamps = self._finish_results(results, dirpath)
-            if not dump_timestamps:
-                noop_top_paths.add(dirpath)
+            self._finish_results(results, dirpath)
 
         # Shut down multiprocessing
         self._pool.close()
@@ -204,7 +195,7 @@ class Walk(HandlerFactory):
         self._printer.done()
 
         if self._timestamps:
-            self._timestamps.dumpf(noop_top_paths)
+            self._timestamps.dumpf()
 
         self._totals.report()
         return self._totals

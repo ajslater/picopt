@@ -44,7 +44,7 @@ class OldTimestamps:
                 if not is_path_ignored(
                     self._config, path, ignore_case=self._ignore_case
                 ):
-                    stack.extend(path / sub_path for sub_path in path.iterdir())
+                    stack.extend(path.iterdir())
             elif path.name == OLD_TIMESTAMPS_NAME:
                 self._add_old_timestamp(path)
                 # consume child timestamps

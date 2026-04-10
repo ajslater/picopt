@@ -58,7 +58,7 @@ class Printer:
 
     def skip_container(self, container_type: str, path_info: PathInfo) -> None:
         """Skip entire container."""
-        reason = f"{container_type}, contents all skipped"
+        reason = f"{container_type}, contents skipped. Optimizing during repack."
         self.skip(reason, path_info)
 
     def skip_timestamp(self, message, path_info: PathInfo) -> None:

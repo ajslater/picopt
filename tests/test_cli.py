@@ -5,7 +5,7 @@ import sys
 from pathlib import Path
 
 from picopt import cli
-from picopt.handlers.container.archive.zip import Cbz, Zip
+from picopt.plugins.zip import Cbz, Zip
 from tests import IMAGES_DIR, get_test_dir
 
 __all__ = ()  # hides module from pydocstring
@@ -27,11 +27,22 @@ class TestCLI:
         if TMP_ROOT.exists():
             shutil.rmtree(TMP_ROOT)
 
-    def test_get_arguments(self) -> None:
-        """Test get arguments."""
+    def _test_get_arguments_prepare(self):
         args = ("picopt", "-rqc", "PNG,WEBP", "-x", "CBZ,ZIP", "-bdLM", str(TMP_ROOT))
         arguments = cli.get_arguments(args)
-        arguments = arguments.picopt
+        return arguments.picopt
+
+    def _test_get_arguments_aux(self, arguments) -> None:
+        assert arguments.bigger
+        assert not arguments.timestamps
+        assert arguments.dry_run
+        assert arguments.list_only
+        assert not arguments.keep_metadata
+        assert arguments.paths[0] == str(TMP_ROOT)
+
+    def test_get_arguments(self) -> None:
+        """Test get arguments."""
+        arguments = self._test_get_arguments_prepare()
         assert arguments.verbose == 0
         assert arguments.convert_to == ("PNG", "WEBP")
         assert arguments.formats is None
@@ -40,12 +51,7 @@ class TestCLI:
             Zip.OUTPUT_FORMAT_STR,
         )
         assert arguments.symlinks
-        assert arguments.bigger
-        assert not arguments.timestamps
-        assert arguments.dry_run
-        assert arguments.list_only
-        assert not arguments.keep_metadata
-        assert arguments.paths[0] == str(TMP_ROOT)
+        self._test_get_arguments_aux(arguments)
 
     def test_main(self) -> None:
         """Test main method."""
