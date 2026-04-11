@@ -266,35 +266,6 @@ class Scheduler:
         self._record_totals(report)
         self._write_timestamp(report, top_path)
 
-    def _cancel_subtree(self, root: ContainerNode, *, reason: Exception) -> None:
-        """Mark a subtree CANCELLED, purge its ready work, clean staging."""
-        del reason  # recorded by the caller in totals
-        stack: list[ContainerNode] = [root]
-        cancelled: set[ContainerNode] = set()
-        while stack:
-            node = stack.pop()
-            if node in cancelled:
-                continue
-            cancelled.add(node)
-            node.state = NodeState.CANCELLED
-            node.handler.get_optimized_contents().clear()
-            stack.extend(node.children)
-        # Purge ready queue of anything belonging to a cancelled node.
-        self._ready = deque((job, n) for (job, n) in self._ready if n not in cancelled)
-        # Clean staging immediately for every cancelled node.
-        for node in cancelled:
-            self._cleanup_node_staging(node)
-            self._live_nodes.discard(node)
-        # Already-running futures check state on completion and drop results.
-
-    def _trigger_fail_fast(self, reason: Exception) -> None:
-        """Mark fail_fast, cancel every live top-level subtree."""
-        self._fail_fast_triggered = True
-        tops = [n for n in list(self._live_nodes) if n.is_top_level()]
-        for top in tops:
-            self._cancel_subtree(top, reason=reason)
-        self._ready.clear()
-
     def run(self) -> None:
         """Drain ready and inflight until both are empty."""
         try:
@@ -359,6 +330,35 @@ class Scheduler:
         cap = 2 * self._max_workers
         while self._ready and self._inflight_count() < cap:
             self._submit_ready_job()
+
+    def _cancel_subtree(self, root: ContainerNode, *, reason: Exception) -> None:
+        """Mark a subtree CANCELLED, purge its ready work, clean staging."""
+        del reason  # recorded by the caller in totals
+        stack: list[ContainerNode] = [root]
+        cancelled: set[ContainerNode] = set()
+        while stack:
+            node = stack.pop()
+            if node in cancelled:
+                continue
+            cancelled.add(node)
+            node.state = NodeState.CANCELLED
+            node.handler.get_optimized_contents().clear()
+            stack.extend(node.children)
+        # Purge ready queue of anything belonging to a cancelled node.
+        self._ready = deque((job, n) for (job, n) in self._ready if n not in cancelled)
+        # Clean staging immediately for every cancelled node.
+        for node in cancelled:
+            self._cleanup_node_staging(node)
+            self._live_nodes.discard(node)
+        # Already-running futures check state on completion and drop results.
+
+    def _trigger_fail_fast(self, reason: Exception) -> None:
+        """Mark fail_fast, cancel every live top-level subtree."""
+        self._fail_fast_triggered = True
+        tops = [n for n in list(self._live_nodes) if n.is_top_level()]
+        for top in tops:
+            self._cancel_subtree(top, reason=reason)
+        self._ready.clear()
 
     def _handle_completion(self, fut: Future) -> None:
         """Dispatch one completed future by which inflight map owns it."""
@@ -543,7 +543,7 @@ class Scheduler:
         self._ready.append((RepackJob(handler=repack_handler), node))
 
     def _record_totals(self, report: ReportStats) -> None:
-        """Accumulate one ReportStats into Totals. Mirrors old _finish_results."""
+        """Accumulate one ReportStats into Totals."""
         if report.exc:
             self._totals.errors.append(report)
             report.report(self._printer)
@@ -556,7 +556,7 @@ class Scheduler:
 
     def _write_timestamp(self, report: ReportStats, top_path: Path) -> None:
         """Write a timestamp if timestamps are enabled and result changed."""
-        if self._timestamps and report.changed and report.path is not None:
+        if self._timestamps and report.path is not None and report.changed:
             self._timestamps.set(top_path, report.path)
 
     def _cleanup_node_staging(self, node: ContainerNode) -> None:
