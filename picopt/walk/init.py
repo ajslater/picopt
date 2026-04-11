@@ -9,9 +9,9 @@ from treestamps import Grovestamps, GrovestampsConfig
 from picopt import PROGRAM_NAME
 from picopt.config.consts import TIMESTAMPS_CONFIG_KEYS
 from picopt.exceptions import PicoptError
-from picopt.old_timestamps import OldTimestamps
 from picopt.printer import Printer
 from picopt.report import Totals
+from picopt.walk.legacy_timestamps import OldTimestamps
 from picopt.walk.skip import WalkSkipper
 
 if TYPE_CHECKING:
