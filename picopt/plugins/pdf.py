@@ -66,6 +66,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any
 from zipfile import ZipInfo
 
+from pikepdf.exceptions import PasswordError
 from termcolor import cprint
 from typing_extensions import override
 
@@ -337,19 +338,27 @@ class Pdf(ContainerHandler):
             msg = f"could not open PDF {self.path_info.full_output_name()}: {exc}"
             raise OSError(msg) from exc
 
+        refust = False
         try:
-            if _has_signature(pdf):
+            if refuse := _has_signature(pdf):
                 msg = (
                     f"{self.path_info.full_output_name()}: "
                     "PDF has a digital signature; refusing to modify."
                 )
-                raise ValueError(msg)
+                cprint(msg, "yellow")
+            else:
+                import pikepdf
 
-            import pikepdf
-
-            for obj in pdf.objects:
-                if path_info := self._walk_pdf_obj(obj, pikepdf):
-                    yield path_info
+                for obj in pdf.objects:
+                    if path_info := self._walk_pdf_obj(obj, pikepdf):
+                        yield path_info
+        except PasswordError:
+            refuse = True
+            msg = (
+                f"{self.path_info.full_output_name()}: "
+                "PDF is encrypted; refusing to modify."
+            )
+            cprint(msg, "yellow")
         finally:
             with suppress(Exception):
                 pdf.close()
@@ -361,7 +370,7 @@ class Pdf(ContainerHandler):
         # bytes_in vs bytes_out check in _cleanup_after_optimize discards
         # the rewrite cleanly if it grew the file (common for already-
         # optimized PDFs), so flipping this flag is safe.
-        self._do_repack = True
+        self._do_repack = not refuse
 
         self._walk_finish()
 
