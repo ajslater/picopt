@@ -14,7 +14,6 @@ from typing import TYPE_CHECKING
 from rarfile import RarFile, is_rarfile
 from typing_extensions import override
 
-from picopt.formats import FileFormat
 from picopt.plugins.base import (
     ArchiveHandler,
     Detector,
@@ -24,6 +23,7 @@ from picopt.plugins.base import (
     Tool,
     ToolStatus,
 )
+from picopt.plugins.base.format import FileFormat
 
 if TYPE_CHECKING:
     from io import BytesIO

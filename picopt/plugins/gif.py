@@ -12,7 +12,6 @@ from typing import Any, BinaryIO
 from PIL.GifImagePlugin import TYPE_CHECKING, GifImageFile
 from typing_extensions import override
 
-from picopt.formats import FileFormat
 from picopt.plugins.base import (
     ExternalTool,
     Handler,
@@ -21,6 +20,7 @@ from picopt.plugins.base import (
     Route,
     Tool,
 )
+from picopt.plugins.base.format import FileFormat
 
 if TYPE_CHECKING:
     from io import BytesIO

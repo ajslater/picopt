@@ -17,7 +17,7 @@ from picopt.plugins.base.handler import Handler
 if TYPE_CHECKING:
     from collections.abc import Generator, Iterable
 
-    from picopt.formats import FileFormat
+    from picopt.plugins.base.format import FileFormat
     from picopt.report import ReportStats
 
 

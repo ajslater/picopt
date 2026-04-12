@@ -32,11 +32,10 @@ from typing import Any, BinaryIO
 from PIL import Image, ImageSequence, UnidentifiedImageError
 
 from picopt import plugins as registry
-from picopt.formats import FileFormat
 from picopt.path import PathInfo
 from picopt.pillow.webp_lossless import is_lossless as _webp_is_lossless
+from picopt.plugins.base.format import FileFormat
 from picopt.plugins.pil_convertible import is_tiff_lossless
-from picopt.walk.init import WalkInit
 
 # PIL format-string constants. Hardcoded so this module doesn't have to
 # import the per-format PIL ImageFile subclasses just to read a string.
@@ -135,16 +134,11 @@ def _get_non_pil_format(path_info: PathInfo) -> FileFormat | None:
     return None
 
 
-class DetectFormat(WalkInit):
-    """Detect format method."""
-
-    def detect_format(
-        self, path_info: PathInfo
-    ) -> tuple[FileFormat | None, Mapping[str, Any]]:
-        """Return the file format (or None) and the PIL info dict."""
-        file_format, info = _get_image_format(
-            path_info, keep_metadata=self._config.keep_metadata
-        )
-        if not file_format:
-            file_format = _get_non_pil_format(path_info)
-        return file_format, info
+def detect_format(
+    path_info: PathInfo, *, keep_metadata: bool
+) -> tuple[FileFormat | None, Mapping[str, Any]]:
+    """Return the file format (or None) and the PIL info dict."""
+    file_format, info = _get_image_format(path_info, keep_metadata=keep_metadata)
+    if not file_format:
+        file_format = _get_non_pil_format(path_info)
+    return file_format, info

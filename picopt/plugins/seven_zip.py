@@ -17,7 +17,6 @@ from py7zr import SevenZipFile, is_7zfile
 from py7zr.io import BytesIOFactory
 from typing_extensions import override
 
-from picopt.formats import FileFormat
 from picopt.plugins.base import (
     ArchiveHandler,
     Detector,
@@ -27,6 +26,7 @@ from picopt.plugins.base import (
     Route,
     Tool,
 )
+from picopt.plugins.base.format import FileFormat
 
 if TYPE_CHECKING:
     from pathlib import Path

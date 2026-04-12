@@ -2,19 +2,75 @@
 
 import os
 import traceback
+from concurrent.futures import ProcessPoolExecutor
 from pathlib import Path
 
-from treestamps import Treestamps
+from confuse.templates import AttrDict
+from treestamps import Grovestamps, GrovestampsConfig, Treestamps
 
+from picopt import PROGRAM_NAME
+from picopt.config.consts import TIMESTAMPS_CONFIG_KEYS
+from picopt.exceptions import PicoptError
 from picopt.path import PathInfo
 from picopt.plugins.base import ContainerHandler, Handler, ImageHandler
+from picopt.printer import Printer
 from picopt.report import ReportStats, Totals
 from picopt.walk.handler_factory import HandlerFactory
+from picopt.walk.legacy_timestamps import OldTimestamps
 from picopt.walk.scheduler import ContainerNode, OptimizeLeafJob, Scheduler
+from picopt.walk.skip import WalkSkipper
 
 
-class Walk(HandlerFactory):
+class Walk:
     """Methods for walking the tree and handling files."""
+
+    def _create_top_paths(self):
+        """Create and Validate that top paths exist."""
+        top_paths = []
+        paths: tuple[Path, ...] = tuple(sorted(frozenset(self._config.paths)))
+        for path in paths:
+            if not path.exists():
+                msg = f"Path does not exist: {path}"
+                raise PicoptError(msg)
+            if path.is_symlink() and not self._config.symlinks:
+                continue
+            top_paths.append(path)
+        if not top_paths:
+            msg = "No paths to optimize."
+            raise PicoptError(msg)
+        return tuple(top_paths)
+
+    def __init__(self, config: AttrDict) -> None:
+        """Initialize."""
+        self._config: AttrDict = config
+        self._top_paths: tuple[Path, ...] = self._create_top_paths()
+        self._printer: Printer = Printer(config.verbose)
+        self._totals: Totals = Totals(config, self._printer)
+        self._executor: ProcessPoolExecutor = ProcessPoolExecutor(
+            max_workers=self._config.jobs or None
+        )
+        self._timestamps: Grovestamps | None = None  # reassigned at start of run
+        self._skipper: WalkSkipper = WalkSkipper(config, self._printer)
+        self._handler_factory: HandlerFactory = HandlerFactory(config, self._printer)
+
+    def _init_timestamps(self) -> None:
+        """Init timestamps."""
+        if not self._config.timestamps:
+            return
+        config = GrovestampsConfig(
+            paths=self._top_paths,
+            program_name=PROGRAM_NAME,
+            verbose=self._config.verbose,
+            symlinks=self._config.symlinks,
+            ignore=self._config.ignore,
+            check_config=self._config.timestamps_check_config,
+            program_config=self._config,
+            program_config_keys=TIMESTAMPS_CONFIG_KEYS,
+        )
+        self._timestamps = Grovestamps(config)
+        for timestamps in self._timestamps.values():
+            OldTimestamps(self._config, timestamps).import_old_timestamps()
+        self._skipper.set_timestamps(self._timestamps)
 
     def _enqueue_children(
         self, sched: Scheduler, node: ContainerNode, children: list[PathInfo]
@@ -77,7 +133,7 @@ class Walk(HandlerFactory):
                 raise TypeError(msg)
 
     def _create_handler(self, path_info: PathInfo) -> Handler | None:
-        handler = self.create_handler(path_info, self._timestamps)
+        handler = self._handler_factory.create_handler(path_info, self._timestamps)
         if handler is None:
             return None
 
@@ -140,7 +196,7 @@ class Walk(HandlerFactory):
             totals=self._totals,
             printer=self._printer,
             max_workers=max_workers,
-            create_repack_handler=self.create_repack_handler,
+            create_repack_handler=HandlerFactory.create_repack_handler,
             child_enqueue_callback=self._enqueue_children,
         )
 

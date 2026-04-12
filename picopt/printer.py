@@ -137,14 +137,14 @@ class Printer:
         """Lost size."""
         self._message(report, color="light_blue")
 
-    def warn(self, message: str, exc: Exception | None = None) -> None:
+    def warn(self, message: str, exc: BaseException | None = None) -> None:
         """Warning."""
         message = "WARNING: " + message
         if exc:
             message += f": {exc}"
         self._message(message, color="light_yellow", force_verbose=True)
 
-    def error(self, message: str, exc: Exception) -> None:
+    def error(self, message: str, exc: BaseException) -> None:
         """Error."""
         message = "ERROR: " + message + f": {exc}"
         self._message(message, color="light_red", force_verbose=True)

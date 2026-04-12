@@ -25,8 +25,8 @@ from pathlib import Path
 from typing import TYPE_CHECKING, BinaryIO
 
 from picopt import WORKING_SUFFIX
-from picopt.formats import FileFormat
 from picopt.path import DOUBLE_SUFFIX, PathInfo
+from picopt.plugins.base.format import FileFormat
 from picopt.printer import Printer
 from picopt.report import ReportStats
 

@@ -70,7 +70,6 @@ from zipfile import ZipInfo
 from termcolor import cprint
 from typing_extensions import override
 
-from picopt.formats import FileFormat
 from picopt.path import PathInfo
 from picopt.plugins.base import (
     ContainerHandler,
@@ -81,6 +80,7 @@ from picopt.plugins.base import (
     Route,
     Tool,
 )
+from picopt.plugins.base.format import FileFormat
 
 if TYPE_CHECKING:
     from collections.abc import Generator

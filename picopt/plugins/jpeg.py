@@ -15,7 +15,6 @@ from PIL.JpegImagePlugin import JpegImageFile
 from PIL.MpoImagePlugin import MpoImageFile
 from typing_extensions import override
 
-from picopt.formats import FileFormat
 from picopt.pillow.jpeg_xmp import set_jpeg_xmp
 from picopt.plugins.base import (
     Handler,
@@ -25,6 +24,7 @@ from picopt.plugins.base import (
     Route,
     Tool,
 )
+from picopt.plugins.base.format import FileFormat
 
 # Public so the pil_convertible plugin can reference it.
 MPO_FILE_FORMAT = FileFormat(str(MpoImageFile.format), lossless=False, animated=True)

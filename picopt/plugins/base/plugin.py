@@ -19,8 +19,8 @@ from dataclasses import dataclass, field
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from picopt.formats import FileFormat
     from picopt.path import PathInfo
+    from picopt.plugins.base.format import FileFormat
     from picopt.plugins.base.handler import Handler
 
 

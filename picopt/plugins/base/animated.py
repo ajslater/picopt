@@ -24,7 +24,7 @@ from picopt.plugins.base.image import ImageHandler
 if TYPE_CHECKING:
     from collections.abc import Generator, Mapping
 
-    from picopt.formats import FileFormat
+    from picopt.plugins.base.format import FileFormat
 
 ANIMATED_INFO_KEYS = ("bbox", "blend", "disposal", "duration")
 

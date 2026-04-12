@@ -13,7 +13,6 @@ from zipfile import ZIP_DEFLATED, ZIP_STORED, ZipFile, is_zipfile
 
 from typing_extensions import override
 
-from picopt.formats import FileFormat
 from picopt.plugins.base import (
     ArchiveHandler,
     Detector,
@@ -22,6 +21,7 @@ from picopt.plugins.base import (
     Route,
     Tool,
 )
+from picopt.plugins.base.format import FileFormat
 from picopt.plugins.base.tool import StdLibTool
 from picopt.plugins.rar import Cbr, Rar
 from picopt.plugins.seven_zip import Cb7, SevenZip

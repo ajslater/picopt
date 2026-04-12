@@ -28,7 +28,7 @@ from picopt.plugins.base import Detector, Handler, Plugin
 if TYPE_CHECKING:
     from collections.abc import Iterator
 
-    from picopt.formats import FileFormat
+    from picopt.plugins.base.format import FileFormat
 
 
 # ---------------------------------------------------------------------------

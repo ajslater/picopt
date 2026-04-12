@@ -72,7 +72,6 @@ from typing import TYPE_CHECKING, Any, BinaryIO
 from PIL.WebPImagePlugin import WebPImageFile
 from typing_extensions import override
 
-from picopt.formats import FileFormat
 from picopt.path import PathInfo
 from picopt.plugins.base import (
     ExternalTool,
@@ -85,6 +84,7 @@ from picopt.plugins.base import (
     Tool,
     ToolStatus,
 )
+from picopt.plugins.base.format import FileFormat
 from picopt.plugins.gif import Gif, GifAnimated
 from picopt.plugins.png import Png, PngAnimated
 
