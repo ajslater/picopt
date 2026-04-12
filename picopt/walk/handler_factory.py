@@ -43,23 +43,6 @@ from picopt.printer import Printer
 from picopt.walk.detect_format import detect_format
 
 
-def _is_pipeline_available(handler_cls: type[Handler], config: AttrDict) -> bool:
-    """
-    Whether the config-time probe found a workable pipeline for this handler.
-
-    A handler is "available" iff every tier in its ``PIPELINE`` produced a
-    selected tool. Handlers with an empty PIPELINE (e.g. archive handlers
-    that pack via Python libraries, or PILPack sentinels) are always
-    available — there is nothing to be missing.
-    """
-    if not handler_cls.PIPELINE:
-        return True
-    stages = config.computed.handler_stages.get(handler_cls)
-    if stages is None:
-        return False
-    return len(stages) == len(handler_cls.PIPELINE)
-
-
 class HandlerFactory:
     """Handler factory for creating format-appropriate handlers."""
 
@@ -83,12 +66,28 @@ class HandlerFactory:
             return None
         return entry
 
+    def _is_pipeline_available(self, handler_cls: type[Handler]) -> bool:
+        """
+        Whether the config-time probe found a workable pipeline for this handler.
+
+        A handler is "available" iff every tier in its ``PIPELINE`` produced a
+        selected tool. Handlers with an empty PIPELINE (e.g. archive handlers
+        that pack via Python libraries, or PILPack sentinels) are always
+        available — there is nothing to be missing.
+        """
+        if not handler_cls.PIPELINE:
+            return True
+        stages = self._config.computed.handler_stages.get(handler_cls)
+        if stages is None:
+            return False
+        return len(stages) == len(handler_cls.PIPELINE)
+
     def _pick_handler_class_choose_converter(
         self, candidate: type[Handler], convert_to: frozenset[str]
     ):
         if candidate.OUTPUT_FORMAT_STR not in convert_to:
             return None
-        if not _is_pipeline_available(candidate, self._config):
+        if not self._is_pipeline_available(candidate):
             return None
         return candidate
 
@@ -136,7 +135,7 @@ class HandlerFactory:
         if (
             handler_cls is None
             and native is not None
-            and _is_pipeline_available(native, self._config)
+            and self._is_pipeline_available(native)
         ):
             handler_cls = native
 
