@@ -210,9 +210,9 @@ class Walk:
         self._printer.done()
 
         if self._timestamps:
-            for top_path in self._top_paths:
-                dirpath = Treestamps.get_dir(top_path)
-                self._timestamps.compact(dirpath, dirpath)
+            ic("BEFORE", self._timestamps.dumps())
+            self._timestamps.compact_all()
+            ic("COMPACTED", self._timestamps.dumps())
             self._timestamps.dumpf()
 
         self._totals.report()
