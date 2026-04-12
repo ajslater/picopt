@@ -18,7 +18,7 @@ from PIL.PngImagePlugin import PngImageFile, PngInfo
 from PIL.WebPImagePlugin import WebPImageFile
 from typing_extensions import override
 
-from picopt.formats import PNGINFO_XMP_KEY, FileFormat
+from picopt.plugins.base.format import PNGINFO_XMP_KEY, FileFormat
 from picopt.plugins.base.handler import Handler
 
 if TYPE_CHECKING:

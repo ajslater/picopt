@@ -7,12 +7,11 @@ Owns: GIF (still + animated). Tool: gifsicle (external).
 from __future__ import annotations
 
 from types import MappingProxyType
-from typing import Any, BinaryIO
+from typing import TYPE_CHECKING, Any, BinaryIO
 
-from PIL.GifImagePlugin import TYPE_CHECKING, GifImageFile
+from PIL.GifImagePlugin import GifImageFile
 from typing_extensions import override
 
-from picopt.formats import FileFormat
 from picopt.plugins.base import (
     ExternalTool,
     Handler,
@@ -21,6 +20,7 @@ from picopt.plugins.base import (
     Route,
     Tool,
 )
+from picopt.plugins.base.format import FileFormat
 
 if TYPE_CHECKING:
     from io import BytesIO

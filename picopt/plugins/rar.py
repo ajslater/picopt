@@ -9,12 +9,12 @@ configured.
 
 from __future__ import annotations
 
+from types import MappingProxyType
 from typing import TYPE_CHECKING
 
 from rarfile import RarFile, is_rarfile
 from typing_extensions import override
 
-from picopt.formats import FileFormat
 from picopt.plugins.base import (
     ArchiveHandler,
     Detector,
@@ -24,6 +24,7 @@ from picopt.plugins.base import (
     Tool,
     ToolStatus,
 )
+from picopt.plugins.base.format import FileFormat
 
 if TYPE_CHECKING:
     from io import BytesIO
@@ -135,10 +136,12 @@ class Cbr(Rar):
     INPUT_FILE_FORMATS = frozenset({OUTPUT_FILE_FORMAT})
 
 
-_SUFFIX_TO_FORMAT: dict[str, FileFormat] = {
-    ".rar": Rar.OUTPUT_FILE_FORMAT,
-    ".cbr": Cbr.OUTPUT_FILE_FORMAT,
-}
+_SUFFIX_TO_FORMAT: MappingProxyType[str, FileFormat] = MappingProxyType(
+    {
+        ".rar": Rar.OUTPUT_FILE_FORMAT,
+        ".cbr": Cbr.OUTPUT_FILE_FORMAT,
+    }
+)
 
 
 PLUGIN = Plugin(

@@ -22,11 +22,12 @@ import traceback
 from abc import ABC, abstractmethod
 from io import BufferedReader, BytesIO
 from pathlib import Path
-from typing import TYPE_CHECKING, BinaryIO
+from types import MappingProxyType
+from typing import TYPE_CHECKING, BinaryIO, Final
 
 from picopt import WORKING_SUFFIX
-from picopt.formats import FileFormat
 from picopt.path import DOUBLE_SUFFIX, PathInfo
+from picopt.plugins.base.format import FileFormat
 from picopt.printer import Printer
 from picopt.report import ReportStats
 
@@ -36,7 +37,9 @@ if TYPE_CHECKING:
     from picopt.plugins.base.tool import Tool
 
 # Used by working-path construction for nested-container scratch files.
-_WORKING_PATH_TRANS_TABLE: dict[int, str] = str.maketrans(dict.fromkeys(" /", "_"))
+_WORKING_PATH_TRANS_TABLE: Final[MappingProxyType[int, str]] = MappingProxyType(
+    str.maketrans(dict.fromkeys(" /", "_"))
+)
 
 
 class Handler(ABC):

@@ -17,7 +17,7 @@ from picopt.plugins.base.handler import Handler
 if TYPE_CHECKING:
     from collections.abc import Generator, Iterable
 
-    from picopt.formats import FileFormat
+    from picopt.plugins.base.format import FileFormat
     from picopt.report import ReportStats
 
 
@@ -178,7 +178,7 @@ class ArchiveHandler(ContainerHandler, ABC):
                 data := self._archive_readfile(archive, archiveinfo.info)
             ):
                 path_info.set_data(data)
-            self.set_task(path_info, None)
+            self._optimized_contents.add(path_info)
 
     @override
     def walk(self) -> Generator[PathInfo]:
@@ -189,22 +189,18 @@ class ArchiveHandler(ContainerHandler, ABC):
             for archiveinfo in non_treestamp_entries:
                 if path_info := self._walk_one_entry(archive, archiveinfo):
                     yield path_info
-            if self._do_repack:
-                self._copy_unchanged_files(archive)
+            # Always copy unchanged files: the scheduler decides
+            # whether to repack after children are processed, but
+            # we must read data while the archive is still open.
+            self._copy_unchanged_files(archive)
         self._walk_finish()
 
     @override
-    def _hydrate_optimized_path_info(
+    def hydrate_optimized_path_info(
         self, path_info: PathInfo, report: ReportStats
     ) -> None:
-        super()._hydrate_optimized_path_info(path_info, report)
+        super().hydrate_optimized_path_info(path_info, report)
         original_path = path_info.name()
         final_path = report.path
         if final_path and original_path != final_path:
             path_info.rename(final_path)
-            self._do_repack = True
-
-    @override
-    def optimize_contents(self) -> None:
-        super().optimize_contents()
-        self._skip_path_infos = set()

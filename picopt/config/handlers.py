@@ -38,8 +38,8 @@ if TYPE_CHECKING:
 
     from confuse import Subview
 
-    from picopt.formats import FileFormat
     from picopt.plugins.base import Handler, Tool
+    from picopt.plugins.base.format import FileFormat
 
 
 def _select_pipeline_for_handler(

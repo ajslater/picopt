@@ -1,5 +1,10 @@
 # 📰 Picopt News
 
+## v6.1.0
+
+- Rewote multiprocessing to enable more throughput.
+- Added fail fast options for the entire workflow or only containers.
+
 ## v6.0.0
 
 - Picopt now recompresses PDFs and their image contents losslessly.

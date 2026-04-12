@@ -1,56 +1,107 @@
 """Walk the directory trees and files and call the optimizers."""
 
+import os
 import traceback
-from multiprocessing.pool import ApplyResult, AsyncResult
+from concurrent.futures import ProcessPoolExecutor
 from pathlib import Path
 
-from treestamps import Treestamps
+from confuse.templates import AttrDict
+from treestamps import Grovestamps, GrovestampsConfig, Treestamps
 
+from picopt import PROGRAM_NAME
+from picopt.config.consts import TIMESTAMPS_CONFIG_KEYS
+from picopt.exceptions import PicoptError
 from picopt.path import PathInfo
 from picopt.plugins.base import ContainerHandler, Handler, ImageHandler
+from picopt.printer import Printer
 from picopt.report import ReportStats, Totals
 from picopt.walk.handler_factory import HandlerFactory
+from picopt.walk.legacy_timestamps import OldTimestamps
+from picopt.walk.scheduler import ContainerNode, OptimizeLeafJob, Scheduler
+from picopt.walk.skip import WalkSkipper
 
 
-class Walk(HandlerFactory):
+class Walk:
     """Methods for walking the tree and handling files."""
 
-    def _finish_results(
-        self,
-        results: list[ApplyResult],
-        top_path: Path,
+    def _create_top_paths(self):
+        """Create and Validate that top paths exist."""
+        top_paths = []
+        paths: tuple[Path, ...] = tuple(sorted(frozenset(self._config.paths)))
+        for path in paths:
+            if not path.exists():
+                msg = f"Path does not exist: {path}"
+                raise PicoptError(msg)
+            if path.is_symlink() and not self._config.symlinks:
+                continue
+            top_paths.append(path)
+        if not top_paths:
+            msg = "No paths to optimize."
+            raise PicoptError(msg)
+        return tuple(top_paths)
+
+    def __init__(self, config: AttrDict) -> None:
+        """Initialize."""
+        self._config: AttrDict = config
+        self._top_paths: tuple[Path, ...] = self._create_top_paths()
+        self._printer: Printer = Printer(config.verbose)
+        self._totals: Totals = Totals(config, self._printer)
+        self._executor: ProcessPoolExecutor = ProcessPoolExecutor(
+            max_workers=self._config.jobs or None
+        )
+        self._timestamps: Grovestamps | None = None  # reassigned at start of run
+        self._skipper: WalkSkipper = WalkSkipper(config, self._printer)
+        self._handler_factory: HandlerFactory = HandlerFactory(config, self._printer)
+
+    def _init_timestamps(self) -> None:
+        """Init timestamps."""
+        if not self._config.timestamps:
+            return
+        config = GrovestampsConfig(
+            paths=self._top_paths,
+            program_name=PROGRAM_NAME,
+            verbose=self._config.verbose,
+            symlinks=self._config.symlinks,
+            ignore=self._config.ignore,
+            check_config=self._config.timestamps_check_config,
+            program_config=self._config,
+            program_config_keys=TIMESTAMPS_CONFIG_KEYS,
+        )
+        self._timestamps = Grovestamps(config)
+        for timestamps in self._timestamps.values():
+            OldTimestamps(self._config, timestamps).import_old_timestamps()
+        self._skipper.set_timestamps(self._timestamps)
+
+    def _enqueue_children(
+        self, sched: Scheduler, node: ContainerNode, children: list[PathInfo]
     ) -> None:
-        """
-        Get the async results and total them.
+        """Bridge between scheduler and HandlerFactory for container children."""
+        for path_info in children:
+            handler = self._create_handler(path_info)
+            if handler is None:
+                # noop copy — child passes through unmodified
+                node.handler.get_optimized_contents().add(path_info)
+                continue
+            if isinstance(handler, ContainerHandler):
+                sched.enqueue_container(handler, parent=node)
+            elif isinstance(handler, ImageHandler):
+                sched.enqueue_leaf(
+                    OptimizeLeafJob(handler=handler, path_info=path_info),
+                    parent=node,
+                )
 
-        Returns weather timestamps should be dumped or not
-        """
-        for result in results:
-            final_result = result.get()
-            if final_result.exc:
-                final_result.report(self._printer)
-
-                self._totals.errors.append(final_result)
-            else:
-                self._totals.bytes_in += final_result.bytes_in
-                if final_result.saved > 0 and not self._config.bigger:
-                    self._totals.bytes_out += final_result.bytes_out
-                else:
-                    self._totals.bytes_out += final_result.bytes_in
-            if self._timestamps and final_result.changed:
-                self._timestamps.set(top_path, final_result.path)
-
-    def walk_dir(self, dir_path_info: PathInfo) -> None:
-        """Recursively optimize a directory."""
+    def walk_dir(self, dir_path_info: PathInfo, scheduler: Scheduler) -> None:
+        """Recursively walk a directory, enqueuing jobs into the scheduler."""
         if not self._config.recurse or not dir_path_info.is_dir():
-            # Skip
             return
 
-        results = []
-        files = []
         dir_path = dir_path_info.path
+        if not dir_path:
+            return
 
-        if dir_path:
+        scheduler.begin_dir(dir_path_info.top_path, dir_path)
+        try:
+            files = []
             for name in sorted(dir_path.iterdir()):
                 entry_path = dir_path / name
                 if entry_path.is_dir():
@@ -58,71 +109,38 @@ class Walk(HandlerFactory):
                         path_info=dir_path_info,
                         path=entry_path,
                     )
-                    self.walk_file(path_info)
+                    self.walk_file(path_info, scheduler)
                 else:
                     files.append(entry_path)
 
-        for entry_path in sorted(files):
-            path_info = PathInfo(
-                path_info=dir_path_info,
-                path=entry_path,
-            )
-            if result := self.walk_file(path_info):
-                results.append(result)
+            for entry_path in sorted(files):
+                path_info = PathInfo(
+                    path_info=dir_path_info,
+                    path=entry_path,
+                )
+                self.walk_file(path_info, scheduler)
+        except Exception:
+            scheduler.cancel_dir(dir_path)
+            raise
+        scheduler.seal_dir(dir_path)
 
-        self._finish_results(
-            results,
-            dir_path_info.top_path,
-        )
-
-        if self._timestamps and dir_path:
-            # Compact timestamps after every directory completes
-            self._timestamps.compact(dir_path_info.top_path, dir_path)
-
-    def _walk_container(self, unpack_handler: ContainerHandler) -> None:
-        """Walk the container."""
-        for path_info in unpack_handler.walk():
-            container_result = None
-            if handler := self._create_handler(path_info):
-                container_result = self._handle_file(handler)
-            unpack_handler.set_task(path_info, container_result)
-
-    def _handle_container(self, handler: ContainerHandler) -> ApplyResult | None:
-        """Optimize a container."""
-        result: ApplyResult | None = None
-        try:
-            # Walk and Unpack or Skip
-            self._walk_container(handler)
-            if not handler.is_do_repack():
-                return result
-            # Optimize
-            handler.optimize_contents()
-            # Repack
-            handler.clean_for_repack()
-            handler = self.create_repack_handler(self._config, handler)
-            result = self._pool.apply_async(handler.repack)
-        except Exception as exc:
-            traceback.print_exc()
-            args = (exc,)
-            result = self._pool.apply_async(handler.error, args=args)
-        return result
-
-    def _handle_file(self, handler) -> None | AsyncResult:
-        """Call the correct walk or pool apply for the handler."""
-        if not handler:
-            return None
+    def _handle_file(
+        self, handler: Handler, path_info: PathInfo, scheduler: Scheduler
+    ) -> None:
+        """Enqueue the correct job for the handler type."""
         match handler:
             case ContainerHandler():
-                # Unpack inline, not in the pool, and walk immediately like dirs.
-                return self._handle_container(handler)
+                scheduler.enqueue_container(handler)
             case ImageHandler():
-                return self._pool.apply_async(handler.optimize_wrapper)
+                scheduler.enqueue_leaf(
+                    OptimizeLeafJob(handler=handler, path_info=path_info),
+                )
             case _:
                 msg = f"Bad picopt handler {handler}"
                 raise TypeError(msg)
 
     def _create_handler(self, path_info: PathInfo) -> Handler | None:
-        handler = self.create_handler(path_info, self._timestamps)
+        handler = self._handler_factory.create_handler(path_info, self._timestamps)
         if handler is None:
             return None
 
@@ -131,13 +149,16 @@ class Walk(HandlerFactory):
 
         return handler
 
-    def _walk_file_get_handler(self, path_info: PathInfo) -> Handler | None:
+    def _walk_file_get_handler(
+        self, path_info: PathInfo, scheduler: Scheduler
+    ) -> Handler | None:
         if path_info.frame is None:
             if self._skipper.is_walk_file_skip(path_info):
                 return None
 
             if path_info.is_dir():
-                return self.walk_dir(path_info)
+                self.walk_dir(path_info, scheduler)
+                return None
 
             if self._skipper.is_older_than_timestamp(path_info):
                 return None
@@ -147,54 +168,56 @@ class Walk(HandlerFactory):
             self._printer.skip("no handler", path_info)
         return handler
 
-    def walk_file(self, path_info: PathInfo) -> ApplyResult | None:
-        """Optimize an individual file."""
+    def walk_file(self, path_info: PathInfo, scheduler: Scheduler) -> None:
+        """Optimize an individual file by enqueuing into the scheduler."""
         try:
-            result = None
-            if handler := self._walk_file_get_handler(path_info):
-                result = self._handle_file(handler)
+            if handler := self._walk_file_get_handler(path_info, scheduler):
+                self._handle_file(handler, path_info, scheduler)
         except Exception as exc:
             traceback.print_exc()
-            apply_kwargs = {
-                "path": path_info.path,
-                "bytes_in": path_info.bytes_in(),
-                "exc": exc,
-                "config": self._config,
-                "path_info": path_info,
-            }
-            result = self._pool.apply_async(ReportStats, (), apply_kwargs)
-        return result
+            report = ReportStats(
+                path=path_info.path or Path(),
+                bytes_in=path_info.bytes_in(),
+                exc=exc,
+                config=self._config,
+                path_info=path_info,
+            )
+            scheduler.accept_prebuilt_report(report, path_info.top_path)
 
-    def _walk_top_path(self, top_path: Path, top_results: dict):
+    def _walk_top_path(self, top_path: Path, scheduler: Scheduler) -> None:
         dirpath = Treestamps.get_dir(top_path)
         path_info = PathInfo(
             top_path=dirpath, convert=True, path=top_path, is_case_sensitive=None
         )
-        result = self.walk_file(path_info)
-        if dirpath not in top_results:
-            top_results[dirpath] = []
-        if result is not None:
-            top_results[dirpath].append(result)
+        self.walk_file(path_info, scheduler)
 
     def walk(self) -> Totals:
         """Optimize all configured files."""
         self._init_timestamps()
 
-        # Walk each top file
-        top_results = {}
-        for top_path in self._top_paths:
-            self._walk_top_path(top_path, top_results)
-        # Finish
-        for dirpath, results in top_results.items():
-            self._finish_results(results, dirpath)
+        max_workers = self._config.jobs or os.cpu_count() or 1
+        scheduler = Scheduler(
+            config=self._config,
+            executor=self._executor,
+            timestamps=self._timestamps,
+            totals=self._totals,
+            printer=self._printer,
+            max_workers=max_workers,
+            create_repack_handler=HandlerFactory.create_repack_handler,
+            child_enqueue_callback=self._enqueue_children,
+        )
 
-        # Shut down multiprocessing
-        self._pool.close()
-        self._pool.join()
+        for top_path in self._top_paths:
+            self._walk_top_path(top_path, scheduler)
+
+        scheduler.run()
+
+        self._executor.shutdown(wait=True)
 
         self._printer.done()
 
         if self._timestamps:
+            self._timestamps.compact_all()
             self._timestamps.dumpf()
 
         self._totals.report()

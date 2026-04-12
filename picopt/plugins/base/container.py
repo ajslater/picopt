@@ -32,7 +32,6 @@ from picopt.plugins.base.handler import Handler
 
 if TYPE_CHECKING:
     from collections.abc import Generator
-    from multiprocessing.pool import ApplyResult
 
     from confuse import AttrDict
     from treestamps import Grovestamps
@@ -70,7 +69,6 @@ class ContainerHandler(Handler, ABC):
             self.config, self._printer, timestamps, in_archive=True
         )
         self.comment: bytes | None = comment
-        self._tasks: dict[PathInfo, ApplyResult] = {}
         self._optimized_contents: set[PathInfo] = optimized_contents or set()
         self._do_repack: bool = bool(optimized_contents)
 
@@ -99,28 +97,17 @@ class ContainerHandler(Handler, ABC):
         """Set the flag determining whether the container needs repack."""
         self._do_repack = do_repack
 
-    def set_task(self, path_info: PathInfo, mp_result: ApplyResult | None) -> None:
-        """Store the multiprocessing result for one child path."""
-        if mp_result is None:
-            self._optimized_contents.add(path_info)
-            self._printer.copied()
-        else:
-            self._tasks[path_info] = mp_result
-            self._do_repack = True
-
-    def _hydrate_optimized_path_info(
+    def hydrate_optimized_path_info(
         self, path_info: PathInfo, report: ReportStats
     ) -> None:
+        """
+        Pull optimized bytes from a completed report back onto path_info.
+
+        Subclasses (archive, PDF) override to handle renames.
+        Called by the scheduler after each leaf completes.
+        """
         if report.data:
             path_info.set_data(report.data)
-
-    def optimize_contents(self) -> None:
-        """Collect every queued multiprocessing result, then strip non-pickleables."""
-        for path_info in tuple(self._tasks):
-            mp_results = self._tasks.pop(path_info)
-            report = mp_results.get()
-            self._hydrate_optimized_path_info(path_info, report)
-            self._optimized_contents.add(path_info)
 
     def get_optimized_contents(self) -> set[PathInfo]:
         """Return optimized contents."""

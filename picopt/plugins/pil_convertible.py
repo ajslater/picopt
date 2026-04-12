@@ -44,8 +44,8 @@ from PIL.TiffImagePlugin import TiffImageFile
 from PIL.XbmImagePlugin import XbmImageFile
 from PIL.XpmImagePlugin import XpmImageFile
 
-from picopt.formats import FileFormat
 from picopt.plugins.base import Plugin, Route
+from picopt.plugins.base.format import FileFormat
 from picopt.plugins.png import Png, PngAnimated
 from picopt.plugins.webp import (
     Img2WebPAnimatedLossless,

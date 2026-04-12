@@ -11,13 +11,13 @@ from __future__ import annotations
 
 from io import BytesIO
 from sys import maxsize
+from types import MappingProxyType
 from typing import TYPE_CHECKING
 
 from py7zr import SevenZipFile, is_7zfile
 from py7zr.io import BytesIOFactory
 from typing_extensions import override
 
-from picopt.formats import FileFormat
 from picopt.plugins.base import (
     ArchiveHandler,
     Detector,
@@ -27,6 +27,7 @@ from picopt.plugins.base import (
     Route,
     Tool,
 )
+from picopt.plugins.base.format import FileFormat
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -148,10 +149,12 @@ class Cb7(SevenZip):
     INPUT_FILE_FORMATS = frozenset({OUTPUT_FILE_FORMAT})
 
 
-_SUFFIX_TO_FORMAT: dict[str, FileFormat] = {
-    ".7z": SevenZip.OUTPUT_FILE_FORMAT,
-    ".cb7": Cb7.OUTPUT_FILE_FORMAT,
-}
+_SUFFIX_TO_FORMAT: MappingProxyType[str, FileFormat] = MappingProxyType(
+    {
+        ".7z": SevenZip.OUTPUT_FILE_FORMAT,
+        ".cb7": Cb7.OUTPUT_FILE_FORMAT,
+    }
+)
 
 
 PLUGIN = Plugin(

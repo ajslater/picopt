@@ -8,13 +8,17 @@ CB_CONVERT_FROM_FORMAT_STRS, etc) is now a registry query — see
 allowlist, which doesn't depend on the format registry at all.
 """
 
-TIMESTAMPS_CONFIG_KEYS = {
-    "bigger",
-    "convert_to",
-    "formats",
-    "ignore",
-    "keep_metadata",
-    "near_lossless",
-    "recurse",
-    "symlinks",
-}
+from typing import Final
+
+TIMESTAMPS_CONFIG_KEYS: Final[frozenset[str]] = frozenset(
+    {
+        "bigger",
+        "convert_to",
+        "formats",
+        "ignore",
+        "keep_metadata",
+        "near_lossless",
+        "recurse",
+        "symlinks",
+    }
+)

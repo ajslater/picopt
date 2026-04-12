@@ -3,7 +3,7 @@
 import shutil
 
 from picopt import PROGRAM_NAME, cli
-from picopt.old_timestamps import OLD_TIMESTAMPS_NAME
+from picopt.walk.legacy_timestamps import OLD_TIMESTAMPS_NAME
 from tests import IMAGES_DIR, assert_size_close, get_test_dir
 
 __all__ = ()
