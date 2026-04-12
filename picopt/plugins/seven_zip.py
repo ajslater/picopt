@@ -11,6 +11,7 @@ from __future__ import annotations
 
 from io import BytesIO
 from sys import maxsize
+from types import MappingProxyType
 from typing import TYPE_CHECKING
 
 from py7zr import SevenZipFile, is_7zfile
@@ -148,10 +149,12 @@ class Cb7(SevenZip):
     INPUT_FILE_FORMATS = frozenset({OUTPUT_FILE_FORMAT})
 
 
-_SUFFIX_TO_FORMAT: dict[str, FileFormat] = {
-    ".7z": SevenZip.OUTPUT_FILE_FORMAT,
-    ".cb7": Cb7.OUTPUT_FILE_FORMAT,
-}
+_SUFFIX_TO_FORMAT: MappingProxyType[str, FileFormat] = MappingProxyType(
+    {
+        ".7z": SevenZip.OUTPUT_FILE_FORMAT,
+        ".cb7": Cb7.OUTPUT_FILE_FORMAT,
+    }
+)
 
 
 PLUGIN = Plugin(

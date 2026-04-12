@@ -27,25 +27,23 @@ def is_lossless(input_buffer: BytesIO | BufferedReader) -> bool:
         else input_buffer
     )
 
-    if not _VP8_HEADER.compare(buffer):
-        result = False
-    else:
+    try:
+        if not _VP8_HEADER.compare(buffer):
+            return False
         x = buffer.read(1)
         if x == b"L":
-            result = True
-        elif x == b"X":
+            return True
+        if x == b"X":
             finder = (
                 buffer
                 if isinstance(buffer, mmap)
                 else bytearray(buffer.read(_SEARCH_LEN))
             )
-            result = finder.find(_VP8L_HEADER) != -1
-        else:
-            result = False
-
-    input_buffer.close()
-    buffer.close()
-    return result
+            return finder.find(_VP8L_HEADER) != -1
+        return False
+    finally:
+        input_buffer.close()
+        buffer.close()
 
 
 def main() -> None:

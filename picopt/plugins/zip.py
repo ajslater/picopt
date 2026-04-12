@@ -8,6 +8,7 @@ inventory.
 
 from __future__ import annotations
 
+from types import MappingProxyType
 from typing import TYPE_CHECKING
 from zipfile import ZIP_DEFLATED, ZIP_STORED, ZipFile, is_zipfile
 
@@ -144,11 +145,13 @@ class EPub(Zip):
     CONVERT_CHILDREN: bool = False
 
 
-_SUFFIX_TO_FORMAT: dict[str, FileFormat] = {
-    ".zip": Zip.OUTPUT_FILE_FORMAT,
-    ".cbz": Cbz.OUTPUT_FILE_FORMAT,
-    ".epub": EPub.OUTPUT_FILE_FORMAT,
-}
+_SUFFIX_TO_FORMAT: MappingProxyType[str, FileFormat] = MappingProxyType(
+    {
+        ".zip": Zip.OUTPUT_FILE_FORMAT,
+        ".cbz": Cbz.OUTPUT_FILE_FORMAT,
+        ".epub": EPub.OUTPUT_FILE_FORMAT,
+    }
+)
 
 
 PLUGIN = Plugin(

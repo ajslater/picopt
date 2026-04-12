@@ -22,7 +22,7 @@ from picopt.printer import Printer
 from picopt.walk.walk import Walk
 
 if TYPE_CHECKING:
-    from collections.abc import Sequence
+    from collections.abc import Collection, Sequence
 
 _LIST_DELIMITER = ","
 
@@ -37,39 +37,48 @@ def _get_version() -> str:
 
 def _default_format_strs() -> tuple[str, ...]:
     """Format strings of every default-enabled plugin's handlers."""
-    out: set[str] = set()
-    for plugin in registry.iter_plugins():
-        if not plugin.default_enabled:
-            continue
-        for handler_cls in plugin.handlers:
-            out.add(handler_cls.OUTPUT_FORMAT_STR)
-    return tuple(sorted(out))
+    return tuple(
+        sorted(
+            {
+                handler_cls.OUTPUT_FORMAT_STR
+                for plugin in registry.iter_plugins()
+                if plugin.default_enabled
+                for handler_cls in plugin.handlers
+            }
+        )
+    )
 
 
 def _archive_convert_from_format_strs() -> tuple[str, ...]:
     """Format strings the registry knows how to convert *from* into Zip/Cbz."""
-    out: set[str] = set()
-    routes = registry.routes_by_format()
-    for file_format, (_native, convert_chain) in routes.items():
-        if not file_format.archive:
-            continue
-        for handler_cls in convert_chain:
-            if handler_cls.OUTPUT_FORMAT_STR in {"ZIP", "CBZ"}:
-                out.add(file_format.format_str)
-                break
-    return tuple(sorted(out))
+    return tuple(
+        sorted(
+            {
+                file_format.format_str
+                for file_format, (
+                    _native,
+                    convert_chain,
+                ) in registry.routes_by_format().items()
+                if file_format.archive
+                and any(h.OUTPUT_FORMAT_STR in {"ZIP", "CBZ"} for h in convert_chain)
+            }
+        )
+    )
 
 
 def _lossless_image_convert_to_format_strs() -> tuple[str, ...]:
     """Convert-to targets that are lossless image formats."""
-    out: set[str] = set()
-    for plugin in registry.iter_plugins():
-        for handler_cls in plugin.convert_targets:
-            if handler_cls.OUTPUT_FILE_FORMAT.archive:
-                continue
-            if handler_cls.OUTPUT_FILE_FORMAT.lossless:
-                out.add(handler_cls.OUTPUT_FORMAT_STR)
-    return tuple(sorted(out))
+    return tuple(
+        sorted(
+            {
+                handler_cls.OUTPUT_FORMAT_STR
+                for plugin in registry.iter_plugins()
+                for handler_cls in plugin.convert_targets
+                if not handler_cls.OUTPUT_FILE_FORMAT.archive
+                and handler_cls.OUTPUT_FILE_FORMAT.lossless
+            }
+        )
+    )
 
 
 class SplitArgsAction(Action):
@@ -90,7 +99,7 @@ class SplitArgsAction(Action):
 
 
 def _comma_join(
-    formats: frozenset[str] | tuple[str, ...] | Sequence[str],
+    formats: Collection[str],
     *,
     space: bool = True,
     final_and: bool = False,

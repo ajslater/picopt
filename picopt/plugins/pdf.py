@@ -60,7 +60,6 @@ Refusals
 
 from __future__ import annotations
 
-from collections.abc import Generator
 from contextlib import suppress
 from io import BytesIO
 from pathlib import Path

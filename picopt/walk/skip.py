@@ -93,7 +93,7 @@ class WalkSkipper:
             return True
 
         path = path_info.path
-        if path and path.name.rfind(WORKING_SUFFIX) > -1:
+        if path and WORKING_SUFFIX in path.name:
             self._clean_up_working_files(path)
             return True
         return False

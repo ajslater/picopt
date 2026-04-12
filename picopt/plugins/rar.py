@@ -9,6 +9,7 @@ configured.
 
 from __future__ import annotations
 
+from types import MappingProxyType
 from typing import TYPE_CHECKING
 
 from rarfile import RarFile, is_rarfile
@@ -135,10 +136,12 @@ class Cbr(Rar):
     INPUT_FILE_FORMATS = frozenset({OUTPUT_FILE_FORMAT})
 
 
-_SUFFIX_TO_FORMAT: dict[str, FileFormat] = {
-    ".rar": Rar.OUTPUT_FILE_FORMAT,
-    ".cbr": Cbr.OUTPUT_FILE_FORMAT,
-}
+_SUFFIX_TO_FORMAT: MappingProxyType[str, FileFormat] = MappingProxyType(
+    {
+        ".rar": Rar.OUTPUT_FILE_FORMAT,
+        ".cbr": Cbr.OUTPUT_FILE_FORMAT,
+    }
+)
 
 
 PLUGIN = Plugin(

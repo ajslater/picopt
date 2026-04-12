@@ -31,6 +31,7 @@ from collections import deque
 from concurrent.futures import FIRST_COMPLETED, Future, ProcessPoolExecutor, wait
 from dataclasses import dataclass, field
 from enum import Enum, auto
+from itertools import chain
 from typing import TYPE_CHECKING
 
 from picopt.report import ReportStats
@@ -273,10 +274,12 @@ class Scheduler:
                 self._submit_ready()
                 if self._inflight_count() == 0:
                     continue
-                all_futs = (
-                    list(self._inflight_unpack)
-                    + list(self._inflight_leaf)
-                    + list(self._inflight_repack)
+                all_futs = list(
+                    chain(
+                        self._inflight_unpack,
+                        self._inflight_leaf,
+                        self._inflight_repack,
+                    )
                 )
                 done, _ = wait(all_futs, return_when=FIRST_COMPLETED)
                 for fut in done:
@@ -304,26 +307,28 @@ class Scheduler:
         job, node = self._ready.popleft()
         # Skip jobs whose owning node got cancelled while they were queued.
         if node is not None and node.state is NodeState.CANCELLED:
-            if isinstance(job, (UnpackJob, RepackJob)):
-                # node's own job — the cancel walk already decremented
-                # the parent counter, nothing to do.
-                pass
-            else:
-                node.pending = max(0, node.pending - 1)
+            match job:
+                case UnpackJob() | RepackJob():
+                    # node's own job — the cancel walk already decremented
+                    # the parent counter, nothing to do.
+                    pass
+                case _:
+                    node.pending = max(0, node.pending - 1)
             return
         fut = self._executor.submit(job.run)
-        if isinstance(job, UnpackJob):
-            assert node is not None
-            node.state = NodeState.UNPACKING
-            self._inflight_unpack[fut] = node
-        elif isinstance(job, OptimizeLeafJob):
-            self._inflight_leaf[fut] = _LeafEntry(job=job, parent=node)
-            if node is not None and node.state is NodeState.NEW:
-                node.state = NodeState.OPTIMIZING
-        else:
-            assert node is not None
-            node.state = NodeState.REPACKING
-            self._inflight_repack[fut] = node
+        match job:
+            case UnpackJob():
+                assert node is not None
+                node.state = NodeState.UNPACKING
+                self._inflight_unpack[fut] = node
+            case OptimizeLeafJob():
+                self._inflight_leaf[fut] = _LeafEntry(job=job, parent=node)
+                if node is not None and node.state is NodeState.NEW:
+                    node.state = NodeState.OPTIMIZING
+            case RepackJob():
+                assert node is not None
+                node.state = NodeState.REPACKING
+                self._inflight_repack[fut] = node
 
     def _submit_ready(self) -> None:
         """Submit ready jobs up to the backpressure cap."""
@@ -482,6 +487,7 @@ class Scheduler:
         # Failure branches
         if report.exc is not None:
             self._handle_repack_failure(report, node)
+            return
 
         # Success: accumulate, timestamp, cleanup, notify parent.
         self._record_totals(report)
@@ -515,7 +521,7 @@ class Scheduler:
         """If pending == 0, enqueue RepackJob or synthesize no-op completion."""
         if node.pending != 0 or node.state is NodeState.CANCELLED:
             return
-        if node.state is NodeState.REPACKING or node.state is NodeState.DONE:
+        if node.state in (NodeState.REPACKING, NodeState.DONE):
             return
 
         # Respect the handler's own _do_repack flag (set during walk) OR

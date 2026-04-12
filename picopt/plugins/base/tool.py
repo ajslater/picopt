@@ -147,7 +147,7 @@ class InternalTool(Tool):
 
 
 class StdLibTool(InternalTool):
-    """A tool takenn from the Python Standard Library."""
+    """A tool taken from the Python Standard Library."""
 
     PYTHON_VERSION = f"Python {python_version()}"
 

@@ -3,6 +3,7 @@ Detect file format.
 
 Two-phase dispatch:
 
+
 1. **PIL probe** — try to open the file as an image. If PIL recognises it,
    build a :class:`FileFormat` from the PIL format string and the info dict.
    Two formats need extra disambiguation that PIL doesn't do for us:
@@ -25,17 +26,22 @@ Two-phase dispatch:
    here.
 """
 
-from collections.abc import Mapping
+from __future__ import annotations
+
 from contextlib import suppress
-from typing import Any, BinaryIO
+from typing import TYPE_CHECKING, Any, BinaryIO
 
 from PIL import Image, ImageSequence, UnidentifiedImageError
 
 from picopt import plugins as registry
-from picopt.path import PathInfo
 from picopt.pillow.webp_lossless import is_lossless as _webp_is_lossless
 from picopt.plugins.base.format import FileFormat
 from picopt.plugins.pil_convertible import is_tiff_lossless
+
+if TYPE_CHECKING:
+    from collections.abc import Mapping
+
+    from picopt.path import PathInfo
 
 # PIL format-string constants. Hardcoded so this module doesn't have to
 # import the per-format PIL ImageFile subclasses just to read a string.
