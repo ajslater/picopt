@@ -95,10 +95,13 @@ class Walk:
         if not self._config.recurse or not dir_path_info.is_dir():
             return
 
-        files = []
         dir_path = dir_path_info.path
+        if not dir_path:
+            return
 
-        if dir_path:
+        scheduler.begin_dir(dir_path_info.top_path, dir_path)
+        try:
+            files = []
             for name in sorted(dir_path.iterdir()):
                 entry_path = dir_path / name
                 if entry_path.is_dir():
@@ -110,12 +113,16 @@ class Walk:
                 else:
                     files.append(entry_path)
 
-        for entry_path in sorted(files):
-            path_info = PathInfo(
-                path_info=dir_path_info,
-                path=entry_path,
-            )
-            self.walk_file(path_info, scheduler)
+            for entry_path in sorted(files):
+                path_info = PathInfo(
+                    path_info=dir_path_info,
+                    path=entry_path,
+                )
+                self.walk_file(path_info, scheduler)
+        except Exception:
+            scheduler.cancel_dir(dir_path)
+            raise
+        scheduler.seal_dir(dir_path)
 
     def _handle_file(
         self, handler: Handler, path_info: PathInfo, scheduler: Scheduler
@@ -210,9 +217,7 @@ class Walk:
         self._printer.done()
 
         if self._timestamps:
-            ic("BEFORE", self._timestamps.dumps())
             self._timestamps.compact_all()
-            ic("COMPACTED", self._timestamps.dumps())
             self._timestamps.dumpf()
 
         self._totals.report()

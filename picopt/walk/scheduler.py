@@ -189,6 +189,15 @@ class _LeafEntry:
     parent: ContainerNode | None  # None = direct directory leaf, not in container
 
 
+@dataclass
+class _DirTracker:
+    """Track pending children of a walked directory for timestamp writes."""
+
+    top_path: Path
+    pending: int = 0
+    sealed: bool = False
+
+
 # ------------------------------------------------------------------- scheduler
 
 
@@ -232,7 +241,7 @@ class Scheduler:
         self._inflight_repack: dict[Future, ContainerNode] = {}
         self._live_nodes: set[ContainerNode] = set()
 
-        # top-level-containers waiting for their top-path's timestamp write
+        self._dir_trackers: dict[Path, _DirTracker] = {}
         self._fail_fast_triggered: bool = False
 
     # ---------------------------------------------------------- public API
@@ -243,6 +252,8 @@ class Scheduler:
         self._ready.append((job, parent))
         if parent is not None:
             parent.pending += 1
+        elif job.path_info.path is not None:
+            self._dir_enqueue(job.path_info.path)
 
     def enqueue_container(
         self, handler: ContainerHandler, parent: ContainerNode | None = None
@@ -253,6 +264,8 @@ class Scheduler:
         if parent is not None:
             parent.children.append(node)
             parent.pending += 1
+        elif handler.path_info.path is not None:
+            self._dir_enqueue(handler.path_info.path)
         self._ready.append((UnpackJob(handler=handler), node))
         return node
 
@@ -266,6 +279,31 @@ class Scheduler:
         """
         self._record_totals(report)
         self._write_timestamp(report, top_path)
+
+    def begin_dir(self, top_path: Path, dir_path: Path) -> None:
+        """Register a directory whose children are about to be enqueued."""
+        parent_tracker = self._dir_trackers.get(dir_path.parent)
+        if parent_tracker is not None:
+            parent_tracker.pending += 1
+        self._dir_trackers[dir_path] = _DirTracker(top_path=top_path)
+
+    def seal_dir(self, dir_path: Path) -> None:
+        """Mark a directory as fully enumerated; finalize if no pending children."""
+        tracker = self._dir_trackers.get(dir_path)
+        if tracker is None:
+            return
+        tracker.sealed = True
+        if tracker.pending <= 0:
+            self._finalize_dir(dir_path, tracker)
+
+    def cancel_dir(self, dir_path: Path) -> None:
+        """Remove a directory tracker without finalizing (used on walk errors)."""
+        tracker = self._dir_trackers.pop(dir_path, None)
+        if tracker is None:
+            return
+        parent_dir = dir_path.parent
+        if parent_dir in self._dir_trackers:
+            self._dir_child_done(parent_dir)
 
     def run(self) -> None:
         """Drain ready and inflight until both are empty."""
@@ -452,6 +490,8 @@ class Scheduler:
         # Top-level directory leaf: straight to totals + timestamps.
         self._record_totals(report)
         self._write_timestamp(report, entry.job.path_info.top_path)
+        if entry.job.path_info.path is not None:
+            self._dir_child_done(entry.job.path_info.path.parent)
 
     def _handle_repack_failure(self, report, node):
         if self._config.fail_fast:
@@ -495,6 +535,8 @@ class Scheduler:
             top_path = node.handler.path_info.top_path
             self._write_timestamp(report, top_path)
             self._cleanup_node_staging(node)
+            if node.handler.path_info.path is not None:
+                self._dir_child_done(node.handler.path_info.path.parent)
         else:
             # Hydrate a PathInfo for our parent's _optimized_contents so
             # the parent's repack picks up our repacked bytes.
@@ -561,9 +603,33 @@ class Scheduler:
             self._totals.bytes_out += report.bytes_in
 
     def _write_timestamp(self, report: ReportStats, top_path: Path) -> None:
-        """Write a timestamp if timestamps are enabled and result changed."""
-        if self._timestamps and report.path is not None and report.changed:
+        """Write a timestamp if timestamps are enabled and no error."""
+        if self._timestamps and report.path is not None and not report.exc:
             self._timestamps.set(top_path, report.path)
+
+    def _dir_enqueue(self, child_path: Path) -> None:
+        """Increment a directory's pending count for a newly enqueued child."""
+        tracker = self._dir_trackers.get(child_path.parent)
+        if tracker is not None:
+            tracker.pending += 1
+
+    def _dir_child_done(self, parent_dir: Path) -> None:
+        """Decrement a directory's pending count; finalize when ready."""
+        tracker = self._dir_trackers.get(parent_dir)
+        if tracker is None:
+            return
+        tracker.pending -= 1
+        if tracker.pending <= 0 and tracker.sealed:
+            self._finalize_dir(parent_dir, tracker)
+
+    def _finalize_dir(self, dir_path: Path, tracker: _DirTracker) -> None:
+        """Write directory timestamp with compaction and cascade to parent."""
+        del self._dir_trackers[dir_path]
+        if self._timestamps:
+            self._timestamps.set(tracker.top_path, dir_path, compact=True)
+        parent_dir = dir_path.parent
+        if parent_dir in self._dir_trackers:
+            self._dir_child_done(parent_dir)
 
     def _cleanup_node_staging(self, node: ContainerNode) -> None:
         """Rmtree this node's staging_dir, swallowing errors."""
