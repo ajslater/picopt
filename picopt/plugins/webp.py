@@ -72,7 +72,6 @@ from typing import TYPE_CHECKING, Any, BinaryIO
 from PIL.WebPImagePlugin import WebPImageFile
 from typing_extensions import override
 
-from picopt.formats import FileFormat
 from picopt.path import PathInfo
 from picopt.plugins.base import (
     ExternalTool,
@@ -85,6 +84,7 @@ from picopt.plugins.base import (
     Tool,
     ToolStatus,
 )
+from picopt.plugins.base.format import FileFormat
 from picopt.plugins.gif import Gif, GifAnimated
 from picopt.plugins.png import Png, PngAnimated
 
@@ -410,7 +410,40 @@ _ANIMATED_WEBP_FRAME_KWARGS: MappingProxyType[str, Any] = MappingProxyType(
 )
 
 
-class Img2WebPAnimatedLossless(ImageAnimated):
+class WebPAnimatedLossless(ImageAnimated, ABC):
+    """Common WebPAnimated Tool methods."""
+
+    OUTPUT_FORMAT_STR = _WEBP_FORMAT_STR
+    OUTPUT_FILE_FORMAT = FileFormat(_WEBP_FORMAT_STR, lossless=True, animated=True)
+    SUFFIXES: tuple[str, ...] = (".webp",)
+    PIL2_KWARGS: MappingProxyType[str, Any] = _ANIMATED_WEBP_PIL_KWARGS
+    PIL2_FRAME_KWARGS: MappingProxyType[str, Any] = _ANIMATED_WEBP_FRAME_KWARGS
+
+    def __init__(self, *args, **kwargs) -> None:
+        """Initialize instance."""
+        super().__init__(*args, **kwargs)
+        self._working_tmp_dir: Path | None = None
+        self._frame_index_width: int = 0
+
+    # ----- frame file plumbing
+    def _ensure_tmp_dir(self) -> Path:
+        if self._working_tmp_dir is None:
+            self._working_tmp_dir = Path(mkdtemp(suffix=_hash_tmp_dir_suffix(self)))
+        return self._working_tmp_dir
+
+    def _frame_path(self, index: int) -> Path:
+        n = str(index).zfill(self._frame_index_width)
+        return self._ensure_tmp_dir() / f"frame_{n}.webp"
+
+    # ----- pack
+    #
+    def _cleanup_tmp_dir(self) -> None:
+        if self._working_tmp_dir is not None:
+            shutil.rmtree(self._working_tmp_dir, ignore_errors=True)
+            self._working_tmp_dir = None
+
+
+class Img2WebPAnimatedLossless(WebPAnimatedLossless):
     """
     Animated WebP packed via ``img2webp``.
 
@@ -422,17 +455,11 @@ class Img2WebPAnimatedLossless(ImageAnimated):
     :meth:`pack_into` regardless of success.
     """
 
-    OUTPUT_FORMAT_STR = _WEBP_FORMAT_STR
-    OUTPUT_FILE_FORMAT = FileFormat(_WEBP_FORMAT_STR, lossless=True, animated=True)
     INPUT_FILE_FORMATS = frozenset(
-        {OUTPUT_FILE_FORMAT, *PngAnimated.INPUT_FILE_FORMATS}
+        {WebPAnimatedLossless.OUTPUT_FILE_FORMAT, *PngAnimated.INPUT_FILE_FORMATS}
     )
-    SUFFIXES: tuple[str, ...] = (".webp",)
 
     PIPELINE: tuple[tuple[Tool, ...], ...] = ((Img2WebPTool(),),)
-
-    PIL2_KWARGS: MappingProxyType[str, Any] = _ANIMATED_WEBP_PIL_KWARGS
-    PIL2_FRAME_KWARGS: MappingProxyType[str, Any] = _ANIMATED_WEBP_FRAME_KWARGS
 
     # https://developers.google.com/speed/webp/docs/img2webp
     _IMG2WEBP_BASE_ARGS: tuple[str, ...] = (
@@ -453,20 +480,7 @@ class Img2WebPAnimatedLossless(ImageAnimated):
         super().__init__(*args, **kwargs)
         if CWebPTool.IS_MODERN_CWEBP:
             self._input_file_formats = self._input_file_formats | MODERN_CWEBP_FORMATS
-        self._working_tmp_dir: Path | None = None
         self._frame_paths: list[Path] = []
-        self._frame_index_width: int = 0
-
-    # ----- frame file plumbing
-
-    def _ensure_tmp_dir(self) -> Path:
-        if self._working_tmp_dir is None:
-            self._working_tmp_dir = Path(mkdtemp(suffix=_hash_tmp_dir_suffix(self)))
-        return self._working_tmp_dir
-
-    def _frame_path(self, index: int) -> Path:
-        n = str(index).zfill(self._frame_index_width)
-        return self._ensure_tmp_dir() / f"frame_{n}.webp"
 
     # ----- walk overrides
 
@@ -505,11 +519,6 @@ class Img2WebPAnimatedLossless(ImageAnimated):
         finally:
             self._cleanup_tmp_dir()
 
-    def _cleanup_tmp_dir(self) -> None:
-        if self._working_tmp_dir is not None:
-            shutil.rmtree(self._working_tmp_dir, ignore_errors=True)
-            self._working_tmp_dir = None
-
     def img2webp_args(self) -> tuple[str, ...]:
         """Args for external program."""
         runtime: tuple[str, ...] = (
@@ -533,7 +542,7 @@ class Img2WebPAnimatedLossless(ImageAnimated):
         return tuple(out)
 
 
-class WebPMuxAnimatedLossless(ImageAnimated):
+class WebPMuxAnimatedLossless(WebPAnimatedLossless):
     """
     Animated WebP unpacked and repacked via ``webpmux``.
 
@@ -543,15 +552,9 @@ class WebPMuxAnimatedLossless(ImageAnimated):
     iterator) and :meth:`pack_into` calls :class:`WebPMuxTool`.
     """
 
-    OUTPUT_FORMAT_STR = _WEBP_FORMAT_STR
-    OUTPUT_FILE_FORMAT = FileFormat(_WEBP_FORMAT_STR, lossless=True, animated=True)
-    INPUT_FILE_FORMATS = frozenset({OUTPUT_FILE_FORMAT})
-    SUFFIXES: tuple[str, ...] = (".webp",)
+    INPUT_FILE_FORMATS = frozenset({WebPAnimatedLossless.OUTPUT_FILE_FORMAT})
 
     PIPELINE: tuple[tuple[Tool, ...], ...] = ((WebPMuxTool(),),)
-
-    PIL2_KWARGS: MappingProxyType[str, Any] = _ANIMATED_WEBP_PIL_KWARGS
-    PIL2_FRAME_KWARGS: MappingProxyType[str, Any] = _ANIMATED_WEBP_FRAME_KWARGS
 
     _DURATION_RE: re.Pattern[str] = re.compile(r"frame \d+: (\d+) ms")
     _DEFAULT_DURATION_MS: int = 100
@@ -559,21 +562,9 @@ class WebPMuxAnimatedLossless(ImageAnimated):
     def __init__(self, *args, **kwargs) -> None:
         """Initialize instance."""
         super().__init__(*args, **kwargs)
-        self._working_tmp_dir: Path | None = None
-        self._frame_index_width: int = 0
         self._durations: dict[int, int] = {}
 
     # ----- frame file plumbing
-
-    def _ensure_tmp_dir(self) -> Path:
-        if self._working_tmp_dir is None:
-            self._working_tmp_dir = Path(mkdtemp(suffix=_hash_tmp_dir_suffix(self)))
-        return self._working_tmp_dir
-
-    def _frame_path(self, index: int) -> Path:
-        n = str(index).zfill(self._frame_index_width)
-        return self._ensure_tmp_dir() / f"frame_{n}.webp"
-
     def _webpmux_exec(self) -> tuple[str, ...]:
         """Resolve ``webpmux`` argv prefix from the probed tool instance."""
         return self.resolved_tool(WebPMuxTool).exec_args()
@@ -641,11 +632,6 @@ class WebPMuxAnimatedLossless(ImageAnimated):
             return self.first_stage().run_pack(self)
         finally:
             self._cleanup_tmp_dir()
-
-    def _cleanup_tmp_dir(self) -> None:
-        if self._working_tmp_dir is not None:
-            shutil.rmtree(self._working_tmp_dir, ignore_errors=True)
-            self._working_tmp_dir = None
 
     def webpmux_pack_args(self) -> tuple[str, ...]:
         """Args for external tool."""

@@ -1,6 +1,5 @@
 """Statistics for the optimization operations."""
 
-from dataclasses import dataclass
 from pathlib import Path
 from subprocess import CalledProcessError
 
@@ -11,39 +10,36 @@ from picopt.path import PathInfo
 from picopt.printer import Printer
 
 
-@dataclass
-class ReportStatBase:
-    """Base dataclass for ReportStats."""
-
-    path: Path | None
-    bytes_in: int = 0
-    bytes_out: int = 0
-    exc: Exception | None = None
-    data: bytes = b""
-    changed: bool = False
-
-
-class ReportStats(ReportStatBase):
+class ReportStats:
     """Container for reported stats from optimization operations."""
 
     _TAB: str = " " * 4
 
-    def __init__(
+    def __init__(  # noqa: PLR0913
         self,
         path: Path,
-        *args,
+        *,
+        bytes_in: int = 0,
+        bytes_out: int = 0,
+        exc: BaseException | None = None,
+        data: bytes = b"",
         config: AttrDict | None = None,
         path_info: PathInfo | None = None,
         converted: bool = False,
-        **kwargs,
+        changed: bool = False,
     ) -> None:
         """Initialize required instance variables."""
+        self.path: Path | None = path
+        self.bytes_in: int = bytes_in
+        self.bytes_out: int = bytes_out
+        self.exc: BaseException | None = exc
+        self.data: bytes = data
+        self.changed: bool = changed
         # Don't store these large data structs, just tidbits.
         self.bigger: bool = config.bigger if config else False
         self.test: bool = config.dry_run if config else False
         self.convert: bool = path_info.convert if path_info else False
         self._full_name: str = path_info.full_output_name() if path_info else str(path)
-        super().__init__(path, *args, **kwargs)
         self.saved: int = self.bytes_in - self.bytes_out
         self.converted: bool = converted
 

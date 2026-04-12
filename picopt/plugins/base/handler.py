@@ -22,11 +22,12 @@ import traceback
 from abc import ABC, abstractmethod
 from io import BufferedReader, BytesIO
 from pathlib import Path
-from typing import TYPE_CHECKING, BinaryIO
+from types import MappingProxyType
+from typing import TYPE_CHECKING, BinaryIO, Final
 
 from picopt import WORKING_SUFFIX
-from picopt.formats import FileFormat
 from picopt.path import DOUBLE_SUFFIX, PathInfo
+from picopt.plugins.base.format import FileFormat
 from picopt.printer import Printer
 from picopt.report import ReportStats
 
@@ -36,7 +37,9 @@ if TYPE_CHECKING:
     from picopt.plugins.base.tool import Tool
 
 # Used by working-path construction for nested-container scratch files.
-_WORKING_PATH_TRANS_TABLE: dict[int, str] = str.maketrans(dict.fromkeys(" /", "_"))
+_WORKING_PATH_TRANS_TABLE: Final[MappingProxyType[int, str]] = MappingProxyType(
+    str.maketrans(dict.fromkeys(" /", "_"))
+)
 
 
 class Handler(ABC):
@@ -257,11 +260,10 @@ class Handler(ABC):
 
     def _write_final_path(self, final_data_buffer: BinaryIO) -> None:
         if isinstance(final_data_buffer, BytesIO):
-            with self.final_path.open("wb") as final_file:
+            with self.working_path.open("wb") as working_path:
                 final_data_buffer.seek(0)
-                final_file.write(final_data_buffer.read())
-        else:
-            self.working_path.replace(self.final_path)
+                working_path.write(final_data_buffer.read())
+        self.working_path.replace(self.final_path)
 
     def _cleanup_original_path(self) -> None:
         final_norm = os.path.normcase(self.final_path)

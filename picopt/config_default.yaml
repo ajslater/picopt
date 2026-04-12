@@ -4,6 +4,8 @@ picopt:
   convert_to: []
   disable_programs: []
   dry_run: False
+  fail_fast: False
+  fail_fast_container: False
   formats: [GIF, JPEG, PNG, WEBP]
   ignore: []
   ignore_defaults: True

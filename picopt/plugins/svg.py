@@ -10,7 +10,6 @@ from typing import TYPE_CHECKING, BinaryIO
 
 from typing_extensions import override
 
-from picopt.formats import SVG_FORMAT_STR, FileFormat
 from picopt.plugins.base import (
     Detector,
     ExternalTool,
@@ -21,6 +20,7 @@ from picopt.plugins.base import (
     Route,
     Tool,
 )
+from picopt.plugins.base.format import SVG_FORMAT_STR, FileFormat
 
 if TYPE_CHECKING:
     from io import BytesIO

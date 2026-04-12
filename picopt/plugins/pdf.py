@@ -60,17 +60,16 @@ Refusals
 
 from __future__ import annotations
 
-from collections.abc import Generator
 from contextlib import suppress
 from io import BytesIO
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 from zipfile import ZipInfo
 
+from pikepdf.exceptions import PasswordError
 from termcolor import cprint
 from typing_extensions import override
 
-from picopt.formats import FileFormat
 from picopt.path import PathInfo
 from picopt.plugins.base import (
     ContainerHandler,
@@ -81,6 +80,7 @@ from picopt.plugins.base import (
     Route,
     Tool,
 )
+from picopt.plugins.base.format import FileFormat
 
 if TYPE_CHECKING:
     from collections.abc import Generator
@@ -339,18 +339,25 @@ class Pdf(ContainerHandler):
             raise OSError(msg) from exc
 
         try:
-            if _has_signature(pdf):
+            if refuse := _has_signature(pdf):
                 msg = (
                     f"{self.path_info.full_output_name()}: "
                     "PDF has a digital signature; refusing to modify."
                 )
-                raise ValueError(msg)
+                cprint(msg, "yellow")
+            else:
+                import pikepdf
 
-            import pikepdf
-
-            for obj in pdf.objects:
-                if path_info := self._walk_pdf_obj(obj, pikepdf):
-                    yield path_info
+                for obj in pdf.objects:
+                    if path_info := self._walk_pdf_obj(obj, pikepdf):
+                        yield path_info
+        except PasswordError:
+            refuse = True
+            msg = (
+                f"{self.path_info.full_output_name()}: "
+                "PDF is encrypted; refusing to modify."
+            )
+            cprint(msg, "yellow")
         finally:
             with suppress(Exception):
                 pdf.close()
@@ -362,7 +369,7 @@ class Pdf(ContainerHandler):
         # bytes_in vs bytes_out check in _cleanup_after_optimize discards
         # the rewrite cleanly if it grew the file (common for already-
         # optimized PDFs), so flipping this flag is safe.
-        self._do_repack = True
+        self._do_repack = not refuse
 
         self._walk_finish()
 
@@ -447,7 +454,7 @@ class Pdf(ContainerHandler):
     # ------------------------------------------------------------ hydration
 
     @override
-    def _hydrate_optimized_path_info(
+    def hydrate_optimized_path_info(
         self, path_info: PathInfo, report: ReportStats
     ) -> None:
         """

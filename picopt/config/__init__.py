@@ -57,6 +57,8 @@ def _build_template() -> MappingTemplate:
                     "disable_programs": Sequence(str),
                     "dry_run": bool,
                     "extra_formats": Optional(Sequence(Choice(all_format_strs))),
+                    "fail_fast": bool,
+                    "fail_fast_container": bool,
                     "formats": Sequence(Choice(all_format_strs)),
                     "ignore": Sequence(str),
                     "ignore_defaults": bool,

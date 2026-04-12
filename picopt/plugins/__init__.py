@@ -28,7 +28,7 @@ from picopt.plugins.base import Detector, Handler, Plugin
 if TYPE_CHECKING:
     from collections.abc import Iterator
 
-    from picopt.formats import FileFormat
+    from picopt.plugins.base.format import FileFormat
 
 
 # ---------------------------------------------------------------------------
@@ -114,28 +114,34 @@ def convert_target_format_strs() -> tuple[str, ...]:
 @cache
 def all_format_strs() -> tuple[str, ...]:
     """Sorted format strings the user can pass to --formats / --extra-formats."""
-    seen: set[str] = set()
-    for plugin in iter_plugins():
-        for handler in plugin.handlers:
-            seen.add(handler.OUTPUT_FORMAT_STR)
-        for route in plugin.routes:
-            seen.add(route.file_format.format_str)
-        seen.update(plugin.extra_format_strs)
+    seen: set[str] = {
+        s
+        for plugin in iter_plugins()
+        for s in (
+            *(h.OUTPUT_FORMAT_STR for h in plugin.handlers),
+            *(r.file_format.format_str for r in plugin.routes),
+            *plugin.extra_format_strs,
+        )
+    }
     return tuple(sorted(seen))
 
 
 @cache
 def lossless_format_strs() -> frozenset[str]:
     """Format strings that are losslessly compressible."""
-    out: set[str] = set()
-    for plugin in iter_plugins():
-        for route in plugin.routes:
-            if route.file_format.lossless:
-                out.add(route.file_format.format_str)
-        if plugin.name == "PIL_CONVERTIBLE":
-            # This special case is all lossless
-            out.update(plugin.extra_format_strs)
-    return frozenset(out)
+    return frozenset(
+        s
+        for plugin in iter_plugins()
+        for s in (
+            *(
+                r.file_format.format_str
+                for r in plugin.routes
+                if r.file_format.lossless
+            ),
+            # PIL_CONVERTIBLE extra formats are all lossless
+            *(plugin.extra_format_strs if plugin.name == "PIL_CONVERTIBLE" else ()),
+        )
+    )
 
 
 @cache

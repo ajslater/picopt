@@ -15,7 +15,6 @@ from typing import TYPE_CHECKING, Any
 from PIL.PngImagePlugin import PngImageFile
 from typing_extensions import override
 
-from picopt.formats import FileFormat
 from picopt.pillow.png_bit_depth import png_bit_depth
 from picopt.plugins.base import (
     ExternalTool,
@@ -27,6 +26,7 @@ from picopt.plugins.base import (
     Route,
     Tool,
 )
+from picopt.plugins.base.format import FileFormat
 from picopt.plugins.gif import Gif, GifAnimated
 
 if TYPE_CHECKING:

@@ -237,7 +237,7 @@ class PathInfo:
         return self._archive_pretty_name
 
     def archive_pseudo_path(self) -> Path:
-        """Return a psudeo path of container history for skipping inside archives."""
+        """Return a pseudeo path of container history for skipping inside archives."""
         if self._archive_pseudo_path is None:
             path = Path()
             for child in self.container_path_history():

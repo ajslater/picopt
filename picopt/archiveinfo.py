@@ -4,7 +4,7 @@ from datetime import datetime, timezone
 from operator import attrgetter
 from pathlib import Path
 from tarfile import DIRTYPE, REGTYPE, SYMTYPE, TarInfo
-from typing import TypeAlias
+from typing import Final, TypeAlias
 from zipfile import ZipInfo
 
 from py7zr import FileInfo as SevenZipInfo
@@ -20,10 +20,10 @@ ArchiveInfoType: TypeAlias = TarInfo | RarInfo | ZipInfo | SevenZipInfo
 class SevenZipInfoDefaults:
     """Defaults for SevenZip FileInfo."""
 
-    compressed: bool = True
-    uncompressed: bool = False
-    archivable: bool = True
-    crc32: None = None
+    compressed: Final[bool] = True
+    uncompressed: Final[bool] = False
+    archivable: Final[bool] = True
+    crc32: Final[None] = None
 
 
 class ArchiveInfo:
@@ -95,7 +95,7 @@ class ArchiveInfo:
 
             if dttm:
                 if not dttm.tzinfo:
-                    dttm.replace(tzinfo=timezone.utc)
+                    dttm = dttm.replace(tzinfo=timezone.utc)
                 self._dttm = dttm
         return self._dttm
 
@@ -130,16 +130,15 @@ class ArchiveInfo:
 
     def to_tarinfo(self) -> TarInfo:
         """Convert to TarInfo."""
-        if isinstance(self.info, TarInfo):
-            return self.info
-
-        kwargs = {}
         match self.info:
+            case TarInfo():
+                return self.info
             case ZipInfo() | RarInfo():
+                kwargs = {}
                 if name := self.filename():
                     kwargs["name"] = name
             case _:  # SevenZipInfo
-                kwargs["name"] = self.info.filename
+                kwargs = {"name": self.info.filename}
         info = TarInfo(**kwargs)
         mtime = self.mtime()
         if mtime is not None:

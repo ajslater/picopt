@@ -7,9 +7,9 @@ from confuse import AttrDict
 from treestamps import Grovestamps, Treestamps
 
 from picopt import PROGRAM_NAME, WORKING_SUFFIX
-from picopt.old_timestamps import OLD_TIMESTAMPS_NAME
 from picopt.path import PathInfo, is_path_ignored
 from picopt.printer import Printer
+from picopt.walk.legacy_timestamps import OLD_TIMESTAMPS_NAME
 
 
 class WalkSkipper:
@@ -93,7 +93,7 @@ class WalkSkipper:
             return True
 
         path = path_info.path
-        if path and path.name.rfind(WORKING_SUFFIX) > -1:
+        if path and WORKING_SUFFIX in path.name:
             self._clean_up_working_files(path)
             return True
         return False
