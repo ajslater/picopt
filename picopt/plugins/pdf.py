@@ -338,7 +338,6 @@ class Pdf(ContainerHandler):
             msg = f"could not open PDF {self.path_info.full_output_name()}: {exc}"
             raise OSError(msg) from exc
 
-        refust = False
         try:
             if refuse := _has_signature(pdf):
                 msg = (
