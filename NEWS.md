@@ -1,5 +1,9 @@
 # 📰 Picopt News
 
+## v6.1.1
+
+- Treestamps 3.0.0
+
 ## v6.1.0
 
 - Rewote multiprocessing to enable more throughput.
