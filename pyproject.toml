@@ -24,7 +24,7 @@ dependencies = [
   "python-dateutil~=2.8",
   "rarfile~=4.0",
   "ruamel-yaml>=0.18,<1.0",
-  "treestamps~=2.5.3",
+  "treestamps~=3.0.0",
   "typing-extensions~=4.13",
 ]
 description = "A multi format lossless image optimizer that uses external tools"
@@ -33,7 +33,7 @@ readme = "README.md"
 requires-python = ">=3.10"
 license = { text = "GPL-3.0-only" }
 name = "picopt"
-version = "6.1.0"
+version = "6.1.1"
 [[project.authors]]
 name = "AJ Slater"
 email = "aj@slater.net"

@@ -106,7 +106,7 @@ class WalkSkipper:
         if self._config.after is not None:
             walk_after = self._config.after
         elif self._timestamps and (api := path_info.archive_pseudo_path()):
-            walk_after = self._timestamps.get(path_info.top_path, {}).get(api)
+            walk_after = self._timestamps.get_timestamp(path_info.top_path, api)
         else:
             walk_after = None
         if walk_after is None:
