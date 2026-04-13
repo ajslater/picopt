@@ -217,7 +217,6 @@ class Walk:
         self._printer.done()
 
         if self._timestamps:
-            self._timestamps.compact_all()
             self._timestamps.dumpf()
 
         self._totals.report()
