@@ -251,7 +251,7 @@ class Pdf(ContainerHandler):
     PIPELINE: tuple[tuple[Tool, ...], ...] = ((_PIKEPDF_TOOL,),)
 
     def __init__(
-        self: Pdf,
+        self,
         *args: Any,
         **kwargs: Any,
     ) -> None:

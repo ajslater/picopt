@@ -173,7 +173,7 @@ class ContainerNode:
     had_work: bool = False  # any child produced replacement bytes
     staging_dir: Path | None = None
 
-    def is_top_level(self: ContainerNode) -> bool:
+    def is_top_level(self) -> bool:
         """Return True if this node has no container parent."""
         return self.parent is None
 
@@ -212,7 +212,7 @@ class Scheduler:
     """
 
     def __init__(
-        self: Scheduler,
+        self,
         *,
         config: AttrDict,
         executor: ProcessPoolExecutor,
@@ -246,7 +246,7 @@ class Scheduler:
 
     # ---------------------------------------------------------- public API
     def enqueue_leaf(
-        self: Scheduler, job: OptimizeLeafJob, parent: ContainerNode | None = None
+        self, job: OptimizeLeafJob, parent: ContainerNode | None = None
     ) -> None:
         """Enqueue a top-level or in-container leaf job."""
         self._ready.append((job, parent))
@@ -256,7 +256,7 @@ class Scheduler:
             self._dir_enqueue(job.path_info.path)
 
     def enqueue_container(
-        self: Scheduler, handler: ContainerHandler, parent: ContainerNode | None = None
+        self, handler: ContainerHandler, parent: ContainerNode | None = None
     ) -> ContainerNode:
         """Create a node for a container and enqueue its UnpackJob."""
         node = ContainerNode(handler=handler, parent=parent)
@@ -280,14 +280,14 @@ class Scheduler:
         self._record_totals(report)
         self._write_timestamp(report, top_path)
 
-    def begin_dir(self: Scheduler, top_path: Path, dir_path: Path) -> None:
+    def begin_dir(self, top_path: Path, dir_path: Path) -> None:
         """Register a directory whose children are about to be enqueued."""
         parent_tracker = self._dir_trackers.get(dir_path.parent)
         if parent_tracker is not None:
             parent_tracker.pending += 1
         self._dir_trackers[dir_path] = _DirTracker(top_path=top_path)
 
-    def seal_dir(self: Scheduler, dir_path: Path) -> None:
+    def seal_dir(self, dir_path: Path) -> None:
         """Mark a directory as fully enumerated; finalize if no pending children."""
         tracker = self._dir_trackers.get(dir_path)
         if tracker is None:
@@ -305,7 +305,7 @@ class Scheduler:
         if parent_dir in self._dir_trackers:
             self._dir_child_done(parent_dir)
 
-    def run(self: Scheduler) -> None:
+    def run(self) -> None:
         """Drain ready and inflight until both are empty."""
         try:
             while self._ready or self._inflight_count() > 0:
@@ -327,7 +327,7 @@ class Scheduler:
 
     # ------------------------------------------------------- internals
     #
-    def _inflight_count(self: Scheduler) -> int:
+    def _inflight_count(self) -> int:
         """
         Total futures currently submitted across all job kinds.
 
@@ -340,7 +340,7 @@ class Scheduler:
             + len(self._inflight_repack)
         )
 
-    def _submit_ready_job(self: Scheduler) -> None:
+    def _submit_ready_job(self) -> None:
         """Pop and submit one job from the ready dequeue."""
         job, node = self._ready.popleft()
         # Skip jobs whose owning node got cancelled while they were queued.
@@ -368,14 +368,14 @@ class Scheduler:
                 node.state = NodeState.REPACKING
                 self._inflight_repack[fut] = node
 
-    def _submit_ready(self: Scheduler) -> None:
+    def _submit_ready(self) -> None:
         """Submit ready jobs up to the backpressure cap."""
         cap = 2 * self._max_workers
         while self._ready and self._inflight_count() < cap:
             self._submit_ready_job()
 
     def _cancel_subtree(
-        self: Scheduler, root: ContainerNode, *, reason: BaseException | None
+        self, root: ContainerNode, *, reason: BaseException | None
     ) -> None:
         """Mark a subtree CANCELLED, purge its ready work, clean staging."""
         del reason  # recorded by the caller in totals
@@ -405,7 +405,7 @@ class Scheduler:
             self._cancel_subtree(top, reason=reason)
         self._ready.clear()
 
-    def _handle_completion(self: Scheduler, fut: Future) -> None:
+    def _handle_completion(self, fut: Future) -> None:
         """Dispatch one completed future by which inflight map owns it."""
         if fut in self._inflight_unpack:
             node = self._inflight_unpack.pop(fut)
@@ -437,7 +437,7 @@ class Scheduler:
             self._handle_repack_done(node, report)
 
     def _handle_unpack_done(
-        self: Scheduler, node: ContainerNode, result: UnpackResult
+        self, node: ContainerNode, result: UnpackResult
     ) -> None:
         """Process an UnpackJob completion."""
         # Replace the pre-walk handler with its pickle-roundtripped,
@@ -468,7 +468,7 @@ class Scheduler:
             node.state = NodeState.OPTIMIZING
 
     def _handle_leaf_done(
-        self: Scheduler, entry: _LeafEntry, report: ReportStats
+        self, entry: _LeafEntry, report: ReportStats
     ) -> None:
         """Process an OptimizeLeafJob completion."""
         parent = entry.parent
@@ -500,7 +500,7 @@ class Scheduler:
             self._dir_child_done(entry.job.path_info.path.parent)
 
     def _handle_repack_failure(
-        self: Scheduler, report: ReportStats, node: ContainerNode
+        self, report: ReportStats, node: ContainerNode
     ) -> None:
         if self._config.fail_fast:
             self._totals.errors.append(report)
@@ -526,7 +526,7 @@ class Scheduler:
             self._maybe_start_repack(node.parent)
 
     def _handle_repack_done(
-        self: Scheduler, node: ContainerNode, report: ReportStats
+        self, node: ContainerNode, report: ReportStats
     ) -> None:
         """Process a RepackJob completion (or synthesized no-op/error)."""
         if node.state is NodeState.CANCELLED:
@@ -569,7 +569,7 @@ class Scheduler:
             # node.children is all ContainerNodes no check needed
             self._cleanup_node_staging(child)
 
-    def _maybe_start_repack(self: Scheduler, node: ContainerNode) -> None:
+    def _maybe_start_repack(self, node: ContainerNode) -> None:
         """If pending == 0, enqueue RepackJob or synthesize no-op completion."""
         if node.pending != 0 or node.state is NodeState.CANCELLED:
             return
@@ -600,7 +600,7 @@ class Scheduler:
         node.handler = repack_handler
         self._ready.append((RepackJob(handler=repack_handler), node))
 
-    def _record_totals(self: Scheduler, report: ReportStats) -> None:
+    def _record_totals(self, report: ReportStats) -> None:
         """Accumulate one ReportStats into Totals."""
         if report.exc:
             self._totals.errors.append(report)
@@ -612,18 +612,18 @@ class Scheduler:
         else:
             self._totals.bytes_out += report.bytes_in
 
-    def _write_timestamp(self: Scheduler, report: ReportStats, top_path: Path) -> None:
+    def _write_timestamp(self, report: ReportStats, top_path: Path) -> None:
         """Write a timestamp if timestamps are enabled and no error."""
         if self._timestamps and report.path is not None and not report.exc:
             self._timestamps.set(top_path, report.path)
 
-    def _dir_enqueue(self: Scheduler, child_path: Path) -> None:
+    def _dir_enqueue(self, child_path: Path) -> None:
         """Increment a directory's pending count for a newly enqueued child."""
         tracker = self._dir_trackers.get(child_path.parent)
         if tracker is not None:
             tracker.pending += 1
 
-    def _dir_child_done(self: Scheduler, parent_dir: Path) -> None:
+    def _dir_child_done(self, parent_dir: Path) -> None:
         """Decrement a directory's pending count; finalize when ready."""
         tracker = self._dir_trackers.get(parent_dir)
         if tracker is None:
@@ -632,7 +632,7 @@ class Scheduler:
         if tracker.pending <= 0 and tracker.sealed:
             self._finalize_dir(parent_dir, tracker)
 
-    def _finalize_dir(self: Scheduler, dir_path: Path, tracker: _DirTracker) -> None:
+    def _finalize_dir(self, dir_path: Path, tracker: _DirTracker) -> None:
         """Write directory timestamp with compaction and cascade to parent."""
         del self._dir_trackers[dir_path]
         if self._timestamps:
@@ -641,7 +641,7 @@ class Scheduler:
         if parent_dir in self._dir_trackers:
             self._dir_child_done(parent_dir)
 
-    def _cleanup_node_staging(self: Scheduler, node: ContainerNode) -> None:
+    def _cleanup_node_staging(self, node: ContainerNode) -> None:
         """Rmtree this node's staging_dir, swallowing errors."""
         if node.staging_dir is None:
             return
@@ -651,7 +651,7 @@ class Scheduler:
             traceback.print_exc()
         node.staging_dir = None
 
-    def _cleanup_all_staging(self: Scheduler) -> None:
+    def _cleanup_all_staging(self) -> None:
         """Emergency cleanup: rmtree every live node's staging dir."""
         for node in list(self._live_nodes):
             self._cleanup_node_staging(node)

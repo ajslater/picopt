@@ -86,7 +86,7 @@ class SplitArgsAction(Action):
 
     @override
     def __call__(
-        self: Any,
+        self,
         parser: ArgumentParser,
         namespace: Namespace,
         values: str | Sequence[Any] | None,

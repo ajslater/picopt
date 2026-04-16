@@ -47,14 +47,14 @@ class UnrarTool(ExternalTool):
     version_args = ()
 
     @override
-    def parse_version(self: UnrarTool, version: str) -> str:
+    def parse_version(self, version: str) -> str:
         """Parse unrar version."""
         # this looks fragile. Tuned to unrar 7.11 beta 1.
         version = super().parse_version(version)
         return " ".join(version.split()[1:-6])
 
     @override
-    def probe(self: UnrarTool) -> ToolStatus:
+    def probe(self) -> ToolStatus:
         # Default ExternalTool.probe is fine, but unrar prints its version
         # banner without --version (it just prints help). We accept that.
         return super().probe()

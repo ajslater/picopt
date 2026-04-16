@@ -26,7 +26,7 @@ class Walk:
     """Methods for walking the tree and handling files."""
 
     def _create_top_paths(
-        self: Any,
+        self,
     ) -> "tuple[Path, Path]|tuple[Path]":
         """Create and Validate that top paths exist."""
         top_paths = []
@@ -43,7 +43,7 @@ class Walk:
             raise PicoptError(msg)
         return tuple(top_paths)
 
-    def __init__(self: Any, config: AttrDict) -> None:
+    def __init__(self, config: AttrDict) -> None:
         """Initialize."""
         self._config: AttrDict = config
         self._top_paths: tuple[Path, ...] = self._create_top_paths()
@@ -56,7 +56,7 @@ class Walk:
         self._skipper: WalkSkipper = WalkSkipper(config, self._printer)
         self._handler_factory: HandlerFactory = HandlerFactory(config, self._printer)
 
-    def _init_timestamps(self: Any) -> None:
+    def _init_timestamps(self) -> None:
         """Init timestamps."""
         if not self._config.timestamps:
             return
@@ -76,7 +76,7 @@ class Walk:
         self._skipper.set_timestamps(self._timestamps)
 
     def _enqueue_children(
-        self: Any, sched: Scheduler, node: ContainerNode, children: list[PathInfo]
+        self, sched: Scheduler, node: ContainerNode, children: list[PathInfo]
     ) -> None:
         """Bridge between scheduler and HandlerFactory for container children."""
         for path_info in children:
@@ -93,7 +93,7 @@ class Walk:
                     parent=node,
                 )
 
-    def walk_dir(self: Any, dir_path_info: PathInfo, scheduler: Scheduler) -> None:
+    def walk_dir(self, dir_path_info: PathInfo, scheduler: Scheduler) -> None:
         """Recursively walk a directory, enqueuing jobs into the scheduler."""
         if not self._config.recurse or not dir_path_info.is_dir():
             return
@@ -128,7 +128,7 @@ class Walk:
         scheduler.seal_dir(dir_path)
 
     def _handle_file(
-        self: Any, handler: Handler, path_info: PathInfo, scheduler: Scheduler
+        self, handler: Handler, path_info: PathInfo, scheduler: Scheduler
     ) -> None:
         """Enqueue the correct job for the handler type."""
         match handler:
@@ -142,7 +142,7 @@ class Walk:
                 msg = f"Bad picopt handler {handler}"
                 raise TypeError(msg)
 
-    def _create_handler(self: Any, path_info: PathInfo) -> Handler | None:
+    def _create_handler(self, path_info: PathInfo) -> Handler | None:
         handler = self._handler_factory.create_handler(path_info, self._timestamps)
         if handler is None:
             return None
@@ -153,7 +153,7 @@ class Walk:
         return handler
 
     def _walk_file_get_handler(
-        self: Any, path_info: PathInfo, scheduler: Scheduler
+        self, path_info: PathInfo, scheduler: Scheduler
     ) -> Handler | None:
         if path_info.frame is None:
             if self._skipper.is_walk_file_skip(path_info):
@@ -171,7 +171,7 @@ class Walk:
             self._printer.skip("no handler", path_info)
         return handler
 
-    def walk_file(self: Any, path_info: PathInfo, scheduler: Scheduler) -> None:
+    def walk_file(self, path_info: PathInfo, scheduler: Scheduler) -> None:
         """Optimize an individual file by enqueuing into the scheduler."""
         try:
             if handler := self._walk_file_get_handler(path_info, scheduler):
@@ -187,14 +187,14 @@ class Walk:
             )
             scheduler.accept_prebuilt_report(report, path_info.top_path)
 
-    def _walk_top_path(self: Any, top_path: Path, scheduler: Scheduler) -> None:
+    def _walk_top_path(self, top_path: Path, scheduler: Scheduler) -> None:
         dirpath = Treestamps.get_dir(top_path)
         path_info = PathInfo(
             top_path=dirpath, convert=True, path=top_path, is_case_sensitive=None
         )
         self.walk_file(path_info, scheduler)
 
-    def walk(self: Any) -> Totals:
+    def walk(self) -> Totals:
         """Optimize all configured files."""
         self._init_timestamps()
 

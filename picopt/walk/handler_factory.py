@@ -46,7 +46,7 @@ from picopt.walk.detect_format import detect_format
 class HandlerFactory:
     """Handler factory for creating format-appropriate handlers."""
 
-    def __init__(self: Any, config: AttrDict, printer: Printer) -> None:
+    def __init__(self, config: AttrDict, printer: Printer) -> None:
         """Initialize with config and printer."""
         self._config: AttrDict = config
         self._printer: Printer = printer
@@ -66,7 +66,7 @@ class HandlerFactory:
             return None
         return entry
 
-    def _is_pipeline_available(self: Any, handler_cls: type[Handler]) -> bool:
+    def _is_pipeline_available(self, handler_cls: type[Handler]) -> bool:
         """
         Whether the config-time probe found a workable pipeline for this handler.
 
@@ -115,7 +115,7 @@ class HandlerFactory:
         return handler_cls
 
     def _pick_handler_class(
-        self: Any,
+        self,
         file_format: FileFormat | None,
         *,
         convert: bool,
@@ -150,7 +150,7 @@ class HandlerFactory:
         return handler_cls
 
     def _get_repack_handler_class(
-        self: Any,
+        self,
         path_info: PathInfo,
         file_format: FileFormat,
     ) -> type[ContainerHandler] | None:
@@ -184,7 +184,7 @@ class HandlerFactory:
         return repack_handler_class
 
     def _create_handler_get_class_and_format(
-        self: Any, path_info: PathInfo
+        self, path_info: PathInfo
     ) -> tuple[FileFormat | None, type[Handler] | None, Mapping[str, Any]]:
         handler_cls: type[Handler] | None = None
         try:
@@ -205,7 +205,7 @@ class HandlerFactory:
         return file_format, handler_cls, info
 
     def create_handler(
-        self: Any,
+        self,
         path_info: PathInfo,
         timestamps: Grovestamps | None = None,
     ) -> Handler | None:

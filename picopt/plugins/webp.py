@@ -182,7 +182,7 @@ class CWebPTool(ExternalTool):
         return tuple(parts)
 
     @override
-    def probe(self: Any) -> ToolStatus:
+    def probe(self) -> ToolStatus:
         status = super().probe()
         if status.available:
             parsed = CWebPTool._parse_cwebp_version(status.version)
@@ -207,7 +207,7 @@ class WebPExternalTool(ExternalTool, ABC):
     version_args = ("-version",)
 
     @override
-    def parse_version(self: Any, version: str) -> str:
+    def parse_version(self, version: str) -> str:
         """Version is last term."""
         version = super().parse_version(version)
         return version.split()[-1]
@@ -424,7 +424,7 @@ class WebPAnimatedLossless(ImageAnimated, ABC):
     PIL2_FRAME_KWARGS: MappingProxyType[str, Any] = _ANIMATED_WEBP_FRAME_KWARGS
 
     def __init__(
-        self: Any,
+        self,
         *args: Any,
         **kwargs: Any,
     ) -> None:
@@ -572,7 +572,7 @@ class WebPMuxAnimatedLossless(WebPAnimatedLossless):
     _DEFAULT_DURATION_MS: int = 100
 
     def __init__(
-        self: Any,
+        self,
         *args: Any,
         **kwargs: Any,
     ) -> None:
