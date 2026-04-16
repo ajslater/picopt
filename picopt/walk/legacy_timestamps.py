@@ -13,7 +13,7 @@ OLD_TIMESTAMPS_NAME = ".picopt_timestamp"
 class OldTimestamps:
     """Old timestamps importer."""
 
-    def _add_old_timestamp(self: "OldTimestamps", old_timestamp_path: Path) -> None:
+    def _add_old_timestamp(self, old_timestamp_path: Path) -> None:
         """Get the timestamp from a old style timestamp file."""
         if not old_timestamp_path.exists():
             return
@@ -22,7 +22,7 @@ class OldTimestamps:
         mtime = old_timestamp_path.stat().st_mtime
         self._timestamps.set(path, mtime)
 
-    def _import_old_parent_timestamps(self: "OldTimestamps") -> None:
+    def _import_old_parent_timestamps(self) -> None:
         """Walk up to the root eating old style timestamps."""
         path = self._root_dir
         while path:
@@ -34,7 +34,7 @@ class OldTimestamps:
             self._add_old_timestamp(old_timestamp_path)
             path = False if path.parent == path else path.parent
 
-    def _import_old_child_timestamps(self: "OldTimestamps") -> None:
+    def _import_old_child_timestamps(self) -> None:
         stack = [self._root_dir]
         while stack:
             path = stack.pop()
@@ -50,14 +50,12 @@ class OldTimestamps:
                 # consume child timestamps
                 self._timestamps._consumed_paths.add(path)  # noqa: SLF001
 
-    def import_old_timestamps(self: "OldTimestamps") -> None:
+    def import_old_timestamps(self) -> None:
         """Import all old timestamps."""
         self._import_old_parent_timestamps()
         self._import_old_child_timestamps()
 
-    def __init__(
-        self: "OldTimestamps", config: AttrDict, timestamps: Treestamps
-    ) -> None:
+    def __init__(self, config: AttrDict, timestamps: Treestamps) -> None:
         """Hold new timestamp object."""
         self._config: AttrDict = config
         self._timestamps: Treestamps = timestamps

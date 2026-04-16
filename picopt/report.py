@@ -16,7 +16,7 @@ class ReportStats:
     _TAB: str = " " * 4
 
     def __init__(  # noqa: PLR0913
-        self: "ReportStats",
+        self,
         path: Path,
         *,
         bytes_in: int = 0,
@@ -66,7 +66,7 @@ class ReportStats:
 
         return report
 
-    def _report_error(self: "ReportStats") -> str:
+    def _report_error(self) -> str:
         """Return the error report string."""
         report = f"{self._full_name}\n"
         if isinstance(self.exc, CalledProcessError):
@@ -82,7 +82,7 @@ class ReportStats:
             report += f"\n{self._TAB}{self.exc!s}"
         return report
 
-    def report(self: "ReportStats", printer: Printer) -> None:
+    def report(self, printer: Printer) -> None:
         """Record the percent saved & print it."""
         # Pass the printer in at the end here to avoid pickling
         if self.exc:
@@ -102,7 +102,7 @@ class ReportStats:
 class Totals:
     """Totals for final report."""
 
-    def __init__(self: "Totals", config: AttrDict, printer: Printer) -> None:
+    def __init__(self, config: AttrDict, printer: Printer) -> None:
         """Initialize Totals."""
         self.bytes_in: int = 0
         self.bytes_out: int = 0
@@ -110,7 +110,7 @@ class Totals:
         self._config: AttrDict = config
         self._printer: Printer = printer
 
-    def _report_bytes_in(self: "Totals") -> None:
+    def _report_bytes_in(self) -> None:
         """Report Totals if there were bytes in."""
         if not self._config.verbose and not self._config.dry_run:
             return
@@ -136,7 +136,7 @@ class Totals:
         if self._config.dry_run:
             self._printer.final_message("Dry run did not change any files.")
 
-    def report(self: "Totals") -> None:
+    def report(self) -> None:
         """Report the total number and percent of bytes saved."""
         if self._config.verbose == 1:
             print()  # noqa: T201
