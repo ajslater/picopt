@@ -436,9 +436,7 @@ class Scheduler:
                 report = fut.result()
             self._handle_repack_done(node, report)
 
-    def _handle_unpack_done(
-        self, node: ContainerNode, result: UnpackResult
-    ) -> None:
+    def _handle_unpack_done(self, node: ContainerNode, result: UnpackResult) -> None:
         """Process an UnpackJob completion."""
         # Replace the pre-walk handler with its pickle-roundtripped,
         # walk()-mutated twin. See UnpackResult docstring for which
@@ -467,9 +465,7 @@ class Scheduler:
         else:
             node.state = NodeState.OPTIMIZING
 
-    def _handle_leaf_done(
-        self, entry: _LeafEntry, report: ReportStats
-    ) -> None:
+    def _handle_leaf_done(self, entry: _LeafEntry, report: ReportStats) -> None:
         """Process an OptimizeLeafJob completion."""
         parent = entry.parent
 
@@ -499,9 +495,7 @@ class Scheduler:
         if entry.job.path_info.path is not None:
             self._dir_child_done(entry.job.path_info.path.parent)
 
-    def _handle_repack_failure(
-        self, report: ReportStats, node: ContainerNode
-    ) -> None:
+    def _handle_repack_failure(self, report: ReportStats, node: ContainerNode) -> None:
         if self._config.fail_fast:
             self._totals.errors.append(report)
             report.report(self._printer)
@@ -525,9 +519,7 @@ class Scheduler:
             node.parent.pending = max(0, node.parent.pending - 1)
             self._maybe_start_repack(node.parent)
 
-    def _handle_repack_done(
-        self, node: ContainerNode, report: ReportStats
-    ) -> None:
+    def _handle_repack_done(self, node: ContainerNode, report: ReportStats) -> None:
         """Process a RepackJob completion (or synthesized no-op/error)."""
         if node.state is NodeState.CANCELLED:
             self._cleanup_node_staging(node)

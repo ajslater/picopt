@@ -4,7 +4,6 @@ import os
 import traceback
 from concurrent.futures import ProcessPoolExecutor
 from pathlib import Path
-from typing import Any
 
 from confuse.templates import AttrDict
 from treestamps import Grovestamps, GrovestampsConfig, Treestamps
