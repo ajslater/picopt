@@ -28,7 +28,7 @@ place by the time it matters. Don't reorder.
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from picopt import plugins as registry
 from picopt.printer import Printer
@@ -38,6 +38,14 @@ if TYPE_CHECKING:
 
     from confuse import Subview
 
+    import picopt.config
+    import picopt.plugins.gif
+    import picopt.plugins.jpeg
+    import picopt.plugins.pil_convertible
+    import picopt.plugins.png
+    import picopt.plugins.rar
+    import picopt.plugins.svg
+    import picopt.plugins.tar
     from picopt.plugins.base import Handler, Tool
     from picopt.plugins.base.format import FileFormat
 
@@ -96,7 +104,9 @@ def _enabled_handler_classes(
 class ConfigHandlers:
     """Build the per-handler pipeline selection from the merged config."""
 
-    def __init__(self, printer: Printer | None = None) -> None:
+    def __init__(
+        self: picopt.config.ConfigHandlers, printer: Printer | None = None
+    ) -> None:
         """Initialize printer."""
         self._printer: Printer = printer or Printer(2)
 
@@ -109,7 +119,7 @@ class ConfigHandlers:
         return frozenset(val.upper() for val in val_list)
 
     def _print_formats_config(
-        self,
+        self: picopt.config.ConfigHandlers,
         verbose: int,
         handled_format_strs: set[str],
         convert_format_strs: dict[str, set[str]],
@@ -125,26 +135,61 @@ class ConfigHandlers:
             self._printer.config(f"Converting {from_list} to {target}")
 
     def _set_format_handler_stages(
-        self,
+        self: picopt.config.ConfigHandlers,
         handler_cls: type[Handler],
-        handler_stages,
+        handler_stages: dict[
+            type[
+                picopt.plugins.jpeg.Jpeg
+                | picopt.plugins.pil_convertible.Img2WebPAnimatedLossless
+                | picopt.plugins.pil_convertible.PngAnimated
+                | picopt.plugins.pil_convertible.Png
+                | picopt.plugins.pil_convertible.WebPLossless
+                | picopt.plugins.png.GifAnimated
+                | picopt.plugins.png.Gif
+                | Any
+            ]
+            | Any,
+            tuple[picopt.plugins.gif.GifsicleTool]
+            | tuple[picopt.plugins.jpeg.MozJpegTool]
+            | tuple[
+                picopt.plugins.png.PILSaveTool,
+                picopt.plugins.png.OxiPngTool,
+                picopt.plugins.png.PngOutTool,
+            ]
+            | tuple[picopt.plugins.png.PILSaveTool, Any]
+            | tuple[picopt.plugins.rar.UnrarTool]
+            | tuple[Any]
+            | Any,
+        ],
         disabled_program_names: frozenset[str],
-    ):
+    ) -> None:
         stages = _select_pipeline_for_handler(handler_cls, disabled_program_names)
         if stages is not None:
             handler_stages[handler_cls] = stages
 
     def _set_format_handled_strs_for_format(
-        self,
+        self: picopt.config.ConfigHandlers,
         file_format: FileFormat,
-        all_format_strs,
-        convert_chain,
-        convert_to,
-        handler_stages,
-        convert_format_strs,
-        handled_format_strs,
-        native,
-    ):
+        all_format_strs: frozenset[str],
+        convert_chain: tuple[type[Any]],
+        convert_to: frozenset[str | Any],
+        handler_stages: dict[
+            type[picopt.plugins.svg.ImageHandler | Any],
+            tuple[picopt.plugins.gif.GifsicleTool]
+            | tuple[picopt.plugins.jpeg.MozJpegTool]
+            | tuple[
+                picopt.plugins.png.PILSaveTool,
+                picopt.plugins.png.OxiPngTool,
+                picopt.plugins.png.PngOutTool,
+            ]
+            | tuple[picopt.plugins.png.PILSaveTool, Any]
+            | tuple[picopt.plugins.png.PILSaveTool]
+            | tuple[Any],
+        ],
+        convert_format_strs: dict[Any, Any],
+        handled_format_strs: set[Any],
+        native: type[picopt.plugins.tar.Cbt],
+    ) -> None:
         if file_format.format_str not in all_format_strs:
             return
         picked_via_convert = False
@@ -162,7 +207,9 @@ class ConfigHandlers:
         if not picked_via_convert and native is not None and native in handler_stages:
             handled_format_strs.add(file_format.format_str)
 
-    def set_format_handler_map(self, config: Subview) -> None:
+    def set_format_handler_map(
+        self: picopt.config.ConfigHandlers, config: Subview
+    ) -> None:
         """Probe handlers for the requested formats and store availability."""
         all_format_strs = self._get_config_set(config, "formats", "extra_formats")
         config["formats"].set(tuple(sorted(all_format_strs)))

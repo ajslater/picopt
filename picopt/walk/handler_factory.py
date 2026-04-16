@@ -23,9 +23,14 @@ Handler-class selection rules for an input :class:`FileFormat` ``ff``:
    PackingArchiveHandler)`` check.
 """
 
+from typing import TYPE_CHECKING, Any
+
+if TYPE_CHECKING:
+    import picopt.plugins.jpeg
+    import picopt.plugins.pil_convertible
+
 from collections.abc import Mapping
 from traceback import print_exc
-from typing import Any
 
 from confuse.templates import AttrDict
 from treestamps import Grovestamps
@@ -46,14 +51,14 @@ from picopt.walk.detect_format import detect_format
 class HandlerFactory:
     """Handler factory for creating format-appropriate handlers."""
 
-    def __init__(self, config: AttrDict, printer: Printer) -> None:
+    def __init__(self: Any, config: AttrDict, printer: Printer) -> None:
         """Initialize with config and printer."""
         self._config: AttrDict = config
         self._printer: Printer = printer
 
     def _lookup_route(
-        self,
-        file_format,
+        self: Any,
+        file_format: "picopt.plugins.pil_convertible.FileFormat|None",
     ) -> tuple | None:
         if not file_format:
             return None
@@ -66,7 +71,7 @@ class HandlerFactory:
             return None
         return entry
 
-    def _is_pipeline_available(self, handler_cls: type[Handler]) -> bool:
+    def _is_pipeline_available(self: Any, handler_cls: type[Handler]) -> bool:
         """
         Whether the config-time probe found a workable pipeline for this handler.
 
@@ -83,8 +88,8 @@ class HandlerFactory:
         return len(stages) == len(handler_cls.PIPELINE)
 
     def _pick_handler_class_choose_converter(
-        self, candidate: type[Handler], convert_to: frozenset[str]
-    ):
+        self: Any, candidate: type[Handler], convert_to: frozenset[str]
+    ) -> "type[picopt.plugins.jpeg.Jpeg | picopt.plugins.pil_convertible.Img2WebPAnimatedLossless | picopt.plugins.pil_convertible.WebPLossless | Any] | None":
         if candidate.OUTPUT_FORMAT_STR not in convert_to:
             return None
         if not self._is_pipeline_available(candidate):
@@ -92,9 +97,9 @@ class HandlerFactory:
         return candidate
 
     def _pick_handler_class_converter(
-        self,
+        self: Any,
         file_format: FileFormat | None,
-        convert_chain,
+        convert_chain: "tuple|tuple[type[picopt.plugins.pil_convertible.WebPLossless]]|tuple[type[Any]]",
         *,
         convert: bool,
         repack: bool,
@@ -115,7 +120,7 @@ class HandlerFactory:
         return handler_cls
 
     def _pick_handler_class(
-        self,
+        self: Any,
         file_format: FileFormat | None,
         *,
         convert: bool,
@@ -150,7 +155,7 @@ class HandlerFactory:
         return handler_cls
 
     def _get_repack_handler_class(
-        self,
+        self: Any,
         path_info: PathInfo,
         file_format: FileFormat,
     ) -> type[ContainerHandler] | None:
@@ -184,7 +189,7 @@ class HandlerFactory:
         return repack_handler_class
 
     def _create_handler_get_class_and_format(
-        self, path_info: PathInfo
+        self: Any, path_info: PathInfo
     ) -> tuple[FileFormat | None, type[Handler] | None, Mapping[str, Any]]:
         handler_cls: type[Handler] | None = None
         try:
@@ -205,7 +210,7 @@ class HandlerFactory:
         return file_format, handler_cls, info
 
     def create_handler(
-        self,
+        self: Any,
         path_info: PathInfo,
         timestamps: Grovestamps | None = None,
     ) -> Handler | None:

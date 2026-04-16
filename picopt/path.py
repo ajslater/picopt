@@ -1,5 +1,12 @@
 """Data classes."""
 
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    import pathlib
+
+    import picopt.report
+
 from io import BufferedReader, BytesIO
 from os import stat_result
 from pathlib import Path
@@ -45,8 +52,8 @@ class PathInfo:
     _UNSET = object()
 
     def _copy_constructor(
-        self,
-        path_info=None,
+        self: "picopt.report.PathInfo",
+        path_info: None = None,
         top_path: Path | None = None,
         container_parents: tuple[str, ...] | None = None,
         *,
@@ -56,7 +63,9 @@ class PathInfo:
     ) -> None:
         """Copy from path_info or override with arg."""
 
-        def pick(override, attr: str, default=self._UNSET):
+        def pick(
+            override: "pathlib.PosixPath", attr: str, default: object = self._UNSET
+        ) -> "pathlib.PosixPath":
             """Resolve a field: explicit override > path_info > default > raise."""
             if override is not None:
                 return override
@@ -80,8 +89,8 @@ class PathInfo:
         self.noop = noop
 
     def __init__(  # noqa: PLR0913
-        self,
-        path_info=None,
+        self: "picopt.report.PathInfo",
+        path_info: None = None,
         *,
         top_path: Path | None = None,
         convert: bool | None = None,
@@ -131,7 +140,7 @@ class PathInfo:
         self._container_path_history: tuple[str, ...] | None = None
         self.original_name: str = self.name()
 
-    def is_dir(self) -> bool:
+    def is_dir(self: "picopt.report.PathInfo") -> bool:
         """Is the file a directory."""
         if self._is_dir is None:
             if self.archiveinfo:
@@ -143,14 +152,14 @@ class PathInfo:
 
         return self._is_dir
 
-    def stat(self) -> stat_result | None:
+    def stat(self: "picopt.report.PathInfo") -> stat_result | None:
         """Return fs_stat if possible."""
         if not self._stat_cached:
             self._stat = self.path.stat() if self.path else None
             self._stat_cached = True
         return self._stat
 
-    def data(self) -> bytes:
+    def data(self: "picopt.report.PathInfo") -> bytes:
         """Get the data from the file."""
         if self._data is None:
             if not self.path or self.path.is_dir():
@@ -160,25 +169,25 @@ class PathInfo:
                     self._data = fp.read()
         return self._data
 
-    def set_data(self, data: bytes) -> None:
+    def set_data(self: "picopt.report.PathInfo", data: bytes) -> None:
         """Set the data."""
         self._data = data
 
-    def _buffer(self) -> BytesIO:
+    def _buffer(self: "picopt.report.PathInfo") -> BytesIO:
         """Return a seekable buffer for the data."""
         return BytesIO(self.data())
 
-    def path_or_buffer(self) -> Path | BytesIO:
+    def path_or_buffer(self: "picopt.report.PathInfo") -> Path | BytesIO:
         """Return a the path or the buffered data."""
         return self.path or self._buffer()
 
-    def fp_or_buffer(self) -> BufferedReader | BytesIO:
+    def fp_or_buffer(self: "picopt.report.PathInfo") -> BufferedReader | BytesIO:
         """Return an file pointer for chunking or buffer."""
         if self.path:
             return self.path.open("rb")
         return self._buffer()
 
-    def bytes_in(self) -> int:
+    def bytes_in(self: "picopt.report.PathInfo") -> int:
         """Return the length of the data."""
         if self._bytes_in is None:
             stat = self.stat()
@@ -188,7 +197,7 @@ class PathInfo:
                 self._bytes_in = stat.st_size
         return self._bytes_in
 
-    def mtime(self) -> float:
+    def mtime(self: "picopt.report.PathInfo") -> float:
         """Choose an mtime."""
         if self._mtime is None:
             if self.archiveinfo:
@@ -198,7 +207,7 @@ class PathInfo:
                 self._mtime = stat.st_mtime if stat is not None else 0.0
         return self._mtime
 
-    def name(self) -> str:
+    def name(self: "picopt.report.PathInfo") -> str:
         """Name."""
         if self._name is None:
             if self.archiveinfo:
@@ -211,7 +220,7 @@ class PathInfo:
                 self._name = "Unknown"
         return self._name
 
-    def rename(self, filename: str | Path) -> None:
+    def rename(self: "picopt.report.PathInfo", filename: str | Path) -> None:
         """Rename file."""
         if self.path:
             self.path = Path(filename)
@@ -222,13 +231,13 @@ class PathInfo:
         self._name = self._suffix = self._container_path_history = None
         self._archive_pretty_name = self._archive_pseudo_path = None
 
-    def container_path_history(self) -> tuple[str, ...]:
+    def container_path_history(self: "picopt.report.PathInfo") -> tuple[str, ...]:
         """Collect container parents plus this path's name."""
         if self._container_path_history is None:
             self._container_path_history = (*self.container_parents, self.name())
         return self._container_path_history
 
-    def full_output_name(self) -> str:
+    def full_output_name(self: "picopt.report.PathInfo") -> str:
         """Full path string for output."""
         if self._archive_pretty_name is None:
             self._archive_pretty_name = _CONTAINER_PATH_DELIMITER.join(
@@ -236,7 +245,7 @@ class PathInfo:
             )
         return self._archive_pretty_name
 
-    def archive_pseudo_path(self) -> Path:
+    def archive_pseudo_path(self: "picopt.report.PathInfo") -> Path:
         """Return a pseudeo path of container history for skipping inside archives."""
         if self._archive_pseudo_path is None:
             path = Path()
@@ -245,7 +254,7 @@ class PathInfo:
             self._archive_pseudo_path = path
         return self._archive_pseudo_path
 
-    def suffix(self) -> str:
+    def suffix(self: "picopt.report.PathInfo") -> str:
         """Return first suffix or tar+ suffix."""
         if self._suffix is None:
             path = Path(self.name())

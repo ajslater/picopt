@@ -81,7 +81,7 @@ class PngOutTool(ExternalTool):
     version_args = ()
 
     @override
-    def parse_version(self, version: str) -> str:
+    def parse_version(self: PngOutTool, version: str) -> str:
         version = super().parse_version(version)
         return " ".join(version.split()[-3:])
 

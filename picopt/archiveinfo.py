@@ -1,10 +1,14 @@
 """Archive Info Converter."""
 
+from typing import TYPE_CHECKING, Final, TypeAlias
+
+if TYPE_CHECKING:
+    import picopt.path
+
 from datetime import datetime, timezone
 from operator import attrgetter
 from pathlib import Path
 from tarfile import DIRTYPE, REGTYPE, SYMTYPE, TarInfo
-from typing import Final, TypeAlias
 from zipfile import ZipInfo
 
 from py7zr import FileInfo as SevenZipInfo
@@ -51,7 +55,7 @@ class ArchiveInfo:
                     self._filename = self.info.filename or ""
         return self._filename
 
-    def rename(self, filename: str | Path) -> None:
+    def rename(self: "picopt.path.ArchiveInfo", filename: str | Path) -> None:
         """Rename archiveinfo."""
         filename = str(filename)
         match self.info:
@@ -78,7 +82,7 @@ class ArchiveInfo:
                     self._is_dir = bool(self.info.is_directory)
         return self._is_dir  # ty: ignore[invalid-return-type]
 
-    def datetime(self) -> datetime | None:
+    def datetime(self: "picopt.path.ArchiveInfo") -> datetime | None:
         """Return mtime as a datetime."""
         if self._dttm is None:
             dttm: datetime | None = None
@@ -99,7 +103,7 @@ class ArchiveInfo:
                 self._dttm = dttm
         return self._dttm
 
-    def mtime(self) -> float | None:
+    def mtime(self: "picopt.path.ArchiveInfo") -> float | None:
         """Return Modified Timestamp."""
         if self._mtime is None:
             match self.info:

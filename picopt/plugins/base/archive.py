@@ -17,6 +17,13 @@ from picopt.plugins.base.handler import Handler
 if TYPE_CHECKING:
     from collections.abc import Generator, Iterable
 
+    import confuse
+
+    import picopt.plugins.pdf
+    import picopt.plugins.pil_convertible
+    import picopt.plugins.tar
+    import picopt.report
+    import picopt.walk.skip
     from picopt.plugins.base.format import FileFormat
     from picopt.report import ReportStats
 
@@ -38,7 +45,15 @@ class ArchiveHandler(ContainerHandler, ABC):
     CONVERT_CHILDREN: bool = True
     ARCHIVE_CLASS: type[Any]
 
-    def __init__(self, *args, **kwargs) -> None:
+    def __init__(
+        self: picopt.plugins.tar.ArchiveHandler | Any,
+        *args: confuse.AttrDict | picopt.report.PathInfo,
+        **kwargs: type[picopt.plugins.tar.ArchiveHandler | Any]
+        | picopt.plugins.pil_convertible.FileFormat
+        | picopt.walk.skip.Grovestamps
+        | set[picopt.report.PathInfo]
+        | None,
+    ) -> None:
         """Init archive variables."""
         super().__init__(*args, **kwargs)
         self._skip_path_infos: set[PathInfo] = set()
@@ -197,7 +212,11 @@ class ArchiveHandler(ContainerHandler, ABC):
 
     @override
     def hydrate_optimized_path_info(
-        self, path_info: PathInfo, report: ReportStats
+        self: picopt.plugins.pdf.ContainerHandler
+        | picopt.plugins.tar.ArchiveHandler
+        | Any,
+        path_info: PathInfo,
+        report: ReportStats,
     ) -> None:
         super().hydrate_optimized_path_info(path_info, report)
         original_path = path_info.name()

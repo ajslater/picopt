@@ -103,7 +103,7 @@ _DEFAULT_IGNORE_REGEXPS = (r"^\.", r"\/\.", r"\.sparsebundle$")
 class PicoptConfig(ConfigHandlers):
     """Construct Picopt Config."""
 
-    def _set_after(self, config: Subview) -> None:
+    def _set_after(self: PicoptConfig, config: Subview) -> None:
         after = config["after"].get()
         if after is None:
             return
@@ -139,7 +139,7 @@ class PicoptConfig(ConfigHandlers):
         return r"|".join(ignore_regexps), ignore_single_stars
 
     def _print_ignores(
-        self, ignore_single_stars: list[str], *, ignore_defaults: bool
+        self: PicoptConfig, ignore_single_stars: list[str], *, ignore_defaults: bool
     ) -> None:
         ignore_text = ""
         if ignore_single_stars:
@@ -151,7 +151,7 @@ class PicoptConfig(ConfigHandlers):
         if ignore_text:
             self._printer.config(ignore_text)
 
-    def _set_ignore(self, config: Subview) -> None:
+    def _set_ignore(self: PicoptConfig, config: Subview) -> None:
         """Compute ignore regexp."""
         ignore_list: list[str] = sorted(frozenset(config["ignore"].get(list)))
         ignore_defaults: bool = config["ignore_defaults"].get(bool)
@@ -168,7 +168,7 @@ class PicoptConfig(ConfigHandlers):
         if verbose > 1:
             self._print_ignores(ignore_single_stars, ignore_defaults=ignore_defaults)
 
-    def _set_timestamps(self, config: Subview) -> None:
+    def _set_timestamps(self: PicoptConfig, config: Subview) -> None:
         """Set the timestamps attribute."""
         timestamps = (
             config["timestamps"].get(bool)
@@ -191,7 +191,7 @@ class PicoptConfig(ConfigHandlers):
             self._printer.config(ts_str)
 
     def get_config(
-        self, args: Namespace | None = None, modname: str = PROGRAM_NAME
+        self: PicoptConfig, args: Namespace | None = None, modname: str = PROGRAM_NAME
     ) -> AttrDict:
         """Get the config dict, layering env and args over defaults."""
         config = Configuration(PROGRAM_NAME, modname=modname, read=False)

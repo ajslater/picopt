@@ -12,7 +12,7 @@ from __future__ import annotations
 from io import BytesIO
 from sys import maxsize
 from types import MappingProxyType
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from py7zr import SevenZipFile, is_7zfile
 from py7zr.io import BytesIOFactory
@@ -32,6 +32,11 @@ from picopt.plugins.base.format import FileFormat
 if TYPE_CHECKING:
     from pathlib import Path
 
+    import confuse
+
+    import picopt.plugins.pil_convertible
+    import picopt.report
+    import picopt.walk.skip
     from picopt.path import PathInfo
 
 
@@ -69,7 +74,7 @@ class SevenZipDetector(Detector):
 
     @override
     @classmethod
-    def identify(cls, path_info: PathInfo) -> FileFormat | None:
+    def identify(cls: type[SevenZipDetector], path_info: PathInfo) -> FileFormat | None:
         suffix = path_info.suffix().lower()
         if suffix not in _SUFFIX_TO_FORMAT:
             return None
@@ -100,7 +105,13 @@ class SevenZip(ArchiveHandler):
     ARCHIVE_CLASS = SevenZipFile
     PIPELINE: tuple[tuple[Tool, ...], ...] = ((_PY7ZR_TOOL,),)
 
-    def __init__(self, *args, **kwargs) -> None:
+    def __init__(
+        self: SevenZip,
+        *args: confuse.AttrDict | picopt.report.PathInfo,
+        **kwargs: picopt.plugins.pil_convertible.FileFormat
+        | picopt.walk.skip.Grovestamps
+        | type[SevenZip | Any],
+    ) -> None:
         """Allocate the py7zr extraction factory."""
         super().__init__(*args, **kwargs)
         self._factory: BytesIOFactory = BytesIOFactory(maxsize)

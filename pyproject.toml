@@ -30,7 +30,7 @@ dependencies = [
 description = "A multi format lossless image optimizer that uses external tools"
 keywords = ["cbr", "cbz", "image", "jpg", "png"]
 readme = "README.md"
-requires-python = ">=3.10"
+requires-python = ">=3.12"
 license = { text = "GPL-3.0-only" }
 name = "picopt"
 version = "6.1.1"
@@ -53,6 +53,7 @@ dev = [
   "infer-types~=1.0.0",
   "neovim>=0.3,<1.0",
   "pyclean~=3.1",
+  "righttyper>=0.1.0",
   "semver~=3.0.4",
   "toml-cli>=0.7,<1.0",
   "tomlkit~=0.14",

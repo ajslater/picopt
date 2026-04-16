@@ -1,6 +1,7 @@
 """Base class for testing images."""
 
 import shutil
+from collections.abc import Iterator
 from pathlib import Path
 from types import MappingProxyType
 
@@ -17,7 +18,7 @@ class BaseTest:
     FNS: MappingProxyType[str, tuple] = MappingProxyType({})
 
     @pytest.fixture(autouse=True)
-    def setup_and_teardown(self, fn: str):
+    def setup_and_teardown(self: "BaseTest", fn: str) -> Iterator[None]:
         """Set up method."""
         self.teardown_method()
         self.TMP_ROOT.mkdir(parents=True)
@@ -32,6 +33,6 @@ class BaseTest:
         yield
         self.teardown_method()
 
-    def teardown_method(self) -> None:
+    def teardown_method(self: "BaseTest") -> None:
         """Tear down method."""
         shutil.rmtree(self.TMP_ROOT, ignore_errors=True)

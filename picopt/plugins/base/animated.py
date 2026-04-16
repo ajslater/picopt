@@ -15,7 +15,7 @@ from typing import TYPE_CHECKING, Any, BinaryIO
 
 from PIL import Image, ImageSequence
 from PIL.PngImagePlugin import PngImageFile
-from typing_extensions import override
+from typing_extensions import Self, override
 
 from picopt.path import PathInfo
 from picopt.plugins.base.container import ContainerHandler
@@ -24,6 +24,9 @@ from picopt.plugins.base.image import ImageHandler
 if TYPE_CHECKING:
     from collections.abc import Generator, Mapping
 
+    from confuse import AttrDict
+
+    import picopt.plugins.pil_convertible
     from picopt.plugins.base.format import FileFormat
 
 ANIMATED_INFO_KEYS = ("bbox", "blend", "disposal", "duration")
@@ -46,7 +49,12 @@ class ImageAnimated(ImageHandler, ContainerHandler, ABC):  # pyright: ignore[rep
     PIL2_KWARGS: MappingProxyType[str, Any] = MappingProxyType({})
     CONTAINER_TYPE: str = "Animated Image"
 
-    def __init__(self, *args, info: Mapping[str, Any], **kwargs) -> None:
+    def __init__(
+        self,
+        *args: AttrDict | PathInfo,
+        info: Mapping[str, Any],
+        **kwargs: picopt.plugins.pil_convertible.FileFormat | type[Self],
+    ) -> None:
         """Init frame info."""
         super().__init__(*args, info=info, **kwargs)
         self.frame_info: dict[str, Any] = {}

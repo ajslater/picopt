@@ -20,7 +20,7 @@ class WalkSkipper:
     )
 
     def __init__(
-        self,
+        self: "WalkSkipper",
         config: AttrDict,
         printer: Printer,
         timestamps: Grovestamps | None = None,
@@ -33,11 +33,13 @@ class WalkSkipper:
         self._in_archive: bool = in_archive
         self._printer: Printer = printer
 
-    def set_timestamps(self, timestamps: Grovestamps) -> None:
+    def set_timestamps(self: "WalkSkipper", timestamps: Grovestamps) -> None:
         """Reset the timestamps after they've been established."""
         self._timestamps = timestamps
 
-    def _log_skip(self, reason: str, path_info: PathInfo, *, warn: bool) -> None:
+    def _log_skip(
+        self: "WalkSkipper", reason: str, path_info: PathInfo, *, warn: bool
+    ) -> None:
         if not reason:
             return
         if warn:
@@ -45,7 +47,7 @@ class WalkSkipper:
         else:
             self._printer.skip(reason, path_info)
 
-    def _is_skippable(self, path_info: PathInfo) -> bool:
+    def _is_skippable(self: "WalkSkipper", path_info: PathInfo) -> bool:
         """Handle things that are not optimizable files."""
         reason = ""
         warn = False
@@ -85,7 +87,7 @@ class WalkSkipper:
             self._printer.error("", exc)
 
     def is_walk_file_skip(
-        self,
+        self: "WalkSkipper",
         path_info: PathInfo,
     ) -> bool:
         """Decide on skip the file or not."""
@@ -99,7 +101,7 @@ class WalkSkipper:
         return False
 
     def is_older_than_timestamp(
-        self,
+        self: "WalkSkipper",
         path_info: PathInfo,
     ) -> bool:
         """Is the file older than the timestamp."""

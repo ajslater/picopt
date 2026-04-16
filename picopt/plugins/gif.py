@@ -45,7 +45,7 @@ class GifsicleTool(ExternalTool):
     binary = "gifsicle"
 
     @override
-    def parse_version(self, version: str) -> str:
+    def parse_version(self: GifsicleTool, version: str) -> str:
         version = super().parse_version(version)
         return version.split()[-1]
 

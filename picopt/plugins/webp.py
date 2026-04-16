@@ -100,6 +100,11 @@ MODERN_CWEBP_FORMATS: frozenset[FileFormat] = frozenset(
 if TYPE_CHECKING:
     from collections.abc import Generator
 
+    import confuse
+
+    import picopt.plugins.pil_convertible
+    import picopt.report
+
 
 _WEBP_FORMAT_STR: str = str(WebPImageFile.format)
 
@@ -182,7 +187,7 @@ class CWebPTool(ExternalTool):
         return tuple(parts)
 
     @override
-    def probe(self) -> ToolStatus:
+    def probe(self: Any) -> ToolStatus:
         status = super().probe()
         if status.available:
             parsed = CWebPTool._parse_cwebp_version(status.version)
@@ -207,7 +212,7 @@ class WebPExternalTool(ExternalTool, ABC):
     version_args = ("-version",)
 
     @override
-    def parse_version(self, version: str) -> str:
+    def parse_version(self: Any, version: str) -> str:
         """Version is last term."""
         version = super().parse_version(version)
         return version.split()[-1]
@@ -330,7 +335,12 @@ class WebPLossless(ImageHandler):
     )
     _NEAR_LOSSLESS_ARGS: tuple[str, ...] = ("-near_lossless", "0")
 
-    def __init__(self, *args, **kwargs) -> None:
+    def __init__(
+        self: picopt.plugins.pil_convertible.WebPLossless,
+        *args: confuse.AttrDict | picopt.report.PathInfo,
+        **kwargs: dict[str, int | tuple[int, int, int, int]]
+        | picopt.plugins.pil_convertible.FileFormat,
+    ) -> None:
         """Widen acceptable inputs if cwebp is modern enough for PPM/TIFF."""
         super().__init__(*args, **kwargs)
         if CWebPTool.IS_MODERN_CWEBP:
@@ -419,7 +429,13 @@ class WebPAnimatedLossless(ImageAnimated, ABC):
     PIL2_KWARGS: MappingProxyType[str, Any] = _ANIMATED_WEBP_PIL_KWARGS
     PIL2_FRAME_KWARGS: MappingProxyType[str, Any] = _ANIMATED_WEBP_FRAME_KWARGS
 
-    def __init__(self, *args, **kwargs) -> None:
+    def __init__(
+        self: Any,
+        *args: confuse.AttrDict | picopt.report.PathInfo,
+        **kwargs: dict[str, int | tuple[int, int, int, int]]
+        | picopt.plugins.pil_convertible.FileFormat
+        | type[Any],
+    ) -> None:
         """Initialize instance."""
         super().__init__(*args, **kwargs)
         self._working_tmp_dir: Path | None = None
@@ -475,7 +491,13 @@ class Img2WebPAnimatedLossless(WebPAnimatedLossless):
     _LOSSLESS_OPTS: tuple[str, ...] = ("-lossless",)
     _NEAR_LOSSLESS_OPTS: tuple[str, ...] = ("-near_lossless", "0")
 
-    def __init__(self, *args, **kwargs) -> None:
+    def __init__(
+        self: picopt.plugins.pil_convertible.Img2WebPAnimatedLossless,
+        *args: confuse.AttrDict | picopt.report.PathInfo,
+        **kwargs: dict[str, int]
+        | picopt.plugins.pil_convertible.FileFormat
+        | type[picopt.plugins.pil_convertible.Img2WebPAnimatedLossless],
+    ) -> None:
         """Init instance variables."""
         super().__init__(*args, **kwargs)
         if CWebPTool.IS_MODERN_CWEBP:
@@ -559,7 +581,13 @@ class WebPMuxAnimatedLossless(WebPAnimatedLossless):
     _DURATION_RE: re.Pattern[str] = re.compile(r"frame \d+: (\d+) ms")
     _DEFAULT_DURATION_MS: int = 100
 
-    def __init__(self, *args, **kwargs) -> None:
+    def __init__(
+        self: Any,
+        *args: confuse.AttrDict | picopt.report.PathInfo,
+        **kwargs: dict[str, int]
+        | picopt.plugins.pil_convertible.FileFormat
+        | type[Any],
+    ) -> None:
         """Initialize instance."""
         super().__init__(*args, **kwargs)
         self._durations: dict[int, int] = {}

@@ -24,6 +24,12 @@ from picopt.plugins.base.handler import Handler
 if TYPE_CHECKING:
     from collections.abc import Mapping
 
+    import confuse
+
+    import picopt.plugins.pil_convertible
+    import picopt.plugins.svg
+    import picopt.report
+
 _SAVE_INFO_KEYS: frozenset[str] = frozenset(
     {"n_frames", "loop", "duration", "background"}
 )
@@ -42,7 +48,12 @@ class ImageHandler(Handler):
 
     PIL2_KWARGS: MappingProxyType[str, Any] = MappingProxyType({})
 
-    def __init__(self, *args, info: Mapping[str, Any], **kwargs) -> None:
+    def __init__(
+        self: picopt.plugins.svg.ImageHandler,
+        *args: confuse.AttrDict | picopt.report.PathInfo,
+        info: Mapping[str, Any],
+        **kwargs: picopt.plugins.pil_convertible.FileFormat,
+    ) -> None:
         """Save image info metadata."""
         super().__init__(*args, **kwargs)
         self.info: dict[str, Any] = dict(info)

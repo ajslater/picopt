@@ -1,5 +1,10 @@
 """Test comic format."""
 
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    import pathlib
+
 import shutil
 
 from picopt import PROGRAM_NAME, cli
@@ -31,24 +36,24 @@ class TestOldTimestamps:
     """Test old timestamps."""
 
     @staticmethod
-    def _assert_sizes(index, root=TMP_ROOT):
+    def _assert_sizes(index: int, root: "pathlib.PosixPath" = TMP_ROOT) -> None:
         """Assert sizes."""
         for name, sizes in FNS.items():
             path = root / name
             assert_size_close(path.stat().st_size, sizes[index])
 
-    def setup_method(self) -> None:
+    def setup_method(self: "TestOldTimestamps") -> None:
         """Set up method."""
         self.teardown_method()
         TMP_ROOT.mkdir(exist_ok=True)
         shutil.copy(SRC_JPG, TMP_ROOT)
         self._assert_sizes(0)
 
-    def teardown_method(self) -> None:
+    def teardown_method(self: "TestOldTimestamps") -> None:
         """Tear down method."""
         shutil.rmtree(TMP_ROOT, ignore_errors=True)
 
-    def test_old_timestamp_same_dir(self) -> None:
+    def test_old_timestamp_same_dir(self: "TestOldTimestamps") -> None:
         """Test old timestamp in same dir."""
         old_ts_path = TMP_ROOT / OLD_TIMESTAMPS_NAME
         old_ts_path.touch()
@@ -57,7 +62,7 @@ class TestOldTimestamps:
         assert not old_ts_path.exists()
         self._assert_sizes(0)
 
-    def test_old_timestamp_child(self) -> None:
+    def test_old_timestamp_child(self: "TestOldTimestamps") -> None:
         """Test old timestamp child."""
         child_root = TMP_ROOT / "child"
         child_root.mkdir(exist_ok=True)
@@ -69,7 +74,7 @@ class TestOldTimestamps:
         assert not old_ts_path.exists()
         self._assert_sizes(0, root=child_root)
 
-    def test_old_timestamp_parent(self) -> None:
+    def test_old_timestamp_parent(self: "TestOldTimestamps") -> None:
         """Test old timestamp in parent."""
         child_root = TMP_ROOT / "child"
         child_root.mkdir(exist_ok=True)

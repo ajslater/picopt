@@ -35,6 +35,7 @@ import shutil
 import subprocess
 from pathlib import Path
 from types import MappingProxyType
+from typing import TYPE_CHECKING
 
 import pikepdf
 import pytest
@@ -42,6 +43,9 @@ import pytest
 from picopt import PROGRAM_NAME, cli
 from tests import assert_size_close, get_test_dir
 from tests.base import BaseTest
+
+if TYPE_CHECKING:
+    from collections.abc import Iterator
 
 __all__ = ()
 
@@ -167,7 +171,7 @@ class TestPdfFixtures(BaseTest):
     FNS: MappingProxyType[str, tuple] = MappingProxyType({})
 
     @pytest.fixture(autouse=True)
-    def setup_and_teardown(self, fn: str):
+    def setup_and_teardown(self: TestPdfFixtures, fn: str) -> Iterator[None]:
         """Override BaseTest's setup to use a tolerant source-size check."""
         self.teardown_method()
         self.TMP_ROOT.mkdir(parents=True)
@@ -178,7 +182,7 @@ class TestPdfFixtures(BaseTest):
         yield
         self.teardown_method()
 
-    def test_picopt_pdf_outcome(self, fn: str) -> None:
+    def test_picopt_pdf_outcome(self: TestPdfFixtures, fn: str) -> None:
         """Picopt produces the expected file-size outcome for each fixture."""
         path = TMP_ROOT / fn
         source = PDF_FIXTURE_DIR / fn
@@ -210,7 +214,7 @@ class TestPdfFixtures(BaseTest):
                 f"{fn}: refused fixture bytes differ from source"
             )
 
-    def test_picopt_pdf_still_parses(self, fn: str) -> None:
+    def test_picopt_pdf_still_parses(self: TestPdfFixtures, fn: str) -> None:
         """Whatever picopt produced (or left behind) must still be a valid PDF."""
         path = TMP_ROOT / fn
         _run_picopt(path)
@@ -228,7 +232,9 @@ class TestPdfFixtures(BaseTest):
         not HAS_PDFTOPPM,
         reason="pdftoppm (poppler-utils) not installed",
     )
-    def test_picopt_pdf_lossless_render(self, fn: str, tmp_path: Path) -> None:
+    def test_picopt_pdf_lossless_render(
+        self: TestPdfFixtures, fn: str, tmp_path: Path
+    ) -> None:
         """For SHRINKS fixtures, rendered pixels must match the original at 150 DPI."""
         outcome, _, render_check, _ = FIXTURES[fn]
         if not render_check:
@@ -268,10 +274,10 @@ class TestPdfEmbeddedJpegLossless:
     """
 
     @pytest.fixture(autouse=True)
-    def setup(self) -> None:
+    def setup(self: TestPdfEmbeddedJpegLossless) -> None:
         TMP_ROOT.mkdir(parents=True, exist_ok=True)
 
-    def teardown_method(self) -> None:
+    def teardown_method(self: TestPdfEmbeddedJpegLossless) -> None:
         shutil.rmtree(TMP_ROOT, ignore_errors=True)
 
     @staticmethod
@@ -289,7 +295,9 @@ class TestPdfEmbeddedJpegLossless:
         return hashes
 
     @pytest.mark.parametrize("fn", ["photo_jpeg.pdf", "smask.pdf"])
-    def test_embedded_jpeg_pixels_unchanged(self, fn: str) -> None:
+    def test_embedded_jpeg_pixels_unchanged(
+        self: TestPdfEmbeddedJpegLossless, fn: str
+    ) -> None:
         source = PDF_FIXTURE_DIR / fn
         path = TMP_ROOT / fn
         shutil.copy(source, path)
@@ -317,13 +325,15 @@ class TestPdfHuntedFixtures:
     """New Tests."""
 
     @pytest.fixture(autouse=True)
-    def setup(self) -> None:
+    def setup(self: TestPdfHuntedFixtures) -> None:
         TMP_ROOT.mkdir(parents=True, exist_ok=True)
 
-    def teardown_method(self) -> None:
+    def teardown_method(self: TestPdfHuntedFixtures) -> None:
         shutil.rmtree(TMP_ROOT, ignore_errors=True)
 
-    def test_latex_pdf_renders_losslessly(self, tmp_path: Path) -> None:
+    def test_latex_pdf_renders_losslessly(
+        self: TestPdfHuntedFixtures, tmp_path: Path
+    ) -> None:
         """latex.pdf — a real LaTeX-produced PDF."""
         path_src = PDF_FIXTURE_DIR / "latex.pdf"
         if not HAS_PDFTOPPM:
@@ -340,7 +350,7 @@ class TestPdfHuntedFixtures:
             "latex.pdf: rendered output differs after optimization"
         )
 
-    def test_jbig2_pdf_unchanged(self) -> None:
+    def test_jbig2_pdf_unchanged(self: TestPdfHuntedFixtures) -> None:
         """jbig2.pdf — a PDF with at least one JBIG2-encoded bilevel image."""
         path_src = _maybe_skip_missing("jbig2.pdf")
         path = TMP_ROOT / "jbig2.pdf"
