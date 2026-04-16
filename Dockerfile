@@ -16,8 +16,11 @@ RUN apt-get update \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
+# hadolint ignore=DL4006
+RUN curl -fsSL https://bun.com/install | bash
+
 # hadolint ignore=DL3016
-RUN npm install --global svgo
+RUN bun install --global svgo
 
 WORKDIR /app
 COPY bin bin
@@ -26,7 +29,7 @@ COPY packages packages
 RUN bin/pngout.sh
 
 COPY pyproject.toml uv.lock package.json package-lock.json ./
-RUN npm install
+RUN bun install
 
 COPY . .
 RUN mkdir -p test-results dist
