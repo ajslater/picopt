@@ -96,9 +96,7 @@ def _enabled_handler_classes(
 class ConfigHandlers:
     """Build the per-handler pipeline selection from the merged config."""
 
-    def __init__(
-        self, printer: Printer | None = None
-    ) -> None:
+    def __init__(self, printer: Printer | None = None) -> None:
         """Initialize printer."""
         self._printer: Printer = printer or Printer(2)
 
@@ -164,9 +162,7 @@ class ConfigHandlers:
         if not picked_via_convert and native is not None and native in handler_stages:
             handled_format_strs.add(file_format.format_str)
 
-    def set_format_handler_map(
-        self, config: Subview
-    ) -> None:
+    def set_format_handler_map(self, config: Subview) -> None:
         """Probe handlers for the requested formats and store availability."""
         all_format_strs = self._get_config_set(config, "formats", "extra_formats")
         config["formats"].set(tuple(sorted(all_format_strs)))

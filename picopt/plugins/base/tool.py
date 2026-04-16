@@ -42,7 +42,6 @@ if TYPE_CHECKING:
     from types import ModuleType
 
 
-
 @dataclass(frozen=True)
 class ToolStatus:
     """Result of probing a tool."""
@@ -225,9 +224,7 @@ class ExternalTool(Tool):
         return version.splitlines()[self.version_line].strip()
 
     @override
-    def probe_version(
-        self, path: str = ""
-    ) -> str:
+    def probe_version(self, path: str = "") -> str:
         version = ""
         try:
             if not path:

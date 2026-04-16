@@ -6,8 +6,6 @@ from PIL, etc) lives in the individual plugin modules under picopt/plugins/
 and is exposed via the plugin registry.
 """
 
-
-
 from dataclasses import dataclass
 
 from typing_extensions import override

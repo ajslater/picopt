@@ -58,9 +58,11 @@ def _extract_image_info_from_image(
     if not image_format_str:
         return
     if keep_metadata:
-        for key, value in image.info.items():
-            if isinstance(key, str):
-                info[key] = value
+        str_md = {
+            key: value for key, value in image.info.items() if isinstance(key, str)
+        }
+        info.update(str_md)
+
     animated = getattr(image, "is_animated", False)
     info["animated"] = animated
     if animated and (n_frames := getattr(image, "n_frames", 0)):

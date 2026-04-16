@@ -1,7 +1,5 @@
 """Print Messages."""
 
-
-
 from pathlib import Path
 
 from termcolor import cprint
@@ -63,9 +61,7 @@ class Printer:
         reason = f"{container_type}, contents skipped. Optimizing during repack."
         self.skip(reason, path_info)
 
-    def skip_timestamp(
-        self, message: str, path_info: PathInfo
-    ) -> None:
+    def skip_timestamp(self, message: str, path_info: PathInfo) -> None:
         """Skipped by timestamp."""
         self.skip(message, path_info, color="light_green", attrs=["dark", "bold"])
 

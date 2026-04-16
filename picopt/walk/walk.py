@@ -1,14 +1,10 @@
 """Walk the directory trees and files and call the optimizers."""
 
-from typing import TYPE_CHECKING, Any
-
-if TYPE_CHECKING:
-    import pathlib
-
 import os
 import traceback
 from concurrent.futures import ProcessPoolExecutor
 from pathlib import Path
+from typing import Any
 
 from confuse.templates import AttrDict
 from treestamps import Grovestamps, GrovestampsConfig, Treestamps
@@ -31,7 +27,7 @@ class Walk:
 
     def _create_top_paths(
         self: Any,
-    ) -> "tuple[pathlib.Path, pathlib.Path]|tuple[pathlib.Path]":
+    ) -> "tuple[Path, Path]|tuple[Path]":
         """Create and Validate that top paths exist."""
         top_paths = []
         paths: tuple[Path, ...] = tuple(sorted(frozenset(self._config.paths)))

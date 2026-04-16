@@ -93,9 +93,7 @@ class ContainerHandler(Handler, ABC):
         """Whether any contained file changed and the container needs repacking."""
         return self._do_repack
 
-    def set_do_repack(
-        self, *, do_repack: bool
-    ) -> None:
+    def set_do_repack(self, *, do_repack: bool) -> None:
         """Set the flag determining whether the container needs repack."""
         self._do_repack = do_repack
 
