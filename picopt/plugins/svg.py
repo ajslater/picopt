@@ -61,7 +61,7 @@ class SvgDetector(Detector):
 
     @override
     @classmethod
-    def identify(cls, path_info: PathInfo) -> FileFormat | None:
+    def identify(cls: type[SvgDetector], path_info: PathInfo) -> FileFormat | None:
         return Svg.OUTPUT_FILE_FORMAT if path_info.suffix().lower() == ".svg" else None
 
 

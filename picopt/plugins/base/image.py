@@ -24,6 +24,7 @@ from picopt.plugins.base.handler import Handler
 if TYPE_CHECKING:
     from collections.abc import Mapping
 
+
 _SAVE_INFO_KEYS: frozenset[str] = frozenset(
     {"n_frames", "loop", "duration", "background"}
 )
@@ -42,7 +43,12 @@ class ImageHandler(Handler):
 
     PIL2_KWARGS: MappingProxyType[str, Any] = MappingProxyType({})
 
-    def __init__(self, *args, info: Mapping[str, Any], **kwargs) -> None:
+    def __init__(
+        self,
+        *args: Any,
+        info: Mapping[str, Any],
+        **kwargs: Any,
+    ) -> None:
         """Save image info metadata."""
         super().__init__(*args, **kwargs)
         self.info: dict[str, Any] = dict(info)

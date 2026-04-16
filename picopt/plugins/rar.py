@@ -10,7 +10,7 @@ configured.
 from __future__ import annotations
 
 from types import MappingProxyType
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from rarfile import RarFile, is_rarfile
 from typing_extensions import override
@@ -75,7 +75,7 @@ class RarDetector(Detector):
 
     @override
     @classmethod
-    def identify(cls, path_info: PathInfo) -> FileFormat | None:
+    def identify(cls: type[Any], path_info: PathInfo) -> FileFormat | None:
         suffix = path_info.suffix().lower()
         if suffix not in _SUFFIX_TO_FORMAT:
             return None

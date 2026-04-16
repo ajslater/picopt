@@ -40,7 +40,7 @@ def assert_size_close(
     )
 
 
-def get_test_dir():
+def get_test_dir() -> Path:
     """Return a module specific tmpdir."""
     frame = inspect.currentframe()
     if frame and frame.f_back:

@@ -13,7 +13,7 @@ side effect) whether old or new cwebp behavior is in effect.
 from __future__ import annotations
 
 import sys
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from termcolor import colored, cprint
 
@@ -143,7 +143,7 @@ class PicoptDoctor:
         sys.exit(doctor.checkup())
 
     @classmethod
-    def parse_cli(cls, args: Sequence[str] | None = None):
+    def parse_cli(cls: type[Any], args: Sequence[str] | None = None) -> None:
         """Parse the cli to to enter doctor mode or return."""
         argv = args if args is not None else tuple(sys.argv)
         if len(argv) >= 2 and argv[1] == "doctor":  # noqa: PLR2004

@@ -53,7 +53,7 @@ class HandlerFactory:
 
     def _lookup_route(
         self,
-        file_format,
+        file_format: "FileFormat | None",
     ) -> tuple | None:
         if not file_format:
             return None
@@ -84,7 +84,7 @@ class HandlerFactory:
 
     def _pick_handler_class_choose_converter(
         self, candidate: type[Handler], convert_to: frozenset[str]
-    ):
+    ) -> type[Handler] | None:
         if candidate.OUTPUT_FORMAT_STR not in convert_to:
             return None
         if not self._is_pipeline_available(candidate):
@@ -94,7 +94,7 @@ class HandlerFactory:
     def _pick_handler_class_converter(
         self,
         file_format: FileFormat | None,
-        convert_chain,
+        convert_chain: tuple[type[Handler], ...],
         *,
         convert: bool,
         repack: bool,

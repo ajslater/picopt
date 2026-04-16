@@ -62,7 +62,7 @@ class TestContainersDir(BaseTest):
     SOURCE_DIR: Path = CONTAINER_DIR
     FNS: MappingProxyType[str, tuple] = FNS
 
-    def test_containers_noop(self, fn: str) -> None:
+    def test_containers_noop(self: "TestContainersDir", fn: str) -> None:
         """Test containers noop."""
         path = TMP_ROOT / fn
         args = (*NOOP_ARGS, str(path))
@@ -74,7 +74,9 @@ class TestContainersDir(BaseTest):
         sizes = FNS[fn]
         assert_size_close(path.stat().st_size, sizes[0])
 
-    def test_containers_convert_webp_no_convert_container(self, fn: str) -> None:
+    def test_containers_convert_webp_no_convert_container(
+        self: "TestContainersDir", fn: str
+    ) -> None:
         """Test containers no convert."""
         path = TMP_ROOT / fn
         args = (*NO_CONVERT_ARGS, str(path))
@@ -88,7 +90,7 @@ class TestContainersDir(BaseTest):
         # that previously needed per-extension allowances.
         assert_size_close(path.stat().st_size, size)
 
-    def test_containers_only_convert_to_zip(self, fn: str) -> None:
+    def test_containers_only_convert_to_zip(self: "TestContainersDir", fn: str) -> None:
         """Test containers convert to zip."""
         sizes = FNS[fn]
         path = TMP_ROOT / fn

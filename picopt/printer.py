@@ -46,7 +46,7 @@ class Printer:
 
     def skip(
         self,
-        reason,
+        reason: str,
         path_info: PathInfo,
         color: str = "dark_grey",
         attrs: list[str] | None = None,
@@ -61,7 +61,7 @@ class Printer:
         reason = f"{container_type}, contents skipped. Optimizing during repack."
         self.skip(reason, path_info)
 
-    def skip_timestamp(self, message, path_info: PathInfo) -> None:
+    def skip_timestamp(self, message: str, path_info: PathInfo) -> None:
         """Skipped by timestamp."""
         self.skip(message, path_info, color="light_green", attrs=["dark", "bold"])
 

@@ -38,7 +38,11 @@ class ArchiveHandler(ContainerHandler, ABC):
     CONVERT_CHILDREN: bool = True
     ARCHIVE_CLASS: type[Any]
 
-    def __init__(self, *args, **kwargs) -> None:
+    def __init__(
+        self,
+        *args: Any,
+        **kwargs: Any,
+    ) -> None:
         """Init archive variables."""
         super().__init__(*args, **kwargs)
         self._skip_path_infos: set[PathInfo] = set()
@@ -197,7 +201,9 @@ class ArchiveHandler(ContainerHandler, ABC):
 
     @override
     def hydrate_optimized_path_info(
-        self, path_info: PathInfo, report: ReportStats
+        self,
+        path_info: PathInfo,
+        report: ReportStats,
     ) -> None:
         super().hydrate_optimized_path_info(path_info, report)
         original_path = path_info.name()

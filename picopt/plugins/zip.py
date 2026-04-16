@@ -9,7 +9,7 @@ inventory.
 from __future__ import annotations
 
 from types import MappingProxyType
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 from zipfile import ZIP_DEFLATED, ZIP_STORED, ZipFile, is_zipfile
 
 from typing_extensions import override
@@ -68,7 +68,7 @@ class ZipDetector(Detector):
 
     @override
     @classmethod
-    def identify(cls, path_info: PathInfo) -> FileFormat | None:
+    def identify(cls: type[Any], path_info: PathInfo) -> FileFormat | None:
         suffix = path_info.suffix().lower()
         if suffix not in _SUFFIX_TO_FORMAT:
             return None

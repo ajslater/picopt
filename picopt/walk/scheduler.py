@@ -374,7 +374,9 @@ class Scheduler:
         while self._ready and self._inflight_count() < cap:
             self._submit_ready_job()
 
-    def _cancel_subtree(self, root: ContainerNode, *, reason: Exception) -> None:
+    def _cancel_subtree(
+        self, root: ContainerNode, *, reason: BaseException | None
+    ) -> None:
         """Mark a subtree CANCELLED, purge its ready work, clean staging."""
         del reason  # recorded by the caller in totals
         stack: list[ContainerNode] = [root]
@@ -395,7 +397,7 @@ class Scheduler:
             self._live_nodes.discard(node)
         # Already-running futures check state on completion and drop results.
 
-    def _trigger_fail_fast(self, reason: Exception) -> None:
+    def _trigger_fail_fast(self, reason: BaseException | None) -> None:
         """Mark fail_fast, cancel every live top-level subtree."""
         self._fail_fast_triggered = True
         tops = [n for n in list(self._live_nodes) if n.is_top_level()]
@@ -493,7 +495,7 @@ class Scheduler:
         if entry.job.path_info.path is not None:
             self._dir_child_done(entry.job.path_info.path.parent)
 
-    def _handle_repack_failure(self, report, node):
+    def _handle_repack_failure(self, report: ReportStats, node: ContainerNode) -> None:
         if self._config.fail_fast:
             self._totals.errors.append(report)
             report.report(self._printer)

@@ -157,7 +157,10 @@ class StdLibTool(InternalTool):
         return self.PYTHON_VERSION
 
     @override
-    def probe_path(self, module: ModuleType | None = None) -> str:
+    def probe_path(
+        self,
+        module: ModuleType | None = None,
+    ) -> str:
         """Return placeholder."""
         return "<stdlib>"
 

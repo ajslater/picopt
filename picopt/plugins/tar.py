@@ -273,7 +273,9 @@ class _TarFamilyDetector(Detector):
 
     @override
     @classmethod
-    def identify(cls, path_info: PathInfo) -> FileFormat | None:
+    def identify(
+        cls: type[_TarFamilyDetector], path_info: PathInfo
+    ) -> FileFormat | None:
         for member in cls._MEMBERS:
             if (fmt := member.identify(path_info)) is not None:
                 return fmt

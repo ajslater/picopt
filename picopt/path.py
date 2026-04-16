@@ -4,6 +4,7 @@ from io import BufferedReader, BytesIO
 from os import stat_result
 from pathlib import Path
 from tarfile import TarInfo
+from typing import cast
 from zipfile import ZipInfo
 
 from confuse import AttrDict
@@ -46,7 +47,7 @@ class PathInfo:
 
     def _copy_constructor(
         self,
-        path_info=None,
+        path_info: "PathInfo | None" = None,
         top_path: Path | None = None,
         container_parents: tuple[str, ...] | None = None,
         *,
@@ -56,7 +57,7 @@ class PathInfo:
     ) -> None:
         """Copy from path_info or override with arg."""
 
-        def pick(override, attr: str, default=self._UNSET):
+        def pick(override: object, attr: str, default: object = self._UNSET) -> object:
             """Resolve a field: explicit override > path_info > default > raise."""
             if override is not None:
                 return override
@@ -67,21 +68,25 @@ class PathInfo:
                 raise ValueError(msg)
             return default() if callable(default) else default  # ty: ignore[call-top-callable]
 
-        self.top_path: Path = pick(top_path, "top_path")  # pyright: ignore[reportAttributeAccessIssue]
-        self.convert: bool = pick(convert, "convert")  # pyright: ignore[reportAttributeAccessIssue]
-        self.is_case_sensitive: bool = pick(
-            is_case_sensitive,
-            "is_case_sensitive",
-            default=lambda: is_path_case_sensitive(self.top_path),
+        self.top_path: Path = cast("Path", pick(top_path, "top_path"))
+        self.convert: bool = cast("bool", pick(convert, "convert"))
+        self.is_case_sensitive: bool = cast(
+            "bool",
+            pick(
+                is_case_sensitive,
+                "is_case_sensitive",
+                default=lambda: is_path_case_sensitive(self.top_path),
+            ),
         )
-        self.container_parents: tuple[str, ...] = pick(
-            container_parents, "container_parents", default=()
+        self.container_parents: tuple[str, ...] = cast(
+            "tuple[str, ...]",
+            pick(container_parents, "container_parents", default=()),
         )
         self.noop = noop
 
     def __init__(  # noqa: PLR0913
         self,
-        path_info=None,
+        path_info: "PathInfo | None" = None,
         *,
         top_path: Path | None = None,
         convert: bool | None = None,

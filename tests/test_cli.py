@@ -1,5 +1,10 @@
 """Test cli module."""
 
+from typing import TYPE_CHECKING, Any
+
+if TYPE_CHECKING:
+    import argparse
+
 import shutil
 import sys
 from pathlib import Path
@@ -18,21 +23,21 @@ class TestCLI:
 
     OLD_PATH: Path = TMP_ROOT / "old.jpg"
 
-    def setup_method(self) -> None:
+    def setup_method(self: Any) -> None:
         """Set up method."""
         TMP_ROOT.mkdir(exist_ok=True)
 
-    def teardown_method(self) -> None:
+    def teardown_method(self: Any) -> None:
         """Tear down method."""
         if TMP_ROOT.exists():
             shutil.rmtree(TMP_ROOT)
 
-    def _test_get_arguments_prepare(self):
+    def _test_get_arguments_prepare(self: Any) -> "argparse.Namespace":
         args = ("picopt", "-rqc", "PNG,WEBP", "-x", "CBZ,ZIP", "-bdLM", str(TMP_ROOT))
         arguments = cli.get_arguments(args)
         return arguments.picopt
 
-    def _test_get_arguments_aux(self, arguments) -> None:
+    def _test_get_arguments_aux(self: Any, arguments: "argparse.Namespace") -> None:
         assert arguments.bigger
         assert not arguments.timestamps
         assert arguments.dry_run
@@ -40,7 +45,7 @@ class TestCLI:
         assert not arguments.keep_metadata
         assert arguments.paths[0] == str(TMP_ROOT)
 
-    def test_get_arguments(self) -> None:
+    def test_get_arguments(self: Any) -> None:
         """Test get arguments."""
         arguments = self._test_get_arguments_prepare()
         assert arguments.verbose == 0
@@ -53,7 +58,7 @@ class TestCLI:
         assert arguments.symlinks
         self._test_get_arguments_aux(arguments)
 
-    def test_main(self) -> None:
+    def test_main(self: Any) -> None:
         """Test main method."""
         shutil.copy(JPEG_SRC, self.OLD_PATH)
         old_size = self.OLD_PATH.stat().st_size
@@ -62,7 +67,7 @@ class TestCLI:
         assert self.OLD_PATH.is_file()
         assert self.OLD_PATH.stat().st_size < old_size
 
-    def test_main_err(self) -> None:
+    def test_main_err(self: Any) -> None:
         """Test main errs."""
         sys.argv = ["picopt", "XXX"]
         try:

@@ -28,7 +28,7 @@ place by the time it matters. Don't reorder.
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from picopt import plugins as registry
 from picopt.printer import Printer
@@ -127,9 +127,9 @@ class ConfigHandlers:
     def _set_format_handler_stages(
         self,
         handler_cls: type[Handler],
-        handler_stages,
+        handler_stages: dict[type[Handler], tuple[Tool, ...]],
         disabled_program_names: frozenset[str],
-    ):
+    ) -> None:
         stages = _select_pipeline_for_handler(handler_cls, disabled_program_names)
         if stages is not None:
             handler_stages[handler_cls] = stages
@@ -137,14 +137,14 @@ class ConfigHandlers:
     def _set_format_handled_strs_for_format(
         self,
         file_format: FileFormat,
-        all_format_strs,
-        convert_chain,
-        convert_to,
-        handler_stages,
-        convert_format_strs,
-        handled_format_strs,
-        native,
-    ):
+        all_format_strs: frozenset[str],
+        convert_chain: tuple[type[Handler], ...],
+        convert_to: frozenset[str | Any],
+        handler_stages: dict[type[Handler], tuple[Tool, ...]],
+        convert_format_strs: dict[Any, Any],
+        handled_format_strs: set[Any],
+        native: type[Handler] | None,
+    ) -> None:
         if file_format.format_str not in all_format_strs:
             return
         picked_via_convert = False
