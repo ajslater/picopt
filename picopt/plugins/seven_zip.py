@@ -32,11 +32,6 @@ from picopt.plugins.base.format import FileFormat
 if TYPE_CHECKING:
     from pathlib import Path
 
-    import confuse
-
-    import picopt.plugins.pil_convertible
-    import picopt.report
-    import picopt.walk.skip
     from picopt.path import PathInfo
 
 
@@ -106,11 +101,9 @@ class SevenZip(ArchiveHandler):
     PIPELINE: tuple[tuple[Tool, ...], ...] = ((_PY7ZR_TOOL,),)
 
     def __init__(
-        self: SevenZip,
-        *args: confuse.AttrDict | picopt.report.PathInfo,
-        **kwargs: picopt.plugins.pil_convertible.FileFormat
-        | picopt.walk.skip.Grovestamps
-        | type[SevenZip | Any],
+        self,
+        *args: Any,
+        **kwargs: Any,
     ) -> None:
         """Allocate the py7zr extraction factory."""
         super().__init__(*args, **kwargs)

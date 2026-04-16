@@ -1,12 +1,8 @@
 """Unpack items from a file descriptor."""
 
-from typing import TYPE_CHECKING, BinaryIO
-
-if TYPE_CHECKING:
-    import picopt.pillow.webp_lossless
-
 from dataclasses import dataclass
 from mmap import mmap
+from typing import BinaryIO
 
 
 @dataclass
@@ -17,7 +13,7 @@ class ImageHeader:
     compare_bytes: bytes
 
     def compare(
-        self: "picopt.pillow.webp_lossless.ImageHeader", img: BinaryIO | mmap
+        self, img: BinaryIO | mmap
     ) -> bool:
         """Seek to a spot in a binary file and compare a byte array."""
         img.seek(self.offset)

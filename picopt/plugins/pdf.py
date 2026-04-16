@@ -86,10 +86,6 @@ if TYPE_CHECKING:
     from collections.abc import Generator
     from io import BufferedReader
 
-    import confuse
-
-    import picopt.plugins.pil_convertible
-    import picopt.report
     from picopt.report import ReportStats
 
 # ---------------------------------------------------------------------------
@@ -256,8 +252,8 @@ class Pdf(ContainerHandler):
 
     def __init__(
         self: Pdf,
-        *args: confuse.AttrDict | picopt.report.PathInfo,
-        **kwargs: picopt.plugins.pil_convertible.FileFormat | type[Pdf],
+        *args: Any,
+        **kwargs: Any,
     ) -> None:
         """Init PDF state."""
         super().__init__(*args, **kwargs)

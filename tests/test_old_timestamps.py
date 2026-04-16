@@ -36,7 +36,7 @@ class TestOldTimestamps:
     """Test old timestamps."""
 
     @staticmethod
-    def _assert_sizes(index: int, root: "pathlib.PosixPath" = TMP_ROOT) -> None:
+    def _assert_sizes(index: int, root: "pathlib.Path" = TMP_ROOT) -> None:
         """Assert sizes."""
         for name, sizes in FNS.items():
             path = root / name

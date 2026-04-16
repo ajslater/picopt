@@ -31,7 +31,7 @@ class Walk:
 
     def _create_top_paths(
         self: Any,
-    ) -> "tuple[pathlib.PosixPath, pathlib.PosixPath]|tuple[pathlib.PosixPath]":
+    ) -> "tuple[pathlib.Path, pathlib.Path]|tuple[pathlib.Path]":
         """Create and Validate that top paths exist."""
         top_paths = []
         paths: tuple[Path, ...] = tuple(sorted(frozenset(self._config.paths)))

@@ -33,13 +33,9 @@ from picopt.plugins.base.handler import Handler
 if TYPE_CHECKING:
     from collections.abc import Generator
 
-    import confuse
     from confuse import AttrDict
     from treestamps import Grovestamps
 
-    import picopt.plugins.pdf
-    import picopt.plugins.pil_convertible
-    import picopt.report
     from picopt.path import PathInfo
     from picopt.report import ReportStats
     from picopt.walk.skip import WalkSkipper
@@ -52,13 +48,13 @@ class ContainerHandler(Handler, ABC):
     CAN_PACK: bool = True
 
     def __init__(
-        self: picopt.plugins.pdf.ContainerHandler | Any,
-        *args: confuse.AttrDict | picopt.report.PathInfo,
+        self,
+        *args: Any,
         timestamps: Grovestamps | None = None,
         repack_handler_class: type[ContainerHandler] | None = None,
         comment: bytes | None = None,
         optimized_contents: set[PathInfo] | None = None,
-        **kwargs: picopt.plugins.pil_convertible.FileFormat,
+        **kwargs: Any,
     ) -> None:
         """Initialize instance vars."""
         super().__init__(*args, **kwargs)
@@ -93,18 +89,18 @@ class ContainerHandler(Handler, ABC):
 
     # ----------------------------------------------------- task accumulation
 
-    def is_do_repack(self: picopt.plugins.pdf.ContainerHandler) -> bool:
+    def is_do_repack(self) -> bool:
         """Whether any contained file changed and the container needs repacking."""
         return self._do_repack
 
     def set_do_repack(
-        self: picopt.plugins.pdf.ContainerHandler | Any, *, do_repack: bool
+        self, *, do_repack: bool
     ) -> None:
         """Set the flag determining whether the container needs repack."""
         self._do_repack = do_repack
 
     def hydrate_optimized_path_info(
-        self: picopt.plugins.pdf.ContainerHandler | Any,
+        self,
         path_info: PathInfo,
         report: ReportStats,
     ) -> None:
@@ -118,7 +114,7 @@ class ContainerHandler(Handler, ABC):
             path_info.set_data(report.data)
 
     def get_optimized_contents(
-        self: picopt.plugins.pdf.ContainerHandler | Any,
+        self,
     ) -> set[PathInfo]:
         """Return optimized contents."""
         return self._optimized_contents
@@ -146,7 +142,7 @@ class ContainerHandler(Handler, ABC):
         self._printer.container_repacking_done()
         return buffer
 
-    def clean_for_repack(self: picopt.plugins.pdf.ContainerHandler | Any) -> None:
+    def clean_for_repack(self) -> None:
         """Wipe state that doesn't pickle or aren't needed for multiprocessing repack."""
         self._timestamps = None
         self._skipper = None

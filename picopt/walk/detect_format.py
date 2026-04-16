@@ -58,7 +58,9 @@ def _extract_image_info_from_image(
     if not image_format_str:
         return
     if keep_metadata:
-        info.update(image.info)
+        for key, value in image.info.items():
+            if isinstance(key, str):
+                info[key] = value
     animated = getattr(image, "is_animated", False)
     info["animated"] = animated
     if animated and (n_frames := getattr(image, "n_frames", 0)):
@@ -73,7 +75,7 @@ def _extract_image_info_from_image(
         if durations:
             info["durations"] = durations
     with suppress(AttributeError):
-        info["mpinfo"] = image.mpinfo
+        info["mpinfo"] = image.mpinfo  # pyright: ignore[reportAttributeAccessIssue]  # ty: ignore[unresolved-attribute]
 
 
 def _extract_image_info(

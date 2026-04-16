@@ -23,14 +23,9 @@ Handler-class selection rules for an input :class:`FileFormat` ``ff``:
    PackingArchiveHandler)`` check.
 """
 
-from typing import TYPE_CHECKING, Any
-
-if TYPE_CHECKING:
-    import picopt.plugins.jpeg
-    import picopt.plugins.pil_convertible
-
 from collections.abc import Mapping
 from traceback import print_exc
+from typing import Any
 
 from confuse.templates import AttrDict
 from treestamps import Grovestamps
@@ -57,8 +52,8 @@ class HandlerFactory:
         self._printer: Printer = printer
 
     def _lookup_route(
-        self: Any,
-        file_format: "picopt.plugins.pil_convertible.FileFormat|None",
+        self,
+        file_format: "FileFormat | None",
     ) -> tuple | None:
         if not file_format:
             return None
@@ -88,8 +83,8 @@ class HandlerFactory:
         return len(stages) == len(handler_cls.PIPELINE)
 
     def _pick_handler_class_choose_converter(
-        self: Any, candidate: type[Handler], convert_to: frozenset[str]
-    ) -> "type[picopt.plugins.jpeg.Jpeg | picopt.plugins.pil_convertible.Img2WebPAnimatedLossless | picopt.plugins.pil_convertible.WebPLossless | Any] | None":
+        self, candidate: type[Handler], convert_to: frozenset[str]
+    ) -> type[Handler] | None:
         if candidate.OUTPUT_FORMAT_STR not in convert_to:
             return None
         if not self._is_pipeline_available(candidate):
@@ -97,9 +92,9 @@ class HandlerFactory:
         return candidate
 
     def _pick_handler_class_converter(
-        self: Any,
+        self,
         file_format: FileFormat | None,
-        convert_chain: "tuple|tuple[type[picopt.plugins.pil_convertible.WebPLossless]]|tuple[type[Any]]",
+        convert_chain: tuple[type[Handler], ...],
         *,
         convert: bool,
         repack: bool,

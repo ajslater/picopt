@@ -34,7 +34,6 @@ from picopt.report import ReportStats
 if TYPE_CHECKING:
     from confuse.templates import AttrDict
 
-    import picopt.plugins
     from picopt.plugins.base.tool import Tool
 
 # Used by working-path construction for nested-container scratch files.
@@ -70,7 +69,7 @@ class Handler(ABC):
     # ------------------------------------------------------------------ init
 
     def __init__(
-        self: picopt.plugins.Handler,
+        self,
         config: AttrDict,
         path_info: PathInfo,
         input_file_format: FileFormat,
@@ -102,7 +101,7 @@ class Handler(ABC):
         self._input_file_formats: frozenset[FileFormat] = self.INPUT_FILE_FORMATS
         self._original_mtime = self.path_info.mtime()
 
-    def _compute_final_path(self: picopt.plugins.Handler) -> Path:
+    def _compute_final_path(self) -> Path:
         """Compute the final path even if the original has multiple suffixes."""
         final_path = self.original_path.with_suffix("")
         if final_path.suffix == DOUBLE_SUFFIX:

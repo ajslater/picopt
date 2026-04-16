@@ -77,7 +77,7 @@ class _TarBaseDetector(Detector):
 
     @override
     @classmethod
-    def identify(cls: type[TarGzDetector], path_info: PathInfo) -> FileFormat | None:
+    def identify(cls, path_info: PathInfo) -> FileFormat | None:
         suffix = path_info.suffix().lower()
         if suffix not in cls.SUFFIX_MAP:
             return None

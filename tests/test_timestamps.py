@@ -45,7 +45,7 @@ class TestTimestamps:
     """Test containers dir."""
 
     @staticmethod
-    def _assert_sizes(index: int, root: "pathlib.PosixPath" = TMP_ROOT) -> None:
+    def _assert_sizes(index: int, root: "pathlib.Path" = TMP_ROOT) -> None:
         """Assert sizes."""
         for name, sizes in FNS.items():
             path = root / name
@@ -66,7 +66,9 @@ class TestTimestamps:
 
     @staticmethod
     def _write_timestamp(
-        path: "pathlib.PosixPath|str", ts: None = None, config: None = None
+        path: "pathlib.Path|str",
+        ts: float | None = None,
+        config: dict | None = None,
     ) -> None:
         """Write timestamp."""
         if ts is None:
@@ -114,7 +116,7 @@ class TestTimestamps:
         cli.main(args)
         self._assert_sizes(0)
 
-    def _setup_child_dir(self: "TestTimestamps") -> "pathlib.PosixPath":
+    def _setup_child_dir(self: "TestTimestamps") -> "pathlib.Path":
         """Set up child dir."""
         tmp_child_dir = TMP_ROOT / "child"
         tmp_child_dir.mkdir(exist_ok=True)
@@ -148,7 +150,9 @@ class TestTimestamps:
         assert not WAL_PATH.exists()
 
     @staticmethod
-    def _write_wal(path: str, ts: None = None, config: None = None) -> None:
+    def _write_wal(
+        path: str, ts: float | None = None, config: dict | None = None
+    ) -> None:
         """Write wal."""
         if ts is None:
             ts = datetime.now(tz=timezone.utc).timestamp()

@@ -6,10 +6,7 @@ from PIL, etc) lives in the individual plugin modules under picopt/plugins/
 and is exposed via the plugin registry.
 """
 
-from typing import TYPE_CHECKING
 
-if TYPE_CHECKING:
-    import picopt.plugins.pil_convertible
 
 from dataclasses import dataclass
 
@@ -26,7 +23,7 @@ class FileFormat:
     archive: bool = False
 
     @override
-    def __repr__(self: "picopt.plugins.pil_convertible.FileFormat") -> str:
+    def __repr__(self) -> str:
         """Represent format as a string."""
         parts = [self.format_str]
         if self.archive:

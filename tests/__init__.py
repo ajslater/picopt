@@ -1,10 +1,5 @@
 """Tests init."""
 
-from typing import TYPE_CHECKING
-
-if TYPE_CHECKING:
-    import pathlib
-
 import inspect
 from pathlib import Path
 
@@ -45,7 +40,7 @@ def assert_size_close(
     )
 
 
-def get_test_dir() -> "pathlib.PosixPath":
+def get_test_dir() -> Path:
     """Return a module specific tmpdir."""
     frame = inspect.currentframe()
     if frame and frame.f_back:

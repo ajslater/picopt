@@ -1,9 +1,6 @@
 """Print Messages."""
 
-from typing import TYPE_CHECKING
 
-if TYPE_CHECKING:
-    import picopt.report
 
 from pathlib import Path
 
@@ -15,13 +12,13 @@ from picopt.path import PathInfo
 class Printer:
     """Printing messages during walk and handling."""
 
-    def __init__(self: "picopt.report.Printer", verbose: int) -> None:
+    def __init__(self, verbose: int) -> None:
         """Initialize verbosity and flags."""
         self._verbose: int = verbose
         self._after_newline: bool = True
 
     def _message(
-        self: "picopt.report.Printer",
+        self,
         message: str,
         color: str = "white",
         attrs: list[str] | None = None,
@@ -45,12 +42,12 @@ class Printer:
         cprint(message, color, attrs=attrs, end=end, flush=True)
         self._after_newline = bool(end)
 
-    def config(self: "picopt.report.Printer", message: str) -> None:
+    def config(self, message: str) -> None:
         """Config messages."""
         self._message(message, color="cyan", force_verbose=True)
 
     def skip(
-        self: "picopt.report.Printer",
+        self,
         reason: str,
         path_info: PathInfo,
         color: str = "dark_grey",
@@ -67,7 +64,7 @@ class Printer:
         self.skip(reason, path_info)
 
     def skip_timestamp(
-        self: "picopt.report.Printer", message: str, path_info: PathInfo
+        self, message: str, path_info: PathInfo
     ) -> None:
         """Skipped by timestamp."""
         self.skip(message, path_info, color="light_green", attrs=["dark", "bold"])
@@ -128,11 +125,11 @@ class Printer:
         """Dot for repacked file."""
         self._message(".", color="light_grey", end="", force_continue_line=True)
 
-    def done(self: "picopt.report.Printer") -> None:
+    def done(self) -> None:
         """Operation done."""
         self._message("done.", force_verbose=True, force_continue_line=True)
 
-    def saved(self: "picopt.report.Printer", report: str) -> None:
+    def saved(self, report: str) -> None:
         """Report saved size."""
         self._message(report)
 
@@ -151,15 +148,15 @@ class Printer:
             message += f": {exc}"
         self._message(message, color="light_yellow", force_verbose=True)
 
-    def error(self: "picopt.report.Printer", message: str, exc: BaseException) -> None:
+    def error(self, message: str, exc: BaseException) -> None:
         """Error."""
         message = "ERROR: " + message + f": {exc}"
         self._message(message, color="light_red", force_verbose=True)
 
-    def error_title(self: "picopt.report.Printer", message: str) -> None:
+    def error_title(self, message: str) -> None:
         """Error title."""
         self._message(message, color="light_red", force_verbose=True)
 
-    def final_message(self: "picopt.report.Printer", message: str) -> None:
+    def final_message(self, message: str) -> None:
         """Print final message."""
         self._message(message, force_verbose=True)

@@ -100,11 +100,6 @@ MODERN_CWEBP_FORMATS: frozenset[FileFormat] = frozenset(
 if TYPE_CHECKING:
     from collections.abc import Generator
 
-    import confuse
-
-    import picopt.plugins.pil_convertible
-    import picopt.report
-
 
 _WEBP_FORMAT_STR: str = str(WebPImageFile.format)
 
@@ -336,10 +331,9 @@ class WebPLossless(ImageHandler):
     _NEAR_LOSSLESS_ARGS: tuple[str, ...] = ("-near_lossless", "0")
 
     def __init__(
-        self: picopt.plugins.pil_convertible.WebPLossless,
-        *args: confuse.AttrDict | picopt.report.PathInfo,
-        **kwargs: dict[str, int | tuple[int, int, int, int]]
-        | picopt.plugins.pil_convertible.FileFormat,
+        self,
+        *args: Any,
+        **kwargs: Any,
     ) -> None:
         """Widen acceptable inputs if cwebp is modern enough for PPM/TIFF."""
         super().__init__(*args, **kwargs)
@@ -431,10 +425,8 @@ class WebPAnimatedLossless(ImageAnimated, ABC):
 
     def __init__(
         self: Any,
-        *args: confuse.AttrDict | picopt.report.PathInfo,
-        **kwargs: dict[str, int | tuple[int, int, int, int]]
-        | picopt.plugins.pil_convertible.FileFormat
-        | type[Any],
+        *args: Any,
+        **kwargs: Any,
     ) -> None:
         """Initialize instance."""
         super().__init__(*args, **kwargs)
@@ -492,11 +484,9 @@ class Img2WebPAnimatedLossless(WebPAnimatedLossless):
     _NEAR_LOSSLESS_OPTS: tuple[str, ...] = ("-near_lossless", "0")
 
     def __init__(
-        self: picopt.plugins.pil_convertible.Img2WebPAnimatedLossless,
-        *args: confuse.AttrDict | picopt.report.PathInfo,
-        **kwargs: dict[str, int]
-        | picopt.plugins.pil_convertible.FileFormat
-        | type[picopt.plugins.pil_convertible.Img2WebPAnimatedLossless],
+        self,
+        *args: Any,
+        **kwargs: Any,
     ) -> None:
         """Init instance variables."""
         super().__init__(*args, **kwargs)
@@ -583,10 +573,8 @@ class WebPMuxAnimatedLossless(WebPAnimatedLossless):
 
     def __init__(
         self: Any,
-        *args: confuse.AttrDict | picopt.report.PathInfo,
-        **kwargs: dict[str, int]
-        | picopt.plugins.pil_convertible.FileFormat
-        | type[Any],
+        *args: Any,
+        **kwargs: Any,
     ) -> None:
         """Initialize instance."""
         super().__init__(*args, **kwargs)

@@ -34,18 +34,13 @@ from dataclasses import dataclass
 from importlib.metadata import version as module_version
 from pathlib import Path
 from platform import python_version
-from typing import TYPE_CHECKING, Any, BinaryIO
+from typing import TYPE_CHECKING, BinaryIO
 
 from typing_extensions import override
 
 if TYPE_CHECKING:
     from types import ModuleType
 
-    import picopt.plugins.gif
-    import picopt.plugins.pdf
-    import picopt.plugins.png
-    import picopt.plugins.svg
-    import picopt.plugins.tar
 
 
 @dataclass(frozen=True)
@@ -73,7 +68,7 @@ class Tool(ABC):
     name: str = ""
     required: bool = True
 
-    def parse_version(self: picopt.plugins.svg.Tool, version: str) -> str:
+    def parse_version(self, version: str) -> str:
         """Override to parse tool version specially."""
         return version
 
@@ -118,17 +113,17 @@ class InternalTool(Tool):
     PACKAGE_NAME: str = ""
 
     @override
-    def probe_version(self: picopt.plugins.pdf.InternalTool) -> str:
+    def probe_version(self) -> str:
         package_name = self.PACKAGE_NAME or self.module_name
         version = module_version(package_name) if package_name else "builtin"
         return self.parse_version(version)
 
-    def probe_path(self: picopt.plugins.pdf.InternalTool, module: ModuleType) -> str:
+    def probe_path(self, module: ModuleType) -> str:
         """Probe the intermal module path."""
         return getattr(module, "__file__", "") or "<builtin>"
 
     @override
-    def probe(self: picopt.plugins.pdf.InternalTool) -> ToolStatus:
+    def probe(self) -> ToolStatus:
         """Return results for doctor."""
         try:
             module = __import__(self.module_name)
@@ -158,13 +153,13 @@ class StdLibTool(InternalTool):
     PYTHON_VERSION = f"Python {python_version()}"
 
     @override
-    def probe_version(self: picopt.plugins.tar.StdLibTool | Any) -> str:
+    def probe_version(self) -> str:
         """Return Python version."""
         return self.PYTHON_VERSION
 
     @override
     def probe_path(
-        self: picopt.plugins.pdf.InternalTool | picopt.plugins.tar.StdLibTool | Any,
+        self,
         module: ModuleType | None = None,
     ) -> str:
         """Return placeholder."""
@@ -179,7 +174,7 @@ class PILSaveTool(InternalTool):
     PACKAGE_NAME = "Pillow"
 
     def __init__(
-        self: picopt.plugins.png.PILSaveTool,
+        self,
         target_format_str: str = "",
         save_kwargs: dict | None = None,
         name: str = "",
@@ -214,24 +209,24 @@ class ExternalTool(Tool):
     version_args: tuple[str, ...] = ("--version",)
     version_line: int = 0
 
-    def __init__(self: picopt.plugins.gif.ExternalTool) -> None:
+    def __init__(self) -> None:
         """Init cached path."""
         self._cached_path: Path | None | object = _UNSET
 
-    def _path(self: picopt.plugins.gif.ExternalTool | Any) -> Path | None:
+    def _path(self) -> Path | None:
         if self._cached_path is _UNSET:
             found = shutil.which(self.binary or self.name)
             self._cached_path = Path(found) if found else None
         return self._cached_path  # pyright: ignore[reportReturnType], # ty: ignore[invalid-return-type]
 
     @override
-    def parse_version(self: picopt.plugins.gif.ExternalTool | Any, version: str) -> str:
+    def parse_version(self, version: str) -> str:
         """Take version from first line of external tool output."""
         return version.splitlines()[self.version_line].strip()
 
     @override
     def probe_version(
-        self: picopt.plugins.gif.ExternalTool | Any, path: str = ""
+        self, path: str = ""
     ) -> str:
         version = ""
         try:
@@ -251,7 +246,7 @@ class ExternalTool(Tool):
         return version
 
     @override
-    def probe(self: picopt.plugins.gif.ExternalTool | Any) -> ToolStatus:
+    def probe(self) -> ToolStatus:
         """Doctor probe."""
         path = self._path()
         if path is None:
