@@ -7,8 +7,8 @@ on:
     branches: [main, develop]
 
 env:
-  CI_IMAGE: ${{ github.event.repository.name }}-ci
-  CI_IMAGE_CI: ${{ github.event.repository.name }}-ci:latest
+  CI_IMAGE: ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}-ci
+  CI_IMAGE_TAG: ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}-ci:latest
   CI_CONTAINER: ${{ github.event.repository.name }}-ci
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
 
@@ -65,7 +65,7 @@ jobs:
         with:
           context: .
           load: true
-          tags: ${{ env.CI_IMAGE_CI }}
+          tags: ${{ env.CI_IMAGE_TAG }}
           cache-from: type=registry,ref=${{ env.CI_IMAGE}}:cache
           cache-to: type=registry,ref=${{ env.CI_IMAGE}}:cache,mode=max
 
