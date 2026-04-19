@@ -10,6 +10,7 @@ __pycache__
 /tests/**/*.json
 /tests/**/*.xml
 /tests/**/*.yaml
+bun.lock
 dist
 node_modules
 package-lock.json
