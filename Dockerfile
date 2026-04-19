@@ -29,7 +29,7 @@ COPY packages packages
 # hadolint ignore=DL3059
 RUN bin/pngout.sh
 
-COPY bun.lock pyproject.toml uv.lock package.json ./
+COPY bun.lock package.json ./
 RUN bun install
 
 COPY . .
@@ -37,4 +37,4 @@ RUN mkdir -p test-results dist
 
 # Install
 # hadolint ignore=DL3059
-RUN uv sync
+RUN make install
