@@ -33,7 +33,7 @@ readme = "README.md"
 requires-python = ">=3.10"
 license = { text = "GPL-3.0-only" }
 name = "picopt"
-version = "6.1.1"
+version = "6.1.2"
 [[project.authors]]
 name = "AJ Slater"
 email = "aj@slater.net"
