@@ -140,10 +140,12 @@ class ContainerHandler(Handler, ABC):
         self._printer.container_repacking_done()
         return buffer
 
-    def clean_for_repack(self) -> None:
-        """Wipe state that doesn't pickle or aren't needed for multiprocessing repack."""
-        self._timestamps = None
-        self._skipper = None
+    def __getstate__(self) -> dict[str, Any]:
+        """Drop Grovestamps for worker handoff; its ruamel.yaml Reader owns an un-picklable BufferedReader."""
+        state = self.__dict__.copy()
+        state["_timestamps"] = None
+        state["_skipper"] = None
+        return state
 
     def repack(self) -> ReportStats:
         """Public alias used by the multiprocessing pool dispatcher."""
