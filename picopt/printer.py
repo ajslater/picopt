@@ -1,6 +1,7 @@
 """Print Messages."""
 
 from pathlib import Path
+from traceback import print_exception
 
 from termcolor import cprint
 
@@ -148,6 +149,7 @@ class Printer:
         """Error."""
         message = "ERROR: " + message + f": {exc}"
         self._message(message, color="light_red", force_verbose=True)
+        print_exception(exc)
 
     def error_title(self, message: str) -> None:
         """Error title."""
