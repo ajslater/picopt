@@ -587,7 +587,6 @@ class Scheduler:
             self._handle_repack_done(node, noop)
             return
 
-        node.handler.clean_for_repack()
         repack_handler = self._create_repack_handler(self._config, node.handler)
         node.handler = repack_handler
         self._ready.append((RepackJob(handler=repack_handler), node))
