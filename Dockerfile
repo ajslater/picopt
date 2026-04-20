@@ -11,6 +11,7 @@ RUN apt-get update \
         curl \
         gifsicle \
         jbig2dec \
+        poppler-utils \
         shellcheck \
         unrar \
         webp \
