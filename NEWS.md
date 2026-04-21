@@ -1,5 +1,11 @@
 # 📰 Picopt News
 
+## v6.2.0
+
+- Add bunx support for svgo
+- Fix multiprocessing crash when using timestamps with some archives.
+- Print stack traces when errors occur.
+
 ## v6.1.1
 
 - Treestamps 3.0.0

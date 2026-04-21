@@ -46,7 +46,12 @@ class ImageAnimated(ImageHandler, ContainerHandler, ABC):  # pyright: ignore[rep
     PIL2_KWARGS: MappingProxyType[str, Any] = MappingProxyType({})
     CONTAINER_TYPE: str = "Animated Image"
 
-    def __init__(self, *args, info: Mapping[str, Any], **kwargs) -> None:
+    def __init__(
+        self,
+        *args: Any,
+        info: Mapping[str, Any],
+        **kwargs: Any,
+    ) -> None:
         """Init frame info."""
         super().__init__(*args, info=info, **kwargs)
         self.frame_info: dict[str, Any] = {}

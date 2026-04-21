@@ -76,7 +76,7 @@ class TestImagesDir(BaseTest):
     SOURCE_DIR: Path = IMAGES_DIR
     FNS: MappingProxyType[str, tuple] = FNS
 
-    def test_no_convert(self, fn: str) -> None:
+    def test_no_convert(self: "TestImagesDir", fn: str) -> None:
         """Test no convert."""
         args = (PROGRAM_NAME, "-rvvx SVG", str(self.TMP_ROOT))
         cli.main(args)
@@ -84,7 +84,7 @@ class TestImagesDir(BaseTest):
         size = FNS[fn][1]
         assert_size_close(path.stat().st_size, size)
 
-    def test_convert_to_png(self, fn: str) -> None:
+    def test_convert_to_png(self: "TestImagesDir", fn: str) -> None:
         """Test convert to PNG."""
         args = (
             PROGRAM_NAME,
@@ -99,7 +99,7 @@ class TestImagesDir(BaseTest):
         path = (self.TMP_ROOT / fn).with_suffix("." + suffix)
         assert_size_close(path.stat().st_size, size)
 
-    def test_convert_to_webp(self, fn: str) -> None:
+    def test_convert_to_webp(self: "TestImagesDir", fn: str) -> None:
         """Test convert to WEBP."""
         args = (
             PROGRAM_NAME,
@@ -121,7 +121,9 @@ class TestNearLosslessImageDir(BaseTest):
     SOURCE_DIR: Path = IMAGES_DIR
     FNS: MappingProxyType[str, tuple] = NEAR_LOSSLESS_FNS
 
-    def test_convert_to_webp_near_lossless(self, fn: str) -> None:
+    def test_convert_to_webp_near_lossless(
+        self: "TestNearLosslessImageDir", fn: str
+    ) -> None:
         """Test convert to WEBP."""
         args = (
             PROGRAM_NAME,

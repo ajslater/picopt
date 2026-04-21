@@ -12,7 +12,7 @@ from __future__ import annotations
 from io import BytesIO
 from sys import maxsize
 from types import MappingProxyType
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from py7zr import SevenZipFile, is_7zfile
 from py7zr.io import BytesIOFactory
@@ -69,7 +69,7 @@ class SevenZipDetector(Detector):
 
     @override
     @classmethod
-    def identify(cls, path_info: PathInfo) -> FileFormat | None:
+    def identify(cls: type[SevenZipDetector], path_info: PathInfo) -> FileFormat | None:
         suffix = path_info.suffix().lower()
         if suffix not in _SUFFIX_TO_FORMAT:
             return None
@@ -100,7 +100,11 @@ class SevenZip(ArchiveHandler):
     ARCHIVE_CLASS = SevenZipFile
     PIPELINE: tuple[tuple[Tool, ...], ...] = ((_PY7ZR_TOOL,),)
 
-    def __init__(self, *args, **kwargs) -> None:
+    def __init__(
+        self,
+        *args: Any,
+        **kwargs: Any,
+    ) -> None:
         """Allocate the py7zr extraction factory."""
         super().__init__(*args, **kwargs)
         self._factory: BytesIOFactory = BytesIOFactory(maxsize)

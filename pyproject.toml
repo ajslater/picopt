@@ -33,7 +33,7 @@ readme = "README.md"
 requires-python = ">=3.10"
 license = { text = "GPL-3.0-only" }
 name = "picopt"
-version = "6.1.1"
+version = "6.2.0"
 [[project.authors]]
 name = "AJ Slater"
 email = "aj@slater.net"
@@ -97,6 +97,7 @@ source-include = [
   "Makefile",
   "NEWS.md",
   "bin/**",
+  "bun.lock",
   "ci/**",
   "compose.yaml",
   "docs/DOCKER.md",
@@ -159,7 +160,7 @@ reportUnusedParameter = false
 builtin = "clear,code,rare"
 check-hidden = true
 ignore-words-list = "coverd,falsy,ro,searchd,thead,versio,ws"
-skip = "*~,.*,./dist,./node_modules,./package-lock.json,./package.json,./test-results,./uv.lock,/uv.lock"
+skip = "*~,.*,./bun.lock,./dist,./node_modules,./package-lock.json,./package.json,./test-results,./uv.lock,/uv.lock"
 
 [tool.complexipy]
 failed = true

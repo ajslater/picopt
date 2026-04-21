@@ -106,7 +106,7 @@ class PdfDetector(Detector):
 
     @override
     @classmethod
-    def identify(cls, path_info: PathInfo) -> FileFormat | None:
+    def identify(cls: type[PdfDetector], path_info: PathInfo) -> FileFormat | None:
         """Return Pdf.OUTPUT_FILE_FORMAT iff the file starts with %PDF-."""
         target = path_info.path_or_buffer()
         if isinstance(target, Path):
@@ -250,7 +250,11 @@ class Pdf(ContainerHandler):
     CONVERT_CHILDREN: bool = False
     PIPELINE: tuple[tuple[Tool, ...], ...] = ((_PIKEPDF_TOOL,),)
 
-    def __init__(self, *args, **kwargs) -> None:
+    def __init__(
+        self,
+        *args: Any,
+        **kwargs: Any,
+    ) -> None:
         """Init PDF state."""
         super().__init__(*args, **kwargs)
         # Stash for round-tripping the input bytes from walk() (called
@@ -455,7 +459,7 @@ class Pdf(ContainerHandler):
 
     @override
     def hydrate_optimized_path_info(
-        self, path_info: PathInfo, report: ReportStats
+        self: ContainerHandler | Pdf | Any, path_info: PathInfo, report: ReportStats
     ) -> None:
         """
         Pull optimized child bytes back onto the child PathInfo.

@@ -1,6 +1,7 @@
 """Print Messages."""
 
 from pathlib import Path
+from traceback import print_exception
 
 from termcolor import cprint
 
@@ -46,7 +47,7 @@ class Printer:
 
     def skip(
         self,
-        reason,
+        reason: str,
         path_info: PathInfo,
         color: str = "dark_grey",
         attrs: list[str] | None = None,
@@ -61,7 +62,7 @@ class Printer:
         reason = f"{container_type}, contents skipped. Optimizing during repack."
         self.skip(reason, path_info)
 
-    def skip_timestamp(self, message, path_info: PathInfo) -> None:
+    def skip_timestamp(self, message: str, path_info: PathInfo) -> None:
         """Skipped by timestamp."""
         self.skip(message, path_info, color="light_green", attrs=["dark", "bold"])
 
@@ -148,6 +149,7 @@ class Printer:
         """Error."""
         message = "ERROR: " + message + f": {exc}"
         self._message(message, color="light_red", force_verbose=True)
+        print_exception(exc)
 
     def error_title(self, message: str) -> None:
         """Error title."""

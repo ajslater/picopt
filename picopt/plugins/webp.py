@@ -330,7 +330,11 @@ class WebPLossless(ImageHandler):
     )
     _NEAR_LOSSLESS_ARGS: tuple[str, ...] = ("-near_lossless", "0")
 
-    def __init__(self, *args, **kwargs) -> None:
+    def __init__(
+        self,
+        *args: Any,
+        **kwargs: Any,
+    ) -> None:
         """Widen acceptable inputs if cwebp is modern enough for PPM/TIFF."""
         super().__init__(*args, **kwargs)
         if CWebPTool.IS_MODERN_CWEBP:
@@ -419,7 +423,11 @@ class WebPAnimatedLossless(ImageAnimated, ABC):
     PIL2_KWARGS: MappingProxyType[str, Any] = _ANIMATED_WEBP_PIL_KWARGS
     PIL2_FRAME_KWARGS: MappingProxyType[str, Any] = _ANIMATED_WEBP_FRAME_KWARGS
 
-    def __init__(self, *args, **kwargs) -> None:
+    def __init__(
+        self,
+        *args: Any,
+        **kwargs: Any,
+    ) -> None:
         """Initialize instance."""
         super().__init__(*args, **kwargs)
         self._working_tmp_dir: Path | None = None
@@ -475,7 +483,11 @@ class Img2WebPAnimatedLossless(WebPAnimatedLossless):
     _LOSSLESS_OPTS: tuple[str, ...] = ("-lossless",)
     _NEAR_LOSSLESS_OPTS: tuple[str, ...] = ("-near_lossless", "0")
 
-    def __init__(self, *args, **kwargs) -> None:
+    def __init__(
+        self,
+        *args: Any,
+        **kwargs: Any,
+    ) -> None:
         """Init instance variables."""
         super().__init__(*args, **kwargs)
         if CWebPTool.IS_MODERN_CWEBP:
@@ -559,7 +571,11 @@ class WebPMuxAnimatedLossless(WebPAnimatedLossless):
     _DURATION_RE: re.Pattern[str] = re.compile(r"frame \d+: (\d+) ms")
     _DEFAULT_DURATION_MS: int = 100
 
-    def __init__(self, *args, **kwargs) -> None:
+    def __init__(
+        self,
+        *args: Any,
+        **kwargs: Any,
+    ) -> None:
         """Initialize instance."""
         super().__init__(*args, **kwargs)
         self._durations: dict[int, int] = {}

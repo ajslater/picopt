@@ -157,7 +157,10 @@ class StdLibTool(InternalTool):
         return self.PYTHON_VERSION
 
     @override
-    def probe_path(self, module: ModuleType | None = None) -> str:
+    def probe_path(
+        self,
+        module: ModuleType | None = None,
+    ) -> str:
         """Return placeholder."""
         return "<stdlib>"
 
@@ -302,6 +305,47 @@ class NpxTool(ExternalTool):
         path = self._path()
         return (
             (str(path), "--no", self.npx_name or self.name) if path is not None else ()
+        )
+
+
+class BunxTool(ExternalTool):
+    """A tool installed via bun and invoked through ``bunx --no-install``."""
+
+    bunx_name: str = ""
+
+    @override
+    def _path(self) -> Path | None:
+        if self._cached_path is not _UNSET:
+            return self._cached_path  # pyright: ignore[reportReturnType], # ty: ignore[invalid-return-type]
+        bunx = shutil.which("bunx")
+        if not bunx:
+            self._cached_path = None
+            return None
+        # ``--no-install`` is bunx's equivalent of ``npx --no``: fail rather
+        # than silently downloading a package that isn't already present.
+        try:
+            subprocess.run(  # noqa: S603
+                (bunx, "--no-install", self.bunx_name or self.name, "--version"),
+                check=True,
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+                timeout=10,
+            )
+        except (subprocess.SubprocessError, OSError):
+            self._cached_path = None
+            return None
+        bunx_path = Path(bunx)
+        self._cached_path = bunx_path
+        return bunx_path
+
+    @override
+    def exec_args(self) -> tuple[str, ...]:
+        """Args for subprocess."""
+        path = self._path()
+        return (
+            (str(path), "--no-install", self.bunx_name or self.name)
+            if path is not None
+            else ()
         )
 
 

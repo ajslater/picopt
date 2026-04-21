@@ -8,6 +8,7 @@ from picopt.plugins.base.handler import Handler
 from picopt.plugins.base.image import ImageHandler
 from picopt.plugins.base.plugin import Detector, Plugin, Route
 from picopt.plugins.base.tool import (
+    BunxTool,
     ExternalTool,
     InternalTool,
     NpxTool,
@@ -20,6 +21,7 @@ __all__ = (
     "PNGINFO_XMP_KEY",
     "SVG_FORMAT_STR",
     "ArchiveHandler",
+    "BunxTool",
     "ContainerHandler",
     "Detector",
     "ExternalTool",

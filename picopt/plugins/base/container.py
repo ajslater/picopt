@@ -24,7 +24,7 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from copy import copy
-from typing import TYPE_CHECKING, BinaryIO
+from typing import TYPE_CHECKING, Any, BinaryIO
 
 from typing_extensions import override
 
@@ -49,12 +49,12 @@ class ContainerHandler(Handler, ABC):
 
     def __init__(
         self,
-        *args,
+        *args: Any,
         timestamps: Grovestamps | None = None,
         repack_handler_class: type[ContainerHandler] | None = None,
         comment: bytes | None = None,
         optimized_contents: set[PathInfo] | None = None,
-        **kwargs,
+        **kwargs: Any,
     ) -> None:
         """Initialize instance vars."""
         super().__init__(*args, **kwargs)
@@ -98,7 +98,9 @@ class ContainerHandler(Handler, ABC):
         self._do_repack = do_repack
 
     def hydrate_optimized_path_info(
-        self, path_info: PathInfo, report: ReportStats
+        self,
+        path_info: PathInfo,
+        report: ReportStats,
     ) -> None:
         """
         Pull optimized bytes from a completed report back onto path_info.
@@ -109,7 +111,9 @@ class ContainerHandler(Handler, ABC):
         if report.data:
             path_info.set_data(report.data)
 
-    def get_optimized_contents(self) -> set[PathInfo]:
+    def get_optimized_contents(
+        self,
+    ) -> set[PathInfo]:
         """Return optimized contents."""
         return self._optimized_contents
 
@@ -136,10 +140,12 @@ class ContainerHandler(Handler, ABC):
         self._printer.container_repacking_done()
         return buffer
 
-    def clean_for_repack(self):
-        """Wipe state that doesn't pickle or aren't needed for multiprocessing repack."""
-        self._timestamps = None
-        self._skipper = None
+    def __getstate__(self) -> dict[str, Any]:
+        """Drop Grovestamps for worker handoff; its ruamel.yaml Reader owns an un-picklable BufferedReader."""
+        state = self.__dict__.copy()
+        state["_timestamps"] = None
+        state["_skipper"] = None
+        return state
 
     def repack(self) -> ReportStats:
         """Public alias used by the multiprocessing pool dispatcher."""

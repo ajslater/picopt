@@ -24,7 +24,9 @@ from picopt.walk.skip import WalkSkipper
 class Walk:
     """Methods for walking the tree and handling files."""
 
-    def _create_top_paths(self):
+    def _create_top_paths(
+        self,
+    ) -> "tuple[Path, Path]|tuple[Path]":
         """Create and Validate that top paths exist."""
         top_paths = []
         paths: tuple[Path, ...] = tuple(sorted(frozenset(self._config.paths)))

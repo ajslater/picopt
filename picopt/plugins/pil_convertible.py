@@ -130,7 +130,7 @@ _ANIMATED_PIL_FORMATS: tuple[type[Image], ...] = (
 )
 
 
-def _file_format(image_class, *, animated: bool) -> FileFormat:
+def _file_format(image_class: type[Image], *, animated: bool) -> FileFormat:
     return FileFormat(str(image_class.format), lossless=True, animated=animated)
 
 

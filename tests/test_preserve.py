@@ -34,7 +34,7 @@ class TestPreserve(BaseTest):
     SOURCE_DIR: Path = IMAGES_DIR
     FNS: MappingProxyType[str, tuple] = FNS
 
-    def test_preserve(self, fn: str) -> None:
+    def test_preserve(self: "TestPreserve", fn: str) -> None:
         """Test no convert."""
         path = self.TMP_ROOT / fn
         old_stat = path.stat()

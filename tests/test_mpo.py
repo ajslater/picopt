@@ -37,7 +37,7 @@ class TestMPO(BaseTest):
     SOURCE_DIR: Path = IMAGES_DIR
     FNS: MappingProxyType[str, tuple] = FNS
 
-    def test_no_convert(self, fn: str) -> None:
+    def test_no_convert(self: "TestMPO", fn: str) -> None:
         """Test no convert."""
         args = (PROGRAM_NAME, "-rvvv", str(self.TMP_ROOT))
         cli.main(args)
@@ -45,7 +45,7 @@ class TestMPO(BaseTest):
         size = FNS[fn][1]
         assert_size_close(path.stat().st_size, size)
 
-    def test_convert_to_jpeg(self, fn: str) -> None:
+    def test_convert_to_jpeg(self: "TestMPO", fn: str) -> None:
         """Test convert to PNG."""
         args = (PROGRAM_NAME, "-rvvvx", "MPO", "-c", "JPEG", str(self.TMP_ROOT))
         cli.main(args)
@@ -53,7 +53,7 @@ class TestMPO(BaseTest):
         path = (self.TMP_ROOT / fn).with_suffix("." + suffix)
         assert_size_close(path.stat().st_size, size)
 
-    def test_convert_to_jpeg_disable_internal_mozjpeg(self, fn: str) -> None:
+    def test_convert_to_jpeg_disable_internal_mozjpeg(self: "TestMPO", fn: str) -> None:
         """Test convert to Jpeg from MPO."""
         args = (
             PROGRAM_NAME,

@@ -41,6 +41,8 @@ from picopt.plugins.pil_convertible import is_tiff_lossless
 if TYPE_CHECKING:
     from collections.abc import Mapping
 
+    import PIL.ImageFile
+
     from picopt.path import PathInfo
 
 # PIL format-string constants. Hardcoded so this module doesn't have to
@@ -50,13 +52,17 @@ _TIFF_FORMAT_STR = "TIFF"
 
 
 def _extract_image_info_from_image(
-    image, info: dict[str, Any], *, keep_metadata: bool
+    image: PIL.ImageFile.ImageFile, info: dict[str, Any], *, keep_metadata: bool
 ) -> None:
     image_format_str = image.format
     if not image_format_str:
         return
     if keep_metadata:
-        info.update(image.info)
+        str_md = {
+            key: value for key, value in image.info.items() if isinstance(key, str)
+        }
+        info.update(str_md)
+
     animated = getattr(image, "is_animated", False)
     info["animated"] = animated
     if animated and (n_frames := getattr(image, "n_frames", 0)):
@@ -71,7 +77,7 @@ def _extract_image_info_from_image(
         if durations:
             info["durations"] = durations
     with suppress(AttributeError):
-        info["mpinfo"] = image.mpinfo
+        info["mpinfo"] = image.mpinfo  # pyright: ignore[reportAttributeAccessIssue]  # ty: ignore[unresolved-attribute]
 
 
 def _extract_image_info(

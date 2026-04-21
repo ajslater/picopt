@@ -1,7 +1,7 @@
 """
 SVG format plugin.
 
-Owns: SVG. Tool: svgo, either as a real binary or via npx.
+Owns: SVG. Tool: svgo, as a binary or via bunx/npx.
 """
 
 from __future__ import annotations
@@ -11,6 +11,7 @@ from typing import TYPE_CHECKING, BinaryIO
 from typing_extensions import override
 
 from picopt.plugins.base import (
+    BunxTool,
     Detector,
     ExternalTool,
     Handler,
@@ -47,6 +48,13 @@ class SvgoTool(_SvgoMixin, ExternalTool):
     binary = "svgo"
 
 
+class BunxSvgoTool(_SvgoMixin, BunxTool):
+    """svgo run via bunx (no global install needed)."""
+
+    name = "bunx_svgo"
+    bunx_name = "svgo"
+
+
 class NpxSvgoTool(_SvgoMixin, NpxTool):
     """svgo run via npx (no global install needed)."""
 
@@ -61,7 +69,7 @@ class SvgDetector(Detector):
 
     @override
     @classmethod
-    def identify(cls, path_info: PathInfo) -> FileFormat | None:
+    def identify(cls: type[SvgDetector], path_info: PathInfo) -> FileFormat | None:
         return Svg.OUTPUT_FILE_FORMAT if path_info.suffix().lower() == ".svg" else None
 
 
@@ -72,7 +80,9 @@ class Svg(ImageHandler):
     OUTPUT_FILE_FORMAT = FileFormat(OUTPUT_FORMAT_STR, lossless=True, animated=False)
     INPUT_FILE_FORMATS = frozenset({OUTPUT_FILE_FORMAT})
     SUFFIXES: tuple[str, ...] = (".svg",)
-    PIPELINE: tuple[tuple[Tool, ...], ...] = ((SvgoTool(), NpxSvgoTool()),)
+    PIPELINE: tuple[tuple[Tool, ...], ...] = (
+        (SvgoTool(), BunxSvgoTool(), NpxSvgoTool()),
+    )
 
 
 PLUGIN = Plugin(
