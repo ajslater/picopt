@@ -21,9 +21,6 @@ RUN apt-get update \
 COPY --from=bun-source /usr/local/bin/bun /usr/local/bin/bun
 COPY --from=bun-source /usr/local/bin/bunx /usr/local/bin/bunx
 
-# hadolint ignore=DL3016
-RUN bun install --global svgo
-
 WORKDIR /app
 COPY bin bin
 COPY packages packages
