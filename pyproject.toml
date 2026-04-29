@@ -26,7 +26,7 @@ dependencies = [
   "rarfile~=4.0",
   "rich~=15.0",
   "ruamel-yaml>=0.18,<1.0",
-  "treestamps~=4.0",
+  "treestamps~=4.0.1",
   "typing-extensions~=4.13",
 ]
 description = "A multi format lossless image optimizer that uses external tools"

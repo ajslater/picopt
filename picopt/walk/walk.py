@@ -97,8 +97,8 @@ class Walk:
         """Dump timestamps to disk, with a log line per top path."""
         if not self._timestamps:
             return
-        if self._timestamps.dumpf():
-            roots = ", ".join(sorted(str(p) for p in self._timestamps))
+        if dumped := self._timestamps.dumpf():
+            roots = ", ".join(dumped)
             logger.info(f"Dumped timestamps for: {roots}")
 
     def _enqueue_children(
