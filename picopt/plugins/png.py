@@ -94,10 +94,11 @@ class PngOutTool(ExternalTool):
             logger.warning(str(exc))
             return buf
         if not depth or depth > _PNGOUT_DEPTH_MAX or depth < 1:
-            logger.debug(
+            msg = (
                 f"Skip: pngout for {depth} bit PNG: "
                 f"{handler.path_info.full_output_name()}"
             )
+            logger.debug(msg)
             return buf
         keep_arg = ("-k1",) if handler.config.keep_metadata else ("-k0",)
         return self.run_ext((*self.exec_args(), *_PNGOUT_ARGS, *keep_arg), buf)

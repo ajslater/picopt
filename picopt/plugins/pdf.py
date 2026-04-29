@@ -344,10 +344,11 @@ class Pdf(ContainerHandler):
 
         try:
             if refuse := _has_signature(pdf):
-                logger.warning(
+                msg = (
                     f"{self.path_info.full_output_name()}: "
                     "PDF has a digital signature; refusing to modify."
                 )
+                logger.warning(msg)
             else:
                 import pikepdf
 
@@ -356,10 +357,11 @@ class Pdf(ContainerHandler):
                         yield path_info
         except PasswordError:
             refuse = True
-            logger.warning(
+            msg = (
                 f"{self.path_info.full_output_name()}: "
                 "PDF is encrypted; refusing to modify."
             )
+            logger.warning(msg)
         finally:
             with suppress(Exception):
                 pdf.close()

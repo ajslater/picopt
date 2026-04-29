@@ -98,7 +98,7 @@ class Walk:
         if not self._timestamps:
             return
         if dumped := self._timestamps.dumpf():
-            roots = ", ".join(dumped)
+            roots = ", ".join(str(p) for p in dumped)
             logger.info(f"Dumped timestamps for: {roots}")
 
     def _enqueue_children(

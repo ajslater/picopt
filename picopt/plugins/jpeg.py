@@ -104,17 +104,19 @@ class MpoExtractTool(InternalTool):
         try:
             jpeg_data = self._copy_exif(handler, jpeg_data)
         except Exception as exc:
-            logger.warning(
+            msg = (
                 f"could not copy EXIF data for "
                 f"{handler.path_info.full_output_name()}: {exc}"
             )
+            logger.warning(msg)
         try:
             jpeg_data = self._copy_xmp(handler, jpeg_data)
         except Exception as exc:
-            logger.warning(
+            msg = (
                 f"could not copy XMP data for "
                 f"{handler.path_info.full_output_name()}: {exc}"
             )
+            logger.warning(msg)
 
         handler.input_file_format = handler.OUTPUT_FILE_FORMAT
         return BytesIO(jpeg_data)

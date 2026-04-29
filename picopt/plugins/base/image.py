@@ -125,10 +125,11 @@ class ImageHandler(Handler):
         """Run each pipeline stage in sequence."""
         stages = self.selected_stages()
         if not stages:
-            logger.warning(
+            msg = (
                 f"Tried to execute handler {type(self).__name__} with no "
                 "available pipeline stages."
             )
+            logger.warning(msg)
             msg = f"No pipeline stages available for {type(self).__name__}"
             raise ValueError(msg)
         buf: BinaryIO = self.path_info.fp_or_buffer()

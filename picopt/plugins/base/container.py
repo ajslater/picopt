@@ -88,10 +88,11 @@ class ContainerHandler(Handler, ABC):
         if self._do_repack and self._skipper:
             logger.info(f"Optimizing contents in {self.path_info.full_output_name()}")
         else:
-            logger.info(
+            msg = (
                 f"Skip: {self.CONTAINER_TYPE}, contents skipped. "
                 f"Optimizing during repack: {self.path_info.full_output_name()}"
             )
+            logger.info(msg)
 
     # ----------------------------------------------------- task accumulation
 

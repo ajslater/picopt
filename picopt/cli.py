@@ -150,10 +150,11 @@ def get_dot_color_key() -> str:
         console.print(f"\t[{mark.style}]{mark.char}[/{mark.style}]  {label}")
     console.print()
     console.print("[bold blue]doctor mode:[/bold blue]")
-    console.print(
+    doctor_mode = (
         f" [bright_magenta]{PROGRAM_NAME}[/bright_magenta] "
         "[bright_green]doctor[/bright_green]\t\tDoctor mode shows available tools."
     )
+    console.print(doctor_mode)
     return console.end_capture()
 
 

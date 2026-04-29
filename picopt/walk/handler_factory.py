@@ -172,10 +172,11 @@ class HandlerFactory:
             if picked is not None and issubclass(picked, ContainerHandler):
                 repack_handler_class = picked
         except OSError as exc:
-            logger.warning(
+            msg = (
                 f"getting repack container handler for "
                 f"{path_info.full_output_name()}: {exc}"
             )
+            logger.warning(msg)
             print_exc()
 
         if (
@@ -184,10 +185,11 @@ class HandlerFactory:
             and not self._config.list_only
         ):
             fmt = str(file_format) if file_format else "unknown"
-            logger.debug(
+            msg = (
                 f"Skip: ({fmt}) is not an enabled image or container format: "
                 f"{path_info.full_output_name()}"
             )
+            logger.debug(msg)
 
         return repack_handler_class
 

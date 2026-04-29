@@ -108,7 +108,7 @@ class PicoptDoctor:
         required_color = "red" if self.missing_required else "green"
         optional_color = "cyan" if self.missing_optional else "green"
 
-        console.print(
+        summary = (
             "Summary: "
             f"[{required_color}]"
             f"{available_tools}/{self.total_required} required tools available"
@@ -118,14 +118,16 @@ class PicoptDoctor:
             f"[{optional_color}]{self.missing_optional} missing optional"
             f"[/{optional_color}]."
         )
+        console.print(summary)
 
     def checkup(self) -> int:
         """Run the doctor command. Returns a process exit code."""
-        console.print(
+        header = (
             "[yellow]Plugins[/yellow]\n"
             "  [bold cyan]Formats[/bold cyan]\n"
             "    [cyan]Tools[/cyan]"
         )
+        console.print(header)
         for plugin in sorted(registry.iter_plugins(), key=lambda p: p.name):
             self._checkup_plugin(plugin)
             console.print("")
