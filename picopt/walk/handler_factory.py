@@ -23,37 +23,44 @@ Handler-class selection rules for an input :class:`FileFormat` ``ff``:
    PackingArchiveHandler)`` check.
 """
 
-from collections.abc import Mapping
-from traceback import print_exc
-from typing import Any
+from __future__ import annotations
 
-from confuse.templates import AttrDict
-from treestamps import Grovestamps
+from traceback import print_exc
+from typing import TYPE_CHECKING, Any
+
+from loguru import logger
 
 from picopt import plugins as registry
-from picopt.path import PathInfo
 from picopt.plugins.base import (
     ArchiveHandler,
     ContainerHandler,
     Handler,
     ImageHandler,
 )
-from picopt.plugins.base.format import FileFormat
-from picopt.printer import Printer
 from picopt.walk.detect_format import detect_format
+
+if TYPE_CHECKING:
+    from collections.abc import Mapping
+
+    from confuse.templates import AttrDict
+    from treestamps import Grovestamps
+
+    from picopt.log.reporter import Reporter
+    from picopt.path import PathInfo
+    from picopt.plugins.base.format import FileFormat
 
 
 class HandlerFactory:
     """Handler factory for creating format-appropriate handlers."""
 
-    def __init__(self, config: AttrDict, printer: Printer) -> None:
-        """Initialize with config and printer."""
+    def __init__(self, config: AttrDict, reporter: Reporter) -> None:
+        """Initialize with config and reporter."""
         self._config: AttrDict = config
-        self._printer: Printer = printer
+        self._reporter: Reporter = reporter
 
     def _lookup_route(
         self,
-        file_format: "FileFormat | None",
+        file_format: FileFormat | None,
     ) -> tuple | None:
         if not file_format:
             return None
@@ -165,9 +172,9 @@ class HandlerFactory:
             if picked is not None and issubclass(picked, ContainerHandler):
                 repack_handler_class = picked
         except OSError as exc:
-            self._printer.warn(
-                f"getting repack container handler for {path_info.full_output_name()}",
-                exc,
+            logger.warning(
+                f"getting repack container handler for "
+                f"{path_info.full_output_name()}: {exc}"
             )
             print_exc()
 
@@ -177,8 +184,9 @@ class HandlerFactory:
             and not self._config.list_only
         ):
             fmt = str(file_format) if file_format else "unknown"
-            self._printer.skip(
-                f"({fmt}) is not an enabled image or container format.", path_info
+            logger.debug(
+                f"Skip: ({fmt}) is not an enabled image or container format: "
+                f"{path_info.full_output_name()}"
             )
 
         return repack_handler_class
@@ -196,9 +204,7 @@ class HandlerFactory:
                 convert=path_info.convert,
             )
         except OSError as exc:
-            self._printer.warn(
-                f"getting handler for {path_info.full_output_name()}", exc
-            )
+            logger.warning(f"getting handler for {path_info.full_output_name()}: {exc}")
             print_exc()
             file_format = None
             info = {}

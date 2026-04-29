@@ -1,13 +1,18 @@
-"""Statistics for the optimization operations."""
+"""Per-file optimization result record."""
 
-from pathlib import Path
+from __future__ import annotations
+
 from subprocess import CalledProcessError
+from typing import TYPE_CHECKING
 
-from confuse import AttrDict
 from humanize import naturalsize
 
-from picopt.path import PathInfo
-from picopt.printer import Printer
+if TYPE_CHECKING:
+    from pathlib import Path
+
+    from confuse import AttrDict
+
+    from picopt.path import PathInfo
 
 
 class ReportStats:
@@ -82,70 +87,6 @@ class ReportStats:
             report += f"\n{self._TAB}{self.exc!s}"
         return report
 
-    def report(self, printer: Printer) -> None:
-        """Record the percent saved & print it."""
-        # Pass the printer in at the end here to avoid pickling
-        if self.exc:
-            report = self._report_error()
-            printer.error(report, self.exc)
-            return
-        report = self._report_saved()
-        if self.saved > 0:
-            if self.converted:
-                printer.converted(report)
-            else:
-                printer.saved(report)
-        else:
-            printer.lost(report)
-
-
-class Totals:
-    """Totals for final report."""
-
-    def __init__(self, config: AttrDict, printer: Printer) -> None:
-        """Initialize Totals."""
-        self.bytes_in: int = 0
-        self.bytes_out: int = 0
-        self.errors: list[ReportStats] = []
-        self._config: AttrDict = config
-        self._printer: Printer = printer
-
-    def _report_bytes_in(self) -> None:
-        """Report Totals if there were bytes in."""
-        if not self._config.verbose and not self._config.dry_run:
-            return
-        bytes_saved = self.bytes_in - self.bytes_out
-        percent_bytes_saved = bytes_saved / self.bytes_in * 100
-        sign = (percent_bytes_saved > 0) - (percent_bytes_saved < 0)
-        match (bool(self._config.dry_run), sign):
-            case (True, 1):
-                msg = "Could save"
-            case (True, 0):
-                msg = "Could even out for"
-            case (True, -1):
-                msg = "Could lose"
-            case (False, 1):
-                msg = "Saved"
-            case (False, 0):
-                msg = "Evened out"
-            case _:
-                msg = "Lost"
-        natural_saved = naturalsize(bytes_saved)
-        msg += f" a total of {natural_saved} or {percent_bytes_saved:.2f}%"
-        self._printer.saved(msg)
-        if self._config.dry_run:
-            self._printer.final_message("Dry run did not change any files.")
-
-    def report(self) -> None:
-        """Report the total number and percent of bytes saved."""
-        if self._config.verbose == 1:
-            print()  # noqa: T201
-        if self.bytes_in:
-            self._report_bytes_in()
-        else:
-            self._printer.final_message("Didn't optimize any files.")
-
-        if self.errors:
-            self._printer.error_title("Errors with the following files:")
-            for rs in self.errors:
-                rs.report(self._printer)
+    def report_text(self) -> str:
+        """Return the human-readable line for this report."""
+        return self._report_error() if self.exc else self._report_saved()

@@ -12,6 +12,7 @@ import struct
 from io import BytesIO
 from typing import BinaryIO
 
+from loguru import logger
 from PIL.JpegImagePlugin import JpegImageFile
 from PIL.MpoImagePlugin import MpoImageFile
 from typing_extensions import override
@@ -103,16 +104,16 @@ class MpoExtractTool(InternalTool):
         try:
             jpeg_data = self._copy_exif(handler, jpeg_data)
         except Exception as exc:
-            handler._printer.warn(  # noqa: SLF001
-                f"could not copy EXIF data for {handler.path_info.full_output_name()}",
-                exc,
+            logger.warning(
+                f"could not copy EXIF data for "
+                f"{handler.path_info.full_output_name()}: {exc}"
             )
         try:
             jpeg_data = self._copy_xmp(handler, jpeg_data)
         except Exception as exc:
-            handler._printer.warn(  # noqa: SLF001
-                f"could not copy XMP data for {handler.path_info.full_output_name()}",
-                exc,
+            logger.warning(
+                f"could not copy XMP data for "
+                f"{handler.path_info.full_output_name()}: {exc}"
             )
 
         handler.input_file_format = handler.OUTPUT_FILE_FORMAT
