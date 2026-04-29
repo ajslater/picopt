@@ -1,5 +1,9 @@
 # 📰 Picopt News
 
+## v6.3.0
+
+- New progress and logging
+
 ## v6.2.0
 
 - Add bunx support for svgo

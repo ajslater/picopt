@@ -26,6 +26,7 @@ from confuse.templates import (
     Path as ConfusePath,
 )
 from dateutil.parser import parse
+from loguru import logger
 
 from picopt import PROGRAM_NAME
 from picopt import plugins as registry
@@ -114,7 +115,7 @@ class PicoptConfig(ConfigHandlers):
             timestamp = time.mktime(after_dt.timetuple())
         config["after"].set(timestamp)
         after = time.ctime(timestamp)
-        self._printer.config(f"Optimizing after {after}")
+        logger.info(f"Optimizing after {after}")
 
     @staticmethod
     def _get_ignore_regexp(
@@ -138,8 +139,9 @@ class PicoptConfig(ConfigHandlers):
                 ignore_single_stars.append(ignore_single_star)
         return r"|".join(ignore_regexps), ignore_single_stars
 
+    @staticmethod
     def _print_ignores(
-        self, ignore_single_stars: list[str], *, ignore_defaults: bool
+        ignore_single_stars: list[str], *, ignore_defaults: bool
     ) -> None:
         ignore_text = ""
         if ignore_single_stars:
@@ -149,7 +151,7 @@ class PicoptConfig(ConfigHandlers):
                 ignore_text += " "
             ignore_text += "Not ignoring dotfiles."
         if ignore_text:
-            self._printer.config(ignore_text)
+            logger.info(ignore_text)
 
     def _set_ignore(self, config: Subview) -> None:
         """Compute ignore regexp."""
@@ -188,7 +190,7 @@ class PicoptConfig(ConfigHandlers):
                 ts_str = f"Setting a timestamp file at the top of each directory tree: {roots_str}"
             else:
                 ts_str = "Not setting timestamps."
-            self._printer.config(ts_str)
+            logger.info(ts_str)
 
     def get_config(
         self, args: Namespace | None = None, modname: str = PROGRAM_NAME

@@ -30,8 +30,9 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any
 
+from loguru import logger
+
 from picopt import plugins as registry
-from picopt.printer import Printer
 
 if TYPE_CHECKING:
     from collections.abc import Iterable
@@ -96,10 +97,6 @@ def _enabled_handler_classes(
 class ConfigHandlers:
     """Build the per-handler pipeline selection from the merged config."""
 
-    def __init__(self, printer: Printer | None = None) -> None:
-        """Initialize printer."""
-        self._printer: Printer = printer or Printer(2)
-
     @staticmethod
     def _get_config_set(config: Subview, *keys: str) -> frozenset[str]:
         val_list: list[str] = []
@@ -108,8 +105,8 @@ class ConfigHandlers:
                 val_list += config[key].get(list) or []
         return frozenset(val.upper() for val in val_list)
 
+    @staticmethod
     def _print_formats_config(
-        self,
         verbose: int,
         handled_format_strs: set[str],
         convert_format_strs: dict[str, set[str]],
@@ -117,12 +114,12 @@ class ConfigHandlers:
         if not verbose:
             return
         handled_list = ", ".join(sorted(handled_format_strs))
-        self._printer.config(f"Optimizing formats: {handled_list}")
+        logger.info(f"Optimizing formats: {handled_list}")
         for target, sources in convert_format_strs.items():
             if not sources:
                 continue
             from_list = ", ".join(sorted(sources))
-            self._printer.config(f"Converting {from_list} to {target}")
+            logger.info(f"Converting {from_list} to {target}")
 
     def _set_format_handler_stages(
         self,

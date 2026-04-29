@@ -1,15 +1,24 @@
 """Walk Methods for checking and skipping."""
 
-import shutil
-from pathlib import Path
+from __future__ import annotations
 
-from confuse import AttrDict
-from treestamps import Grovestamps, Treestamps
+import shutil
+from typing import TYPE_CHECKING
+
+from loguru import logger
+from treestamps import Treestamps
 
 from picopt import PROGRAM_NAME, WORKING_SUFFIX
 from picopt.path import PathInfo, is_path_ignored
-from picopt.printer import Printer
 from picopt.walk.legacy_timestamps import OLD_TIMESTAMPS_NAME
+
+if TYPE_CHECKING:
+    from pathlib import Path
+
+    from confuse import AttrDict
+    from treestamps import Grovestamps
+
+    from picopt.log.reporter import Reporter
 
 
 class WalkSkipper:
@@ -22,7 +31,7 @@ class WalkSkipper:
     def __init__(
         self,
         config: AttrDict,
-        printer: Printer,
+        reporter: Reporter,
         timestamps: Grovestamps | None = None,
         *,
         in_archive: bool = False,
@@ -31,7 +40,7 @@ class WalkSkipper:
         self._config: AttrDict = config
         self._timestamps: Grovestamps | None = timestamps
         self._in_archive: bool = in_archive
-        self._printer: Printer = printer
+        self._reporter: Reporter = reporter
 
     def set_timestamps(self, timestamps: Grovestamps) -> None:
         """Reset the timestamps after they've been established."""
@@ -41,9 +50,13 @@ class WalkSkipper:
         if not reason:
             return
         if warn:
-            self._printer.warn(reason)
-        else:
-            self._printer.skip(reason, path_info)
+            logger.warning(reason)
+            self._reporter.stats.record_warning(path_info.path, reason)
+            self._reporter.progress.mark_warning()
+            return
+        logger.debug(f"Skip: {reason}: {path_info.full_output_name()}")
+        self._reporter.stats.record_skipped()
+        self._reporter.progress.mark_skipped()
 
     def _is_skippable(self, path_info: PathInfo) -> bool:
         """Handle things that are not optimizable files."""
@@ -80,9 +93,11 @@ class WalkSkipper:
                 shutil.rmtree(path, ignore_errors=True)
             else:
                 path.unlink(missing_ok=True)
-            self._printer.deleted(path)
+            logger.info(f"Deleted {path}")
         except Exception as exc:
-            self._printer.error("", exc)
+            logger.error(f"Could not delete {path}: {exc}")
+            self._reporter.stats.record_error(path, str(exc))
+            self._reporter.progress.mark_error()
 
     def is_walk_file_skip(
         self,
@@ -114,5 +129,7 @@ class WalkSkipper:
 
         mtime = path_info.mtime()
         if result := bool(mtime <= walk_after):
-            self._printer.skip_timestamp("older than timestamp", path_info)
+            logger.debug(f"Skip: older than timestamp: {path_info.full_output_name()}")
+            self._reporter.stats.record_skipped_timestamp()
+            self._reporter.progress.mark_skipped_timestamp()
         return result
