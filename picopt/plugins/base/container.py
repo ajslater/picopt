@@ -35,9 +35,9 @@ from picopt.plugins.base.handler import Handler
 if TYPE_CHECKING:
     from collections.abc import Generator
 
-    from confuse import AttrDict
     from treestamps import Grovestamps
 
+    from picopt.config.settings import PicoptSettings
     from picopt.path import PathInfo
     from picopt.report import ReportStats
     from picopt.walk.skip import WalkSkipper
@@ -61,7 +61,7 @@ class ContainerHandler(Handler, ABC):
         """Initialize instance vars."""
         super().__init__(*args, **kwargs)
         # Config gets mutated for pickling protection during repack.
-        self.config: AttrDict = copy(self.config)
+        self.config: PicoptSettings = copy(self.config)
         self._timestamps: Grovestamps | None = timestamps
         self.repack_handler_class: type[ContainerHandler] | None = repack_handler_class
         # Lazy import to avoid a cycle (walk.skip imports nothing of ours).
