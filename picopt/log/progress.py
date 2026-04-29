@@ -178,6 +178,7 @@ def make_progress(
     console: Console,
     *,
     enabled: bool = True,
+    total: int | None = None,
     description: str = "Optimizing",
 ) -> ProgressContext:
     """Build a ProgressContext, or a no-op when disabled / not a terminal."""
@@ -203,5 +204,5 @@ def make_progress(
         console=console,
         transient=False,
     )
-    task_id = progress.add_task(description, total=None)
+    task_id = progress.add_task(description, total=total)
     return ProgressContext(progress, char_column, task_id, enabled=True)

@@ -19,7 +19,7 @@ from picopt.log.progress import make_progress
 from picopt.log.reporter import Reporter
 from picopt.log.summary import Stats
 from picopt.log.summary import render as render_summary
-from picopt.path import PathInfo
+from picopt.path import PathInfo, is_path_ignored
 from picopt.plugins.base import ContainerHandler, Handler, ImageHandler
 from picopt.report import ReportStats
 from picopt.walk.handler_factory import HandlerFactory
@@ -213,12 +213,74 @@ class Walk:
         )
         self.walk_file(path_info, scheduler)
 
+    def _count(
+        self, path: Path, name: str, *, is_symlink: bool, is_dir: bool
+    ) -> int:
+        """
+        Count progress-bar advances for ``path``.
+
+        Pre-resolved ``is_symlink`` / ``is_dir`` come from ``os.scandir`` on
+        recursive calls so deep trees don't pay an extra ``stat`` per entry.
+        """
+        if (
+            not self._config.recurse
+            or (not self._config.symlinks and is_symlink)
+            or name in WalkSkipper._TIMESTAMPS_FILENAMES  # noqa: SLF001
+            or not is_dir
+            or is_path_ignored(self._config, path, ignore_case=False)
+        ):
+            return 1
+        try:
+            with os.scandir(path) as it:
+                entries = sorted(it, key=lambda e: e.name)
+        except OSError:
+            return 1
+        total = 0
+        for entry in entries:
+            try:
+                total += self._count(
+                    Path(entry.path),
+                    entry.name,
+                    is_symlink=entry.is_symlink(),
+                    is_dir=entry.is_dir(),
+                )
+            except OSError:
+                total += 1
+        return total
+
+    def _count_path(self, path: Path) -> int:
+        """
+        Mirror walk_file's recursion gate to count progress-bar advances.
+
+        Each non-recursing visit produces one progress mark — top-level
+        files, ignored/symlink/timestamp-file dirs, and so on. Recursed
+        directories contribute their children's counts instead. In-archive
+        children don't emit marks (workers can't reach the live region),
+        so they're not counted.
+        """
+        try:
+            return self._count(
+                path,
+                path.name,
+                is_symlink=path.is_symlink(),
+                is_dir=path.is_dir(),
+            )
+        except OSError:
+            return 1
+
+    def _count_total(self) -> int:
+        """Total advance count for the progress bar across all top paths."""
+        return sum(self._count_path(top) for top in self._top_paths)
+
     def walk(self) -> Stats:
         """Optimize all configured files."""
         self._init_timestamps()
 
         max_workers = self._config.jobs or os.cpu_count() or 1
-        progress = make_progress(console, enabled=self._config.verbose > 0)
+        total = self._count_total()
+        progress = make_progress(
+            console, enabled=self._config.verbose > 0, total=total
+        )
         # Replace the no-op progress that the skipper / factory captured at
         # construction time so they advance the real bar.
         self._reporter.progress = progress
