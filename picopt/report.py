@@ -10,8 +10,7 @@ from humanize import naturalsize
 if TYPE_CHECKING:
     from pathlib import Path
 
-    from confuse import AttrDict
-
+    from picopt.config.settings import PicoptSettings
     from picopt.path import PathInfo
 
 
@@ -28,7 +27,7 @@ class ReportStats:
         bytes_out: int = 0,
         exc: BaseException | None = None,
         data: bytes = b"",
-        config: AttrDict | None = None,
+        config: PicoptSettings | None = None,
         path_info: PathInfo | None = None,
         converted: bool = False,
         changed: bool = False,

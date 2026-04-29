@@ -7,11 +7,11 @@ from tarfile import TarInfo
 from typing import cast
 from zipfile import ZipInfo
 
-from confuse import AttrDict
 from py7zr.py7zr import FileInfo as SevenZipInfo
 from rarfile import RarInfo
 
 from picopt.archiveinfo import ArchiveInfo
+from picopt.config.settings import PicoptSettings
 
 _CONTAINER_PATH_DELIMITER = ":"
 _LOWERCASE_TESTNAME = ".picopt_case_sensitive_test"
@@ -33,11 +33,11 @@ def is_path_case_sensitive(dirpath: Path) -> bool:
     return result
 
 
-def is_path_ignored(config: AttrDict, path: Path, *, ignore_case: bool) -> bool:
+def is_path_ignored(config: PicoptSettings, path: Path, *, ignore_case: bool) -> bool:
     """Match path against the ignore regexp."""
-    ignore = config.computed.ignore
-    ignore = ignore.ignore_case if ignore_case else ignore.case
-    return ignore and bool(ignore.search(str(path)))
+    patterns = config.computed.ignore
+    ignore = patterns.ignore_case if ignore_case else patterns.case
+    return ignore is not None and bool(ignore.search(str(path)))
 
 
 class PathInfo:

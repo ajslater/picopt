@@ -40,9 +40,9 @@ if TYPE_CHECKING:
     from collections.abc import Callable
     from pathlib import Path
 
-    from confuse.templates import AttrDict
     from treestamps import Grovestamps
 
+    from picopt.config.settings import PicoptSettings
     from picopt.log.reporter import Reporter
     from picopt.path import PathInfo
     from picopt.plugins.base import ContainerHandler, ImageHandler
@@ -213,12 +213,14 @@ class Scheduler:
     def __init__(
         self,
         *,
-        config: AttrDict,
+        config: PicoptSettings,
         executor: ProcessPoolExecutor,
         timestamps: Grovestamps | None,
         reporter: Reporter,
         max_workers: int,
-        create_repack_handler: Callable[[AttrDict, ContainerHandler], ContainerHandler],
+        create_repack_handler: Callable[
+            [PicoptSettings, ContainerHandler], ContainerHandler
+        ],
         child_enqueue_callback: Callable[
             [Scheduler, ContainerNode, list[PathInfo]], None
         ],
@@ -337,20 +339,25 @@ class Scheduler:
             + len(self._inflight_repack)
         )
 
-    def _submit_ready_job(self) -> None:
-        """Pop and submit one job from the ready dequeue."""
-        job, node = self._ready.popleft()
-        # Skip jobs whose owning node got cancelled while they were queued.
-        if node is not None and node.state is NodeState.CANCELLED:
-            match job:
-                case UnpackJob() | RepackJob():
-                    # node's own job — the cancel walk already decremented
-                    # the parent counter, nothing to do.
-                    pass
-                case _:
-                    node.pending = max(0, node.pending - 1)
-            return
-        fut = self._executor.submit(job.run)
+    @staticmethod
+    def _drop_cancelled_ready_job(job: Job, node: ContainerNode) -> None:
+        """
+        Decrement parent pending counter for a leaf of a cancelled subtree.
+
+        UnpackJob/RepackJob jobs belong to ``node`` itself; the cancel walk
+        already decremented the parent's pending counter for them, so they
+        need no further bookkeeping.
+        """
+        match job:
+            case UnpackJob() | RepackJob():
+                pass
+            case _:
+                node.pending = max(0, node.pending - 1)
+
+    def _track_submitted_job(
+        self, fut: Future, job: Job, node: ContainerNode | None
+    ) -> None:
+        """Record an in-flight future under the right map and update state."""
         match job:
             case UnpackJob():
                 assert node is not None
@@ -364,6 +371,16 @@ class Scheduler:
                 assert node is not None
                 node.state = NodeState.REPACKING
                 self._inflight_repack[fut] = node
+
+    def _submit_ready_job(self) -> None:
+        """Pop and submit one job from the ready dequeue."""
+        job, node = self._ready.popleft()
+        # Skip jobs whose owning node got cancelled while they were queued.
+        if node is not None and node.state is NodeState.CANCELLED:
+            self._drop_cancelled_ready_job(job, node)
+            return
+        fut = self._executor.submit(job.run)
+        self._track_submitted_job(fut, job, node)
 
     def _submit_ready(self) -> None:
         """Submit ready jobs up to the backpressure cap."""
