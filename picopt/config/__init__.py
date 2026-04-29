@@ -16,7 +16,6 @@ from typing import TYPE_CHECKING, Any
 
 from confuse import Configuration, MappingTemplate
 from confuse.templates import (
-    AttrDict,
     Choice,
     Integer,
     Optional,
@@ -214,9 +213,6 @@ class PicoptConfig(ConfigHandlers):
         self._set_timestamps(config_program)
         self.set_format_handler_map(config_program)
         ad = config.get(_build_template())
-        if not isinstance(ad, AttrDict):
-            msg = f"Expected AttrDict from confuse, got {type(ad).__name__}"
-            raise TypeError(msg)
         return _settings_from_attrdict(ad.picopt)
 
 
