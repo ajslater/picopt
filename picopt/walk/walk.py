@@ -213,6 +213,41 @@ class Walk:
         )
         self.walk_file(path_info, scheduler)
 
+    def _count(
+        self, path: Path, name: str, *, is_symlink: bool, is_dir: bool
+    ) -> int:
+        """
+        Count progress-bar advances for ``path``.
+
+        Pre-resolved ``is_symlink`` / ``is_dir`` come from ``os.scandir`` on
+        recursive calls so deep trees don't pay an extra ``stat`` per entry.
+        """
+        if (
+            not self._config.recurse
+            or (not self._config.symlinks and is_symlink)
+            or name in WalkSkipper._TIMESTAMPS_FILENAMES  # noqa: SLF001
+            or not is_dir
+            or is_path_ignored(self._config, path, ignore_case=False)
+        ):
+            return 1
+        try:
+            with os.scandir(path) as it:
+                entries = sorted(it, key=lambda e: e.name)
+        except OSError:
+            return 1
+        total = 0
+        for entry in entries:
+            try:
+                total += self._count(
+                    Path(entry.path),
+                    entry.name,
+                    is_symlink=entry.is_symlink(),
+                    is_dir=entry.is_dir(),
+                )
+            except OSError:
+                total += 1
+        return total
+
     def _count_path(self, path: Path) -> int:
         """
         Mirror walk_file's recursion gate to count progress-bar advances.
@@ -224,19 +259,14 @@ class Walk:
         so they're not counted.
         """
         try:
-            recurse = (
-                self._config.recurse
-                and (self._config.symlinks or not path.is_symlink())
-                and path.name not in WalkSkipper._TIMESTAMPS_FILENAMES  # noqa: SLF001
-                and not is_path_ignored(self._config, path, ignore_case=False)
-                and path.is_dir()
+            return self._count(
+                path,
+                path.name,
+                is_symlink=path.is_symlink(),
+                is_dir=path.is_dir(),
             )
-            if not recurse:
-                return 1
-            entries = sorted(path.iterdir())
         except OSError:
             return 1
-        return sum(self._count_path(child) for child in entries)
 
     def _count_total(self) -> int:
         """Total advance count for the progress bar across all top paths."""
