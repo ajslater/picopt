@@ -27,11 +27,13 @@ __all__ = ("console", "logger", "setup")
 console: Final[Console] = Console(highlight=False)
 
 
-# verbose -> minimum loguru level to emit
+# verbose -> minimum loguru level to emit. Picopt's default verbose is 1,
+# and the old termcolor Printer showed config-style messages
+# (force_verbose=True) at that level — so INFO must be visible at verbose=1
+# or those regress to silent.
 _VERBOSE_LEVEL: Final = {
     0: "ERROR",
-    1: "WARNING",
-    2: "INFO",
+    1: "INFO",
 }
 
 

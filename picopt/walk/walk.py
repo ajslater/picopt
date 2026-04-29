@@ -87,10 +87,20 @@ class Walk:
             program_config=self._config,
             program_config_keys=TIMESTAMPS_CONFIG_KEYS,
         )
+        roots = ", ".join(str(p) for p in self._top_paths)
+        logger.info(f"Loading timestamps for: {roots}")
         self._timestamps = Grovestamps(config)
         for timestamps in self._timestamps.values():
             OldTimestamps(self._config, timestamps).import_old_timestamps()
         self._skipper.set_timestamps(self._timestamps)
+
+    def _dump_timestamps(self) -> None:
+        """Dump timestamps to disk, with a log line per top path."""
+        if not self._timestamps:
+            return
+        roots = ", ".join(str(p) for p in self._timestamps)
+        logger.info(f"Dumping timestamps for: {roots}")
+        self._timestamps.dumpf()
 
     def _enqueue_children(
         self, sched: Scheduler, node: ContainerNode, children: list[PathInfo]
@@ -303,8 +313,7 @@ class Walk:
 
             self._executor.shutdown(wait=True)
 
-        if self._timestamps:
-            self._timestamps.dumpf()
+        self._dump_timestamps()
 
         if self._config.verbose > 0:
             render_summary(self._stats, console, dry_run=bool(self._config.dry_run))
