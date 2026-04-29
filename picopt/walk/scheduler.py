@@ -43,10 +43,9 @@ if TYPE_CHECKING:
     from confuse.templates import AttrDict
     from treestamps import Grovestamps
 
+    from picopt.log.reporter import Reporter
     from picopt.path import PathInfo
     from picopt.plugins.base import ContainerHandler, ImageHandler
-    from picopt.printer import Printer
-    from picopt.report import Totals
 
 
 # --------------------------------------------------------------------- state
@@ -217,8 +216,7 @@ class Scheduler:
         config: AttrDict,
         executor: ProcessPoolExecutor,
         timestamps: Grovestamps | None,
-        totals: Totals,
-        printer: Printer,
+        reporter: Reporter,
         max_workers: int,
         create_repack_handler: Callable[[AttrDict, ContainerHandler], ContainerHandler],
         child_enqueue_callback: Callable[
@@ -229,8 +227,7 @@ class Scheduler:
         self._config = config
         self._executor = executor
         self._timestamps = timestamps
-        self._totals = totals
-        self._printer = printer
+        self._reporter = reporter
         self._max_workers = max_workers
         self._create_repack_handler = create_repack_handler
         self._child_enqueue_callback = child_enqueue_callback
@@ -483,8 +480,7 @@ class Scheduler:
                     parent.had_work = True
             else:
                 # leaf error inside a container — record, keep going
-                self._totals.errors.append(report)
-                report.report(self._printer)
+                self._reporter.record_report(report)
             parent.pending = max(0, parent.pending - 1)
             self._maybe_start_repack(parent)
             return
@@ -497,8 +493,7 @@ class Scheduler:
 
     def _handle_repack_failure(self, report: ReportStats, node: ContainerNode) -> None:
         if self._config.fail_fast:
-            self._totals.errors.append(report)
-            report.report(self._printer)
+            self._reporter.record_report(report)
             self._trigger_fail_fast(report.exc)
             return
         if self._config.fail_fast_container:
@@ -507,14 +502,12 @@ class Scheduler:
             while root.parent is not None:
                 root = root.parent
             self._cancel_subtree(root, reason=report.exc)
-            self._totals.errors.append(report)
-            report.report(self._printer)
+            self._reporter.record_report(report)
             return
         # default rollback: this container becomes one error, parent
         # sees it as a "done" child with no work.
         self._cancel_subtree(node, reason=report.exc)
-        self._totals.errors.append(report)
-        report.report(self._printer)
+        self._reporter.record_report(report)
         if node.parent is not None:
             node.parent.pending = max(0, node.parent.pending - 1)
             self._maybe_start_repack(node.parent)
@@ -592,16 +585,8 @@ class Scheduler:
         self._ready.append((RepackJob(handler=repack_handler), node))
 
     def _record_totals(self, report: ReportStats) -> None:
-        """Accumulate one ReportStats into Totals."""
-        if report.exc:
-            self._totals.errors.append(report)
-            report.report(self._printer)
-            return
-        self._totals.bytes_in += report.bytes_in
-        if report.saved > 0 and not self._config.bigger:
-            self._totals.bytes_out += report.bytes_out
-        else:
-            self._totals.bytes_out += report.bytes_in
+        """Hand one ReportStats off to the Reporter for stats + progress + log."""
+        self._reporter.record_report(report)
 
     def _write_timestamp(self, report: ReportStats, top_path: Path) -> None:
         """Write a timestamp if timestamps are enabled and no error."""

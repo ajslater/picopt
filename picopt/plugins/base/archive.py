@@ -7,6 +7,7 @@ from io import BytesIO
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
+from loguru import logger
 from typing_extensions import override
 
 from picopt.archiveinfo import ArchiveInfo
@@ -94,10 +95,8 @@ class ArchiveHandler(ContainerHandler, ABC):
         while self._optimized_contents:
             path_info = self._optimized_contents.pop()
             self._pack_info_one_file(archive, path_info)
-            self._printer.packed()
         if self.comment:
             archive.comment = self.comment
-            self._printer.packed()
 
     @override
     def pack_into(self) -> BytesIO:
@@ -169,8 +168,8 @@ class ArchiveHandler(ContainerHandler, ABC):
             yaml_str = yaml_str.decode(errors="replace")
             archive_sub_path = self.path_info.archive_pseudo_path() / path.parent
             self._timestamps.loads(archive_sub_path, yaml_str)
-            if self._skipper:
-                self._printer.consumed_timestamp(path)
+            if self._skipper and self.config.verbose > 1:
+                logger.info(f"Consumed picopt timestamp in archive: {path}")
             self._do_repack = True
         return tuple(non_treestamp_entries)
 
@@ -187,7 +186,8 @@ class ArchiveHandler(ContainerHandler, ABC):
     @override
     def walk(self) -> Generator[PathInfo]:
         """Walk an archive's entries."""
-        self._printer.scan_archive(self.path_info)
+        if self.config.verbose > 1:
+            logger.info(f"Scanning archive {self.path_info.full_output_name()}…")
         with self._get_archive() as archive:
             non_treestamp_entries = self._consume_archive_timestamps(archive)
             for archiveinfo in non_treestamp_entries:

@@ -10,7 +10,8 @@ from importlib.metadata import PackageNotFoundError, version
 from typing import TYPE_CHECKING, Any
 
 from confuse.exceptions import ConfigError
-from termcolor import colored
+from loguru import logger
+from rich.console import Console
 from typing_extensions import override
 
 from picopt import PROGRAM_NAME
@@ -18,7 +19,8 @@ from picopt import plugins as registry
 from picopt.config import PicoptConfig
 from picopt.doctor import PicoptDoctor
 from picopt.exceptions import PicoptError
-from picopt.printer import Printer
+from picopt.log import setup as setup_logging
+from picopt.log.styles import MARKS
 from picopt.walk.walk import Walk
 
 if TYPE_CHECKING:
@@ -120,37 +122,39 @@ def _comma_join(
     return result
 
 
-COLOR_KEY = (
-    ("skipped", "dark_grey", []),
-    ("skipped by timestamp", "light_green", ["dark", "bold"]),
-    ("copied archive contents unchanged", "green", []),
-    ("optimized bigger than original", "light_blue", ["bold"]),
-    ("noop on dry run", "dark_grey", ["bold"]),
-    ("optimized in same format", "white", []),
-    ("converted to another format", "light_cyan", []),
-    ("packed into archive", "light_grey", []),
-    ("consumed timestamp from archive", "magenta", []),
-    ("WARNING", "light_yellow", []),
-    ("ERROR", "light_red", []),
+# Order + label for each mark in the help epilogue legend. The char and
+# style are pulled from the centralized MARKS table so the legend can
+# never drift from what the bar actually renders.
+CHAR_KEY_LABELS: tuple[tuple[str, str], ...] = (
+    ("skipped", "skipped"),
+    ("skipped_timestamp", "skipped by timestamp"),
+    ("copied", "copied archive contents unchanged"),
+    ("lost", "optimized bigger than original"),
+    ("dry_run", "noop on dry run"),
+    ("saved", "optimized in same format"),
+    ("converted", "converted to another format"),
+    ("packed", "packed into archive"),
+    ("consumed_timestamp", "consumed timestamp from archive"),
+    ("warning", "WARNING"),
+    ("error", "ERROR"),
 )
 
 
 def get_dot_color_key() -> str:
-    """Create dot color key."""
-    epilogue = "Progress dot colors:\n"
-    for text, color, attrs in COLOR_KEY:
-        epilogue += "\t" + colored(text, color, attrs=attrs) + "\n"
-
-    epilogue += (
-        "\n"
-        + colored("doctor mode:", "blue", attrs=["bold"])
-        + "\n "
-        + colored(PROGRAM_NAME, "light_magenta")
-        + " "
-        + colored("doctor", "light_green")
-        + "\t\tDoctor mode shows available tools.\n"
+    """Create the progress char legend for the help epilogue."""
+    console = Console(record=True, force_terminal=True, no_color=False)
+    console.begin_capture()
+    console.print("[bold]Progress char key:[/bold]")
+    for kind, label in CHAR_KEY_LABELS:
+        mark = MARKS[kind]
+        console.print(f"\t[{mark.style}]{mark.char}[/{mark.style}]  {label}")
+    console.print()
+    console.print("[bold blue]doctor mode:[/bold blue]")
+    console.print(
+        f" [bright_magenta]{PROGRAM_NAME}[/bright_magenta] "
+        "[bright_green]doctor[/bright_green]\t\tDoctor mode shows available tools."
     )
-    return epilogue
+    return console.end_capture()
 
 
 def get_arguments(params: tuple[str, ...] | None = None) -> Namespace:
@@ -381,19 +385,20 @@ def main(args: tuple[str, ...] | None = None) -> None:
     # the existing CLI into subparsers.
     PicoptDoctor.parse_cli()
 
-    printer = Printer(2)
+    setup_logging(2)
     try:
         arguments = get_arguments(args)
-        config = PicoptConfig(printer).get_config(arguments)
+        setup_logging(arguments.picopt.verbose)
+        config = PicoptConfig().get_config(arguments)
         walker = Walk(config)
         walker.walk()
     except ConfigError as err:
-        printer.error("", err)
+        logger.error(str(err))
         sys.exit(78)
     except PicoptError as err:
-        printer.error("", err)
+        logger.error(str(err))
         sys.exit(1)
     except Exception as exc:
-        printer.error("", exc)
+        logger.error(str(exc))
         traceback.print_exception(exc)
         sys.exit(1)

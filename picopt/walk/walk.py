@@ -1,24 +1,34 @@
 """Walk the directory trees and files and call the optimizers."""
 
+from __future__ import annotations
+
 import os
 import traceback
 from concurrent.futures import ProcessPoolExecutor
 from pathlib import Path
+from typing import TYPE_CHECKING
 
-from confuse.templates import AttrDict
+from loguru import logger
 from treestamps import Grovestamps, GrovestampsConfig, Treestamps
 
 from picopt import PROGRAM_NAME
 from picopt.config.consts import TIMESTAMPS_CONFIG_KEYS
 from picopt.exceptions import PicoptError
+from picopt.log import console
+from picopt.log.progress import make_progress
+from picopt.log.reporter import Reporter
+from picopt.log.summary import Stats
+from picopt.log.summary import render as render_summary
 from picopt.path import PathInfo
 from picopt.plugins.base import ContainerHandler, Handler, ImageHandler
-from picopt.printer import Printer
-from picopt.report import ReportStats, Totals
+from picopt.report import ReportStats
 from picopt.walk.handler_factory import HandlerFactory
 from picopt.walk.legacy_timestamps import OldTimestamps
 from picopt.walk.scheduler import ContainerNode, OptimizeLeafJob, Scheduler
 from picopt.walk.skip import WalkSkipper
+
+if TYPE_CHECKING:
+    from confuse.templates import AttrDict
 
 
 class Walk:
@@ -26,7 +36,7 @@ class Walk:
 
     def _create_top_paths(
         self,
-    ) -> "tuple[Path, Path]|tuple[Path]":
+    ) -> tuple[Path, Path] | tuple[Path]:
         """Create and Validate that top paths exist."""
         top_paths = []
         paths: tuple[Path, ...] = tuple(sorted(frozenset(self._config.paths)))
@@ -46,23 +56,31 @@ class Walk:
         """Initialize."""
         self._config: AttrDict = config
         self._top_paths: tuple[Path, ...] = self._create_top_paths()
-        self._printer: Printer = Printer(config.verbose)
-        self._totals: Totals = Totals(config, self._printer)
+        self._stats: Stats = Stats(
+            timestamps_active=bool(config.timestamps or config.after),
+            dry_run_active=bool(config.dry_run),
+        )
+        # Progress is built later (in walk()) once we know we're really running.
+        self._reporter: Reporter = Reporter(
+            stats=self._stats, verbose=int(config.verbose)
+        )
         self._executor: ProcessPoolExecutor = ProcessPoolExecutor(
             max_workers=self._config.jobs or None
         )
         self._timestamps: Grovestamps | None = None  # reassigned at start of run
-        self._skipper: WalkSkipper = WalkSkipper(config, self._printer)
-        self._handler_factory: HandlerFactory = HandlerFactory(config, self._printer)
+        self._skipper: WalkSkipper = WalkSkipper(config, self._reporter)
+        self._handler_factory: HandlerFactory = HandlerFactory(config, self._reporter)
 
     def _init_timestamps(self) -> None:
         """Init timestamps."""
         if not self._config.timestamps:
             return
+        # ``verbose=0`` keeps treestamps's own internal printer silent so it
+        # doesn't bypass the Rich Live region with its own dot output.
         config = GrovestampsConfig(
             paths=self._top_paths,
             program_name=PROGRAM_NAME,
-            verbose=self._config.verbose,
+            verbose=0,
             symlinks=self._config.symlinks,
             ignore=self._config.ignore,
             check_config=self._config.timestamps_check_config,
@@ -167,7 +185,9 @@ class Walk:
 
         handler = self._create_handler(path_info)
         if not handler:
-            self._printer.skip("no handler", path_info)
+            logger.debug(f"Skip: no handler: {path_info.full_output_name()}")
+            self._stats.record_skipped()
+            self._reporter.progress.mark_skipped()
         return handler
 
     def walk_file(self, path_info: PathInfo, scheduler: Scheduler) -> None:
@@ -193,33 +213,37 @@ class Walk:
         )
         self.walk_file(path_info, scheduler)
 
-    def walk(self) -> Totals:
+    def walk(self) -> Stats:
         """Optimize all configured files."""
         self._init_timestamps()
 
         max_workers = self._config.jobs or os.cpu_count() or 1
+        progress = make_progress(console, enabled=self._config.verbose > 0)
+        # Replace the no-op progress that the skipper / factory captured at
+        # construction time so they advance the real bar.
+        self._reporter.progress = progress
+
         scheduler = Scheduler(
             config=self._config,
             executor=self._executor,
             timestamps=self._timestamps,
-            totals=self._totals,
-            printer=self._printer,
+            reporter=self._reporter,
             max_workers=max_workers,
             create_repack_handler=HandlerFactory.create_repack_handler,
             child_enqueue_callback=self._enqueue_children,
         )
 
-        for top_path in self._top_paths:
-            self._walk_top_path(top_path, scheduler)
+        with progress:
+            for top_path in self._top_paths:
+                self._walk_top_path(top_path, scheduler)
 
-        scheduler.run()
+            scheduler.run()
 
-        self._executor.shutdown(wait=True)
-
-        self._printer.done()
+            self._executor.shutdown(wait=True)
 
         if self._timestamps:
             self._timestamps.dumpf()
 
-        self._totals.report()
-        return self._totals
+        if self._config.verbose > 0:
+            render_summary(self._stats, console, dry_run=bool(self._config.dry_run))
+        return self._stats

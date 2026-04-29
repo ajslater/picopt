@@ -69,6 +69,7 @@ from tempfile import mkdtemp, mkstemp
 from types import MappingProxyType
 from typing import TYPE_CHECKING, Any, BinaryIO
 
+from loguru import logger
 from PIL.WebPImagePlugin import WebPImageFile
 from typing_extensions import override
 
@@ -598,7 +599,8 @@ class WebPMuxAnimatedLossless(WebPAnimatedLossless):
 
     @override
     def walk(self) -> Generator[PathInfo]:
-        self._printer.container_unpacking(self.path_info)
+        if self.config.verbose > 1:
+            logger.info(f"Unpacking {self.path_info.full_output_name()}…")
         n_frames = self.info["n_frames"]
         self._frame_index_width = len(str(n_frames))
         self._ensure_tmp_dir()
