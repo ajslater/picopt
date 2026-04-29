@@ -1,5 +1,9 @@
 # 📰 Picopt News
 
+## v6.3.1
+
+- Fix frame duration erroneously extracted for MPO format, causing an error.
+
 ## v6.3.0
 
 - New progress and logging
