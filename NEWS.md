@@ -1,5 +1,10 @@
 # 📰 Picopt News
 
+## v6.4.0
+
+- Update to Confuse 2.2.0
+- Introduce new PicoptSettings class to type the config.
+
 ## v6.3.1
 
 - Fix frame duration erroneously extracted for MPO format, causing an error.
