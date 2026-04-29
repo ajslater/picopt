@@ -75,32 +75,31 @@ class Walk:
         """Init timestamps."""
         if not self._config.timestamps:
             return
-        # ``verbose=0`` keeps treestamps's own internal printer silent so it
-        # doesn't bypass the Rich Live region with its own dot output.
         config = GrovestampsConfig(
             paths=self._top_paths,
             program_name=PROGRAM_NAME,
-            verbose=0,
+            verbose=self._config.verbose,
             symlinks=self._config.symlinks,
             ignore=self._config.ignore,
             check_config=self._config.timestamps_check_config,
             program_config=self._config,
             program_config_keys=TIMESTAMPS_CONFIG_KEYS,
         )
-        roots = ", ".join(str(p) for p in self._top_paths)
-        logger.info(f"Loading timestamps for: {roots}")
         self._timestamps = Grovestamps(config)
         for timestamps in self._timestamps.values():
             OldTimestamps(self._config, timestamps).import_old_timestamps()
         self._skipper.set_timestamps(self._timestamps)
+        if tps := tuple(tp for tp in self._top_paths if tp in self._timestamps):
+            roots = ", ".join(sorted(str(p) for p in tps))
+            logger.info(f"Loaded timestamps for: {roots}")
 
     def _dump_timestamps(self) -> None:
         """Dump timestamps to disk, with a log line per top path."""
         if not self._timestamps:
             return
-        roots = ", ".join(str(p) for p in self._timestamps)
-        logger.info(f"Dumping timestamps for: {roots}")
-        self._timestamps.dumpf()
+        if self._timestamps.dumpf():
+            roots = ", ".join(sorted(str(p) for p in self._timestamps))
+            logger.info(f"Dumped timestamps for: {roots}")
 
     def _enqueue_children(
         self, sched: Scheduler, node: ContainerNode, children: list[PathInfo]
@@ -223,9 +222,7 @@ class Walk:
         )
         self.walk_file(path_info, scheduler)
 
-    def _count(
-        self, path: Path, name: str, *, is_symlink: bool, is_dir: bool
-    ) -> int:
+    def _count(self, path: Path, name: str, *, is_symlink: bool, is_dir: bool) -> int:
         """
         Count progress-bar advances for ``path``.
 
@@ -288,9 +285,7 @@ class Walk:
 
         max_workers = self._config.jobs or os.cpu_count() or 1
         total = self._count_total()
-        progress = make_progress(
-            console, enabled=self._config.verbose > 0, total=total
-        )
+        progress = make_progress(console, enabled=self._config.verbose > 0, total=total)
         # Replace the no-op progress that the skipper / factory captured at
         # construction time so they advance the real bar.
         self._reporter.progress = progress
