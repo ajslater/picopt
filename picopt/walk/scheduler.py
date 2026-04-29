@@ -40,9 +40,9 @@ if TYPE_CHECKING:
     from collections.abc import Callable
     from pathlib import Path
 
-    from confuse.templates import AttrDict
     from treestamps import Grovestamps
 
+    from picopt.config.settings import PicoptSettings
     from picopt.log.reporter import Reporter
     from picopt.path import PathInfo
     from picopt.plugins.base import ContainerHandler, ImageHandler
@@ -213,12 +213,14 @@ class Scheduler:
     def __init__(
         self,
         *,
-        config: AttrDict,
+        config: PicoptSettings,
         executor: ProcessPoolExecutor,
         timestamps: Grovestamps | None,
         reporter: Reporter,
         max_workers: int,
-        create_repack_handler: Callable[[AttrDict, ContainerHandler], ContainerHandler],
+        create_repack_handler: Callable[
+            [PicoptSettings, ContainerHandler], ContainerHandler
+        ],
         child_enqueue_callback: Callable[
             [Scheduler, ContainerNode, list[PathInfo]], None
         ],

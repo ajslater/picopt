@@ -31,8 +31,7 @@ from picopt.plugins.base.format import FileFormat
 from picopt.report import ReportStats
 
 if TYPE_CHECKING:
-    from confuse.templates import AttrDict
-
+    from picopt.config.settings import PicoptSettings
     from picopt.plugins.base.tool import Tool
 
 # Used by working-path construction for nested-container scratch files.
@@ -69,12 +68,12 @@ class Handler(ABC):
 
     def __init__(
         self,
-        config: AttrDict,
+        config: PicoptSettings,
         path_info: PathInfo,
         input_file_format: FileFormat,
     ) -> None:
         """Initialize handler state."""
-        self.config: AttrDict = config
+        self.config: PicoptSettings = config
         self.path_info: PathInfo = path_info
 
         # Paths
