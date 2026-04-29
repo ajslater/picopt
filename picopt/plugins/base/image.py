@@ -13,6 +13,7 @@ from io import BufferedReader, BytesIO
 from types import MappingProxyType
 from typing import TYPE_CHECKING, Any, BinaryIO
 
+from loguru import logger
 from PIL import Image
 from PIL.PngImagePlugin import PngImageFile, PngInfo
 from PIL.WebPImagePlugin import WebPImageFile
@@ -124,12 +125,11 @@ class ImageHandler(Handler):
         """Run each pipeline stage in sequence."""
         stages = self.selected_stages()
         if not stages:
-            self._printer.warn(
-                (
-                    f"Tried to execute handler {type(self).__name__} with no "
-                    "available pipeline stages."
-                ),
+            msg = (
+                f"Tried to execute handler {type(self).__name__} with no "
+                "available pipeline stages."
             )
+            logger.warning(msg)
             msg = f"No pipeline stages available for {type(self).__name__}"
             raise ValueError(msg)
         buf: BinaryIO = self.path_info.fp_or_buffer()

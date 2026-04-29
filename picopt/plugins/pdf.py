@@ -66,8 +66,8 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any
 from zipfile import ZipInfo
 
+from loguru import logger
 from pikepdf.exceptions import PasswordError
-from termcolor import cprint
 from typing_extensions import override
 
 from picopt.path import PathInfo
@@ -317,8 +317,7 @@ class Pdf(ContainerHandler):
             raw = obj.read_raw_bytes()
         except Exception:
             # One weird object should never sink the whole file.
-            if self.config.verbose > 1:
-                cprint(f"Read error on PDF object {obj}, continuing.", "yellow")
+            logger.warning(f"Read error on PDF object {obj}, continuing.")
             return None
         if not raw:
             return None
@@ -332,7 +331,8 @@ class Pdf(ContainerHandler):
         Non-DCT streams are not yielded — qpdf will recompress them
         structurally during pack_into(), no per-child handler needed.
         """
-        self._printer.scan_archive(self.path_info)
+        if self.config.verbose > 1:
+            logger.info(f"Scanning archive {self.path_info.full_output_name()}…")
         try:
             pdf = self._open_input_pdf()
         except Exception as exc:
@@ -348,7 +348,7 @@ class Pdf(ContainerHandler):
                     f"{self.path_info.full_output_name()}: "
                     "PDF has a digital signature; refusing to modify."
                 )
-                cprint(msg, "yellow")
+                logger.warning(msg)
             else:
                 import pikepdf
 
@@ -361,7 +361,7 @@ class Pdf(ContainerHandler):
                 f"{self.path_info.full_output_name()}: "
                 "PDF is encrypted; refusing to modify."
             )
-            cprint(msg, "yellow")
+            logger.warning(msg)
         finally:
             with suppress(Exception):
                 pdf.close()
@@ -393,14 +393,14 @@ class Pdf(ContainerHandler):
             original_raw = obj.read_raw_bytes()
             optimized = child.data()
         except Exception:
-            cprint(f"Error reading PDF image: {obj}", "red")
+            logger.error(f"Error reading PDF image: {obj}")
             raise
         if not optimized or len(optimized) >= len(original_raw):
             return 0
         try:
             obj.write(optimized, filter=pikepdf.Name.DCTDecode)
         except Exception:
-            cprint(f"Error writing optimized PDF image {obj}", "red")
+            logger.error(f"Error writing optimized PDF image {obj}")
             raise
         return 1
 

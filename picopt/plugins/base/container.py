@@ -26,8 +26,10 @@ from abc import ABC, abstractmethod
 from copy import copy
 from typing import TYPE_CHECKING, Any, BinaryIO
 
+from loguru import logger
 from typing_extensions import override
 
+from picopt.log.reporter import Reporter
 from picopt.plugins.base.handler import Handler
 
 if TYPE_CHECKING:
@@ -65,8 +67,10 @@ class ContainerHandler(Handler, ABC):
         # Lazy import to avoid a cycle (walk.skip imports nothing of ours).
         from picopt.walk.skip import WalkSkipper
 
+        # Workers don't share Reporter with the parent process; give each
+        # worker a detached one so skip-side counters/marks become no-ops.
         self._skipper: WalkSkipper | None = WalkSkipper(
-            self.config, self._printer, timestamps, in_archive=True
+            self.config, Reporter(), timestamps, in_archive=True
         )
         self.comment: bytes | None = comment
         self._optimized_contents: set[PathInfo] = optimized_contents or set()
@@ -79,13 +83,16 @@ class ContainerHandler(Handler, ABC):
         """Yield each child PathInfo in the container."""
 
     def _walk_finish(self) -> None:
-        if not self.config.verbose:
+        if self.config.verbose < 2:  # noqa: PLR2004
             return
-        self._printer.done()
         if self._do_repack and self._skipper:
-            self._printer.optimize_container(self.path_info)
+            logger.info(f"Optimizing contents in {self.path_info.full_output_name()}")
         else:
-            self._printer.skip_container(self.CONTAINER_TYPE, self.path_info)
+            msg = (
+                f"Skip: {self.CONTAINER_TYPE}, contents skipped. "
+                f"Optimizing during repack: {self.path_info.full_output_name()}"
+            )
+            logger.info(msg)
 
     # ----------------------------------------------------- task accumulation
 
@@ -135,10 +142,9 @@ class ContainerHandler(Handler, ABC):
         if not self.CAN_PACK:
             msg = f"{type(self).__name__} cannot optimize a non-packing container."
             raise NotImplementedError(msg)
-        self._printer.container_repacking(self.path_info)
-        buffer = self.pack_into()
-        self._printer.container_repacking_done()
-        return buffer
+        if self.config.verbose > 1:
+            logger.info(f"Repacking {self.path_info.full_output_name()}…")
+        return self.pack_into()
 
     def __getstate__(self) -> dict[str, Any]:
         """Drop Grovestamps for worker handoff; its ruamel.yaml Reader owns an un-picklable BufferedReader."""

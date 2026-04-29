@@ -12,6 +12,7 @@ from io import BytesIO
 from types import MappingProxyType
 from typing import TYPE_CHECKING, Any
 
+from loguru import logger
 from PIL.PngImagePlugin import PngImageFile
 from typing_extensions import override
 
@@ -90,10 +91,14 @@ class PngOutTool(ExternalTool):
         try:
             depth = png_bit_depth(buf)
         except ValueError as exc:
-            handler._printer.warn(str(exc))  # noqa: SLF001
+            logger.warning(str(exc))
             return buf
         if not depth or depth > _PNGOUT_DEPTH_MAX or depth < 1:
-            handler._printer.skip(f"pngout for {depth} bit PNG", handler.path_info)  # noqa: SLF001
+            msg = (
+                f"Skip: pngout for {depth} bit PNG: "
+                f"{handler.path_info.full_output_name()}"
+            )
+            logger.debug(msg)
             return buf
         keep_arg = ("-k1",) if handler.config.keep_metadata else ("-k0",)
         return self.run_ext((*self.exec_args(), *_PNGOUT_ARGS, *keep_arg), buf)

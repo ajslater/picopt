@@ -8,14 +8,15 @@ exclusively a JPEG concern.
 
 from __future__ import annotations
 
+import struct
 from io import BytesIO
 from typing import BinaryIO
 
+from loguru import logger
 from PIL.JpegImagePlugin import JpegImageFile
 from PIL.MpoImagePlugin import MpoImageFile
 from typing_extensions import override
 
-from picopt.pillow.jpeg_xmp import set_jpeg_xmp
 from picopt.plugins.base import (
     Handler,
     ImageHandler,
@@ -31,11 +32,37 @@ MPO_FILE_FORMAT = FileFormat(str(MpoImageFile.format), lossless=False, animated=
 
 _MPO_METADATA: int = 45058
 _MPO_TYPE_PRIMARY: str = "Baseline MP Primary Image"
+_APP1_SECTION_DELIMITER = b"\x00"
+_XAP_MARKER = b"http://ns.adobe.com/xap/1.0/"
+_SOI_MARKER = b"\xff\xd8"
+_EOI_MARKER = b"\xff\xe1"
 
 
 # ---------------------------------------------------------------------------
 # Tools
 # ---------------------------------------------------------------------------
+
+
+def set_jpeg_xmp(jpeg_data: bytes, xmp: str) -> bytes:
+    """Insert xmp data into jpeg."""
+    jpeg_buffer = bytearray(jpeg_data)
+    soi_index = jpeg_buffer.find(_SOI_MARKER)
+    if soi_index == -1:
+        reason = "SOI marker not found in JPEG buffer."
+        raise ValueError(reason)
+    xmp_bytes = (
+        _XAP_MARKER
+        + _APP1_SECTION_DELIMITER
+        + xmp.encode("utf-8")
+        + _APP1_SECTION_DELIMITER
+    )
+    return (
+        bytes(jpeg_buffer[: soi_index + len(_SOI_MARKER)])
+        + _EOI_MARKER
+        + struct.pack("<H", len(xmp_bytes) + len(_EOI_MARKER))
+        + xmp_bytes
+        + bytes(jpeg_buffer[soi_index + len(_SOI_MARKER) :])
+    )
 
 
 class MozJpegTool(InternalTool):
@@ -77,17 +104,19 @@ class MpoExtractTool(InternalTool):
         try:
             jpeg_data = self._copy_exif(handler, jpeg_data)
         except Exception as exc:
-            handler._printer.warn(  # noqa: SLF001
-                f"could not copy EXIF data for {handler.path_info.full_output_name()}",
-                exc,
+            msg = (
+                f"could not copy EXIF data for "
+                f"{handler.path_info.full_output_name()}: {exc}"
             )
+            logger.warning(msg)
         try:
             jpeg_data = self._copy_xmp(handler, jpeg_data)
         except Exception as exc:
-            handler._printer.warn(  # noqa: SLF001
-                f"could not copy XMP data for {handler.path_info.full_output_name()}",
-                exc,
+            msg = (
+                f"could not copy XMP data for "
+                f"{handler.path_info.full_output_name()}: {exc}"
             )
+            logger.warning(msg)
 
         handler.input_file_format = handler.OUTPUT_FILE_FORMAT
         return BytesIO(jpeg_data)

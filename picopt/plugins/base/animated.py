@@ -13,6 +13,7 @@ from statistics import mean
 from types import MappingProxyType
 from typing import TYPE_CHECKING, Any, BinaryIO
 
+from loguru import logger
 from PIL import Image, ImageSequence
 from PIL.PngImagePlugin import PngImageFile
 from typing_extensions import override
@@ -107,7 +108,8 @@ class ImageAnimated(ImageHandler, ContainerHandler, ABC):  # pyright: ignore[rep
     @override
     def walk(self) -> Generator[PathInfo]:
         """Yield each frame as a child PathInfo."""
-        self._printer.container_unpacking(self.path_info)
+        if self.config.verbose > 1:
+            logger.info(f"Unpacking {self.path_info.full_output_name()}…")
         frame_info: dict[str, Any] = {}
         index = 0
         with Image.open(self.original_path) as image:
@@ -154,7 +156,6 @@ class ImageAnimated(ImageHandler, ContainerHandler, ABC):  # pyright: ignore[rep
         for path_info in sorted_frames[1:]:
             frame = Image.open(BytesIO(path_info.data()))
             append_images.append(frame)
-            self._printer.packed()
 
         info = dict(self.prepare_info(self.OUTPUT_FORMAT_STR))
         info.update(self.frame_info)

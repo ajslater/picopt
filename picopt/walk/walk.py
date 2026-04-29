@@ -1,24 +1,34 @@
 """Walk the directory trees and files and call the optimizers."""
 
+from __future__ import annotations
+
 import os
 import traceback
 from concurrent.futures import ProcessPoolExecutor
 from pathlib import Path
+from typing import TYPE_CHECKING
 
-from confuse.templates import AttrDict
+from loguru import logger
 from treestamps import Grovestamps, GrovestampsConfig, Treestamps
 
 from picopt import PROGRAM_NAME
 from picopt.config.consts import TIMESTAMPS_CONFIG_KEYS
 from picopt.exceptions import PicoptError
-from picopt.path import PathInfo
+from picopt.log import console
+from picopt.log.progress import make_progress
+from picopt.log.reporter import Reporter
+from picopt.log.summary import Stats
+from picopt.log.summary import render as render_summary
+from picopt.path import PathInfo, is_path_ignored
 from picopt.plugins.base import ContainerHandler, Handler, ImageHandler
-from picopt.printer import Printer
-from picopt.report import ReportStats, Totals
+from picopt.report import ReportStats
 from picopt.walk.handler_factory import HandlerFactory
 from picopt.walk.legacy_timestamps import OldTimestamps
 from picopt.walk.scheduler import ContainerNode, OptimizeLeafJob, Scheduler
 from picopt.walk.skip import WalkSkipper
+
+if TYPE_CHECKING:
+    from confuse.templates import AttrDict
 
 
 class Walk:
@@ -26,7 +36,7 @@ class Walk:
 
     def _create_top_paths(
         self,
-    ) -> "tuple[Path, Path]|tuple[Path]":
+    ) -> tuple[Path, Path] | tuple[Path]:
         """Create and Validate that top paths exist."""
         top_paths = []
         paths: tuple[Path, ...] = tuple(sorted(frozenset(self._config.paths)))
@@ -46,14 +56,20 @@ class Walk:
         """Initialize."""
         self._config: AttrDict = config
         self._top_paths: tuple[Path, ...] = self._create_top_paths()
-        self._printer: Printer = Printer(config.verbose)
-        self._totals: Totals = Totals(config, self._printer)
+        self._stats: Stats = Stats(
+            timestamps_active=bool(config.timestamps or config.after),
+            dry_run_active=bool(config.dry_run),
+        )
+        # Progress is built later (in walk()) once we know we're really running.
+        self._reporter: Reporter = Reporter(
+            stats=self._stats, verbose=int(config.verbose)
+        )
         self._executor: ProcessPoolExecutor = ProcessPoolExecutor(
             max_workers=self._config.jobs or None
         )
         self._timestamps: Grovestamps | None = None  # reassigned at start of run
-        self._skipper: WalkSkipper = WalkSkipper(config, self._printer)
-        self._handler_factory: HandlerFactory = HandlerFactory(config, self._printer)
+        self._skipper: WalkSkipper = WalkSkipper(config, self._reporter)
+        self._handler_factory: HandlerFactory = HandlerFactory(config, self._reporter)
 
     def _init_timestamps(self) -> None:
         """Init timestamps."""
@@ -73,6 +89,17 @@ class Walk:
         for timestamps in self._timestamps.values():
             OldTimestamps(self._config, timestamps).import_old_timestamps()
         self._skipper.set_timestamps(self._timestamps)
+        if tps := tuple(tp for tp in self._top_paths if tp in self._timestamps):
+            roots = ", ".join(sorted(str(p) for p in tps))
+            logger.info(f"Loaded timestamps for: {roots}")
+
+    def _dump_timestamps(self) -> None:
+        """Dump timestamps to disk, with a log line per top path."""
+        if not self._timestamps:
+            return
+        if dumped := self._timestamps.dumpf():
+            roots = ", ".join(str(p) for p in dumped)
+            logger.info(f"Dumped timestamps for: {roots}")
 
     def _enqueue_children(
         self, sched: Scheduler, node: ContainerNode, children: list[PathInfo]
@@ -167,7 +194,9 @@ class Walk:
 
         handler = self._create_handler(path_info)
         if not handler:
-            self._printer.skip("no handler", path_info)
+            logger.debug(f"Skip: no handler: {path_info.full_output_name()}")
+            self._stats.record_skipped()
+            self._reporter.progress.mark_skipped()
         return handler
 
     def walk_file(self, path_info: PathInfo, scheduler: Scheduler) -> None:
@@ -193,33 +222,94 @@ class Walk:
         )
         self.walk_file(path_info, scheduler)
 
-    def walk(self) -> Totals:
+    def _count(self, path: Path, name: str, *, is_symlink: bool, is_dir: bool) -> int:
+        """
+        Count progress-bar advances for ``path``.
+
+        Pre-resolved ``is_symlink`` / ``is_dir`` come from ``os.scandir`` on
+        recursive calls so deep trees don't pay an extra ``stat`` per entry.
+        """
+        if (
+            not self._config.recurse
+            or (not self._config.symlinks and is_symlink)
+            or name in WalkSkipper._TIMESTAMPS_FILENAMES  # noqa: SLF001
+            or not is_dir
+            or is_path_ignored(self._config, path, ignore_case=False)
+        ):
+            return 1
+        try:
+            with os.scandir(path) as it:
+                entries = sorted(it, key=lambda e: e.name)
+        except OSError:
+            return 1
+        total = 0
+        for entry in entries:
+            try:
+                total += self._count(
+                    Path(entry.path),
+                    entry.name,
+                    is_symlink=entry.is_symlink(),
+                    is_dir=entry.is_dir(),
+                )
+            except OSError:
+                total += 1
+        return total
+
+    def _count_path(self, path: Path) -> int:
+        """
+        Mirror walk_file's recursion gate to count progress-bar advances.
+
+        Each non-recursing visit produces one progress mark — top-level
+        files, ignored/symlink/timestamp-file dirs, and so on. Recursed
+        directories contribute their children's counts instead. In-archive
+        children don't emit marks (workers can't reach the live region),
+        so they're not counted.
+        """
+        try:
+            return self._count(
+                path,
+                path.name,
+                is_symlink=path.is_symlink(),
+                is_dir=path.is_dir(),
+            )
+        except OSError:
+            return 1
+
+    def _count_total(self) -> int:
+        """Total advance count for the progress bar across all top paths."""
+        return sum(self._count_path(top) for top in self._top_paths)
+
+    def walk(self) -> Stats:
         """Optimize all configured files."""
         self._init_timestamps()
 
         max_workers = self._config.jobs or os.cpu_count() or 1
+        total = self._count_total()
+        progress = make_progress(console, enabled=self._config.verbose > 0, total=total)
+        # Replace the no-op progress that the skipper / factory captured at
+        # construction time so they advance the real bar.
+        self._reporter.progress = progress
+
         scheduler = Scheduler(
             config=self._config,
             executor=self._executor,
             timestamps=self._timestamps,
-            totals=self._totals,
-            printer=self._printer,
+            reporter=self._reporter,
             max_workers=max_workers,
             create_repack_handler=HandlerFactory.create_repack_handler,
             child_enqueue_callback=self._enqueue_children,
         )
 
-        for top_path in self._top_paths:
-            self._walk_top_path(top_path, scheduler)
+        with progress:
+            for top_path in self._top_paths:
+                self._walk_top_path(top_path, scheduler)
 
-        scheduler.run()
+            scheduler.run()
 
-        self._executor.shutdown(wait=True)
+            self._executor.shutdown(wait=True)
 
-        self._printer.done()
+        self._dump_timestamps()
 
-        if self._timestamps:
-            self._timestamps.dumpf()
-
-        self._totals.report()
-        return self._totals
+        if self._config.verbose > 0:
+            render_summary(self._stats, console, dry_run=bool(self._config.dry_run))
+        return self._stats

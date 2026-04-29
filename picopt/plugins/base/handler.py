@@ -28,7 +28,6 @@ from typing import TYPE_CHECKING, BinaryIO, Final
 from picopt import WORKING_SUFFIX
 from picopt.path import DOUBLE_SUFFIX, PathInfo
 from picopt.plugins.base.format import FileFormat
-from picopt.printer import Printer
 from picopt.report import ReportStats
 
 if TYPE_CHECKING:
@@ -77,7 +76,6 @@ class Handler(ABC):
         """Initialize handler state."""
         self.config: AttrDict = config
         self.path_info: PathInfo = path_info
-        self._printer: Printer = Printer(self.config.verbose)
 
         # Paths
         self.original_path: Path = path_info.path or Path(path_info.name())
@@ -232,13 +230,10 @@ class Handler(ABC):
         """Run optimize() and convert the result into a ReportStats record."""
         try:
             buffer = self.optimize()
-            report_stats = self._cleanup_after_optimize(buffer)
+            return self._cleanup_after_optimize(buffer)
         except Exception as exc:
             traceback.print_exc()
-            report_stats = self.error(exc)
-        if self.config.verbose:
-            report_stats.report(self._printer)
-        return report_stats
+            return self.error(exc)
 
     # --------------------------------------------------------------- cleanup
 
