@@ -1,11 +1,17 @@
 """import picopt 2.0 timestamps to Treestamps."""
 
-from pathlib import Path
+from __future__ import annotations
 
-from confuse.templates import AttrDict
-from treestamps import Treestamps
+from typing import TYPE_CHECKING
 
 from picopt.path import is_path_case_sensitive, is_path_ignored
+
+if TYPE_CHECKING:
+    from pathlib import Path
+
+    from treestamps import Treestamps
+
+    from picopt.config.settings import PicoptSettings
 
 OLD_TIMESTAMPS_NAME = ".picopt_timestamp"
 
@@ -55,9 +61,9 @@ class OldTimestamps:
         self._import_old_parent_timestamps()
         self._import_old_child_timestamps()
 
-    def __init__(self, config: AttrDict, timestamps: Treestamps) -> None:
+    def __init__(self, config: PicoptSettings, timestamps: Treestamps) -> None:
         """Hold new timestamp object."""
-        self._config: AttrDict = config
+        self._config: PicoptSettings = config
         self._timestamps: Treestamps = timestamps
         self._root_dir: Path = self._timestamps.root_dir
         self._ignore_case: bool = is_path_case_sensitive(self._root_dir)

@@ -589,14 +589,14 @@ wheels = [
 
 [[package]]
 name = "confuse"
-version = "2.1.0"
+version = "2.2.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "pyyaml" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/24/01/7d24e53986959b6148da5d0ffbce3e02e844110ac126bb42f46cad645ec9/confuse-2.1.0.tar.gz", hash = "sha256:abb9674a99c7a6efaef84e2fc84403ecd2dd304503073ff76ea18ed4176e218d", size = 22748, upload-time = "2025-10-27T10:22:01.251Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/a2/a6/444c7376439851ce1d07932f88b707910d4605466d1c313621943c738112/confuse-2.2.0.tar.gz", hash = "sha256:35c1b53e81be125f441bee535130559c935917b26aeaa61289010cd1f55c2b9e", size = 52496, upload-time = "2026-01-28T10:40:16.042Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/ea/6a/60e8d4a0e48559ff05aa7c9c65449c3a29c32ffe9f0690dc94b526c73c1f/confuse-2.1.0-py3-none-any.whl", hash = "sha256:502be1299aa6bf7c48f7719f56795720c073fb28550c0c7a37394366c9d30316", size = 25049, upload-time = "2025-10-27T10:22:00.08Z" },
+    { url = "https://files.pythonhosted.org/packages/65/5d/a1333543a1b40fcbb08830330f6ea7bc7a3bda387a7a0c2bead534f5c01f/confuse-2.2.0-py3-none-any.whl", hash = "sha256:470c6aa1a5008c8d740267f2ad574e3a715b6dd873c1e5f8778b7f7abb954722", size = 27904, upload-time = "2026-01-28T10:40:14.508Z" },
 ]
 
 [[package]]
@@ -1660,7 +1660,7 @@ test = [
 
 [package.metadata]
 requires-dist = [
-    { name = "confuse", specifier = "~=2.1.0,<2.2.0" },
+    { name = "confuse", specifier = "~=2.2.0" },
     { name = "defusedxml", specifier = ">=0.7,<1.0" },
     { name = "filetype", specifier = "~=1.2" },
     { name = "humanize", specifier = "~=4.12" },

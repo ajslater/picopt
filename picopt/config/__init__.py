@@ -12,7 +12,7 @@ from __future__ import annotations
 import re
 import time
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from confuse import Configuration, MappingTemplate
 from confuse.templates import (
@@ -31,6 +31,11 @@ from loguru import logger
 from picopt import PROGRAM_NAME
 from picopt import plugins as registry
 from picopt.config.handlers import ConfigHandlers
+from picopt.config.settings import (
+    ComputedSettings,
+    IgnorePatterns,
+    PicoptSettings,
+)
 
 if TYPE_CHECKING:
     from argparse import Namespace
@@ -194,8 +199,8 @@ class PicoptConfig(ConfigHandlers):
 
     def get_config(
         self, args: Namespace | None = None, modname: str = PROGRAM_NAME
-    ) -> AttrDict:
-        """Get the config dict, layering env and args over defaults."""
+    ) -> PicoptSettings:
+        """Get the validated, frozen settings layered from defaults/env/args."""
         config = Configuration(PROGRAM_NAME, modname=modname, read=False)
         config.read()
         if args and getattr(args, "picopt", None) and args.picopt.config:
@@ -209,4 +214,51 @@ class PicoptConfig(ConfigHandlers):
         self._set_timestamps(config_program)
         self.set_format_handler_map(config_program)
         ad = config.get(_build_template())
-        return ad.picopt
+        if not isinstance(ad, AttrDict):
+            msg = f"Expected AttrDict from confuse, got {type(ad).__name__}"
+            raise TypeError(msg)
+        return _settings_from_attrdict(ad.picopt)
+
+
+def _settings_from_attrdict(ad: Any) -> PicoptSettings:
+    """
+    Build a frozen :class:`PicoptSettings` from a validated AttrDict.
+
+    Confuse's ``MappingTemplate`` already normalized the leaf types, but
+    confuse 2.2.0's typed ``AttrDict[str, object]`` widens every attribute
+    read back to ``object``. ``ad`` is typed as ``Any`` here so this
+    conversion — the one place that knows the schema — can read fields
+    directly. Downstream code consumes the typed ``PicoptSettings`` only.
+    """
+    computed = ad.computed
+    ignore = computed.ignore
+    return PicoptSettings(
+        after=ad.after,
+        bigger=ad.bigger,
+        convert_to=tuple(ad.convert_to) if ad.convert_to is not None else None,
+        disable_programs=tuple(ad.disable_programs),
+        dry_run=ad.dry_run,
+        extra_formats=tuple(ad.extra_formats) if ad.extra_formats is not None else None,
+        fail_fast=ad.fail_fast,
+        fail_fast_container=ad.fail_fast_container,
+        formats=tuple(ad.formats),
+        ignore=tuple(ad.ignore),
+        ignore_defaults=ad.ignore_defaults,
+        jobs=ad.jobs,
+        keep_metadata=ad.keep_metadata,
+        list_only=ad.list_only,
+        near_lossless=ad.near_lossless,
+        paths=tuple(ad.paths),
+        png_max=ad.png_max,
+        preserve=ad.preserve,
+        recurse=ad.recurse,
+        symlinks=ad.symlinks,
+        timestamps=ad.timestamps,
+        timestamps_check_config=ad.timestamps_check_config,
+        timestamps_ignore_archive_entry_mtimes=ad.timestamps_ignore_archive_entry_mtimes,
+        verbose=ad.verbose,
+        computed=ComputedSettings(
+            handler_stages=dict(computed.handler_stages),
+            ignore=IgnorePatterns(case=ignore.case, ignore_case=ignore.ignore_case),
+        ),
+    )

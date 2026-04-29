@@ -28,7 +28,7 @@ from picopt.walk.scheduler import ContainerNode, OptimizeLeafJob, Scheduler
 from picopt.walk.skip import WalkSkipper
 
 if TYPE_CHECKING:
-    from confuse.templates import AttrDict
+    from picopt.config.settings import PicoptSettings
 
 
 class Walk:
@@ -52,9 +52,9 @@ class Walk:
             raise PicoptError(msg)
         return tuple(top_paths)
 
-    def __init__(self, config: AttrDict) -> None:
+    def __init__(self, config: PicoptSettings) -> None:
         """Initialize."""
-        self._config: AttrDict = config
+        self._config: PicoptSettings = config
         self._top_paths: tuple[Path, ...] = self._create_top_paths()
         self._stats: Stats = Stats(
             timestamps_active=bool(config.timestamps or config.after),
@@ -75,6 +75,13 @@ class Walk:
         """Init timestamps."""
         if not self._config.timestamps:
             return
+        # Treestamps filters program_config by program_config_keys; build a
+        # shallow Mapping with only those keys so we don't have to serialize
+        # the whole frozen dataclass (especially the computed sub-fields,
+        # which carry re.Pattern objects and class-keyed dicts).
+        program_config = {
+            key: getattr(self._config, key) for key in TIMESTAMPS_CONFIG_KEYS
+        }
         config = GrovestampsConfig(
             paths=self._top_paths,
             program_name=PROGRAM_NAME,
@@ -82,7 +89,7 @@ class Walk:
             symlinks=self._config.symlinks,
             ignore=self._config.ignore,
             check_config=self._config.timestamps_check_config,
-            program_config=self._config,
+            program_config=program_config,
             program_config_keys=TIMESTAMPS_CONFIG_KEYS,
         )
         self._timestamps = Grovestamps(config)
@@ -98,7 +105,7 @@ class Walk:
         if not self._timestamps:
             return
         if dumped := self._timestamps.dumpf():
-            roots = ", ".join(dumped)
+            roots = ", ".join(str(p) for p in dumped)
             logger.info(f"Dumped timestamps for: {roots}")
 
     def _enqueue_children(

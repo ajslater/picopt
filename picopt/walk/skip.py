@@ -15,9 +15,9 @@ from picopt.walk.legacy_timestamps import OLD_TIMESTAMPS_NAME
 if TYPE_CHECKING:
     from pathlib import Path
 
-    from confuse import AttrDict
     from treestamps import Grovestamps
 
+    from picopt.config.settings import PicoptSettings
     from picopt.log.reporter import Reporter
 
 
@@ -30,14 +30,14 @@ class WalkSkipper:
 
     def __init__(
         self,
-        config: AttrDict,
+        config: PicoptSettings,
         reporter: Reporter,
         timestamps: Grovestamps | None = None,
         *,
         in_archive: bool = False,
     ) -> None:
         """Initialize."""
-        self._config: AttrDict = config
+        self._config: PicoptSettings = config
         self._timestamps: Grovestamps | None = timestamps
         self._in_archive: bool = in_archive
         self._reporter: Reporter = reporter

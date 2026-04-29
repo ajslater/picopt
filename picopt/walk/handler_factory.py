@@ -42,9 +42,9 @@ from picopt.walk.detect_format import detect_format
 if TYPE_CHECKING:
     from collections.abc import Mapping
 
-    from confuse.templates import AttrDict
     from treestamps import Grovestamps
 
+    from picopt.config.settings import PicoptSettings
     from picopt.log.reporter import Reporter
     from picopt.path import PathInfo
     from picopt.plugins.base.format import FileFormat
@@ -53,9 +53,9 @@ if TYPE_CHECKING:
 class HandlerFactory:
     """Handler factory for creating format-appropriate handlers."""
 
-    def __init__(self, config: AttrDict, reporter: Reporter) -> None:
+    def __init__(self, config: PicoptSettings, reporter: Reporter) -> None:
         """Initialize with config and reporter."""
-        self._config: AttrDict = config
+        self._config: PicoptSettings = config
         self._reporter: Reporter = reporter
 
     def _lookup_route(
@@ -249,7 +249,7 @@ class HandlerFactory:
 
     @staticmethod
     def create_repack_handler(
-        config: AttrDict,
+        config: PicoptSettings,
         unpack_handler: ContainerHandler,
     ) -> ContainerHandler:
         """Return a handler to repack the container using the optimized contents."""
