@@ -55,6 +55,7 @@ dev = [
   "infer-types~=1.0.0",
   "neovim>=0.3,<1.0",
   "pyclean~=3.1",
+  "pypi-cleanup~=0.1.10",
   "semver~=3.0.4",
   "toml-cli>=0.7,<1.0",
   "tomlkit~=0.14",
