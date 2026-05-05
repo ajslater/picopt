@@ -25,6 +25,7 @@ dependencies = [
   "python-dateutil~=2.8",
   "rarfile~=4.0",
   "rich~=15.0",
+  "rich-argparse~=1.8",
   "ruamel-yaml>=0.18,<1.0",
   "treestamps~=4.0.1",
   "typing-extensions~=4.13",
@@ -35,7 +36,7 @@ readme = "README.md"
 requires-python = ">=3.10"
 license = { text = "GPL-3.0-only" }
 name = "picopt"
-version = "6.4.0"
+version = "6.5.0"
 [[project.authors]]
 name = "AJ Slater"
 email = "aj@slater.net"
@@ -55,6 +56,7 @@ dev = [
   "infer-types~=1.0.0",
   "neovim>=0.3,<1.0",
   "pyclean~=3.1",
+  "pypi-cleanup~=0.1.10",
   "semver~=3.0.4",
   "toml-cli>=0.7,<1.0",
   "tomlkit~=0.14",

@@ -1,5 +1,13 @@
 # 📰 Picopt News
 
+## v6.5.0
+
+- Faster PDF detection
+- Faster metadata extraction
+- Defer animated image duration doublecheck to only WebP animated and only at
+  handler time. Speeds up other animated images.
+- Use rich_argparse to format cli help.
+
 ## v6.4.0
 
 - Update to Confuse 2.2.0

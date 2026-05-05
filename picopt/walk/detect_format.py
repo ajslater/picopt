@@ -29,10 +29,9 @@ Two-phase dispatch:
 from __future__ import annotations
 
 from contextlib import suppress
-from typing import TYPE_CHECKING, Any, BinaryIO
+from typing import TYPE_CHECKING, Any
 
-from loguru import logger
-from PIL import Image, ImageSequence, UnidentifiedImageError
+from PIL import Image, UnidentifiedImageError
 
 from picopt import plugins as registry
 from picopt.pillow.webp_lossless import is_lossless as _webp_is_lossless
@@ -48,30 +47,8 @@ if TYPE_CHECKING:
 
 # PIL format-string constants. Hardcoded so this module doesn't have to
 # import the per-format PIL ImageFile subclasses just to read a string.
-_MPO_FORMAT_STR = "MPO"
 _TIFF_FORMAT_STR = "TIFF"
 _WEBP_FORMAT_STR = "WEBP"
-
-
-def _extract_animated_durations(image: ImageFile, info: dict[str, Any]):
-    durations = {}
-    if image.format == _MPO_FORMAT_STR:
-        return durations
-
-    # PIL frequently fails to populate per-frame durations on WebP
-    if image.format != _WEBP_FORMAT_STR and info.get("durations"):
-        return durations
-
-    try:
-        for frame_index, frame in enumerate(ImageSequence.Iterator(image), start=1):
-            duration = frame.info.get("duration", None)
-            if duration is not None:
-                durations[frame_index] = duration
-    except Exception as exc:
-        msg = "Error extracting animated frame duration"
-        logger.warning(msg)
-        logger.exception(exc)
-    return durations
 
 
 def _extract_image_info_from_image(
@@ -90,8 +67,6 @@ def _extract_image_info_from_image(
     info["animated"] = animated
     if animated and (n_frames := getattr(image, "n_frames", 0)):
         info["n_frames"] = n_frames
-        if durations := _extract_animated_durations(image, info):
-            info["durations"] = durations
     with suppress(AttributeError):
         info["mpinfo"] = image.mpinfo  # pyright: ignore[reportAttributeAccessIssue]  # ty: ignore[unresolved-attribute]
 
@@ -99,28 +74,17 @@ def _extract_image_info_from_image(
 def _extract_image_info(
     path_info: PathInfo, *, keep_metadata: bool
 ) -> tuple[str | None, dict[str, Any]]:
-    """
-    Get image format and info from a file via PIL.
-
-    PIL's ``verify()`` consumes the image; we have to open the file twice:
-    once to verify, then again to read the format and info.
-    """
+    """Get image format and info from a file via PIL."""
     image_format_str: str | None = None
     info: dict[str, Any] = {}
     try:
-        fp = path_info.path_or_buffer()
-        with Image.open(fp) as image:
-            image.verify()
-        image.close()  # animated images keep the fp open after the with-block
-        if isinstance(fp, BinaryIO):
-            fp.close()
-        fp = path_info.path_or_buffer()
-        with Image.open(fp) as image:
+        # Read metadata before verify(): for some Path-opened formats
+        # (notably GIF), PIL closes its internal fp during verify(), which
+        # then breaks lazy attrs like is_animated and n_frames.
+        with Image.open(path_info.path_or_buffer()) as image:
             image_format_str = image.format
             _extract_image_info_from_image(image, info, keep_metadata=keep_metadata)
-        image.close()
-        if isinstance(fp, BinaryIO):
-            fp.close()
+            image.verify()
     except UnidentifiedImageError:
         pass
     return image_format_str, info
