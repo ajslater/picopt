@@ -158,9 +158,11 @@ def get_dot_color_key() -> str:
         (
             "",
             "[argparse.groups]doctor mode:[/argparse.groups]",
-            f" [argparse.prog]{PROGRAM_NAME}[/argparse.prog]"
-            " [argparse.args]doctor[/argparse.args]"
-            "\t\tDoctor mode shows available tools.",
+            (
+                f" [argparse.prog]{PROGRAM_NAME}[/argparse.prog]"
+                " [argparse.args]doctor[/argparse.args]"
+                "\t\tDoctor mode shows available tools."
+            ),
         )
     )
     return "\n".join(lines)
