@@ -636,9 +636,7 @@ class WebPMuxAnimatedLossless(WebPAnimatedLossless):
             msg = "No frames found — is this actually an animated WebP?"
             raise ValueError(msg)
 
-        self._durations = self.info.get("durations") or self._read_durations(
-            len(extracted)
-        )
+        self._durations = self._read_durations(len(extracted))
         self._do_repack = True
         self._walk_finish()
 
