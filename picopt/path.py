@@ -19,6 +19,9 @@ _UPPERCASE_TESTNAME: str = _LOWERCASE_TESTNAME.upper()
 # Special case only supported double suffixes prevents heaps of false signals for
 # other multiple suffix types.
 DOUBLE_SUFFIX = ".tar"
+# Bytes cached for header_bytes(). Sized to cover the largest magic-byte
+# window any current detector needs (PDF: 1024) with margin.
+_HEADER_BYTES_CACHE_SIZE = 4096
 
 
 def is_path_case_sensitive(dirpath: Path) -> bool:
@@ -122,6 +125,7 @@ class PathInfo:
 
         # optionally computed
         self._data: bytes | None = data
+        self._header_bytes: bytes | None = None
 
         # always computed
         self._is_dir: bool | None = None
@@ -168,6 +172,21 @@ class PathInfo:
     def set_data(self, data: bytes) -> None:
         """Set the data."""
         self._data = data
+
+    def header_bytes(self) -> bytes:
+        """First _HEADER_BYTES_CACHE_SIZE bytes of the file, cached for detectors."""
+        if self._header_bytes is None:
+            if self._data is not None:
+                self._header_bytes = self._data[:_HEADER_BYTES_CACHE_SIZE]
+            elif self.path and not self.path.is_dir():
+                try:
+                    with self.path.open("rb") as fp:
+                        self._header_bytes = fp.read(_HEADER_BYTES_CACHE_SIZE)
+                except OSError:
+                    self._header_bytes = b""
+            else:
+                self._header_bytes = b""
+        return self._header_bytes
 
     def _buffer(self) -> BytesIO:
         """Return a seekable buffer for the data."""

@@ -62,7 +62,6 @@ from __future__ import annotations
 
 from contextlib import suppress
 from io import BytesIO
-from pathlib import Path
 from typing import TYPE_CHECKING, Any
 from zipfile import ZipInfo
 
@@ -85,6 +84,7 @@ from picopt.plugins.base.format import FileFormat
 if TYPE_CHECKING:
     from collections.abc import Generator
     from io import BufferedReader
+    from pathlib import Path
 
     from picopt.report import ReportStats
 
@@ -108,18 +108,7 @@ class PdfDetector(Detector):
     @classmethod
     def identify(cls: type[PdfDetector], path_info: PathInfo) -> FileFormat | None:
         """Return Pdf.OUTPUT_FILE_FORMAT iff the file starts with %PDF-."""
-        target = path_info.path_or_buffer()
-        if isinstance(target, Path):
-            try:
-                with target.open("rb") as fp:
-                    head = fp.read(_PDF_MAGIC_WINDOW)
-            except OSError:
-                return None
-        else:
-            target.seek(0)
-            head = target.read(_PDF_MAGIC_WINDOW)
-            target.seek(0)
-        if _PDF_MAGIC in head:
+        if _PDF_MAGIC in path_info.header_bytes()[:_PDF_MAGIC_WINDOW]:
             return Pdf.OUTPUT_FILE_FORMAT
         return None
 
