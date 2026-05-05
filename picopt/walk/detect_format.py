@@ -31,8 +31,7 @@ from __future__ import annotations
 from contextlib import suppress
 from typing import TYPE_CHECKING, Any, BinaryIO
 
-from loguru import logger
-from PIL import Image, ImageSequence, UnidentifiedImageError
+from PIL import Image, UnidentifiedImageError
 
 from picopt import plugins as registry
 from picopt.pillow.webp_lossless import is_lossless as _webp_is_lossless
@@ -48,30 +47,8 @@ if TYPE_CHECKING:
 
 # PIL format-string constants. Hardcoded so this module doesn't have to
 # import the per-format PIL ImageFile subclasses just to read a string.
-_MPO_FORMAT_STR = "MPO"
 _TIFF_FORMAT_STR = "TIFF"
 _WEBP_FORMAT_STR = "WEBP"
-
-
-def _extract_animated_durations(image: ImageFile, info: dict[str, Any]):
-    durations = {}
-    if image.format == _MPO_FORMAT_STR:
-        return durations
-
-    # PIL frequently fails to populate per-frame durations on WebP
-    if image.format != _WEBP_FORMAT_STR and info.get("durations"):
-        return durations
-
-    try:
-        for frame_index, frame in enumerate(ImageSequence.Iterator(image), start=1):
-            duration = frame.info.get("duration", None)
-            if duration is not None:
-                durations[frame_index] = duration
-    except Exception as exc:
-        msg = "Error extracting animated frame duration"
-        logger.warning(msg)
-        logger.exception(exc)
-    return durations
 
 
 def _extract_image_info_from_image(
@@ -90,8 +67,6 @@ def _extract_image_info_from_image(
     info["animated"] = animated
     if animated and (n_frames := getattr(image, "n_frames", 0)):
         info["n_frames"] = n_frames
-        if durations := _extract_animated_durations(image, info):
-            info["durations"] = durations
     with suppress(AttributeError):
         info["mpinfo"] = image.mpinfo  # pyright: ignore[reportAttributeAccessIssue]  # ty: ignore[unresolved-attribute]
 
