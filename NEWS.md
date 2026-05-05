@@ -1,5 +1,9 @@
 # 📰 Picopt News
 
+## v6.5.0
+
+- Use rich_argparse to format cli help.
+
 ## v6.4.0
 
 - Update to Confuse 2.2.0
