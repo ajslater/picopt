@@ -29,7 +29,7 @@ Two-phase dispatch:
 from __future__ import annotations
 
 from contextlib import suppress
-from typing import TYPE_CHECKING, Any, BinaryIO
+from typing import TYPE_CHECKING, Any
 
 from PIL import Image, UnidentifiedImageError
 
@@ -74,28 +74,17 @@ def _extract_image_info_from_image(
 def _extract_image_info(
     path_info: PathInfo, *, keep_metadata: bool
 ) -> tuple[str | None, dict[str, Any]]:
-    """
-    Get image format and info from a file via PIL.
-
-    PIL's ``verify()`` consumes the image; we have to open the file twice:
-    once to verify, then again to read the format and info.
-    """
+    """Get image format and info from a file via PIL."""
     image_format_str: str | None = None
     info: dict[str, Any] = {}
     try:
-        fp = path_info.path_or_buffer()
-        with Image.open(fp) as image:
-            image.verify()
-        image.close()  # animated images keep the fp open after the with-block
-        if isinstance(fp, BinaryIO):
-            fp.close()
-        fp = path_info.path_or_buffer()
-        with Image.open(fp) as image:
+        # Read metadata before verify(): for some Path-opened formats
+        # (notably GIF), PIL closes its internal fp during verify(), which
+        # then breaks lazy attrs like is_animated and n_frames.
+        with Image.open(path_info.path_or_buffer()) as image:
             image_format_str = image.format
             _extract_image_info_from_image(image, info, keep_metadata=keep_metadata)
-        image.close()
-        if isinstance(fp, BinaryIO):
-            fp.close()
+            image.verify()
     except UnidentifiedImageError:
         pass
     return image_format_str, info
