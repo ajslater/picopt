@@ -2,16 +2,17 @@
 
 from __future__ import annotations
 
+import re
 import sys
 import traceback
-from argparse import Action, ArgumentParser, Namespace, RawDescriptionHelpFormatter
+from argparse import Action, ArgumentParser, Namespace
 from functools import cache
 from importlib.metadata import PackageNotFoundError, version
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, ClassVar
 
 from confuse.exceptions import ConfigError
 from loguru import logger
-from rich.console import Console
+from rich_argparse import RawDescriptionRichHelpFormatter
 from typing_extensions import override
 
 from picopt import PROGRAM_NAME
@@ -141,21 +142,44 @@ CHAR_KEY_LABELS: tuple[tuple[str, str], ...] = (
 
 
 def get_dot_color_key() -> str:
-    """Create the progress char legend for the help epilogue."""
-    console = Console(record=True, force_terminal=True, no_color=False)
-    console.begin_capture()
-    console.print("[bold]Progress char key:[/bold]")
+    """
+    Build the progress-char legend + doctor-mode hint for the help epilog.
+
+    Returns Rich markup; ``RawDescriptionRichHelpFormatter`` parses it
+    against the formatter's ``styles`` theme, so ``[argparse.prog]`` and
+    ``[argparse.args]`` resolve to the same colors used elsewhere in
+    the rendered help.
+    """
+    lines = ["[argparse.groups]Progress char key:[/argparse.groups]"]
     for kind, label in CHAR_KEY_LABELS:
         mark = MARKS[kind]
-        console.print(f"\t[{mark.style}]{mark.char}[/{mark.style}]  {label}")
-    console.print()
-    console.print("[bold blue]doctor mode:[/bold blue]")
-    doctor_mode = (
-        f" [bright_magenta]{PROGRAM_NAME}[/bright_magenta] "
-        "[bright_green]doctor[/bright_green]\t\tDoctor mode shows available tools."
+        lines.append(f"\t[{mark.style}]{mark.char}[/{mark.style}]  {label}")
+    lines.extend(
+        (
+            "",
+            "[argparse.groups]doctor mode:[/argparse.groups]",
+            f" [argparse.prog]{PROGRAM_NAME}[/argparse.prog]"
+            " [argparse.args]doctor[/argparse.args]"
+            "\t\tDoctor mode shows available tools.",
+        )
     )
-    console.print(doctor_mode)
-    return console.end_capture()
+    return "\n".join(lines)
+
+
+class PicoptHelpFormatter(RawDescriptionRichHelpFormatter):
+    """
+    Rich help formatter that highlights picopt format names.
+
+    Format strings mentioned in help text (e.g. ``PNG``, ``ZIP``,
+    ``WEBP``) are colorized with the same style as the metavars they
+    correspond to (``FORMATS``, ``EXTRA_FORMATS``, ...), so the help
+    reads coherently.
+    """
+
+    highlights: ClassVar[list[str]] = [
+        *RawDescriptionRichHelpFormatter.highlights,
+        rf"\b(?P<metavar>{'|'.join(re.escape(f) for f in registry.all_format_strs())})\b",
+    ]
 
 
 def get_arguments(params: tuple[str, ...] | None = None) -> Namespace:
@@ -170,7 +194,7 @@ def get_arguments(params: tuple[str, ...] | None = None) -> Namespace:
     parser = ArgumentParser(
         description=description,
         epilog=epilog,
-        formatter_class=RawDescriptionHelpFormatter,
+        formatter_class=PicoptHelpFormatter,
     )
     parser.add_argument(
         "-r",

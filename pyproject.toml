@@ -25,6 +25,7 @@ dependencies = [
   "python-dateutil~=2.8",
   "rarfile~=4.0",
   "rich~=15.0",
+  "rich-argparse~=1.8",
   "ruamel-yaml>=0.18,<1.0",
   "treestamps~=4.0.1",
   "typing-extensions~=4.13",
