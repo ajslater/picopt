@@ -36,7 +36,7 @@ class Walk:
 
     def _create_top_paths(
         self,
-    ) -> tuple[Path, Path] | tuple[Path]:
+    ) -> tuple[Path, ...]:
         """Create and Validate that top paths exist."""
         top_paths = []
         paths: tuple[Path, ...] = tuple(sorted(frozenset(self._config.paths)))
