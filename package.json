@@ -41,14 +41,6 @@
       },
       {
         "files": [
-          "**/*Dockerfile"
-        ],
-        "options": {
-          "parser": "sh"
-        }
-      },
-      {
-        "files": [
           "**/nginx/http.d/**/*.conf"
         ],
         "options": {
