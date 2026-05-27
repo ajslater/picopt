@@ -1,5 +1,10 @@
 # 📰 Picopt News
 
+## v6.5.1
+
+- Fix data loss when converting without external tools.
+- Show platform-specific install hints in `picopt doctor` for missing tools.
+
 ## v6.5.0
 
 - Faster PDF detection
