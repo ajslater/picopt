@@ -67,9 +67,12 @@ def _select_pipeline_for_handler(
             if status.available:
                 picked = tool
                 break
-        if picked is None:
+        if picked is not None:
+            chosen.append(picked)
+        elif all(not tool.required for tool in tier):
+            continue
+        else:
             return None
-        chosen.append(picked)
     return tuple(chosen)
 
 

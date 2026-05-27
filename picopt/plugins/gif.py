@@ -16,6 +16,7 @@ from picopt.plugins.base import (
     ExternalTool,
     Handler,
     ImageHandler,
+    PILSaveTool,
     Plugin,
     Route,
     Tool,
@@ -63,9 +64,7 @@ class _GifBase(ImageHandler):
     OUTPUT_FORMAT_STR = str(GifImageFile.format)
     SUFFIXES: tuple[str, ...] = (".gif",)
     PIPELINE: tuple[tuple[Tool, ...], ...] = (
-        # gifsicle is preferred; PIL save acts as a fallback for the rare
-        # case where the user disables gifsicle but still wants GIF handled.
-        (GifsicleTool(),),
+        (GifsicleTool(), PILSaveTool(target_format_str="GIF", name="pil2gif")),
     )
     PIL2_KWARGS: MappingProxyType[str, Any] = MappingProxyType({"optimize": True})
 

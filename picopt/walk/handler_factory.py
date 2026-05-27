@@ -84,10 +84,7 @@ class HandlerFactory:
         """
         if not handler_cls.PIPELINE:
             return True
-        stages = self._config.computed.handler_stages.get(handler_cls)
-        if stages is None:
-            return False
-        return len(stages) == len(handler_cls.PIPELINE)
+        return handler_cls in self._config.computed.handler_stages
 
     def _pick_handler_class_choose_converter(
         self, candidate: type[Handler], convert_to: frozenset[str]

@@ -4,6 +4,7 @@ __pycache__
 .claude
 .git
 .venv
+*.sh
 *Dockerfile
 /node_modules
 /test-results

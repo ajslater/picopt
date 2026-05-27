@@ -2,7 +2,7 @@
 # Tag old version as latest
 set -euo pipefail
 
-if [[ "$#" -lt 3 ]]; then
+if [[ $# -lt 3 ]]; then
   echo "Usage: $0 <registry> <image_name> <version_tag>"
   echo "Example: $0 ghcr.io ajslater/codex 1.10.3"
   exit 1
@@ -15,7 +15,7 @@ SOURCE_TAG=$3
 TARGET_TAG="latest"
 
 # Ensure DOCKER_PASS and DOCKER_USER are set in your environment
-if [[ -z "$DOCKER_PASS" || -z "$DOCKER_USER" ]]; then
+if [[ -z $DOCKER_PASS || -z $DOCKER_USER ]]; then
   echo "Error: DOCKER_PASS and DOCKER_USER environment variables must be set."
   exit 1
 fi
