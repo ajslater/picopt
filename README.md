@@ -166,9 +166,7 @@ install these first
 <!-- eslint-skip -->
 
 ```sh
-brew install gifsicle mozjpeg svgo webp
-
-ln -s $(brew --prefix)/opt/mozjpeg/bin/jpegtran /usr/local/bin/mozjpeg
+brew install gifsicle svgo webp
 ```
 
 #### Debian / Ubuntu, Windows Linux Subsystem
@@ -179,16 +177,7 @@ ln -s $(brew --prefix)/opt/mozjpeg/bin/jpegtran /usr/local/bin/mozjpeg
 apt-get install gifsicle python-imaging webp
 ```
 
-if you don't want to install mozjpeg using the instructions below then use
-jpegtran:
-
-<!-- eslint-skip -->
-
-```sh
-apt-get install libjpeg-progs
-```
-
-See mozjepg, pngout & svgo install instructions below
+See pngout & svgo install instructions below
 
 #### Redhat / Fedora
 
@@ -198,16 +187,7 @@ See mozjepg, pngout & svgo install instructions below
 dnf install gifsicle python3-pillow libwebp-tools
 ```
 
-if you don't want to install mozjpeg using the instructions below then use
-jpegtran:
-
-<!-- eslint-skip -->
-
-```sh
-dnf install libjpeg-turbo-utils
-```
-
-See mozjepg, pngout & svgo install instructions below
+See pngout & svgo install instructions below
 
 ### Picopt python package
 

@@ -6,6 +6,9 @@ tree of plugin -> handler -> tier ->  tool with availability, version, and
 path. Optional tools that are missing are reported separately from
 required ones at the bottom.
 
+When a tool is missing, the doctor shows a platform-appropriate install
+command (brew on macOS, apt on Debian/Ubuntu, dnf on Fedora/RHEL).
+
 Probing CWebPTool here also surfaces (via the WebPLossless.IS_MODERN_CWEBP
 side effect) whether old or new cwebp behavior is in effect.
 """
@@ -13,6 +16,8 @@ side effect) whether old or new cwebp behavior is in effect.
 from __future__ import annotations
 
 import sys
+from pathlib import Path
+from types import MappingProxyType
 from typing import TYPE_CHECKING, Any
 
 from rich.markup import escape
@@ -24,6 +29,93 @@ from picopt.plugins.webp import CWebPTool
 if TYPE_CHECKING:
     from collections.abc import Sequence
 
+# ── Platform detection ────────────────────────────────────────────────
+
+_BREW = "brew"
+_APT = "apt"
+_DNF = "dnf"
+
+
+def _detect_pkg_manager() -> str:
+    if sys.platform == "darwin":
+        return _BREW
+    if sys.platform == "linux":
+        try:
+            info = Path("/etc/os-release").read_text()
+        except OSError:
+            return ""
+        lower = info.lower()
+        if "debian" in lower or "ubuntu" in lower:
+            return _APT
+        if "fedora" in lower or "rhel" in lower or "centos" in lower:
+            return _DNF
+    return ""
+
+
+# ── Install hints keyed by (tool name, package manager) ──────────────
+# Tools from the same upstream package share the same hint.
+
+_WEBP_HINTS: MappingProxyType[str, str] = MappingProxyType(
+    {
+        _BREW: "brew install webp",
+        _APT: "apt install webp",
+        _DNF: "dnf install libwebp-tools",
+    }
+)
+
+_INSTALL_HINTS: MappingProxyType[str, MappingProxyType[str, str]] = MappingProxyType(
+    {
+        "gifsicle": MappingProxyType(
+            {
+                _BREW: "brew install gifsicle",
+                _APT: "apt install gifsicle",
+                _DNF: "dnf install gifsicle",
+            }
+        ),
+        "cwebp": _WEBP_HINTS,
+        "gif2webp": _WEBP_HINTS,
+        "img2webp": _WEBP_HINTS,
+        "webpmux": _WEBP_HINTS,
+        "unrar": MappingProxyType(
+            {
+                _BREW: "brew install rar",
+                _APT: "apt install unrar",
+                _DNF: "dnf install unrar",
+            }
+        ),
+        "pngout": MappingProxyType({_BREW: "brew install jonof/kenutils/pngout"}),
+        "svgo": MappingProxyType(
+            {
+                _BREW: "brew install svgo",
+                _APT: "npm install -g svgo",
+                _DNF: "npm install -g svgo",
+            }
+        ),
+        "npx_svgo": MappingProxyType(
+            {
+                _BREW: "npm install -g svgo",
+                _APT: "npm install -g svgo",
+                _DNF: "npm install -g svgo",
+            }
+        ),
+        "bunx_svgo": MappingProxyType(
+            {
+                _BREW: "bun install -g svgo",
+                _APT: "bun install -g svgo",
+                _DNF: "bun install -g svgo",
+            }
+        ),
+    }
+)
+
+
+def _install_hint(tool_name: str, pkg_manager: str) -> str:
+    hints = _INSTALL_HINTS.get(tool_name, {})
+    return hints.get(pkg_manager, "")
+
+
+# ── Doctor ────────────────────────────────────────────────────────────
+
 
 class PicoptDoctor:
     """Picopt doctor."""
@@ -33,6 +125,7 @@ class PicoptDoctor:
         self.total_required = 0
         self.missing_required = 0
         self.missing_optional = 0
+        self._pkg_manager: str = _detect_pkg_manager()
 
     def _checkup_tool_get_tier_and_name(
         self, status, tier_idx: int, tool
@@ -71,12 +164,18 @@ class PicoptDoctor:
         if not status.available and status.error:
             bits.extend(["-", f"[red]{escape(status.error)}[/red]"])
         elif isinstance(tool, CWebPTool):
-            # Probe-side-effect on WebPLossless: announce the cwebp generation.
             flag = "modern" if CWebPTool.IS_MODERN_CWEBP else "legacy"
             flag_color = "green" if CWebPTool.IS_MODERN_CWEBP else "cyan"
             bits.append(f"([{flag_color}]{flag}[/{flag_color}])")
 
         console.print(" ".join(bits))
+
+        if not status.available:
+            tool_name = tool.name or type(tool).__name__
+            hint = _install_hint(tool_name, self._pkg_manager)
+            if hint:
+                console.print(f"[dim]             install: {escape(hint)}[/dim]")
+
         return tier_has_available
 
     def _checkup_handler_pipeline_tier(self, tier_idx: int, tier) -> None:
