@@ -310,7 +310,7 @@ class Handler(ABC):
         )
         if (
             self.working_path
-            and self.working_path != self.final_path
+            and self.working_path not in {self.final_path, self.original_path}
             and isinstance(final_data_buffer, BufferedReader)
         ):
             self.working_path.unlink(missing_ok=True)

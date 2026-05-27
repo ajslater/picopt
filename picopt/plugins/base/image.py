@@ -98,7 +98,10 @@ class ImageHandler(Handler):
         If the input is already in an acceptable format for this handler,
         skip the round-trip and return the buffer untouched.
         """
-        if self.input_file_format in self._input_file_formats:
+        if (
+            self.input_file_format.format_str == format_str
+            and self.input_file_format in self._input_file_formats
+        ):
             return input_buffer
         info = self.prepare_info(format_str)
         output_buffer = BytesIO()
