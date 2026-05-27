@@ -150,32 +150,37 @@ class PicoptDoctor:
             f"[{tier_color}]    tier {tier_idx} {prefix} {name}[/{tier_color}]"
         ], tier_has_available
 
-    def _checkup_tool(self, tier_idx, tool) -> bool:
-        status = tool.probe()
-        bits, tier_has_available = self._checkup_tool_get_tier_and_name(
-            status, tier_idx, tool
-        )
-
+    @staticmethod
+    def _checkup_tool_detail_bits(status, tool) -> list[str]:
+        bits: list[str] = []
         if status.version:
             bits.append(f"[bold black]{escape(status.version)}[/bold black]")
         if status.path and status.path != "<builtin>":
             bits.append(f"[dim white]\\[{escape(status.path)}][/dim white]")
-
         if not status.available and status.error:
             bits.extend(["-", f"[red]{escape(status.error)}[/red]"])
         elif isinstance(tool, CWebPTool):
             flag = "modern" if CWebPTool.IS_MODERN_CWEBP else "legacy"
             flag_color = "green" if CWebPTool.IS_MODERN_CWEBP else "cyan"
             bits.append(f"([{flag_color}]{flag}[/{flag_color}])")
+        return bits
 
+    def _checkup_tool_print_hint(self, status, tool) -> None:
+        if status.available:
+            return
+        tool_name = tool.name or type(tool).__name__
+        hint = _install_hint(tool_name, self._pkg_manager)
+        if hint:
+            console.print(f"[dim]             install: {escape(hint)}[/dim]")
+
+    def _checkup_tool(self, tier_idx, tool) -> bool:
+        status = tool.probe()
+        bits, tier_has_available = self._checkup_tool_get_tier_and_name(
+            status, tier_idx, tool
+        )
+        bits.extend(self._checkup_tool_detail_bits(status, tool))
         console.print(" ".join(bits))
-
-        if not status.available:
-            tool_name = tool.name or type(tool).__name__
-            hint = _install_hint(tool_name, self._pkg_manager)
-            if hint:
-                console.print(f"[dim]             install: {escape(hint)}[/dim]")
-
+        self._checkup_tool_print_hint(status, tool)
         return tier_has_available
 
     def _checkup_handler_pipeline_tier(self, tier_idx: int, tier) -> None:
