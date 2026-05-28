@@ -1,5 +1,9 @@
 # 📰 Picopt News
 
+## v6.5.2
+
+- Update to latest oxipng v10
+
 ## v6.5.1
 
 - Fix data loss when converting without external tools.

@@ -52,7 +52,7 @@ class OxiPngTool(InternalTool):
 
     name = "oxipng"
     module_name = "oxipng"
-    PACKAGE_NAME = "pyoxipng"
+    PACKAGE_NAME = "oxipng-pybind"
 
     @override
     def run_stage(self, handler: Handler, buf: BinaryIO) -> BytesIO:
@@ -63,7 +63,7 @@ class OxiPngTool(InternalTool):
             opts["level"] = 5
             opts["deflate"] = oxipng.Deflaters.zopfli(15)
         if not handler.config.keep_metadata:
-            opts["strip"] = oxipng.StripChunks.safe()
+            opts["strip"] = oxipng.StripChunks.safe
         buf.seek(0)
         with buf:
             return BytesIO(oxipng.optimize_from_memory(buf.read(), **opts))
