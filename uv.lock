@@ -1566,6 +1566,24 @@ wheels = [
 ]
 
 [[package]]
+name = "oxipng-pybind"
+version = "10.1.1.post1"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/56/38/c74f1678f29ddc43ee5ad9da4975407583bb7f541e0d832d23700e741c5a/oxipng_pybind-10.1.1.post1.tar.gz", hash = "sha256:79bf22b6db5cca52428d23c930b9d4d11e7bff38bd96c94e122df83326c9d143", size = 152404, upload-time = "2026-05-28T11:20:14.585Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/ca/3b/863792fde6bec66e1ddad01110780b3b6edbcd8079b8e6f841870b822d1a/oxipng_pybind-10.1.1.post1-cp310-abi3-macosx_10_12_x86_64.whl", hash = "sha256:8e883cba03d1e3667d8457691744f77de774d9369a79917bbef3fa8ccb6a140c", size = 522823, upload-time = "2026-05-28T11:20:00.856Z" },
+    { url = "https://files.pythonhosted.org/packages/b2/d0/1fd1c37bf4b0def7883e412d6ab8c480b734b7ecfe36db5caccb6d75eb55/oxipng_pybind-10.1.1.post1-cp310-abi3-macosx_11_0_arm64.whl", hash = "sha256:d6dc2a4215d2fc10aa4f12271102c3639eb22c8d13ac8c8d26d240f5a0c40539", size = 489228, upload-time = "2026-05-28T11:20:02.487Z" },
+    { url = "https://files.pythonhosted.org/packages/42/a1/42818e1b322a220f4e18d753b1574cca138fdb73fdb6ecd6063892662731/oxipng_pybind-10.1.1.post1-cp310-abi3-manylinux_2_28_aarch64.whl", hash = "sha256:2f4d5063d8aaf93f940377375dc49b677a3818ad0758810756906e0f7b331fa7", size = 527090, upload-time = "2026-05-28T11:20:03.893Z" },
+    { url = "https://files.pythonhosted.org/packages/69/51/7658d4370e4ab9d3a08f9d1f4210a34fca8d3636aa40b953be8983b23e6e/oxipng_pybind-10.1.1.post1-cp310-abi3-manylinux_2_28_x86_64.whl", hash = "sha256:ecc858000bb5860fce871f4d958f50d677847657acba1d0a1a717bdfeeb71ea8", size = 555599, upload-time = "2026-05-28T11:20:05.203Z" },
+    { url = "https://files.pythonhosted.org/packages/3f/cd/571b5dc1d0e8f4b8cac620013c0076d9f47257d0e6bfcc881a9db7baa632/oxipng_pybind-10.1.1.post1-cp310-abi3-win_amd64.whl", hash = "sha256:cba36d82f6a7b080ca89ae83dee5dd6f3bb2879e91541b24415cad51fcf59be1", size = 456117, upload-time = "2026-05-28T11:20:06.508Z" },
+    { url = "https://files.pythonhosted.org/packages/c2/34/1b005a569dd696e78edf7566d5f5f34db91b0a7ea6c92f422b15ccc33aa0/oxipng_pybind-10.1.1.post1-cp311-abi3-macosx_10_12_x86_64.whl", hash = "sha256:3153a586a8dc12409dfc692f4aee78060e8c8ec204b0f33dfa9928518a04ab42", size = 522500, upload-time = "2026-05-28T11:20:07.898Z" },
+    { url = "https://files.pythonhosted.org/packages/8d/fd/810a8bd08fc1639c50978d341d6e7e22e302347788afa20f6bb64ae8c4c3/oxipng_pybind-10.1.1.post1-cp311-abi3-macosx_11_0_arm64.whl", hash = "sha256:ad2272dd2b3087a35646f81aa89359b2b994a95959c6e5a2c50733f6e5f5ecd6", size = 488803, upload-time = "2026-05-28T11:20:09.122Z" },
+    { url = "https://files.pythonhosted.org/packages/fb/e7/cfb665747fb47b351659d5840577286079dd453a392ae1fb41eb67c3f2c7/oxipng_pybind-10.1.1.post1-cp311-abi3-manylinux_2_28_aarch64.whl", hash = "sha256:6829b4ed103846697b43ecec289e5b0a171f4d26b903df446c1da653da2caf52", size = 526286, upload-time = "2026-05-28T11:20:10.442Z" },
+    { url = "https://files.pythonhosted.org/packages/93/b0/ec33eea1f406a5aa9f92ca49dcc2e0fed0a03e38dc11db56f7eca706b984/oxipng_pybind-10.1.1.post1-cp311-abi3-manylinux_2_28_x86_64.whl", hash = "sha256:16164129c684324995bea08fd4b2dfad2d9fa853e9dfa736db63e42744332dd2", size = 554024, upload-time = "2026-05-28T11:20:11.843Z" },
+    { url = "https://files.pythonhosted.org/packages/27/66/dbaf080fd8849138733f61d773cb8512024444755b840cc5af30cdef7eea/oxipng_pybind-10.1.1.post1-cp311-abi3-win_amd64.whl", hash = "sha256:61f6d11d0ce22661edcc6fe587f249c98c1aa65333aa0e795a7d6d4d8eaf708b", size = 455504, upload-time = "2026-05-28T11:20:13.301Z" },
+]
+
+[[package]]
 name = "packaging"
 version = "26.2"
 source = { registry = "https://pypi.org/simple" }
@@ -1603,11 +1621,11 @@ dependencies = [
     { name = "humanize" },
     { name = "loguru" },
     { name = "mozjpeg-lossless-optimization" },
+    { name = "oxipng-pybind" },
     { name = "piexif" },
     { name = "pikepdf" },
     { name = "pillow" },
     { name = "py7zr" },
-    { name = "pyoxipng" },
     { name = "python-dateutil" },
     { name = "rarfile" },
     { name = "rich" },
@@ -1664,11 +1682,11 @@ requires-dist = [
     { name = "humanize", specifier = "~=4.12" },
     { name = "loguru", specifier = "~=0.7" },
     { name = "mozjpeg-lossless-optimization", specifier = "~=1.3" },
+    { name = "oxipng-pybind", specifier = ">=1.0" },
     { name = "piexif", specifier = "~=1.1" },
     { name = "pikepdf", specifier = ">=10.5.1" },
     { name = "pillow", specifier = ">=12.0" },
     { name = "py7zr", specifier = "~=1.0" },
-    { name = "pyoxipng", specifier = "~=9.1" },
     { name = "python-dateutil", specifier = "~=2.8" },
     { name = "rarfile", specifier = "~=4.0" },
     { name = "rich", specifier = "~=15.0" },
@@ -2087,54 +2105,6 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/04/d7/c4412e6219661fd8689cdd9553988f8ea38c151067d70c49436977688aa9/pynvim-0.6.0.tar.gz", hash = "sha256:0ffcb879322d08f9e9061e1123dd58ba3a5ccfbd4999bb1157bac525822aa590", size = 51478, upload-time = "2025-09-07T18:35:37.601Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/54/2d/c28b9293975ed9ee05e52f1d316cb402ba6edb232baa0497754a70182ca2/pynvim-0.6.0-py3-none-any.whl", hash = "sha256:29f92ff3fde9e52c263e6bfd7f30345be05bfc7b5c21484da1cc38a8d8e5e98f", size = 47633, upload-time = "2025-09-07T18:35:36.348Z" },
-]
-
-[[package]]
-name = "pyoxipng"
-version = "9.1.1"
-source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/ee/cc/25a4e3e3e0dc41103337144aacfccbda34562ef6b3fa6b1afa4975e0cc11/pyoxipng-9.1.1.tar.gz", hash = "sha256:c9c3c087b0c744ba9b709a321c61183668f024c138748a8da565fe89a4bf0fb8", size = 322672, upload-time = "2025-08-21T13:44:17.16Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/8c/67/80e1742df5c3e24e5e67d44bfc187446113b774f85a9fdc05c66226c9688/pyoxipng-9.1.1-cp310-cp310-macosx_10_12_x86_64.whl", hash = "sha256:54ff2cf2f1418eca361a42774c54bd9a34d6d632d87dc26089d8644e9a9cb519", size = 620564, upload-time = "2025-08-21T13:43:43.564Z" },
-    { url = "https://files.pythonhosted.org/packages/2c/2b/2d64e859ded5b1ff97631182fbd9959c3286a3b4ae7d281dab64a7f02cf8/pyoxipng-9.1.1-cp310-cp310-macosx_11_0_arm64.whl", hash = "sha256:3710eed13f1d14fb841d6bce0c4e8978a1e53558f536223b58af110d1c50443f", size = 577507, upload-time = "2025-08-21T13:43:37.111Z" },
-    { url = "https://files.pythonhosted.org/packages/9f/d7/2b35c2b4080688a28d8e456c31a28568793e2da0a03fe723d93819ac346f/pyoxipng-9.1.1-cp310-cp310-manylinux_2_28_aarch64.whl", hash = "sha256:a460589fbbfa0a1f05e636751265c463479ab9ec16c5ca70c11051822ad055ff", size = 658136, upload-time = "2025-08-21T13:43:24.816Z" },
-    { url = "https://files.pythonhosted.org/packages/c5/f4/1865dc6b723e42b5b590280384a159288ae53289be527fb73b75104021c8/pyoxipng-9.1.1-cp310-cp310-manylinux_2_28_x86_64.whl", hash = "sha256:390b14c8ff56f112c46b7416e16a7a27db06489eb55ec0060fd4d67c29d78158", size = 672169, upload-time = "2025-08-21T13:43:30.821Z" },
-    { url = "https://files.pythonhosted.org/packages/74/14/0a424ab44f32fce7ee274f33264c0ec55f1cb94838ea7ef6328f2c68fd18/pyoxipng-9.1.1-cp310-cp310-musllinux_1_2_aarch64.whl", hash = "sha256:35a54d1c9957fa7ff41e937e6346577297a403f81a1631eeb4f8c2f061df600c", size = 833610, upload-time = "2025-08-21T13:43:49.785Z" },
-    { url = "https://files.pythonhosted.org/packages/b1/a9/5230b493b977fe3a143349a14f3a29fd556c5e6a3fa8474ac6048cff083d/pyoxipng-9.1.1-cp310-cp310-musllinux_1_2_armv7l.whl", hash = "sha256:803221f48c2583695d5eb45c06f6909c5722a295e0d877b97dc0ede06966afa4", size = 911213, upload-time = "2025-08-21T13:43:55.463Z" },
-    { url = "https://files.pythonhosted.org/packages/df/e3/dc91306aef63b20f43caf62cc9c3e7ed1c635c2914cfb3f0633eb7d42608/pyoxipng-9.1.1-cp310-cp310-musllinux_1_2_i686.whl", hash = "sha256:b0e7b7d7f8f16d15fd53c0bf12225d575d230e487a780778a11604eff2347110", size = 874832, upload-time = "2025-08-21T13:44:02.193Z" },
-    { url = "https://files.pythonhosted.org/packages/f6/0b/313f7ce8b1b9912cb370584e9d129a794730b86e768d165808078e144346/pyoxipng-9.1.1-cp310-cp310-musllinux_1_2_x86_64.whl", hash = "sha256:9843db526703ae88d869695bef25e5f75f98fed338b9f508f1b258f95fef598d", size = 840367, upload-time = "2025-08-21T13:44:09.282Z" },
-    { url = "https://files.pythonhosted.org/packages/dd/b3/9adc27fd027cb78b16cbbaf67ecc9771e4a1a14e01b1ef0085de69527390/pyoxipng-9.1.1-cp310-cp310-win32.whl", hash = "sha256:d9b3249b6edc558461610e3b01a377e6160ee8de72494e9df8fedec699e76d0f", size = 438507, upload-time = "2025-08-21T13:44:24.512Z" },
-    { url = "https://files.pythonhosted.org/packages/2d/00/8475fb4a4e550fe16f9305728d7ec83aa291a5585393f6d49331e159e4cd/pyoxipng-9.1.1-cp310-cp310-win_amd64.whl", hash = "sha256:f43b42d84736dd4944a0d18cebc80cb89f0d0b8aea476e2714cd6afc19e1997d", size = 458340, upload-time = "2025-08-21T13:44:18.615Z" },
-    { url = "https://files.pythonhosted.org/packages/ae/89/6957b2e386cae5b998d98904ae7bcd4a49c6bc77fbcb43dfbefd5896dd4d/pyoxipng-9.1.1-cp311-cp311-macosx_10_12_x86_64.whl", hash = "sha256:dee84d2d6fdfdfc0f2958f3953fbadd18d6118d55b3f0f18e5447cc9d1b84539", size = 619738, upload-time = "2025-08-21T13:43:44.881Z" },
-    { url = "https://files.pythonhosted.org/packages/7a/c9/39a89f2fe7d184e150759581ca8d714639618d54d9f15eade6e84d9fa45b/pyoxipng-9.1.1-cp311-cp311-macosx_11_0_arm64.whl", hash = "sha256:2b2f362d40906cb3ede7c919505184e6b2c94c64abd4ddc63734dacbdc38681c", size = 577001, upload-time = "2025-08-21T13:43:38.48Z" },
-    { url = "https://files.pythonhosted.org/packages/b8/3a/9b5cbc44921f76c8f5b7a7be50fccbd0a2a6928a385556c25284d41f0cc3/pyoxipng-9.1.1-cp311-cp311-manylinux_2_28_aarch64.whl", hash = "sha256:ef92f2284ec696f2cba1c6403ece87a5355ffc6b78a2111fecf4ffdfee70f626", size = 658253, upload-time = "2025-08-21T13:43:26.179Z" },
-    { url = "https://files.pythonhosted.org/packages/92/d2/bfddbd1a9d3cdc3419f2d28b9a1f989fa22df45b9dbe8dde93bb906c0afb/pyoxipng-9.1.1-cp311-cp311-manylinux_2_28_x86_64.whl", hash = "sha256:6b53431f9f4651daecc113d53719824dd83591ff59edd7a2b07d277a257c82c7", size = 671873, upload-time = "2025-08-21T13:43:32.015Z" },
-    { url = "https://files.pythonhosted.org/packages/62/a6/532e6f8bae798f9ae10162ca16d1321c0e71419bdcbbf0d23af50b234510/pyoxipng-9.1.1-cp311-cp311-musllinux_1_2_aarch64.whl", hash = "sha256:f35a36d3675cb431a5d8a7e4a1b72ac5693303bd29d795cf608f147a14b24fed", size = 833695, upload-time = "2025-08-21T13:43:51.047Z" },
-    { url = "https://files.pythonhosted.org/packages/21/ea/be04e0b75371ca17d832a51b96f968686718f8792b994886110d1dd71a10/pyoxipng-9.1.1-cp311-cp311-musllinux_1_2_armv7l.whl", hash = "sha256:6b6fb85b976521cc2fa987b9ec392b66a437d56a07b7f691c4911e26c30d4d24", size = 912307, upload-time = "2025-08-21T13:43:56.612Z" },
-    { url = "https://files.pythonhosted.org/packages/4f/a7/6964b8a79017998459de0d33397305428c145e2753869cf622c2ee263adc/pyoxipng-9.1.1-cp311-cp311-musllinux_1_2_i686.whl", hash = "sha256:17e75a18ef6405cc0850994abf7cc78ed2b2afd5c3c3443aca60b35e7896c7f5", size = 874612, upload-time = "2025-08-21T13:44:03.531Z" },
-    { url = "https://files.pythonhosted.org/packages/d8/f1/c0b7c644e6ad82edf6027286cb8a106e7d0a5c49cd8de9aeb42db1bbf977/pyoxipng-9.1.1-cp311-cp311-musllinux_1_2_x86_64.whl", hash = "sha256:fbc4d5cca8d0d453090618cd3f250dbc98212a3693055cc48922485c210826de", size = 840310, upload-time = "2025-08-21T13:44:10.601Z" },
-    { url = "https://files.pythonhosted.org/packages/d0/ee/08bdde2dc71dc007114448cc42b7645852fe8172f9a3b29d46c2bdfa9d26/pyoxipng-9.1.1-cp311-cp311-win32.whl", hash = "sha256:5ef7183b082a715bf2a53a20964df713d9944659dbcf9521258834e6ecc6df38", size = 438290, upload-time = "2025-08-21T13:44:25.585Z" },
-    { url = "https://files.pythonhosted.org/packages/fb/0f/d02062c7f2cfb53fab0484c4095451b72d249134b0252073773e3c2d869f/pyoxipng-9.1.1-cp311-cp311-win_amd64.whl", hash = "sha256:327d065925cec7972b744f30e890e1c3ca3d47908b5e8474ebba389dbdd627e1", size = 458236, upload-time = "2025-08-21T13:44:19.719Z" },
-    { url = "https://files.pythonhosted.org/packages/4b/b2/701083b07cc03e2cf5c76df6e91f19a1aac2fda4e84d4152022768a6b5e7/pyoxipng-9.1.1-cp312-cp312-macosx_10_12_x86_64.whl", hash = "sha256:dd262203be827a9cbd176f024baad1c6ba980393ff1d19a144b34ef2533ee1a0", size = 613189, upload-time = "2025-08-21T13:43:45.955Z" },
-    { url = "https://files.pythonhosted.org/packages/0b/45/840b14aaa5d2a12864274957067cd60dc53532e772675b65aae67aff6828/pyoxipng-9.1.1-cp312-cp312-macosx_11_0_arm64.whl", hash = "sha256:6f3a8df3afc9fdb3543c0cbc6b6e963e788650bd1bdb89a05a3e1fa276a9c63a", size = 572905, upload-time = "2025-08-21T13:43:39.849Z" },
-    { url = "https://files.pythonhosted.org/packages/be/1e/4121e510058a0fb77b7a821c495bff2f5b5ec992db1792535000c8628d0c/pyoxipng-9.1.1-cp312-cp312-manylinux_2_28_aarch64.whl", hash = "sha256:3d6e3982e563c56732da3493b76b616b625e8072b10542081832184fdba8bcdf", size = 658808, upload-time = "2025-08-21T13:43:27.352Z" },
-    { url = "https://files.pythonhosted.org/packages/f8/2f/1e126efcdf4d9a3753dc158d6ac5127a83adca4418696935ed39f97bdd6b/pyoxipng-9.1.1-cp312-cp312-manylinux_2_28_x86_64.whl", hash = "sha256:f7771b81d6a81b9b4e9f70a7e0d982a4d9d33054842050aeef5cae116d915a57", size = 672522, upload-time = "2025-08-21T13:43:33.496Z" },
-    { url = "https://files.pythonhosted.org/packages/b3/28/1e00f1403287177309e90f7a4e7eb07cabd3349ea80ab1b406a72ffdcd40/pyoxipng-9.1.1-cp312-cp312-musllinux_1_2_aarch64.whl", hash = "sha256:3e5281dfa33aa716bcddb59010609f27d1d82e39342ae6d03c7c714c78d4b3cf", size = 834234, upload-time = "2025-08-21T13:43:52.135Z" },
-    { url = "https://files.pythonhosted.org/packages/98/7e/3b26abbcfac668915c41d4a3166d993435c35b3435af883eb0ff43bce0c6/pyoxipng-9.1.1-cp312-cp312-musllinux_1_2_armv7l.whl", hash = "sha256:14fc4633e182b279837759c8992df18475f3334481efb5582d4f176b3675eb48", size = 911158, upload-time = "2025-08-21T13:43:58.057Z" },
-    { url = "https://files.pythonhosted.org/packages/30/c5/cb83410a00a22fb31066406f7aed54d3102bf8ba5e6a2b960fd184c676f4/pyoxipng-9.1.1-cp312-cp312-musllinux_1_2_i686.whl", hash = "sha256:75decb289ad548bd1384b9034571e506ef883380be05fa3090431f039aa08513", size = 875049, upload-time = "2025-08-21T13:44:04.669Z" },
-    { url = "https://files.pythonhosted.org/packages/12/1e/c661c964626d7c5d737de88422d1e89375d79cb859bf934f77aaf2d69ed8/pyoxipng-9.1.1-cp312-cp312-musllinux_1_2_x86_64.whl", hash = "sha256:e3307254a6766599c2ec6a1252f1e778d600c9f162cde7e084d944084a734d84", size = 841204, upload-time = "2025-08-21T13:44:11.815Z" },
-    { url = "https://files.pythonhosted.org/packages/48/91/7d6e5b7235c705e6fd80b0b54e74c4debf068b40494b5d02ce12fdaad4d9/pyoxipng-9.1.1-cp312-cp312-win32.whl", hash = "sha256:45381a5279240ecdf33561075f9868b95f9532d12360b5f3254bedf1cfce8c29", size = 438681, upload-time = "2025-08-21T13:44:26.695Z" },
-    { url = "https://files.pythonhosted.org/packages/38/13/e645eb1d22e05edaa8d961d8bf8a975c6804839133912fa1f10a2093c537/pyoxipng-9.1.1-cp312-cp312-win_amd64.whl", hash = "sha256:120c286665ba2a8e86a9c91ee51067c9bebc53c0a2ebb38cb558217a70ee8a1d", size = 459710, upload-time = "2025-08-21T13:44:20.781Z" },
-    { url = "https://files.pythonhosted.org/packages/96/9b/37ebc46e53615eeb74c1def05fbe273998c6763dfa0bedaec75af436125b/pyoxipng-9.1.1-cp313-cp313-macosx_10_12_x86_64.whl", hash = "sha256:4ca1d27a90e8adaeefe1d1fbc5f754021fa0f50fec240fff644635b91423cf2d", size = 613575, upload-time = "2025-08-21T13:43:47.183Z" },
-    { url = "https://files.pythonhosted.org/packages/e6/4f/8af9288bac07287e16e1d5544a0d6b74e554d90d2aae5ffae4c7705cbfce/pyoxipng-9.1.1-cp313-cp313-macosx_11_0_arm64.whl", hash = "sha256:c1af73961a090209c1bc79d75942ee45955b4b47b53939fe49a036a9943e2472", size = 573375, upload-time = "2025-08-21T13:43:41.008Z" },
-    { url = "https://files.pythonhosted.org/packages/74/92/b3ef4263921122c2c0904ff2490a6b32f8a7dd84111ea39f48c22182f168/pyoxipng-9.1.1-cp313-cp313-manylinux_2_28_aarch64.whl", hash = "sha256:020fe8bdbbc9dd06064beb14c33a44d5d3d3e6c3365e92795ecffb716cdce093", size = 659066, upload-time = "2025-08-21T13:43:28.481Z" },
-    { url = "https://files.pythonhosted.org/packages/91/c7/e8f36960924c23ba8dad0a97e75e55a142af77ad9a465ffff437e2ce3a55/pyoxipng-9.1.1-cp313-cp313-manylinux_2_28_x86_64.whl", hash = "sha256:a71024ec9660253fd8ab09e0af5e66aaa973fb31cc34a4f193aab8c5b7518d91", size = 672820, upload-time = "2025-08-21T13:43:34.649Z" },
-    { url = "https://files.pythonhosted.org/packages/cb/6e/8850098083d0197bf8fa1557f5656a75ea058a4821822fd9d2bca5740f02/pyoxipng-9.1.1-cp313-cp313-musllinux_1_2_aarch64.whl", hash = "sha256:48dd91f27ed93c3ce13e4705b8d3e82c14d10d02e0fb27518076c7363472edf5", size = 834260, upload-time = "2025-08-21T13:43:53.154Z" },
-    { url = "https://files.pythonhosted.org/packages/56/98/8fd41c25c19a8729608fed20e861643b7f324fbc673168aa10807a546f21/pyoxipng-9.1.1-cp313-cp313-musllinux_1_2_armv7l.whl", hash = "sha256:bbefa908c057d654d213d99ed2201cba1aa382ff41e37eb1580423fbe88228fa", size = 911306, upload-time = "2025-08-21T13:43:59.675Z" },
-    { url = "https://files.pythonhosted.org/packages/52/92/165de08ff29dc09e4f41d0d50f2e0ec00cca76597967a0d8beb7086fbbe1/pyoxipng-9.1.1-cp313-cp313-musllinux_1_2_i686.whl", hash = "sha256:f49e49f1043ba7f83779b7b70c86dddbe75a591726113ba17ba78fab96a363e9", size = 874246, upload-time = "2025-08-21T13:44:06.758Z" },
-    { url = "https://files.pythonhosted.org/packages/62/46/0ebc803cf0c50eba4f6a175a51a22394188fd18e589a498216d65ae7c1ae/pyoxipng-9.1.1-cp313-cp313-musllinux_1_2_x86_64.whl", hash = "sha256:02c8df2c62c6ed09d9ae07b83481481bb707faf1e91244d1e7c2a8ef0357cc3c", size = 841278, upload-time = "2025-08-21T13:44:13.002Z" },
-    { url = "https://files.pythonhosted.org/packages/06/6b/7b9a473b0d4435c687281837fec4609eddedc7e8112901888a5cb999df9a/pyoxipng-9.1.1-cp313-cp313-win32.whl", hash = "sha256:f7b29240fac6be4e3b1d9db2398d251ddf127030faffdfff639d910695b68537", size = 438727, upload-time = "2025-08-21T13:44:27.757Z" },
-    { url = "https://files.pythonhosted.org/packages/6e/50/3c4042cb356223d29269a485aa8dd8a03922af7db58a66feb5e252252391/pyoxipng-9.1.1-cp313-cp313-win_amd64.whl", hash = "sha256:9b807afd9e93d7f41cf74e6a23fba390b40004777ec70081543cb9ef62834d5e", size = 459299, upload-time = "2025-08-21T13:44:22.46Z" },
 ]
 
 [[package]]
