@@ -354,6 +354,16 @@ def get_arguments(params: tuple[str, ...] | None = None) -> Namespace:
         help="Number of parallel jobs to run simultaneously.",
     )
     parser.add_argument(
+        "--memory-limit",
+        action="store",
+        dest="memory_limit",
+        help=(
+            "Approximate peak memory budget for optimizing large archives, "
+            "e.g. 8G or 512M. Limits how many big archives run at once so the "
+            "process isn't OOM-killed. 0 (default) means auto: two-thirds of RAM."
+        ),
+    )
+    parser.add_argument(
         "-C",
         "--config",
         type=str,

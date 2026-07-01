@@ -1,5 +1,14 @@
 # 📰 Picopt News
 
+## v6.6.0
+
+- Memory-aware scheduling: picopt now estimates the peak memory of large
+  archives and limits how many run at once so big libraries (e.g. multi-GB
+  comic archives) no longer exhaust RAM and get the process OOM-killed. Tune the
+  budget with the new `--memory-limit` option (e.g. `--memory-limit 8G`), which
+  reads as an approximate peak-memory target; the default is two-thirds of
+  detected RAM.
+
 ## v6.5.2
 
 - Update to latest oxipng v10

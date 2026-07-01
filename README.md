@@ -288,6 +288,22 @@ timestamps.
 picopt -rStc CBZ,WEBP -x TIFF,CBR,CBZ /Volumes/Media/Comics
 ```
 
+Optimize the same comic library, but cap memory use so multi-GB archives don't
+exhaust RAM:
+
+<!-- eslint-skip -->
+
+```sh
+picopt -rStc CBZ,WEBP -x TIFF,CBR,CBZ --memory-limit 6G /Volumes/Media/Comics
+```
+
+picopt holds each archive plus its decompressed pages in memory while optimizing,
+so large archives spread across many parallel workers can use a lot of RAM.
+`--memory-limit` is an approximate peak-memory target (default: two-thirds of
+detected RAM) that bounds how many large archives run at once — a single archive
+bigger than the whole budget still runs, on its own — and `-j` caps the number
+of parallel workers.
+
 Optimize all files, but only JPEG format files:
 
 <!-- eslint-skip -->

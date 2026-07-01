@@ -50,6 +50,17 @@ if TYPE_CHECKING:
 
 # --------------------------------------------------------------------- state
 
+# Multiplier from a top-level item's on-disk size to its estimated peak resident
+# memory while optimized. A container holds, concurrently: the whole archive
+# bytes, every decompressed member, the optimized copies, and the output buffer
+# built at repack — plus a pickled duplicate of much of that in the worker
+# process. Measured peak RSS / on-disk size is ~3x for comic archives, so the
+# sum of charges approximates real memory use and ``--memory-limit`` reads as an
+# approximate RAM target. It only needs to be roughly right: the memory gate
+# always lets a single over-budget item run alone, so an underestimate never
+# deadlocks, it just overshoots once.
+_MEM_COST_FACTOR = 3
+
 
 class NodeState(Enum):
     """Lifecycle of a ContainerNode."""
@@ -171,6 +182,7 @@ class ContainerNode:
     state: NodeState = NodeState.NEW
     had_work: bool = False  # any child produced replacement bytes
     staging_dir: Path | None = None
+    cost: int = 0  # memory budget charged for this node (0 = not charged)
 
     def is_top_level(self) -> bool:
         """Return True if this node has no container parent."""
@@ -186,6 +198,7 @@ class _LeafEntry:
 
     job: OptimizeLeafJob
     parent: ContainerNode | None  # None = direct directory leaf, not in container
+    cost: int = 0  # memory budget charged for a standalone leaf (0 otherwise)
 
 
 @dataclass
@@ -242,6 +255,15 @@ class Scheduler:
 
         self._dir_trackers: dict[Path, _DirTracker] = {}
         self._fail_fast_triggered: bool = False
+
+        # Memory-aware admission. `_byte_budget <= 0` disables the gate.
+        # `_inflight_bytes` is the sum of estimated resident memory for every
+        # live top-level item (containers still being unpacked/optimized/
+        # repacked, plus standalone leaf images). New top-level items are only
+        # admitted while they fit the budget — except when nothing is live, so a
+        # single archive larger than the whole budget still runs (alone).
+        self._byte_budget: int = config.memory_limit
+        self._inflight_bytes: int = 0
 
     # ---------------------------------------------------------- public API
     def enqueue_leaf(
@@ -372,21 +394,84 @@ class Scheduler:
                 node.state = NodeState.REPACKING
                 self._inflight_repack[fut] = node
 
-    def _submit_ready_job(self) -> None:
-        """Pop and submit one job from the ready dequeue."""
-        job, node = self._ready.popleft()
-        # Skip jobs whose owning node got cancelled while they were queued.
-        if node is not None and node.state is NodeState.CANCELLED:
-            self._drop_cancelled_ready_job(job, node)
-            return
+    def _est_cost(self, path_info: PathInfo) -> int:
+        """Estimate peak resident memory for a top-level item, in bytes."""
+        return int(path_info.bytes_in()) * _MEM_COST_FACTOR
+
+    def _charge_info(self, job: Job, node: ContainerNode | None) -> tuple[bool, int]:
+        """
+        Whether a ready job introduces a *new* top-level item, and its cost.
+
+        Only new top-level containers (their UnpackJob) and standalone
+        directory-level leaves are charged/gated. Jobs that make progress on an
+        already-admitted container (in-container leaves, nested-container
+        unpacks, and every RepackJob) are exempt — their memory is already
+        accounted for by their top-level ancestor, and gating them could
+        deadlock the container that must repack to release budget.
+        """
+        match job:
+            case UnpackJob():
+                if node is not None and node.is_top_level():
+                    return True, self._est_cost(node.handler.path_info)
+            case OptimizeLeafJob():
+                if node is None:  # standalone directory leaf
+                    return True, self._est_cost(job.path_info)
+        return False, 0
+
+    def _admits(self, cost: int) -> bool:
+        """Whether a new top-level item costing `cost` may start now."""
+        if self._byte_budget <= 0:
+            return True  # gate disabled
+        if self._inflight_bytes == 0:
+            return True  # forward-progress guarantee: run it alone
+        return self._inflight_bytes + cost <= self._byte_budget
+
+    def _release_budget(self, cost: int) -> None:
+        self._inflight_bytes = max(0, self._inflight_bytes - cost)
+
+    def _retire_node(self, node: ContainerNode) -> None:
+        """Release a node's memory charge and drop it from the live set."""
+        self._release_budget(node.cost)
+        node.cost = 0
+        self._live_nodes.discard(node)
+
+    def _submit_one(self, job: Job, node: ContainerNode | None, cost: int) -> None:
+        """Submit one admitted job and charge its budget (if any)."""
         fut = self._executor.submit(job.run)
         self._track_submitted_job(fut, job, node)
+        if cost:
+            self._inflight_bytes += cost
+            if isinstance(job, UnpackJob):
+                assert node is not None
+                node.cost = cost
+            else:  # standalone leaf
+                self._inflight_leaf[fut].cost = cost
 
     def _submit_ready(self) -> None:
-        """Submit ready jobs up to the backpressure cap."""
+        """
+        Submit ready jobs up to the backpressure cap and the memory budget.
+
+        Scans the whole ready queue rather than only its head: a top-level item
+        blocked by the memory budget is left in place while exempt jobs behind
+        it (leaves/repacks of already-admitted containers) still run — those are
+        what eventually complete and free budget. Deferred items keep their
+        order at the front of the queue for the next tick.
+        """
         cap = 2 * self._max_workers
+        deferred: deque[tuple[Job, ContainerNode | None]] = deque()
         while self._ready and self._inflight_count() < cap:
-            self._submit_ready_job()
+            job, node = self._ready.popleft()
+            # Skip jobs whose owning node got cancelled while they were queued.
+            if node is not None and node.state is NodeState.CANCELLED:
+                self._drop_cancelled_ready_job(job, node)
+                continue
+            charged, cost = self._charge_info(job, node)
+            if charged and not self._admits(cost):
+                deferred.append((job, node))
+                continue
+            self._submit_one(job, node, cost if charged else 0)
+        if deferred:
+            self._ready.extendleft(reversed(deferred))
 
     def _cancel_subtree(
         self, root: ContainerNode, *, reason: BaseException | None
@@ -408,7 +493,7 @@ class Scheduler:
         # Clean staging immediately for every cancelled node.
         for node in cancelled:
             self._cleanup_node_staging(node)
-            self._live_nodes.discard(node)
+            self._retire_node(node)
         # Already-running futures check state on completion and drop results.
 
     def _trigger_fail_fast(self, reason: BaseException | None) -> None:
@@ -481,6 +566,8 @@ class Scheduler:
 
     def _handle_leaf_done(self, entry: _LeafEntry, report: ReportStats) -> None:
         """Process an OptimizeLeafJob completion."""
+        # Release a standalone leaf's memory charge (0 for in-container leaves).
+        self._release_budget(entry.cost)
         parent = entry.parent
 
         # In-container leaf: hydrate PathInfo from bytes, stash in parent.
@@ -533,7 +620,7 @@ class Scheduler:
         """Process a RepackJob completion (or synthesized no-op/error)."""
         if node.state is NodeState.CANCELLED:
             self._cleanup_node_staging(node)
-            self._live_nodes.discard(node)
+            self._retire_node(node)
             return
 
         # Failure branches
@@ -565,7 +652,7 @@ class Scheduler:
             self._maybe_start_repack(parent)
 
         node.state = NodeState.DONE
-        self._live_nodes.discard(node)
+        self._retire_node(node)
         # Clean up child staging dirs now that we've finished repacking.
         for child in node.children:
             # node.children is all ContainerNodes no check needed

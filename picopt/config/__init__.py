@@ -9,6 +9,7 @@ plugin registry. The only computed values that survive in this file are
 
 from __future__ import annotations
 
+import os
 import re
 import time
 from pathlib import Path
@@ -70,6 +71,7 @@ def _build_template() -> MappingTemplate:
                     "jobs": Integer(),
                     "keep_metadata": bool,
                     "list_only": bool,
+                    "memory_limit": Integer(),
                     "near_lossless": bool,
                     "paths": Sequence(ConfusePath()),
                     "png_max": bool,
@@ -104,6 +106,52 @@ def _build_template() -> MappingTemplate:
 _MULTIPLE_STARS_RE: re.Pattern[str] = re.compile(r"\*+")
 _DEFAULT_IGNORE_REGEXPS = (r"^\.", r"\/\.", r"\.sparsebundle$")
 
+# Memory-limit parsing / auto-detection.
+_MEMORY_SUFFIXES: dict[str, int] = {
+    "K": 1024,
+    "M": 1024**2,
+    "G": 1024**3,
+    "T": 1024**4,
+}
+# Fraction of total RAM to budget by default. Two-thirds leaves ~a third for the
+# OS, file cache, and headroom above the (approximate) per-archive estimate.
+_DEFAULT_MEMORY_FRACTION = 2 / 3
+# Used only when total RAM can't be detected (e.g. no sysconf, no psutil).
+_FALLBACK_TOTAL_RAM = 4 * 1024**3
+
+
+def _parse_memory_str(value: object) -> int:
+    """Parse a memory size (int bytes or a K/M/G/T-suffixed string) to bytes."""
+    if isinstance(value, (int, float)):
+        return int(value)
+    text = str(value).strip().upper().rstrip("B").strip()
+    if not text:
+        return 0
+    multiplier = 1
+    if text[-1] in _MEMORY_SUFFIXES:
+        multiplier = _MEMORY_SUFFIXES[text[-1]]
+        text = text[:-1].strip()
+    try:
+        return int(float(text) * multiplier)
+    except ValueError:
+        return 0
+
+
+def _detect_total_ram() -> int:
+    """Best-effort total physical RAM in bytes, cross-platform."""
+    try:
+        # POSIX (Linux + macOS): total pages * page size.
+        return os.sysconf("SC_PAGE_SIZE") * os.sysconf("SC_PHYS_PAGES")
+    except (ValueError, OSError, AttributeError):
+        pass
+    try:
+        import psutil
+
+        return int(psutil.virtual_memory().total)
+    except Exception:
+        # Any psutil import/read failure falls back to a safe fixed budget.
+        return _FALLBACK_TOTAL_RAM
+
 
 class PicoptConfig(ConfigHandlers):
     """Construct Picopt Config."""
@@ -120,6 +168,21 @@ class PicoptConfig(ConfigHandlers):
         config["after"].set(timestamp)
         after = time.ctime(timestamp)
         logger.info(f"Optimizing after {after}")
+
+    def _set_memory_limit(self, config: Subview) -> None:
+        """
+        Resolve the memory budget (in bytes) used to throttle large archives.
+
+        Accepts an int or a K/M/G/T-suffixed string. ``0`` (the default) means
+        auto: two-thirds of detected physical RAM. The resolved value is always
+        a positive byte count.
+        """
+        limit = _parse_memory_str(config["memory_limit"].get())
+        if limit <= 0:
+            limit = int(_detect_total_ram() * _DEFAULT_MEMORY_FRACTION)
+        config["memory_limit"].set(limit)
+        if config["verbose"].get(int) > 1:
+            logger.info(f"Memory budget for large archives: {limit // 1024**2} MiB")
 
     @staticmethod
     def _get_ignore_regexp(
@@ -210,6 +273,7 @@ class PicoptConfig(ConfigHandlers):
         config_program = config[PROGRAM_NAME]
         self._set_ignore(config_program)
         self._set_after(config_program)
+        self._set_memory_limit(config_program)
         self._set_timestamps(config_program)
         self.set_format_handler_map(config_program)
         ad = config.get(_build_template())
@@ -243,6 +307,7 @@ def _settings_from_attrdict(ad: Any) -> PicoptSettings:
         jobs=ad.jobs,
         keep_metadata=ad.keep_metadata,
         list_only=ad.list_only,
+        memory_limit=ad.memory_limit,
         near_lossless=ad.near_lossless,
         paths=tuple(ad.paths),
         png_max=ad.png_max,

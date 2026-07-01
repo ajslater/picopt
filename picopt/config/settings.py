@@ -76,6 +76,7 @@ class PicoptSettings:
     jobs: int
     keep_metadata: bool
     list_only: bool
+    memory_limit: int
     near_lossless: bool
     png_max: bool
     preserve: bool
