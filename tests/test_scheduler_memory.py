@@ -55,11 +55,11 @@ def _make_scheduler(memory_limit_bytes: int) -> "tuple[Scheduler, _StubExecutor]
     executor = _StubExecutor()
     scheduler = Scheduler(
         config=config,
-        executor=executor,  # type: ignore[arg-type]
+        executor=executor,  # pyright: ignore[reportArgumentType]  # ty: ignore[invalid-argument-type]
         timestamps=None,
-        reporter=None,  # type: ignore[arg-type]
+        reporter=None,  # pyright: ignore[reportArgumentType]  # ty: ignore[invalid-argument-type]
         max_workers=1000,  # keep the 2*max_workers future cap out of the way
-        create_repack_handler=lambda *_a: None,  # type: ignore[arg-type,return-value]
+        create_repack_handler=lambda *_a: None,  # pyright: ignore[reportArgumentType]  # ty: ignore[invalid-argument-type]
         child_enqueue_callback=lambda *_a: None,
     )
     return scheduler, executor
@@ -72,7 +72,7 @@ class TestSchedulerMemoryGate:
         """Only as many large containers as fit the budget start at once."""
         scheduler, executor = _make_scheduler(_BUDGET)
         for _ in range(_TOTAL):
-            scheduler.enqueue_container(_FakeHandler(_SIZE))  # type: ignore[arg-type]
+            scheduler.enqueue_container(_FakeHandler(_SIZE))  # pyright: ignore[reportArgumentType]  # ty: ignore[invalid-argument-type]
         scheduler._submit_ready()
         assert len(executor.submitted) == _FITS
         assert scheduler._inflight_bytes == _COST * _FITS
@@ -81,7 +81,7 @@ class TestSchedulerMemoryGate:
     def test_gate_runs_oversized_item_alone(self: Any) -> None:
         """A single item bigger than the whole budget still runs (alone)."""
         scheduler, executor = _make_scheduler(_BUDGET)
-        scheduler.enqueue_container(_FakeHandler(_BIG_SIZE))  # type: ignore[arg-type]
+        scheduler.enqueue_container(_FakeHandler(_BIG_SIZE))  # pyright: ignore[reportArgumentType]  # ty: ignore[invalid-argument-type]
         scheduler._submit_ready()
         assert len(executor.submitted) == 1
         assert scheduler._inflight_bytes == _BIG_SIZE * _MEM_COST_FACTOR
@@ -90,7 +90,7 @@ class TestSchedulerMemoryGate:
         """A deferred item is admitted once an in-flight node retires."""
         scheduler, executor = _make_scheduler(_BUDGET)
         nodes = [
-            scheduler.enqueue_container(_FakeHandler(_SIZE))  # type: ignore[arg-type]
+            scheduler.enqueue_container(_FakeHandler(_SIZE))  # pyright: ignore[reportArgumentType]  # ty: ignore[invalid-argument-type]
             for _ in range(_TOTAL)
         ]
         scheduler._submit_ready()
@@ -108,7 +108,7 @@ class TestSchedulerMemoryGate:
         """A generous budget never defers work."""
         scheduler, executor = _make_scheduler(1024**4)  # 1 TiB
         for _ in range(_ALL):
-            scheduler.enqueue_container(_FakeHandler(_SIZE))  # type: ignore[arg-type]
+            scheduler.enqueue_container(_FakeHandler(_SIZE))  # pyright: ignore[reportArgumentType]  # ty: ignore[invalid-argument-type]
         scheduler._submit_ready()
         assert len(executor.submitted) == _ALL
         assert len(scheduler._ready) == _NONE

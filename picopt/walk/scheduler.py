@@ -416,6 +416,8 @@ class Scheduler:
             case OptimizeLeafJob():
                 if node is None:  # standalone directory leaf
                     return True, self._est_cost(job.path_info)
+            case _:  # RepackJob and progress on already-admitted containers
+                pass
         return False, 0
 
     def _admits(self, cost: int) -> bool:
