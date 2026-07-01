@@ -60,7 +60,7 @@
   "devDependencies": {
     "@eslint-community/eslint-plugin-eslint-comments": "^4.7.2",
     "@eslint/js": "^10.0.1",
-    "@eslint/json": "^2.0.0",
+    "@eslint/json": "^2.0.1",
     "@fsouza/prettierd": "^0.28.0",
     "@prettier/plugin-xml": "^3.4.2",
     "@stylistic/eslint-plugin": "^5.10.0",
@@ -86,7 +86,7 @@
     "eslint-plugin-security": "^4.0.1",
     "eslint-plugin-sonarjs": "^4.1.0",
     "eslint-plugin-toml": "^1.4.0",
-    "eslint-plugin-unicorn": "^69.0.0",
+    "eslint-plugin-unicorn": "^70.0.0",
     "eslint-plugin-yml": "^3.5.0",
     "prettier": "^3.9.4",
     "prettier-plugin-nginx": "^1.0.3",
