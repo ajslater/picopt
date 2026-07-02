@@ -136,7 +136,10 @@ class TestArchiveFidelity:
         stamp = ArchiveTimestamp.from_datetime(KNOWN_MTIME)
         with SevenZipFile(sz_path, "w") as szf:
             szf.writef(BytesIO(png_data), PNG_FN)
-            file_info = szf.header.files_info.files[-1]
+            header = szf.header
+            assert header is not None
+            assert header.files_info is not None
+            file_info = header.files_info.files[-1]
             file_info["creationtime"] = stamp
             file_info["lastwritetime"] = stamp
             file_info["lastaccesstime"] = stamp

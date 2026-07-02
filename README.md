@@ -110,15 +110,9 @@ When configured to convert GIFS to WebP, Animated GIFs are converted to WebP
 with the [gif2webp](https://developers.google.com/speed/webp/docs/gif2webp)
 binary if it exists. It is normally distributed as part of the webp package.
 
-#### Experimental option
-
-This experimental options is activated with an environment variable.
-
-Set `PICOPT_ENABLE_IMG2WEBP=1` to make picopt optimize animated WebPs and
-convert animated PNGs to webp with the
-[img2webp](https://developers.google.com/speed/webp/docs/img2webp) binary. In my
-experiments img2webp has performed worse than picopt's custom algorithm using
-PIL & cwebp
+Animated WebPs are optimized (and animated PNGs converted to WebP) with the
+[img2webp](https://developers.google.com/speed/webp/docs/img2webp) binary when
+it is available, falling back to picopt's internal algorithm using PIL & cwebp.
 
 ### SVG
 

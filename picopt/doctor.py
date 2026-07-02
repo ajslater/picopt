@@ -131,8 +131,6 @@ class PicoptDoctor:
         self, status, tier_idx: int, tool
     ) -> tuple[list[str], bool]:
         tier_has_available = False
-        if status.required:
-            self.total_required += 1
         if status.available:
             tier_has_available = True
             prefix = "ok  "
@@ -140,7 +138,6 @@ class PicoptDoctor:
         else:
             prefix = "MISS"
             if status.required:
-                self.missing_required += 1
                 tier_color = "red"
             else:
                 self.missing_optional += 1
@@ -187,6 +184,13 @@ class PicoptDoctor:
         tier_has_available = False
         for tool in tier:
             tier_has_available |= self._checkup_tool(tier_idx, tool)
+        # Tools within a tier are ALTERNATIVES: the tier is healthy when
+        # any one of them is available. Count requirements per tier, not
+        # per tool, or healthy installs report missing-required tools.
+        if any(tool.required for tool in tier):
+            self.total_required += 1
+            if not tier_has_available:
+                self.missing_required += 1
         if not tier_has_available:
             console.print(
                 f"[yellow]    !!! tier {tier_idx} has no available tool[/yellow]"
@@ -208,18 +212,18 @@ class PicoptDoctor:
             self._checkup_handler(handler_cls)
 
     def _checkup_report(self) -> None:
-        available_tools = self.total_required - self.missing_required
+        available_tiers = self.total_required - self.missing_required
         required_color = "red" if self.missing_required else "green"
         optional_color = "cyan" if self.missing_optional else "green"
 
         summary = (
             "Summary: "
             f"[{required_color}]"
-            f"{available_tools}/{self.total_required} required tools available"
+            f"{available_tiers}/{self.total_required} required tool tiers available"
             f"[/{required_color}], "
             f"[{required_color}]{self.missing_required} missing required"
             f"[/{required_color}], "
-            f"[{optional_color}]{self.missing_optional} missing optional"
+            f"[{optional_color}]{self.missing_optional} missing optional tools"
             f"[/{optional_color}]."
         )
         console.print(summary)

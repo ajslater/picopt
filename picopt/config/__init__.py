@@ -16,6 +16,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
 from confuse import Configuration, MappingTemplate
+from confuse.exceptions import ConfigError
 from confuse.templates import (
     Choice,
     Integer,
@@ -86,11 +87,13 @@ def _build_template() -> MappingTemplate:
                         MappingTemplate(
                             {
                                 "handler_stages": dict,
+                                # Patterns are None when the user disables the
+                                # default ignores and supplies none (-I alone).
                                 "ignore": Optional(
                                     MappingTemplate(
                                         {
-                                            "case": re.Pattern,
-                                            "ignore_case": re.Pattern,
+                                            "case": Optional(re.Pattern),
+                                            "ignore_case": Optional(re.Pattern),
                                         }
                                     )
                                 ),
@@ -120,13 +123,18 @@ _DEFAULT_MEMORY_FRACTION = 2 / 3
 _FALLBACK_TOTAL_RAM = 4 * 1024**3
 
 
-def _parse_memory_str(value: object) -> int:
-    """Parse a memory size (int bytes or a K/M/G/T-suffixed string) to bytes."""
+def _parse_memory_str(value: object) -> int | None:
+    """
+    Parse a memory size (int bytes or a K/M/G/T-suffixed string) to bytes.
+
+    Returns None for unparseable values so the caller can reject them
+    instead of silently falling back to auto-detection.
+    """
     if isinstance(value, (int, float)):
         return int(value)
     text = str(value).strip().upper().rstrip("B").strip()
     if not text:
-        return 0
+        return None
     multiplier = 1
     if text[-1] in _MEMORY_SUFFIXES:
         multiplier = _MEMORY_SUFFIXES[text[-1]]
@@ -134,7 +142,7 @@ def _parse_memory_str(value: object) -> int:
     try:
         return int(float(text) * multiplier)
     except ValueError:
-        return 0
+        return None
 
 
 def _detect_total_ram() -> int:
@@ -163,8 +171,14 @@ class PicoptConfig(ConfigHandlers):
         try:
             timestamp = float(after)
         except ValueError:
-            after_dt = parse(after)
-            timestamp = time.mktime(after_dt.timetuple())
+            try:
+                after_dt = parse(after)
+            except (ValueError, OverflowError) as exc:
+                msg = f"Unparseable --after value {after!r}: {exc}"
+                raise ConfigError(msg) from exc
+            # datetime.timestamp() honors an explicit timezone; naive
+            # values are interpreted as local time, like mktime did.
+            timestamp = after_dt.timestamp()
         config["after"].set(timestamp)
         after = time.ctime(timestamp)
         logger.info(f"Optimizing after {after}")
@@ -177,7 +191,11 @@ class PicoptConfig(ConfigHandlers):
         auto: two-thirds of detected physical RAM. The resolved value is always
         a positive byte count.
         """
-        limit = _parse_memory_str(config["memory_limit"].get())
+        raw = config["memory_limit"].get()
+        limit = _parse_memory_str(raw)
+        if limit is None:
+            msg = f"Unparseable --memory-limit value: {raw!r}"
+            raise ConfigError(msg)
         if limit <= 0:
             limit = int(_detect_total_ram() * _DEFAULT_MEMORY_FRACTION)
         config["memory_limit"].set(limit)

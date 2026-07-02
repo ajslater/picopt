@@ -170,6 +170,12 @@ class ConfigHandlers:
         all_format_strs = self._get_config_set(config, "formats", "extra_formats")
         config["formats"].set(tuple(sorted(all_format_strs)))
         convert_to = self._get_config_set(config, "convert_to")
+        # Write the upcased lists back so template validation accepts
+        # lowercase user input for -x and -c exactly as it does for -f.
+        if extra_formats := self._get_config_set(config, "extra_formats"):
+            config["extra_formats"].set(tuple(sorted(extra_formats)))
+        if convert_to:
+            config["convert_to"].set(tuple(sorted(convert_to)))
 
         disabled_list: list[str] | None = config["disable_programs"].get(list)
         disabled_program_names = (

@@ -57,7 +57,9 @@ class TestCLI:
             Cbz.OUTPUT_FORMAT_STR,
             Zip.OUTPUT_FORMAT_STR,
         )
-        assert arguments.symlinks
+        # Un-passed flags stay None so config-file/env layers aren't
+        # shadowed; the config layer's defaults resolve symlinks to True.
+        assert arguments.symlinks is None
         self._test_get_arguments_aux(arguments)
 
     def test_main(self: Any) -> None:
