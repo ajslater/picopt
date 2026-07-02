@@ -181,6 +181,7 @@ class ContainerNode:
     children: list[ContainerNode] = field(default_factory=list)
     state: NodeState = NodeState.NEW
     had_work: bool = False  # any child produced replacement bytes
+    had_error: bool = False  # any child errored; don't timestamp this subtree
     staging_dir: Path | None = None
     cost: int = 0  # memory budget charged for this node (0 = not charged)
 
@@ -208,6 +209,9 @@ class _DirTracker:
     top_path: Path
     pending: int = 0
     sealed: bool = False
+    # A child errored: writing a compacted dir timestamp would cover the
+    # failed file and permanently skip it on subsequent runs.
+    errored: bool = False
 
 
 # ------------------------------------------------------------------- scheduler
@@ -300,6 +304,8 @@ class Scheduler:
         """
         self._record_totals(report)
         self._write_timestamp(report, top_path)
+        if report.exc and report.path is not None:
+            self._mark_dir_errored(report.path.parent)
 
     def begin_dir(self, top_path: Path, dir_path: Path) -> None:
         """Register a directory whose children are about to be enqueued."""
@@ -590,6 +596,7 @@ class Scheduler:
                 # the rebuilt archive.
                 self._reporter.record_report(report)
                 parent.handler.get_optimized_contents().add(entry.job.path_info)
+                parent.had_error = True
             parent.pending = max(0, parent.pending - 1)
             self._maybe_start_repack(parent)
             return
@@ -598,7 +605,9 @@ class Scheduler:
         self._record_totals(report)
         self._write_timestamp(report, entry.job.path_info.top_path)
         if entry.job.path_info.path is not None:
-            self._dir_child_done(entry.job.path_info.path.parent)
+            self._dir_child_done(
+                entry.job.path_info.path.parent, errored=bool(report.exc)
+            )
 
     def _handle_repack_failure(self, report: ReportStats, node: ContainerNode) -> None:
         if self._config.fail_fast:
@@ -612,6 +621,7 @@ class Scheduler:
                 root = root.parent
             self._cancel_subtree(root, reason=report.exc)
             self._reporter.record_report(report)
+            self._notify_dir_of_top_level_error(root)
             return
         # default rollback: this container becomes one error, parent
         # sees it as a "done" child with no work.
@@ -621,8 +631,17 @@ class Scheduler:
             # Keep the nested container's original bytes so the parent's
             # repack doesn't drop this member from the rebuilt archive.
             node.parent.handler.get_optimized_contents().add(node.handler.path_info)
+            node.parent.had_error = True
             node.parent.pending = max(0, node.parent.pending - 1)
             self._maybe_start_repack(node.parent)
+        else:
+            self._notify_dir_of_top_level_error(node)
+
+    def _notify_dir_of_top_level_error(self, node: ContainerNode) -> None:
+        """Tell a failed top-level container's directory tracker it is done."""
+        path = node.handler.path_info.path
+        if path is not None:
+            self._dir_child_done(path.parent, errored=True)
 
     def _handle_repack_done(self, node: ContainerNode, report: ReportStats) -> None:
         """Process a RepackJob completion (or synthesized no-op/error)."""
@@ -640,20 +659,28 @@ class Scheduler:
         self._record_totals(report)
         if node.is_top_level():
             top_path = node.handler.path_info.top_path
-            self._write_timestamp(report, top_path)
+            # A member error inside means the container isn't fully
+            # optimized; timestamping it would skip the failed member
+            # forever on subsequent runs.
+            if not node.had_error:
+                self._write_timestamp(report, top_path)
             self._cleanup_node_staging(node)
             if node.handler.path_info.path is not None:
-                self._dir_child_done(node.handler.path_info.path.parent)
+                self._dir_child_done(
+                    node.handler.path_info.path.parent, errored=node.had_error
+                )
         else:
             # Hydrate a PathInfo for our parent's _optimized_contents so
-            # the parent's repack picks up our repacked bytes.
+            # the parent's repack picks up our repacked bytes and any
+            # conversion rename (performed on the worker's pickled copy).
             parent = node.parent
             assert parent is not None
-            if report.data:
-                node.handler.path_info.set_data(report.data)
+            parent.handler.hydrate_optimized_path_info(node.handler.path_info, report)
             parent.handler.get_optimized_contents().add(node.handler.path_info)
             if report.changed:
                 parent.had_work = True
+            if node.had_error:
+                parent.had_error = True
             # Our staging lives until the PARENT's repack reads us, so we
             # don't rmtree here. Parent's repack completion triggers it.
             parent.pending = max(0, parent.pending - 1)
@@ -677,9 +704,15 @@ class Scheduler:
         # whether any child produced replacement bytes. Handlers like
         # Img2WebPAnimated set _do_repack=True unconditionally during walk()
         # because format conversion always requires repacking even when no
-        # individual child was "optimized".
+        # individual child was "optimized". A requested container format
+        # conversion (e.g. CBR -> CBZ) also needs a repack even when every
+        # member was already optimized.
         if not node.handler.is_do_repack():
-            node.handler.set_do_repack(do_repack=node.had_work)
+            convert_intent = (
+                node.handler.repack_handler_class is not None
+                and type(node.handler) is not node.handler.repack_handler_class
+            )
+            node.handler.set_do_repack(do_repack=node.had_work or convert_intent)
         if not node.handler.is_do_repack():
             # No work: synthesize a no-op completion so the parent chain
             # gets notified identically to a real repack.
@@ -711,11 +744,19 @@ class Scheduler:
         if tracker is not None:
             tracker.pending += 1
 
-    def _dir_child_done(self, parent_dir: Path) -> None:
+    def _mark_dir_errored(self, dir_path: Path) -> None:
+        """Poison a directory's timestamp write after a child error."""
+        tracker = self._dir_trackers.get(dir_path)
+        if tracker is not None:
+            tracker.errored = True
+
+    def _dir_child_done(self, parent_dir: Path, *, errored: bool = False) -> None:
         """Decrement a directory's pending count; finalize when ready."""
         tracker = self._dir_trackers.get(parent_dir)
         if tracker is None:
             return
+        if errored:
+            tracker.errored = True
         tracker.pending -= 1
         if tracker.pending <= 0 and tracker.sealed:
             self._finalize_dir(parent_dir, tracker)
@@ -723,11 +764,14 @@ class Scheduler:
     def _finalize_dir(self, dir_path: Path, tracker: _DirTracker) -> None:
         """Write directory timestamp with compaction and cascade to parent."""
         del self._dir_trackers[dir_path]
-        if self._timestamps:
+        # An errored child means this directory is not fully optimized; a
+        # compacted dir stamp would cover the failed file and skip it on
+        # every future run. Per-file stamps for the successes remain.
+        if self._timestamps and not tracker.errored:
             self._timestamps.set(tracker.top_path, dir_path, compact=True)
         parent_dir = dir_path.parent
         if parent_dir in self._dir_trackers:
-            self._dir_child_done(parent_dir)
+            self._dir_child_done(parent_dir, errored=tracker.errored)
 
     def _cleanup_node_staging(self, node: ContainerNode) -> None:
         """Rmtree this node's staging_dir, swallowing errors."""

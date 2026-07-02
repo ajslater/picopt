@@ -113,7 +113,23 @@ class Walk:
     ) -> None:
         """Bridge between scheduler and HandlerFactory for container children."""
         for path_info in children:
-            handler = self._create_handler(path_info)
+            try:
+                handler = self._create_handler(path_info)
+            except Exception as exc:
+                # A member that can't even be sniffed (e.g. a decompression
+                # bomb) is one error, not a run-ender. Pass it through
+                # unmodified so the repacked archive keeps it.
+                traceback.print_exc()
+                report = ReportStats(
+                    path=Path(path_info.full_output_name()),
+                    bytes_in=path_info.bytes_in(),
+                    exc=exc,
+                    config=self._config,
+                    path_info=path_info,
+                )
+                self._reporter.record_report(report)
+                node.handler.get_optimized_contents().add(path_info)
+                continue
             if handler is None:
                 # noop copy — child passes through unmodified
                 node.handler.get_optimized_contents().add(path_info)
