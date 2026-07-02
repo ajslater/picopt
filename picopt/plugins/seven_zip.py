@@ -15,6 +15,7 @@ from types import MappingProxyType
 from typing import TYPE_CHECKING, Any
 
 from py7zr import SevenZipFile, is_7zfile
+from py7zr.helpers import ArchiveTimestamp
 from py7zr.io import BytesIOFactory
 from typing_extensions import override
 
@@ -140,8 +141,18 @@ class SevenZip(ArchiveHandler):
     @override
     def _pack_info_one_file(self, archive, path_info) -> None:
         data = BytesIO(path_info.data())
-        arcname = path_info.archiveinfo.filename()
-        archive.writef(data, arcname=arcname)
+        archiveinfo = path_info.archiveinfo
+        archive.writef(data, arcname=archiveinfo.filename())
+        # py7zr's writef API stamps every member with now() and offers no
+        # override; restore the original member mtime on the header entry
+        # it just appended.
+        mtime = archiveinfo.mtime()
+        if mtime is not None and archive.header.files_info.files:
+            stamp = ArchiveTimestamp.from_datetime(mtime)
+            file_info = archive.header.files_info.files[-1]
+            file_info["creationtime"] = stamp
+            file_info["lastwritetime"] = stamp
+            file_info["lastaccesstime"] = stamp
 
 
 class Cb7(SevenZip):

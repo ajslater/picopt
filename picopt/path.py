@@ -98,6 +98,7 @@ class PathInfo:
         path: Path | None = None,
         frame: int | None = None,
         archiveinfo: ZipInfo | RarInfo | TarInfo | SevenZipInfo | None = None,
+        archive_index: int | None = None,
         data: bytes | None = None,
         noop: bool = False,
     ) -> None:
@@ -122,6 +123,9 @@ class PathInfo:
         self.archiveinfo: ArchiveInfo | None = (
             ArchiveInfo(archiveinfo) if archiveinfo else None
         )
+        # Position within the parent archive; repack uses it to preserve
+        # member order (EPUB requires mimetype first).
+        self.archive_index: int | None = archive_index
 
         # optionally computed
         self._data: bytes | None = data

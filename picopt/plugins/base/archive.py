@@ -94,8 +94,14 @@ class ArchiveHandler(ContainerHandler, ABC):
         raise NotImplementedError(msg)
 
     def _archive_write(self, archive) -> None:
-        while self._optimized_contents:
-            path_info = self._optimized_contents.pop()
+        # Preserve the source archive's member order (EPUB requires its
+        # mimetype entry first); members without an index sort last, stably.
+        contents = sorted(
+            self._optimized_contents,
+            key=lambda pi: (pi.archive_index is None, pi.archive_index or 0),
+        )
+        self._optimized_contents.clear()
+        for path_info in contents:
             self._pack_info_one_file(archive, path_info)
         if self.comment:
             archive.comment = self.comment
@@ -123,11 +129,13 @@ class ArchiveHandler(ContainerHandler, ABC):
 
     # --------------------------------------------------------------- walk
 
-    def _create_path_info(self, archiveinfo, data: bytes | None = None):
-
+    def _create_path_info(
+        self, archiveinfo, index: int | None = None, data: bytes | None = None
+    ):
         return PathInfo(
             path_info=self.path_info,
             archiveinfo=archiveinfo,
+            archive_index=index,
             data=data,
             convert=self._convert_children,
             container_parents=self.path_info.container_path_history(),
@@ -142,8 +150,8 @@ class ArchiveHandler(ContainerHandler, ABC):
             )
         )
 
-    def _walk_one_entry(self, archive, archiveinfo):
-        path_info = self._create_path_info(archiveinfo)
+    def _walk_one_entry(self, archive, archiveinfo, index: int):
+        path_info = self._create_path_info(archiveinfo, index)
         if self._is_archive_path_skip(path_info):
             self._skip_path_infos.add(path_info)
             return None
@@ -191,9 +199,10 @@ class ArchiveHandler(ContainerHandler, ABC):
         if self.config.verbose > 1:
             logger.info(f"Scanning archive {self.path_info.full_output_name()}…")
         with self._get_archive() as archive:
+            self._set_comment(archive)
             non_treestamp_entries = self._consume_archive_timestamps(archive)
-            for archiveinfo in non_treestamp_entries:
-                if path_info := self._walk_one_entry(archive, archiveinfo):
+            for index, archiveinfo in enumerate(non_treestamp_entries):
+                if path_info := self._walk_one_entry(archive, archiveinfo, index):
                     yield path_info
             # Always copy unchanged files: the scheduler decides
             # whether to repack after children are processed, but
