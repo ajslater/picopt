@@ -585,8 +585,11 @@ class Scheduler:
                 if report.changed:
                     parent.had_work = True
             else:
-                # leaf error inside a container — record, keep going
+                # leaf error inside a container — record it, but keep the
+                # member's walk-time bytes so repack doesn't drop it from
+                # the rebuilt archive.
                 self._reporter.record_report(report)
+                parent.handler.get_optimized_contents().add(entry.job.path_info)
             parent.pending = max(0, parent.pending - 1)
             self._maybe_start_repack(parent)
             return
@@ -615,6 +618,9 @@ class Scheduler:
         self._cancel_subtree(node, reason=report.exc)
         self._reporter.record_report(report)
         if node.parent is not None:
+            # Keep the nested container's original bytes so the parent's
+            # repack doesn't drop this member from the rebuilt archive.
+            node.parent.handler.get_optimized_contents().add(node.handler.path_info)
             node.parent.pending = max(0, node.parent.pending - 1)
             self._maybe_start_repack(node.parent)
 

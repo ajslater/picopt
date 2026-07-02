@@ -254,9 +254,17 @@ class Handler(ABC):
 
     def _write_final_path(self, final_data_buffer: BinaryIO) -> None:
         if isinstance(final_data_buffer, BytesIO):
-            with self.working_path.open("wb") as working_path:
+            # Never write into original_path directly: a crash or full disk
+            # mid-write would destroy the user's file. Write to a sibling
+            # temp file (same filesystem, so replace() below is atomic);
+            # stale ones are cleaned by WalkSkipper on the next run.
+            tmp_path = self.final_path.with_name(self.final_path.name + WORKING_SUFFIX)
+            with tmp_path.open("wb") as tmp_file:
                 final_data_buffer.seek(0)
-                working_path.write(final_data_buffer.read())
+                tmp_file.write(final_data_buffer.read())
+                tmp_file.flush()
+                os.fsync(tmp_file.fileno())
+            self.working_path = tmp_path
         self.working_path.replace(self.final_path)
 
     def _cleanup_original_path(self) -> None:
@@ -288,11 +296,9 @@ class Handler(ABC):
         self._preserve_stats()
 
     def _cleanup_after_optimize_get_return_data(
-        self, final_data_buffer: BinaryIO, bytes_in: int, bytes_out: int
+        self, final_data_buffer: BinaryIO, *, replaced: bool
     ) -> bytes:
-        if not self.config.dry_run and (
-            bytes_out > 0 and (bytes_out < bytes_in or self.config.bigger)
-        ):
+        if replaced:
             return_data = self._save_new_data(final_data_buffer)
             if self.path_info.path:
                 self._cleanup_filesystem(final_data_buffer)
@@ -305,8 +311,11 @@ class Handler(ABC):
         """Replace the old file with the better one or discard the new wasteful one."""
         bytes_in = self.path_info.bytes_in()
         bytes_out = self._get_buffer_len(final_data_buffer)
+        replaced = not self.config.dry_run and (
+            bytes_out > 0 and (bytes_out < bytes_in or self.config.bigger)
+        )
         return_data = self._cleanup_after_optimize_get_return_data(
-            final_data_buffer, bytes_in, bytes_out
+            final_data_buffer, replaced=replaced
         )
         if (
             self.working_path
@@ -314,19 +323,19 @@ class Handler(ABC):
             and isinstance(final_data_buffer, BufferedReader)
         ):
             self.working_path.unlink(missing_ok=True)
-        converted = self.original_path != self.final_path
+        # A discarded (or dry-run) result leaves the original in place: no
+        # conversion happened, nothing may be renamed or stat()ed at
+        # final_path — for conversions it was never created.
+        converted = replaced and self.original_path != self.final_path
         if converted:
             self.path_info.rename(self.final_path)
         # For in-archive entries final_path is a synthetic name with no
         # filesystem reality; whether the entry "changed" is decided by
         # whether the worker produced replacement bytes. The parent
         # container's repack pass owns the real timestamp.
-        if self.path_info.path is None:
-            changed = bool(return_data)
-        else:
-            changed = self.final_path.stat().st_mtime != self._original_mtime
+        changed = bool(return_data) if self.path_info.path is None else replaced
         return ReportStats(
-            self.final_path,
+            self.final_path if replaced else self.original_path,
             converted=converted,
             path_info=self.path_info,
             config=self.config,

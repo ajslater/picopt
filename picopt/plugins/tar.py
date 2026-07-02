@@ -118,7 +118,12 @@ class Tar(ArchiveHandler):
 
     @override
     def _get_archive(self) -> TarFile:
-        archive = tar_open(self.original_path, "r")  # noqa: SIM115
+        # In-archive members have no filesystem path; open from the buffer.
+        target = self.path_info.path_or_buffer()
+        if isinstance(target, BytesIO):
+            archive = tar_open(fileobj=target, mode="r")  # noqa: SIM115
+        else:
+            archive = tar_open(target, "r")  # noqa: SIM115
         if not archive:
             msg = f"Unknown archive type: {self.original_path}"
             raise ValueError(msg)

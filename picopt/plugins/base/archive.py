@@ -70,7 +70,9 @@ class ArchiveHandler(ContainerHandler, ABC):
     def _get_archive(self):
         """Open the archive for reading."""
         archive_class = type(self).ARCHIVE_CLASS
-        archive = archive_class(self.original_path, "r")
+        # In-archive members have no filesystem path; open from the buffer.
+        target = self.path_info.path_or_buffer()
+        archive = archive_class(target, "r")
         if not archive:
             msg = f"Unknown archive type: {self.original_path}"
             raise ValueError(msg)
