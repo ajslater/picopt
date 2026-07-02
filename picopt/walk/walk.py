@@ -70,6 +70,9 @@ class Walk:
         self._timestamps: Grovestamps | None = None  # reassigned at start of run
         self._skipper: WalkSkipper = WalkSkipper(config, self._reporter)
         self._handler_factory: HandlerFactory = HandlerFactory(config, self._reporter)
+        # (st_dev, st_ino) of every walked directory; symlink cycles and
+        # duplicate links must not re-optimize the same tree.
+        self._visited_dirs: set[tuple[int, int]] = set()
 
     def _init_timestamps(self) -> None:
         """Init timestamps."""
@@ -150,6 +153,16 @@ class Walk:
         dir_path = dir_path_info.path
         if not dir_path:
             return
+
+        try:
+            dir_stat = dir_path.stat()
+        except OSError:
+            return
+        dir_key = (dir_stat.st_dev, dir_stat.st_ino)
+        if dir_key in self._visited_dirs:
+            logger.debug(f"Skip: directory already visited (symlink loop): {dir_path}")
+            return
+        self._visited_dirs.add(dir_key)
 
         scheduler.begin_dir(dir_path_info.top_path, dir_path)
         try:
@@ -245,7 +258,15 @@ class Walk:
         )
         self.walk_file(path_info, scheduler)
 
-    def _count(self, path: Path, name: str, *, is_symlink: bool, is_dir: bool) -> int:
+    def _count(
+        self,
+        path: Path,
+        name: str,
+        visited: set[tuple[int, int]],
+        *,
+        is_symlink: bool,
+        is_dir: bool,
+    ) -> int:
         """
         Count progress-bar advances for ``path``.
 
@@ -261,6 +282,12 @@ class Walk:
         ):
             return 1
         try:
+            # Mirror walk_dir's symlink-loop guard or a cycle never ends.
+            dir_stat = path.stat()
+            dir_key = (dir_stat.st_dev, dir_stat.st_ino)
+            if dir_key in visited:
+                return 0
+            visited.add(dir_key)
             with os.scandir(path) as it:
                 entries = sorted(it, key=lambda e: e.name)
         except OSError:
@@ -271,6 +298,7 @@ class Walk:
                 total += self._count(
                     Path(entry.path),
                     entry.name,
+                    visited,
                     is_symlink=entry.is_symlink(),
                     is_dir=entry.is_dir(),
                 )
@@ -292,6 +320,7 @@ class Walk:
             return self._count(
                 path,
                 path.name,
+                set(),
                 is_symlink=path.is_symlink(),
                 is_dir=path.is_dir(),
             )
@@ -305,6 +334,7 @@ class Walk:
     def walk(self) -> Stats:
         """Optimize all configured files."""
         self._init_timestamps()
+        self._visited_dirs.clear()
 
         max_workers = self._config.jobs or os.cpu_count() or 1
         total = self._count_total()
