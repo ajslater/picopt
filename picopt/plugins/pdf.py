@@ -172,8 +172,8 @@ def _is_dct_filter(filt: Any) -> bool:
     return False
 
 
-def _has_signature(pdf: Any) -> bool:
-    """Return True iff the PDF has a digital signature flag set."""
+def _has_signature_flag(pdf: Any) -> bool:
+    """Return True iff the PDF's AcroForm signature flag is set."""
     import pikepdf
 
     root = pdf.Root
@@ -193,6 +193,27 @@ def _has_signature(pdf: Any) -> bool:
         return bool(int(sig_flags) & 1)
     except (TypeError, ValueError):
         return False
+
+
+def _has_signature_object(pdf: Any) -> bool:
+    """
+    Return True iff any object is a signature dictionary (``/Type /Sig``).
+
+    Catches signed PDFs from non-conforming producers that never set the
+    AcroForm ``SigFlags`` bit; rewriting those would destroy the signature.
+    """
+    import pikepdf
+
+    for obj in pdf.objects:
+        with suppress(Exception):
+            if obj.get(pikepdf.Name.Type, None) == pikepdf.Name.Sig:
+                return True
+    return False
+
+
+def _has_signature(pdf: Any) -> bool:
+    """Return True iff the PDF appears to be digitally signed."""
+    return _has_signature_flag(pdf) or _has_signature_object(pdf)
 
 
 def _synthetic_zipinfo(objgen: tuple[int, int]) -> ZipInfo:
@@ -387,7 +408,13 @@ class Pdf(ContainerHandler):
         if not optimized or len(optimized) >= len(original_raw):
             return 0
         try:
-            obj.write(optimized, filter=pikepdf.Name.DCTDecode)
+            # Preserve /DecodeParms (e.g. /ColorTransform): the optimized
+            # bytes are still a JPEG with the same color encoding, and
+            # dropping the parms can corrupt colors in some readers.
+            decode_parms = obj.get(pikepdf.Name.DecodeParms, None)
+            obj.write(
+                optimized, filter=pikepdf.Name.DCTDecode, decode_parms=decode_parms
+            )
         except Exception:
             logger.error(f"Error writing optimized PDF image {obj}")
             raise
@@ -431,14 +458,23 @@ class Pdf(ContainerHandler):
         try:
             self._apply_optimized_jpegs(pdf)
             output_buffer = BytesIO()
-            pdf.save(
-                output_buffer,
-                object_stream_mode=pikepdf.ObjectStreamMode.generate,
-                compress_streams=True,
-                stream_decode_level=pikepdf.StreamDecodeLevel.generalized,
-                recompress_flate=True,
-                linearize=False,
-            )
+            save_kwargs: dict[str, Any] = {
+                "object_stream_mode": pikepdf.ObjectStreamMode.generate,
+                "compress_streams": True,
+                "recompress_flate": True,
+                "linearize": False,
+            }
+            if pdf.is_encrypted:
+                # An owner-password-restricted PDF opens without a password;
+                # saving without encryption=True would silently strip its
+                # protection. qpdf cannot decode streams while preserving
+                # encryption, so accept the weaker rewrite for these.
+                save_kwargs["encryption"] = True
+            else:
+                save_kwargs["stream_decode_level"] = (
+                    pikepdf.StreamDecodeLevel.generalized
+                )
+            pdf.save(output_buffer, **save_kwargs)
         finally:
             with suppress(Exception):
                 pdf.close()
