@@ -43,6 +43,19 @@ if TYPE_CHECKING:
     from picopt.plugins.base.format import FileFormat
 
 
+def _pick_tier_tool(
+    tier: tuple[Tool, ...],
+    disabled_program_names: frozenset[str],
+) -> Tool | None:
+    """Return the first available, non-disabled tool in a tier."""
+    for tool in tier:
+        if tool.name and tool.name in disabled_program_names:
+            continue
+        if tool.probe().available:
+            return tool
+    return None
+
+
 def _select_pipeline_for_handler(
     handler_cls: type[Handler],
     disabled_program_names: frozenset[str],
@@ -53,25 +66,15 @@ def _select_pipeline_for_handler(
     Returns ``None`` if any tier has no available tool — that signals the
     handler can't run on this machine. Returns the empty tuple for handlers
     with an empty pipeline (e.g. archive packers that use only stdlib /
-    library code); those are unconditionally available.
+    library code); those are unconditionally available. Tiers whose tools
+    are all optional are skipped when nothing in them is available.
     """
-    if not handler_cls.PIPELINE:
-        return ()
     chosen: list[Tool] = []
     for tier in handler_cls.PIPELINE:
-        picked: Tool | None = None
-        for tool in tier:
-            if tool.name and tool.name in disabled_program_names:
-                continue
-            status = tool.probe()
-            if status.available:
-                picked = tool
-                break
+        picked = _pick_tier_tool(tier, disabled_program_names)
         if picked is not None:
             chosen.append(picked)
-        elif all(not tool.required for tool in tier):
-            continue
-        else:
+        elif any(tool.required for tool in tier):
             return None
     return tuple(chosen)
 
