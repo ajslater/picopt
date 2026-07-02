@@ -97,7 +97,8 @@ def _is_lossless(
 ) -> bool:
     """Decide whether a PIL-identified format is the lossless variant."""
     if image_format_str == _WEBP_FORMAT_STR:
-        return _webp_is_lossless(path_info.fp_or_buffer())
+        with path_info.fp_or_buffer() as buffer:
+            return _webp_is_lossless(buffer)
     if image_format_str == _TIFF_FORMAT_STR:
         return is_tiff_lossless(dict(info))
     return image_format_str in registry.lossless_format_strs()

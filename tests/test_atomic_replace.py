@@ -1,7 +1,9 @@
 """Test the replace/discard policy of Handler._cleanup_after_optimize."""
 
+import os
 from io import BytesIO
 from pathlib import Path
+from subprocess import CalledProcessError
 from typing import BinaryIO
 
 import pytest
@@ -42,7 +44,7 @@ class _StubConvertHandler(_StubHandler):
     SUFFIXES = (".webp",)
 
 
-def _make_settings(*, dry_run: bool = False) -> PicoptSettings:
+def _make_settings(*, dry_run: bool = False, preserve: bool = False) -> PicoptSettings:
     computed = ComputedSettings(
         handler_stages={}, ignore=IgnorePatterns(case=None, ignore_case=None)
     )
@@ -58,7 +60,7 @@ def _make_settings(*, dry_run: bool = False) -> PicoptSettings:
         memory_limit=0,
         near_lossless=False,
         png_max=False,
-        preserve=False,
+        preserve=preserve,
         recurse=True,
         symlinks=True,
         timestamps=False,
@@ -81,11 +83,14 @@ def _make_handler(
     handler_cls: type[_StubHandler] = _StubHandler,
     *,
     dry_run: bool = False,
+    preserve: bool = False,
 ) -> tuple[_StubHandler, Path]:
     original_path = tmp_path / "test.png"
     original_path.write_bytes(_ORIGINAL_DATA)
     path_info = PathInfo(top_path=tmp_path, path=original_path, convert=False)
-    handler = handler_cls(_make_settings(dry_run=dry_run), path_info, _PNG_FORMAT)
+    handler = handler_cls(
+        _make_settings(dry_run=dry_run, preserve=preserve), path_info, _PNG_FORMAT
+    )
     return handler, original_path
 
 
@@ -158,3 +163,35 @@ def test_dry_run_conversion_writes_nothing(tmp_path: Path) -> None:
     assert original_path.read_bytes() == _ORIGINAL_DATA
     assert not (tmp_path / "test.webp").exists()
     assert not list(tmp_path.glob(f"*{WORKING_SUFFIX}*"))
+
+
+def test_preserve_survives_chown_failure(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """--preserve still restores mode and mtime when chown is denied."""
+    handler, original_path = _make_handler(tmp_path, preserve=True)
+    original_mtime_ns = original_path.stat().st_mtime_ns
+
+    def _denied(*_args, **_kwargs) -> None:
+        msg = "Operation not permitted"
+        raise PermissionError(msg)
+
+    monkeypatch.setattr(os, "chown", _denied)
+    report = handler._cleanup_after_optimize(BytesIO(_OPTIMIZED_DATA))
+    assert report.exc is None
+    assert original_path.read_bytes() == _OPTIMIZED_DATA
+    assert original_path.stat().st_mtime_ns == original_mtime_ns
+
+
+def test_run_ext_fs_cleans_temp_input_when_tool_fails(tmp_path: Path) -> None:
+    """A failed external tool must not leave the spilled temp input behind."""
+    handler, _ = _make_handler(tmp_path)
+    input_path = tmp_path / "spilled.tmp"
+    with pytest.raises(CalledProcessError):
+        handler.run_ext_fs(
+            ("/usr/bin/false",),
+            BytesIO(_ORIGINAL_DATA),
+            input_path,
+            input_path_tmp=True,
+        )
+    assert not input_path.exists()

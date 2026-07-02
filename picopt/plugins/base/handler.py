@@ -25,6 +25,8 @@ from pathlib import Path
 from types import MappingProxyType
 from typing import TYPE_CHECKING, BinaryIO, Final
 
+from loguru import logger
+
 from picopt import WORKING_SUFFIX
 from picopt.path import DOUBLE_SUFFIX, PathInfo
 from picopt.plugins.base.format import FileFormat
@@ -139,20 +141,22 @@ class Handler(ABC):
                 input_buffer.seek(0)
                 input_tmp_file.write(input_buffer.read())
 
-        proc = subprocess.run(  # noqa: S603
-            args,
-            check=True,
-            capture_output=True,
-        )
-
-        if input_path_tmp and input_path:
-            input_path.unlink(missing_ok=True)
-
-        if output_path_tmp and output_path:
-            output_buffer = BytesIO(output_path.read_bytes())
-            output_path.unlink(missing_ok=True)
-        else:
-            output_buffer = BytesIO(proc.stdout)
+        try:
+            proc = subprocess.run(  # noqa: S603
+                args,
+                check=True,
+                capture_output=True,
+            )
+            if output_path_tmp and output_path:
+                output_buffer = BytesIO(output_path.read_bytes())
+            else:
+                output_buffer = BytesIO(proc.stdout)
+        finally:
+            # Temp files must not survive a failed external tool.
+            if input_path_tmp and input_path:
+                input_path.unlink(missing_ok=True)
+            if output_path_tmp and output_path:
+                output_path.unlink(missing_ok=True)
         return output_buffer
 
     def get_working_path(self) -> Path:
@@ -282,7 +286,12 @@ class Handler(ABC):
         stat = self.path_info.stat()
         if stat is None:
             return
-        os.chown(self.final_path, stat.st_uid, stat.st_gid)
+        try:
+            os.chown(self.final_path, stat.st_uid, stat.st_gid)
+        except OSError as exc:
+            # Non-root users can't chown; a successful optimization must
+            # not become an error, and mode/mtime should still restore.
+            logger.debug(f"Could not restore owner of {self.final_path}: {exc}")
         self.final_path.chmod(stat.st_mode)
         os.utime(self.final_path, ns=(stat.st_atime_ns, stat.st_mtime_ns))
 

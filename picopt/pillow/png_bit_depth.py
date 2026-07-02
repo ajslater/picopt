@@ -17,14 +17,13 @@ _BIT_DEPTH_OFFSET = 24
 
 def png_bit_depth(buffer: BinaryIO) -> int | None:
     """If a file is a png, get the bit depth from the standard position."""
-    if _PNG_HEADER.compare(buffer):
-        buffer.seek(_BIT_DEPTH_OFFSET)  # bit depth offset
-        depth = buffer.read(1)
-        result = int.from_bytes(depth, byteorder="little")
-    else:
+    if not _PNG_HEADER.compare(buffer):
         reason = "cannot find bit depth of non png"
         raise ValueError(reason)
-    return result
+    buffer.seek(_BIT_DEPTH_OFFSET)  # bit depth offset
+    depth = buffer.read(1)
+    # None for truncated files rather than a fake 0 depth.
+    return depth[0] if depth else None
 
 
 def main() -> None:
