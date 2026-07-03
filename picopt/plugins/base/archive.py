@@ -142,12 +142,10 @@ class ArchiveHandler(ContainerHandler, ABC):
         )
 
     def _is_archive_path_skip(self, path_info) -> bool:
-        return bool(self._skipper) and (
-            self._skipper.is_walk_file_skip(path_info)
-            or (
-                not self.config.timestamps_ignore_archive_entry_mtimes
-                and self._skipper.is_older_than_timestamp(path_info)
-            )
+        skipper = self._get_skipper()
+        return skipper.is_walk_file_skip(path_info) or (
+            not self.config.timestamps_ignore_archive_entry_mtimes
+            and skipper.is_older_than_timestamp(path_info)
         )
 
     def _walk_one_entry(self, archive, archiveinfo, index: int):
@@ -178,7 +176,7 @@ class ArchiveHandler(ContainerHandler, ABC):
             yaml_str = yaml_str.decode(errors="replace")
             archive_sub_path = self.path_info.archive_pseudo_path() / path.parent
             self._timestamps.loads(archive_sub_path, yaml_str)
-            if self._skipper and self.config.verbose > 1:
+            if self.config.verbose > 1:
                 logger.info(f"Consumed picopt timestamp in archive: {path}")
             self._do_repack = True
         return tuple(non_treestamp_entries)

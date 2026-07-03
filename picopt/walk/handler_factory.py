@@ -31,6 +31,7 @@ from typing import TYPE_CHECKING, Any
 from loguru import logger
 
 from picopt import plugins as registry
+from picopt.archive_stamps import ArchiveStamps
 from picopt.plugins.base import (
     ArchiveHandler,
     ContainerHandler,
@@ -48,6 +49,26 @@ if TYPE_CHECKING:
     from picopt.log.reporter import Reporter
     from picopt.path import PathInfo
     from picopt.plugins.base.format import FileFormat
+
+
+def _build_archive_stamps(
+    path_info: PathInfo, timestamps: Grovestamps | None
+) -> ArchiveStamps | None:
+    """
+    Build the picklable timestamps slice an archive's unpack worker uses.
+
+    Seeds the slice with the tree's serialized stamps (``dump_dict`` —
+    the same config-headed mapping treestamps round-trips through disk)
+    so member entry-mtime skip checks work in the worker, where the real
+    Grovestamps cannot travel.
+    """
+    if timestamps is None:
+        return None
+    try:
+        tree = timestamps[path_info.top_path]
+    except KeyError:
+        return None
+    return ArchiveStamps(tree._config, tree.dump_dict())  # noqa: SLF001
 
 
 class HandlerFactory:
@@ -235,7 +256,7 @@ class HandlerFactory:
             if repack_handler_class:
                 kwargs["repack_handler_class"] = repack_handler_class
                 if issubclass(handler_cls, ArchiveHandler):
-                    kwargs["timestamps"] = timestamps
+                    kwargs["timestamps"] = _build_archive_stamps(path_info, timestamps)
             else:
                 return None
 

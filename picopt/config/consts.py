@@ -20,5 +20,8 @@ TIMESTAMPS_CONFIG_KEYS: Final[frozenset[str]] = frozenset(
         "near_lossless",
         "recurse",
         "symlinks",
+        # Changes which archive members are optimized, so flipping it must
+        # invalidate stamps like any other behavior-affecting option.
+        "timestamps_ignore_archive_entry_mtimes",
     }
 )

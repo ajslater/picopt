@@ -32,6 +32,7 @@ DEFAULT_CONFIG = {
     "near_lossless": False,
     "recurse": True,
     "symlinks": True,
+    "timestamps_ignore_archive_entry_mtimes": False,
 }
 
 TREESTAMPS_CONFIG = {"ignore": frozenset(), "symlinks": True}
