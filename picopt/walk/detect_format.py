@@ -135,3 +135,18 @@ def detect_format(
     if not file_format:
         file_format = _get_non_pil_format(path_info)
     return file_format, info
+
+
+def predetect_format(path_info: PathInfo, *, keep_metadata: bool) -> None:
+    """
+    Detect and cache the format onto the PathInfo.
+
+    Run inside unpack workers so the expensive PIL sniff of every archive
+    member parallelizes instead of serializing on the scheduler thread.
+    """
+    try:
+        path_info.detected = detect_format(path_info, keep_metadata=keep_metadata)
+    except Exception:
+        # Leave undetected: the main thread re-detects inside its
+        # per-member error guard and reports the failure there.
+        path_info.detected = None

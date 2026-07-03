@@ -76,7 +76,8 @@ class TestSchedulerMemoryGate:
         scheduler._submit_ready()
         assert len(executor.submitted) == _FITS
         assert scheduler._inflight_bytes == _COST * _FITS
-        assert len(scheduler._ready) == _DEFERRED
+        assert len(scheduler._gated) == _DEFERRED
+        assert len(scheduler._ready) == _NONE
 
     def test_gate_runs_oversized_item_alone(self: Any) -> None:
         """A single item bigger than the whole budget still runs (alone)."""
@@ -94,7 +95,8 @@ class TestSchedulerMemoryGate:
             for _ in range(_TOTAL)
         ]
         scheduler._submit_ready()
-        assert len(scheduler._ready) == _DEFERRED
+        assert len(scheduler._gated) == _DEFERRED
+        assert len(scheduler._ready) == _NONE
 
         admitted = [node for node in nodes if node.cost > 0]
         scheduler._retire_node(admitted[0])
@@ -103,6 +105,7 @@ class TestSchedulerMemoryGate:
         scheduler._submit_ready()
         assert len(executor.submitted) == _TOTAL
         assert len(scheduler._ready) == _NONE
+        assert len(scheduler._gated) == _NONE
 
     def test_large_budget_admits_everything(self: Any) -> None:
         """A generous budget never defers work."""
@@ -112,3 +115,4 @@ class TestSchedulerMemoryGate:
         scheduler._submit_ready()
         assert len(executor.submitted) == _ALL
         assert len(scheduler._ready) == _NONE
+        assert len(scheduler._gated) == _NONE

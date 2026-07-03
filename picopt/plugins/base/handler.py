@@ -251,10 +251,14 @@ class Handler(ABC):
     def _save_new_data(self, final_data_buffer: BinaryIO | None) -> bytes:
         if final_data_buffer is None:
             return b""
-        if isinstance(final_data_buffer, BytesIO) or bool(self.path_info.archiveinfo):
-            final_data_buffer.seek(0)
-            return final_data_buffer.read()
-        return b""
+        # Only in-container entries need their bytes returned — the parent's
+        # repack consumes them. Top-level results are already written to
+        # disk; returning them would pickle the whole file back to the main
+        # process just to be discarded.
+        if self.path_info.path is not None:
+            return b""
+        final_data_buffer.seek(0)
+        return final_data_buffer.read()
 
     def _write_final_path(self, final_data_buffer: BinaryIO) -> None:
         if isinstance(final_data_buffer, BytesIO):

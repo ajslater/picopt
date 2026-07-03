@@ -319,6 +319,7 @@ ignore-variadic-names = true
 ignore-overlong-task-comments = true
 
 [tool.ruff.lint.per-file-ignores]
+"bin/*" = ["T201", "T203"]
 "tests/*" = ["D101", "D102", "SLF001", "T201", "T203"]
 
 [tool.ruff.lint.pylint]

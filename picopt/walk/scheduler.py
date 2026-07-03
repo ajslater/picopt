@@ -35,6 +35,7 @@ from itertools import chain
 from typing import TYPE_CHECKING
 
 from picopt.report import ReportStats
+from picopt.walk.detect_format import predetect_format
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -130,6 +131,11 @@ class UnpackJob:
         """Unpack the container and list its children. Worker-side."""
         try:
             children = list(self.handler.walk())
+            # Pre-detect member formats here so the expensive PIL sniff
+            # parallelizes instead of serializing on the scheduler thread.
+            keep_metadata = self.handler.config.keep_metadata
+            for child in children:
+                predetect_format(child, keep_metadata=keep_metadata)
             return UnpackResult(handler=self.handler, children=children)
         except Exception as exc:
             traceback.print_exc()
@@ -252,6 +258,9 @@ class Scheduler:
         self._child_enqueue_callback = child_enqueue_callback
 
         self._ready: deque[tuple[Job, ContainerNode | None]] = deque()
+        # Top-level items deferred by the memory gate wait here in FIFO
+        # order instead of being re-scanned through _ready on every tick.
+        self._gated: deque[tuple[Job, ContainerNode | None]] = deque()
         self._inflight_unpack: dict[Future, ContainerNode] = {}
         self._inflight_leaf: dict[Future, _LeafEntry] = {}
         self._inflight_repack: dict[Future, ContainerNode] = {}
@@ -333,9 +342,9 @@ class Scheduler:
             self._dir_child_done(parent_dir)
 
     def run(self) -> None:
-        """Drain ready and inflight until both are empty."""
+        """Drain ready, gated, and inflight until all are empty."""
         try:
-            while self._ready or self._inflight_count() > 0:
+            while self._ready or self._gated or self._inflight_count() > 0:
                 self._submit_ready()
                 if self._inflight_count() == 0:
                     continue
@@ -455,18 +464,32 @@ class Scheduler:
             else:  # standalone leaf
                 self._inflight_leaf[fut].cost = cost
 
+    def _submit_gated(self, cap: int) -> None:
+        """Admit memory-gated items in FIFO order until the head blocks."""
+        while self._gated and self._inflight_count() < cap:
+            job, node = self._gated[0]
+            if node is not None and node.state is NodeState.CANCELLED:
+                self._gated.popleft()
+                self._drop_cancelled_ready_job(job, node)
+                continue
+            _, cost = self._charge_info(job, node)
+            if not self._admits(cost):
+                break
+            self._gated.popleft()
+            self._submit_one(job, node, cost)
+
     def _submit_ready(self) -> None:
         """
         Submit ready jobs up to the backpressure cap and the memory budget.
 
-        Scans the whole ready queue rather than only its head: a top-level item
-        blocked by the memory budget is left in place while exempt jobs behind
-        it (leaves/repacks of already-admitted containers) still run — those are
-        what eventually complete and free budget. Deferred items keep their
-        order at the front of the queue for the next tick.
+        Top-level items blocked by the memory budget move to the gated
+        queue so exempt jobs behind them (leaves/repacks of already-admitted
+        containers) still run — those are what eventually complete and free
+        budget. The gated queue is retried head-first each tick instead of
+        rescanning the whole ready queue.
         """
         cap = 2 * self._max_workers
-        deferred: deque[tuple[Job, ContainerNode | None]] = deque()
+        self._submit_gated(cap)
         while self._ready and self._inflight_count() < cap:
             job, node = self._ready.popleft()
             # Skip jobs whose owning node got cancelled while they were queued.
@@ -475,11 +498,9 @@ class Scheduler:
                 continue
             charged, cost = self._charge_info(job, node)
             if charged and not self._admits(cost):
-                deferred.append((job, node))
+                self._gated.append((job, node))
                 continue
             self._submit_one(job, node, cost if charged else 0)
-        if deferred:
-            self._ready.extendleft(reversed(deferred))
 
     def _cancel_subtree(
         self, root: ContainerNode, *, reason: BaseException | None
@@ -496,8 +517,9 @@ class Scheduler:
             node.state = NodeState.CANCELLED
             node.handler.get_optimized_contents().clear()
             stack.extend(node.children)
-        # Purge ready queue of anything belonging to a cancelled node.
+        # Purge queues of anything belonging to a cancelled node.
         self._ready = deque((job, n) for (job, n) in self._ready if n not in cancelled)
+        self._gated = deque((job, n) for (job, n) in self._gated if n not in cancelled)
         # Clean staging immediately for every cancelled node.
         for node in cancelled:
             self._cleanup_node_staging(node)
@@ -511,6 +533,7 @@ class Scheduler:
         for top in tops:
             self._cancel_subtree(top, reason=reason)
         self._ready.clear()
+        self._gated.clear()
 
     def _handle_completion(self, fut: Future) -> None:
         """Dispatch one completed future by which inflight map owns it."""

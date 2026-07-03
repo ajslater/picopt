@@ -216,9 +216,14 @@ class HandlerFactory:
     ) -> tuple[FileFormat | None, type[Handler] | None, Mapping[str, Any]]:
         handler_cls: type[Handler] | None = None
         try:
-            file_format, info = detect_format(
-                path_info, keep_metadata=self._config.keep_metadata
-            )
+            # Unpack workers pre-detect archive members so the expensive
+            # PIL sniff doesn't serialize on this thread.
+            detected = path_info.detected
+            if detected is None:
+                detected = detect_format(
+                    path_info, keep_metadata=self._config.keep_metadata
+                )
+            file_format, info = detected
             handler_cls = self._pick_handler_class(
                 file_format,
                 convert=path_info.convert,

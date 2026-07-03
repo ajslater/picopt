@@ -130,6 +130,9 @@ class PathInfo:
         # optionally computed
         self._data: bytes | None = data
         self._header_bytes: bytes | None = None
+        # (FileFormat | None, info-Mapping) cached by unpack workers via
+        # predetect_format(); None means detection has not run yet.
+        self.detected: tuple | None = None
 
         # always computed
         self._is_dir: bool | None = None

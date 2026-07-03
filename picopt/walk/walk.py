@@ -337,8 +337,11 @@ class Walk:
         self._visited_dirs.clear()
 
         max_workers = self._config.jobs or os.cpu_count() or 1
-        total = self._count_total()
-        progress = make_progress(console, enabled=self._config.verbose > 0, total=total)
+        # The pre-count re-walks the whole tree; don't pay for it when the
+        # progress bar isn't shown at all.
+        progress_enabled = self._config.verbose > 0
+        total = self._count_total() if progress_enabled else 0
+        progress = make_progress(console, enabled=progress_enabled, total=total)
         # Replace the no-op progress that the skipper / factory captured at
         # construction time so they advance the real bar.
         self._reporter.progress = progress

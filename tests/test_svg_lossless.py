@@ -14,16 +14,18 @@ TMP_ROOT = get_test_dir()
 SVG_FN = "boxed.svg"
 # Enough repetitive filler that svgo produces a smaller file and picopt
 # actually replaces it.
-SVG_SOURCE = (
-    '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">\n'
-    "  <title>Keep Me</title>\n"
-    "  <desc>Important description</desc>\n"
-    + "".join(
-        f'  <rect x="{i}.0000" y="{i}.0000" width="10.0000" height="10.0000" '
-        'style="fill:#ff0000;stroke:none" />\n'
-        for i in range(20)
+_SVG_RECT = (
+    '  <rect x="{i}.0000" y="{i}.0000" width="10.0000" height="10.0000"'
+    ' style="fill:#ff0000;stroke:none" />\n'
+)
+SVG_SOURCE = "".join(
+    (
+        '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">\n',
+        "  <title>Keep Me</title>\n",
+        "  <desc>Important description</desc>\n",
+        *(_SVG_RECT.format(i=i) for i in range(20)),
+        "</svg>\n",
     )
-    + "</svg>\n"
 )
 
 
