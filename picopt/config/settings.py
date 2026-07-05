@@ -15,7 +15,7 @@ the validated result is converted into this dataclass once in
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     import re
@@ -45,14 +45,15 @@ class ComputedSettings:
 
     - ``handler_stages`` is filled by :class:`ConfigHandlers` after probing
       each handler's PIPELINE; absence of a handler-class key signals
-      "no available pipeline" to the routing layer. Typed as ``dict[Any, Any]``
-      to avoid an import cycle with ``picopt.plugins.base``; consumers know
-      the concrete shape via local ``cast``-style usage.
+      "no available pipeline" to the routing layer. Concretely it is
+      ``dict[type[Handler], tuple[Tool, ...]]``, but plugins.base imports
+      this module, and basedpyright's reportImportCycles counts even
+      TYPE_CHECKING edges, so the annotation stays structural.
     - ``ignore`` is filled by ``_set_ignore`` from the user's ``ignore``
       list plus ``ignore_defaults``.
     """
 
-    handler_stages: dict[Any, Any]
+    handler_stages: dict[type, tuple]
     ignore: IgnorePatterns
 
 

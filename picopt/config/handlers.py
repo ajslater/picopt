@@ -28,7 +28,7 @@ by the time it matters. Don't reorder.
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 
 from loguru import logger
 
@@ -40,7 +40,6 @@ if TYPE_CHECKING:
     from confuse import Subview
 
     from picopt.plugins.base import Handler, Tool
-    from picopt.plugins.base.format import FileFormat
 
 
 def _pick_tier_tool(
@@ -137,34 +136,6 @@ class ConfigHandlers:
         if stages is not None:
             handler_stages[handler_cls] = stages
 
-    def _set_format_handled_strs_for_format(
-        self,
-        file_format: FileFormat,
-        all_format_strs: frozenset[str],
-        convert_chain: tuple[type[Handler], ...],
-        convert_to: frozenset[str | Any],
-        handler_stages: dict[type[Handler], tuple[Tool, ...]],
-        convert_format_strs: dict[Any, Any],
-        handled_format_strs: set[Any],
-        native: type[Handler] | None,
-    ) -> None:
-        if file_format.format_str not in all_format_strs:
-            return
-        picked_via_convert = False
-        for candidate in convert_chain:
-            if candidate.OUTPUT_FORMAT_STR not in convert_to:
-                continue
-            if candidate not in handler_stages:
-                continue
-            convert_format_strs.setdefault(candidate.OUTPUT_FORMAT_STR, set()).add(
-                file_format.format_str
-            )
-            handled_format_strs.add(file_format.format_str)
-            picked_via_convert = True
-            break
-        if not picked_via_convert and native is not None and native in handler_stages:
-            handled_format_strs.add(file_format.format_str)
-
     def set_format_handler_map(self, config: Subview) -> None:
         """Probe handlers for the requested formats and store availability."""
         all_format_strs = self._get_config_set(config, "formats", "extra_formats")
@@ -187,23 +158,32 @@ class ConfigHandlers:
             self._set_format_handler_stages(
                 handler_cls, handler_stages, disabled_program_names
             )
-        # Walk the routing table to compute the verbose-output summary. The
-        # routing layer will do this same lookup at runtime; we just mirror
-        # the result for the user-facing log.
+        # Build the verbose-output summary with the routing layer's own
+        # decision function so the log can never drift from what the walk
+        # actually does. repack=True for archives applies the same
+        # convert/CAN_PACK gates the repack pass will.
         handled_format_strs: set[str] = set()
         convert_format_strs: dict[str, set[str]] = {}
         routes = registry.routes_by_format()
         for file_format, (native, convert_chain) in routes.items():
-            self._set_format_handled_strs_for_format(
+            if file_format.format_str not in all_format_strs:
+                continue
+            picked = registry.pick_route_handler(
                 file_format,
-                all_format_strs,
-                convert_chain,
-                convert_to,
-                handler_stages,
-                convert_format_strs,
-                handled_format_strs,
                 native,
+                convert_chain,
+                convert=True,
+                repack=file_format.archive,
+                convert_to=convert_to,
+                handler_stages=handler_stages,
             )
+            if picked is None:
+                continue
+            handled_format_strs.add(file_format.format_str)
+            if picked is not native:
+                convert_format_strs.setdefault(picked.OUTPUT_FORMAT_STR, set()).add(
+                    file_format.format_str
+                )
         config["computed"]["handler_stages"].set(handler_stages)
 
         verbose: int = config["verbose"].get(int)

@@ -94,51 +94,6 @@ class HandlerFactory:
             return None
         return entry
 
-    def _is_pipeline_available(self, handler_cls: type[Handler]) -> bool:
-        """
-        Whether the config-time probe found a workable pipeline for this handler.
-
-        A handler is "available" iff every tier in its ``PIPELINE`` produced a
-        selected tool. Handlers with an empty PIPELINE (e.g. archive handlers
-        that pack via Python libraries, or PILPack sentinels) are always
-        available — there is nothing to be missing.
-        """
-        if not handler_cls.PIPELINE:
-            return True
-        return handler_cls in self._config.computed.handler_stages
-
-    def _pick_handler_class_choose_converter(
-        self, candidate: type[Handler], convert_to: frozenset[str]
-    ) -> type[Handler] | None:
-        if candidate.OUTPUT_FORMAT_STR not in convert_to:
-            return None
-        if not self._is_pipeline_available(candidate):
-            return None
-        return candidate
-
-    def _pick_handler_class_converter(
-        self,
-        file_format: FileFormat | None,
-        convert_chain: tuple[type[Handler], ...],
-        *,
-        convert: bool,
-        repack: bool,
-    ) -> type[Handler] | None:
-        # Conversion path: archives only convert during the repack pass; for
-        # images we prefer the convert handler at first sight because it's
-        # often faster than translating through PIL.
-        if not file_format:
-            return None
-        handler_cls: type[Handler] | None = None
-        convert_to: frozenset[str] = frozenset(self._config.convert_to or ())
-        if convert and (not file_format.archive or repack):
-            for candidate in convert_chain:
-                if handler_cls := self._pick_handler_class_choose_converter(
-                    candidate, convert_to
-                ):
-                    break
-        return handler_cls
-
     def _pick_handler_class(
         self,
         file_format: FileFormat | None,
@@ -151,28 +106,15 @@ class HandlerFactory:
         if not entry:
             return None
         native, convert_chain = entry
-
-        handler_cls = self._pick_handler_class_converter(
-            file_format, convert_chain, convert=convert, repack=repack
+        return registry.pick_route_handler(
+            file_format,
+            native,
+            convert_chain,
+            convert=convert,
+            repack=repack,
+            convert_to=frozenset(self._config.convert_to or ()),
+            handler_stages=self._config.computed.handler_stages,
         )
-
-        # Native fallback.
-        if (
-            handler_cls is None
-            and native is not None
-            and self._is_pipeline_available(native)
-        ):
-            handler_cls = native
-
-        # Repack callers need a packing-capable handler.
-        if (
-            repack
-            and handler_cls is not None
-            and not (issubclass(handler_cls, ContainerHandler) and handler_cls.CAN_PACK)
-        ):
-            handler_cls = None
-
-        return handler_cls
 
     def _get_repack_handler_class(
         self,
