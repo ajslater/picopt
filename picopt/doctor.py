@@ -9,8 +9,8 @@ required ones at the bottom.
 When a tool is missing, the doctor shows a platform-appropriate install
 command (brew on macOS, apt on Debian/Ubuntu, dnf on Fedora/RHEL).
 
-Probing CWebPTool here also surfaces (via the WebPLossless.IS_MODERN_CWEBP
-side effect) whether old or new cwebp behavior is in effect.
+Probing CWebPTool also surfaces (via the probed instance's ``is_modern``
+flag) whether old or new cwebp behavior is in effect.
 """
 
 from __future__ import annotations
@@ -157,8 +157,8 @@ class PicoptDoctor:
         if not status.available and status.error:
             bits.extend(["-", f"[red]{escape(status.error)}[/red]"])
         elif isinstance(tool, CWebPTool):
-            flag = "modern" if CWebPTool.IS_MODERN_CWEBP else "legacy"
-            flag_color = "green" if CWebPTool.IS_MODERN_CWEBP else "cyan"
+            flag = "modern" if tool.is_modern else "legacy"
+            flag_color = "green" if tool.is_modern else "cyan"
             bits.append(f"([{flag_color}]{flag}[/{flag_color}])")
         return bits
 

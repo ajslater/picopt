@@ -43,10 +43,10 @@ def _discover() -> tuple[Plugin, ...]:
 
     plugins: list[Plugin] = []
     for module_info in pkgutil.iter_modules(plugins_pkg.__path__):
-        if module_info.ispkg:
-            continue  # skip the base/ subpackage
-        if module_info.name.startswith("_"):
+        if module_info.name.startswith("_") or module_info.name == "base":
             continue
+        # Plugins may be single modules or subpackages (e.g. webp/);
+        # either way the PLUGIN descriptor lives at the top level.
         module = importlib.import_module(f"picopt.plugins.{module_info.name}")
         plugin = getattr(module, "PLUGIN", None)
         if isinstance(plugin, Plugin):

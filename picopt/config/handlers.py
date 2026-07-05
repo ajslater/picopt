@@ -18,12 +18,12 @@ that absence as "this handler is unavailable" and falls through the
 The format → handler routing map is no longer built here at all — it lives
 in the registry as :func:`picopt.plugins.routes_by_format`.
 
-Important ordering invariant: ``CWebPTool.probe()`` mutates
-``WebPLossless.IS_MODERN_CWEBP`` as a side effect, and ``WebPLossless``
+Important ordering invariant: ``CWebPTool.probe()`` records on the
+shared ``CWEBP_TOOL`` singleton whether cwebp is modern, and WebP handler
 instances read that flag in ``__init__`` to widen their accepted input
 formats. The probe loop runs at config-construction time, before
-:class:`Walk` ever instantiates a handler, so the side effect is always in
-place by the time it matters. Don't reorder.
+:class:`Walk` ever instantiates a handler, so the flag is always in place
+by the time it matters. Don't reorder.
 """
 
 from __future__ import annotations
