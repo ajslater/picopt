@@ -13,6 +13,8 @@
 - Archives keep their comments and member order through repack; tar symlinks and
   hardlinks survive; 7z member times are preserved; pre-1980 member times no
   longer crash conversion; legacy non-UTF8 zip member names are repaired.
+- Archive conversions compress each member by content; converting a rar, tar, or
+  7z no longer leaves every member stored uncompressed.
 - Files that fail to optimize are retried on the next timestamped run;
   previously directory timestamps covered them and they were skipped forever.
 - One corrupt file inside an archive (e.g. a decompression bomb) no longer
@@ -29,12 +31,18 @@
   `--strip-metadata` is given.
 - Conversions discarded for being bigger (and dry runs) are reported as skips,
   not errors.
+- `--preserve` no longer fails as a non-root user when it cannot change
+  ownership; it still restores permissions and modification time.
+- Temporary files and animated-WebP frame directories are cleaned up when a tool
+  fails or a run is cancelled, instead of leaking to disk.
 - `picopt doctor` no longer reports missing tools and exits nonzero on healthy
   installs.
 - Symlink loops, unreadable directories, and FIFOs no longer hang or crash the
   walk.
 - Bad `--memory-limit` and `--after` values abort with clean error messages;
-  lowercase format lists are accepted for `-x` and `-c`.
+  timezone-aware `--after` values are honored; lowercase format lists are
+  accepted for `-x` and `-c`.
+- `-I`/`--no-default-ignores` without `-i` no longer aborts at startup.
 - Existing timestamps are invalidated once after upgrading because the timestamp
   config check gained new keys; the first `-t` run re-examines already-optimized
   trees.
