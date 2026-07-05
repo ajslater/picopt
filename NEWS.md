@@ -1,5 +1,12 @@
 # 📰 Picopt News
 
+## v6.6.1
+
+### Fixes
+
+- The `Optimizing formats` summary is no longer repeated once per directory
+  when using `-W` or per-directory `.picopt.yaml` files.
+
 ## v6.6.0
 
 ### Fixes
