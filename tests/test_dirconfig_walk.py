@@ -114,6 +114,22 @@ class TestDirConfigWalk:
         # kept, so the file's mtime changes — proof it was re-processed.
         assert (photos / PNG_FN).stat().st_mtime_ns != optimized_mtime
 
+    def test_formats_banner_prints_once_with_write_dir_config(self, capsys) -> None:
+        # -W plants a .picopt.yaml at the target root, so every directory
+        # re-resolves settings and finds it in its ancestry — skipping the
+        # "no dir config -> reuse run-wide settings" fast path and rebuilding
+        # the config once per directory. The run-wide "Optimizing formats"
+        # banner must still be emitted exactly once, not per directory.
+        for sub in ("", "a", "a/b", "c"):
+            directory = TMP_ROOT / sub if sub else TMP_ROOT
+            directory.mkdir(parents=True, exist_ok=True)
+            shutil.copy(IMAGES_DIR / PNG_FN, directory / PNG_FN)
+
+        cli.main((PROGRAM_NAME, "-rvx", "PNG", str(TMP_ROOT), "-W"))
+
+        out = capsys.readouterr().out
+        assert out.count("Optimizing formats") == 1
+
     def test_archive_members_inherit_dir_config(self) -> None:
         comics = TMP_ROOT / "comics"
         _write_dir_config(comics, "picopt:\n  convert_to: [WEBP]\n")
