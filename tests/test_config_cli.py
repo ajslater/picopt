@@ -91,6 +91,35 @@ class _FakeTool(Tool):
         )
 
 
+class _CountingTool(Tool):
+    """Tool counting how many real probes run."""
+
+    name = "counting-tool"
+
+    def __init__(self) -> None:
+        self.probes = 0
+
+    @override
+    def probe_version(self) -> str:
+        return "1.0"
+
+    @override
+    def _probe(self) -> ToolStatus:
+        self.probes += 1
+        return ToolStatus(name=self.name, available=True)
+
+
+class TestProbeMemoization:
+    """probe() runs the real probe once per instance."""
+
+    def test_probe_is_cached(self: Any) -> None:
+        tool = _CountingTool()
+        first = tool.probe()
+        second = tool.probe()
+        assert tool.probes == 1
+        assert first is second
+
+
 class TestDoctorTierAccounting:
     """Tools in a tier are alternatives; one available tool satisfies it."""
 

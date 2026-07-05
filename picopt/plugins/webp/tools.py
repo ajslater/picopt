@@ -95,8 +95,8 @@ class CWebPTool(ExternalTool):
         return tuple(parts)
 
     @override
-    def probe(self) -> ToolStatus:
-        status = super().probe()
+    def _probe(self) -> ToolStatus:
+        status = super()._probe()
         if status.available:
             parsed = CWebPTool._parse_cwebp_version(status.version)
             self.is_modern = bool(parsed) and parsed >= CWebPTool._MIN_CWEBP_VERSION

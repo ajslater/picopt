@@ -66,6 +66,10 @@ class Tool(ABC):
 
     name: str = ""
     required: bool = True
+    # Class-level default; the first probe() sets an instance attribute.
+    # Tools are module singletons, so probing happens once per process —
+    # per-directory config rebuilds must not respawn --version subprocesses.
+    _probed_status: ToolStatus | None = None
 
     def parse_version(self, version: str) -> str:
         """Override to parse tool version specially."""
@@ -75,9 +79,16 @@ class Tool(ABC):
     def probe_version(self) -> str:
         """Probe the tool version for probe()."""
 
-    @abstractmethod
     def probe(self) -> ToolStatus:
-        """Return availability, version, and path."""
+        """Return availability, version, and path. Cached per instance."""
+        if self._probed_status is None:
+            self._probed_status = self._probe()
+        return self._probed_status
+
+    def _probe(self) -> ToolStatus:
+        """Perform the actual probe; subclasses implement."""
+        msg = f"{type(self).__name__} does not implement _probe"
+        raise NotImplementedError(msg)
 
     def run_stage(self, handler, buf: BinaryIO) -> BinaryIO:
         """Transform an input buffer; default raises."""
@@ -122,7 +133,7 @@ class InternalTool(Tool):
         return getattr(module, "__file__", "") or "<builtin>"
 
     @override
-    def probe(self) -> ToolStatus:
+    def _probe(self) -> ToolStatus:
         """Return results for doctor."""
         try:
             module = __import__(self.module_name)
@@ -243,7 +254,7 @@ class ExternalTool(Tool):
         return version
 
     @override
-    def probe(self) -> ToolStatus:
+    def _probe(self) -> ToolStatus:
         """Doctor probe."""
         path = self._path()
         if path is None:

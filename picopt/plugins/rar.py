@@ -22,7 +22,6 @@ from picopt.plugins.base import (
     Plugin,
     Route,
     Tool,
-    ToolStatus,
 )
 from picopt.plugins.base.format import FileFormat
 
@@ -50,14 +49,10 @@ class UnrarTool(ExternalTool):
     def parse_version(self, version: str) -> str:
         """Parse unrar version."""
         # this looks fragile. Tuned to unrar 7.11 beta 1.
+        # NOTE: unrar prints its version banner without --version (it just
+        # prints help). We accept that.
         version = super().parse_version(version)
         return " ".join(version.split()[1:-6])
-
-    @override
-    def probe(self) -> ToolStatus:
-        # Default ExternalTool.probe is fine, but unrar prints its version
-        # banner without --version (it just prints help). We accept that.
-        return super().probe()
 
 
 _UNRAR_TOOL = UnrarTool()
