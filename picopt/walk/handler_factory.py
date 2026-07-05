@@ -81,11 +81,12 @@ class HandlerFactory:
 
     def _lookup_route(
         self,
+        config: PicoptSettings,
         file_format: FileFormat | None,
     ) -> tuple | None:
         if not file_format:
             return None
-        if file_format.format_str not in self._config.formats:
+        if file_format.format_str not in config.formats:
             return None
 
         routes = registry.routes_by_format()
@@ -96,13 +97,14 @@ class HandlerFactory:
 
     def _pick_handler_class(
         self,
+        config: PicoptSettings,
         file_format: FileFormat | None,
         *,
         convert: bool,
         repack: bool = False,
     ) -> type[Handler] | None:
         """Return a handler class for the file format."""
-        entry = self._lookup_route(file_format)
+        entry = self._lookup_route(config, file_format)
         if not entry:
             return None
         native, convert_chain = entry
@@ -112,12 +114,13 @@ class HandlerFactory:
             convert_chain,
             convert=convert,
             repack=repack,
-            convert_to=frozenset(self._config.convert_to or ()),
-            handler_stages=self._config.computed.handler_stages,
+            convert_to=frozenset(config.convert_to or ()),
+            handler_stages=config.computed.handler_stages,
         )
 
     def _get_repack_handler_class(
         self,
+        config: PicoptSettings,
         path_info: PathInfo,
         file_format: FileFormat,
     ) -> type[ContainerHandler] | None:
@@ -125,6 +128,7 @@ class HandlerFactory:
         repack_handler_class: type[ContainerHandler] | None = None
         try:
             picked = self._pick_handler_class(
+                config,
                 file_format,
                 convert=path_info.convert,
                 repack=True,
@@ -139,11 +143,7 @@ class HandlerFactory:
             logger.warning(msg)
             print_exc()
 
-        if (
-            not repack_handler_class
-            and self._config.verbose > 1
-            and not self._config.list_only
-        ):
+        if not repack_handler_class and config.verbose > 1 and not config.list_only:
             fmt = str(file_format) if file_format else "unknown"
             msg = (
                 f"Skip: ({fmt}) is not an enabled image or container format: "
@@ -154,7 +154,7 @@ class HandlerFactory:
         return repack_handler_class
 
     def _create_handler_get_class_and_format(
-        self, path_info: PathInfo
+        self, config: PicoptSettings, path_info: PathInfo
     ) -> tuple[FileFormat | None, type[Handler] | None, Mapping[str, Any]]:
         handler_cls: type[Handler] | None = None
         try:
@@ -162,11 +162,10 @@ class HandlerFactory:
             # PIL sniff doesn't serialize on this thread.
             detected = path_info.detected
             if detected is None:
-                detected = detect_format(
-                    path_info, keep_metadata=self._config.keep_metadata
-                )
+                detected = detect_format(path_info, keep_metadata=config.keep_metadata)
             file_format, info = detected
             handler_cls = self._pick_handler_class(
+                config,
                 file_format,
                 convert=path_info.convert,
             )
@@ -181,13 +180,21 @@ class HandlerFactory:
         self,
         path_info: PathInfo,
         timestamps: Grovestamps | None = None,
+        settings: PicoptSettings | None = None,
     ) -> Handler | None:
-        """Return a handler for the image format."""
+        """
+        Return a handler for the image format.
+
+        ``settings`` carries a directory's resolved ``.picopt.yaml``
+        configuration; the handler is constructed with it so per-directory
+        options travel into workers and archive members.
+        """
         if path_info.noop:
             return None
 
+        config = settings or self._config
         file_format, handler_cls, info = self._create_handler_get_class_and_format(
-            path_info
+            config, path_info
         )
 
         if not handler_cls or not file_format:
@@ -198,7 +205,7 @@ class HandlerFactory:
             kwargs["info"] = info
         if issubclass(handler_cls, ContainerHandler):
             repack_handler_class = self._get_repack_handler_class(
-                path_info, file_format
+                config, path_info, file_format
             )
             if repack_handler_class:
                 kwargs["repack_handler_class"] = repack_handler_class
@@ -208,7 +215,7 @@ class HandlerFactory:
                 return None
 
         return handler_cls(
-            self._config,
+            config,
             path_info,
             input_file_format=file_format,
             **kwargs,

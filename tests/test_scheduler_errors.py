@@ -37,6 +37,8 @@ class _FakeContainerHandler:
         self.repack_handler_class = None
         self.hydrate_calls: list[tuple[Any, Any]] = []
         self.staging_dir: Path | None = None
+        # The scheduler passes this to create_repack_handler.
+        self.config = None
         self._optimized_contents: set[Any] = set()
         self._do_repack = False
 

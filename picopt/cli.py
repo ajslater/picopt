@@ -407,6 +407,35 @@ def get_arguments(params: tuple[str, ...] | None = None) -> Namespace:
         help="When an inner repack fails, fail the entire top-level container.",
     )
     parser.add_argument(
+        "-w",
+        "--write-config",
+        action="store_true",
+        default=None,
+        dest="write_config",
+        help=(
+            "Write the merged config to your user config file, then run "
+            "normally. Run-mode flags (dry run, list only, and verbosity) "
+            "are not persisted."
+        ),
+    )
+    parser.add_argument(
+        "-W",
+        "--write-dir-config",
+        action="store_true",
+        default=None,
+        dest="write_dir_config",
+        help=(
+            "Write the invoked options into a .picopt.yaml in each target "
+            "directory (a file target's parent), then run normally."
+        ),
+    )
+    parser.add_argument(
+        "--write-config-file",
+        action="store",
+        dest="write_config_file",
+        help="Write the merged config to the given file path, then run normally.",
+    )
+    parser.add_argument(
         "-V",
         "--version",
         action="version",
@@ -441,7 +470,7 @@ def main(args: tuple[str, ...] | None = None) -> None:
         cli_verbose = arguments.picopt.verbose
         setup_logging(1 if cli_verbose is None else cli_verbose)
         config = PicoptConfig().get_config(arguments)
-        walker = Walk(config)
+        walker = Walk(config, arguments)
         walker.walk()
     except ConfigError as err:
         logger.error(str(err))

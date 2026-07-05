@@ -2,6 +2,7 @@
 
 import shutil
 from datetime import datetime, timezone
+from hashlib import sha256
 from pathlib import Path
 from types import MappingProxyType
 
@@ -33,6 +34,8 @@ DEFAULT_CONFIG = {
     "recurse": True,
     "symlinks": True,
     "timestamps_ignore_archive_entry_mtimes": False,
+    # The tree has no .picopt.yaml files: the empty-digest fingerprint.
+    "_dir_config_fingerprint": sha256(b"").hexdigest(),
 }
 
 TREESTAMPS_CONFIG = {"ignore": frozenset(), "symlinks": True}

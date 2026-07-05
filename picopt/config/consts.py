@@ -10,6 +10,12 @@ allowlist, which doesn't depend on the format registry at all.
 
 from typing import Final
 
+# Per-directory config files layer beneath env vars and CLI args but above
+# the user config. Named to be distinct from the timestamps file
+# ``.picopt_treestamps.yaml``. Lives here (a leaf module) so the walk layer
+# can import it without triggering the config package's heavy import chain.
+DIR_CONFIG_FILENAME: Final = ".picopt.yaml"
+
 TIMESTAMPS_CONFIG_KEYS: Final[frozenset[str]] = frozenset(
     {
         "bigger",

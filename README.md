@@ -237,6 +237,54 @@ Or you can install svgo with npm:
 npm install -G svgo
 ```
 
+## ⚙️ Configuration
+
+Picopt layers configuration from these sources, lowest to highest priority:
+packaged defaults, your user config file, a `-C CONFIG` file, per-directory
+`.picopt.yaml` files (see below), environment variables, and command line
+options. Every config file uses the same envelope:
+
+<!-- eslint-skip -->
+
+```yaml
+picopt:
+    recurse: true
+    convert_to: [WEBP, CBZ]
+```
+
+### Per-directory `.picopt.yaml` files
+
+A `.picopt.yaml` placed inside a target directory applies to that directory and
+everything under it. Files are discovered from each processed file's directory
+up to the command line target root (never above it), and deeper directories win
+over shallower ones. Environment variables and command line options still win
+over every directory file.
+
+<!-- eslint-skip -->
+
+```sh
+printf 'picopt:\n  convert_to: [CBZ]\n' > comics/.picopt.yaml
+picopt -rx CBR,CBZ .   # CBRs under comics/ convert; siblings don't
+```
+
+Any config key is accepted and validated, but run-scoped keys — `dry_run`,
+`list_only`, `timestamps`, `after`, `jobs`, `memory_limit`, `fail_fast`,
+`fail_fast_container`, `verbose`, and `paths` — are governed by the run-level
+value; setting them in a directory file has no per-directory effect. When
+timestamps (`-t`) are enabled, editing, adding, or removing any `.picopt.yaml`
+re-processes its tree on the next run.
+
+### Writing config files
+
+- `-w` / `--write-config` merges the options you invoked into your user config
+  file and then runs normally.
+- `-W` / `--write-dir-config` writes them into a `.picopt.yaml` in each target
+  directory (a file target's parent).
+- `--write-config-file PATH` writes them to an explicit path.
+
+Existing keys and comments in the target file survive the merge. Run-mode flags
+(`-d`, `-L`, verbosity) and the target paths are never persisted.
+
 ## ⌨️ Use Examples
 
 Optimize all JPEG files in a directory:

@@ -11,6 +11,7 @@ from loguru import logger
 from treestamps import Treestamps
 
 from picopt import PROGRAM_NAME, WORKING_SUFFIX
+from picopt.config.consts import DIR_CONFIG_FILENAME
 from picopt.path import PathInfo, is_path_ignored
 from picopt.walk.legacy_timestamps import OLD_TIMESTAMPS_NAME
 
@@ -28,6 +29,9 @@ class WalkSkipper:
     _TIMESTAMPS_FILENAMES: frozenset[str] = frozenset(
         {*Treestamps.get_filenames(PROGRAM_NAME), OLD_TIMESTAMPS_NAME}
     )
+    # picopt's own metadata files, never optimization targets. Public so
+    # Walk._count can mirror the gate.
+    SKIP_FILENAMES: frozenset[str] = _TIMESTAMPS_FILENAMES | {DIR_CONFIG_FILENAME}
 
     def __init__(
         self,
@@ -70,6 +74,8 @@ class WalkSkipper:
         basename = Path(path_info.name()).name
         if not self._config.symlinks and path and path.is_symlink():
             reason = "symlink"
+        elif basename == DIR_CONFIG_FILENAME:
+            reason = "picopt config"
         elif basename in self._TIMESTAMPS_FILENAMES:
             legacy = "legacy " if basename == OLD_TIMESTAMPS_NAME else ""
             reason = f"{legacy}timestamp"

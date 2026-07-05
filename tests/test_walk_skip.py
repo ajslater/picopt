@@ -41,6 +41,14 @@ class TestWalkSkipper:
         path_info = PathInfo(top_path=tmp_path, path=stamp_path, convert=False)
         assert skipper.is_walk_file_skip(path_info)
 
+    def test_dir_config_file_skipped_by_basename(self: Any, tmp_path: Path) -> None:
+        """.picopt.yaml files are never optimization targets."""
+        skipper = _make_skipper()
+        config_path = tmp_path / ".picopt.yaml"
+        config_path.write_bytes(_DATA)
+        path_info = PathInfo(top_path=tmp_path, path=config_path, convert=False)
+        assert skipper.is_walk_file_skip(path_info)
+
     def test_ignore_respects_case_sensitivity(self: Any, tmp_path: Path) -> None:
         """Uppercase ignore patterns don't match lowercase files on case-sensitive filesystems."""
         skipper = _make_skipper("-i", "*.BAK")

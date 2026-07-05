@@ -731,7 +731,8 @@ class Scheduler:
             self._handle_repack_done(node, noop)
             return
 
-        repack_handler = self._create_repack_handler(self._config, node.handler)
+        # Repack under the handler's own (per-directory) config.
+        repack_handler = self._create_repack_handler(node.handler.config, node.handler)
         node.handler = repack_handler
         self._ready.append((RepackJob(handler=repack_handler), node))
 
