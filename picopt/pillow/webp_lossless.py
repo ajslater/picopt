@@ -2,48 +2,60 @@
 """
 Determine if a webp is lossless.
 
-This should be a part of Pillow
-https://developers.google.com/speed/webp/docs/webp_lossless_bitstream_specification
+Parses the RIFF chunk structure rather than searching for byte strings, so
+metadata payloads (ICC, EXIF, XMP) can neither hide the image chunk nor
+fake one:
+https://developers.google.com/speed/webp/docs/riff_container
+
+This should be a part of Pillow.
 """
 
-from io import BufferedReader, BytesIO
-from mmap import ACCESS_READ, mmap
 from pathlib import Path
+from struct import unpack
+from typing import BinaryIO
 
-from picopt.pillow.header import ImageHeader
+_RIFF_HEADER_LEN = 12
+_CHUNK_HEADER_LEN = 8
+# ANMF chunk: 16 bytes of frame parameters, then the frame's image chunks.
+_ANMF_FRAME_PARAMS_LEN = 16
+_LOSSLESS_FOURCC = b"VP8L"
+_LOSSY_FOURCC = b"VP8 "
+_ANIM_FRAME_FOURCC = b"ANMF"
 
-# RIFF_HEADER = ImageHeader(0, b"RIFF"))
-# WEBP_HEADER = ImageHeader(8, b"WEBP"))
-_VP8_HEADER = ImageHeader(12, b"VP8")
-_VP8L_HEADER = b"VP8L"
-_SEARCH_LEN = 128
 
+def is_lossless(input_buffer: BinaryIO) -> bool:
+    """
+    Walk RIFF chunks until the first image data chunk decides losslessness.
 
-def is_lossless(input_buffer: BytesIO | BufferedReader) -> bool:
-    """Compare header types against lossless types."""
-    buffer: BytesIO | mmap = (
-        mmap(input_buffer.fileno(), 0, access=ACCESS_READ)
-        if isinstance(input_buffer, BufferedReader)
-        else input_buffer
-    )
-
-    try:
-        if not _VP8_HEADER.compare(buffer):
-            return False
-        x = buffer.read(1)
-        if x == b"L":
-            return True
-        if x == b"X":
-            finder = (
-                buffer
-                if isinstance(buffer, mmap)
-                else bytearray(buffer.read(_SEARCH_LEN))
-            )
-            return finder.find(_VP8L_HEADER) != -1
+    Leaves the buffer position at 0; the caller owns closing it.
+    """
+    input_buffer.seek(0)
+    header = input_buffer.read(_RIFF_HEADER_LEN)
+    if (
+        len(header) < _RIFF_HEADER_LEN
+        or header[:4] != b"RIFF"
+        or header[8:12] != b"WEBP"
+    ):
         return False
+    try:
+        while True:
+            chunk_header = input_buffer.read(_CHUNK_HEADER_LEN)
+            if len(chunk_header) < _CHUNK_HEADER_LEN:
+                return False
+            fourcc = chunk_header[:4]
+            (size,) = unpack("<I", chunk_header[4:])
+            if fourcc == _LOSSLESS_FOURCC:
+                return True
+            if fourcc == _LOSSY_FOURCC:
+                return False
+            if fourcc == _ANIM_FRAME_FOURCC:
+                # Descend into the frame; image chunks follow the params.
+                input_buffer.seek(_ANMF_FRAME_PARAMS_LEN, 1)
+                continue
+            # Chunk payloads are padded to even sizes.
+            input_buffer.seek(size + (size & 1), 1)
     finally:
-        input_buffer.close()
-        buffer.close()
+        input_buffer.seek(0)
 
 
 def main() -> None:

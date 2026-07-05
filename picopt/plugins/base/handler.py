@@ -25,6 +25,8 @@ from pathlib import Path
 from types import MappingProxyType
 from typing import TYPE_CHECKING, BinaryIO, Final
 
+from loguru import logger
+
 from picopt import WORKING_SUFFIX
 from picopt.path import DOUBLE_SUFFIX, PathInfo
 from picopt.plugins.base.format import FileFormat
@@ -139,20 +141,22 @@ class Handler(ABC):
                 input_buffer.seek(0)
                 input_tmp_file.write(input_buffer.read())
 
-        proc = subprocess.run(  # noqa: S603
-            args,
-            check=True,
-            capture_output=True,
-        )
-
-        if input_path_tmp and input_path:
-            input_path.unlink(missing_ok=True)
-
-        if output_path_tmp and output_path:
-            output_buffer = BytesIO(output_path.read_bytes())
-            output_path.unlink(missing_ok=True)
-        else:
-            output_buffer = BytesIO(proc.stdout)
+        try:
+            proc = subprocess.run(  # noqa: S603
+                args,
+                check=True,
+                capture_output=True,
+            )
+            if output_path_tmp and output_path:
+                output_buffer = BytesIO(output_path.read_bytes())
+            else:
+                output_buffer = BytesIO(proc.stdout)
+        finally:
+            # Temp files must not survive a failed external tool.
+            if input_path_tmp and input_path:
+                input_path.unlink(missing_ok=True)
+            if output_path_tmp and output_path:
+                output_path.unlink(missing_ok=True)
         return output_buffer
 
     def get_working_path(self) -> Path:
@@ -247,16 +251,28 @@ class Handler(ABC):
     def _save_new_data(self, final_data_buffer: BinaryIO | None) -> bytes:
         if final_data_buffer is None:
             return b""
-        if isinstance(final_data_buffer, BytesIO) or bool(self.path_info.archiveinfo):
-            final_data_buffer.seek(0)
-            return final_data_buffer.read()
-        return b""
+        # Only in-container entries need their bytes returned — the parent's
+        # repack consumes them. Top-level results are already written to
+        # disk; returning them would pickle the whole file back to the main
+        # process just to be discarded.
+        if self.path_info.path is not None:
+            return b""
+        final_data_buffer.seek(0)
+        return final_data_buffer.read()
 
     def _write_final_path(self, final_data_buffer: BinaryIO) -> None:
         if isinstance(final_data_buffer, BytesIO):
-            with self.working_path.open("wb") as working_path:
+            # Never write into original_path directly: a crash or full disk
+            # mid-write would destroy the user's file. Write to a sibling
+            # temp file (same filesystem, so replace() below is atomic);
+            # stale ones are cleaned by WalkSkipper on the next run.
+            tmp_path = self.final_path.with_name(self.final_path.name + WORKING_SUFFIX)
+            with tmp_path.open("wb") as tmp_file:
                 final_data_buffer.seek(0)
-                working_path.write(final_data_buffer.read())
+                tmp_file.write(final_data_buffer.read())
+                tmp_file.flush()
+                os.fsync(tmp_file.fileno())
+            self.working_path = tmp_path
         self.working_path.replace(self.final_path)
 
     def _cleanup_original_path(self) -> None:
@@ -274,7 +290,12 @@ class Handler(ABC):
         stat = self.path_info.stat()
         if stat is None:
             return
-        os.chown(self.final_path, stat.st_uid, stat.st_gid)
+        try:
+            os.chown(self.final_path, stat.st_uid, stat.st_gid)
+        except OSError as exc:
+            # Non-root users can't chown; a successful optimization must
+            # not become an error, and mode/mtime should still restore.
+            logger.debug(f"Could not restore owner of {self.final_path}: {exc}")
         self.final_path.chmod(stat.st_mode)
         os.utime(self.final_path, ns=(stat.st_atime_ns, stat.st_mtime_ns))
 
@@ -288,11 +309,9 @@ class Handler(ABC):
         self._preserve_stats()
 
     def _cleanup_after_optimize_get_return_data(
-        self, final_data_buffer: BinaryIO, bytes_in: int, bytes_out: int
+        self, final_data_buffer: BinaryIO, *, replaced: bool
     ) -> bytes:
-        if not self.config.dry_run and (
-            bytes_out > 0 and (bytes_out < bytes_in or self.config.bigger)
-        ):
+        if replaced:
             return_data = self._save_new_data(final_data_buffer)
             if self.path_info.path:
                 self._cleanup_filesystem(final_data_buffer)
@@ -305,8 +324,11 @@ class Handler(ABC):
         """Replace the old file with the better one or discard the new wasteful one."""
         bytes_in = self.path_info.bytes_in()
         bytes_out = self._get_buffer_len(final_data_buffer)
+        replaced = not self.config.dry_run and (
+            bytes_out > 0 and (bytes_out < bytes_in or self.config.bigger)
+        )
         return_data = self._cleanup_after_optimize_get_return_data(
-            final_data_buffer, bytes_in, bytes_out
+            final_data_buffer, replaced=replaced
         )
         if (
             self.working_path
@@ -314,19 +336,19 @@ class Handler(ABC):
             and isinstance(final_data_buffer, BufferedReader)
         ):
             self.working_path.unlink(missing_ok=True)
-        converted = self.original_path != self.final_path
+        # A discarded (or dry-run) result leaves the original in place: no
+        # conversion happened, nothing may be renamed or stat()ed at
+        # final_path — for conversions it was never created.
+        converted = replaced and self.original_path != self.final_path
         if converted:
             self.path_info.rename(self.final_path)
         # For in-archive entries final_path is a synthetic name with no
         # filesystem reality; whether the entry "changed" is decided by
         # whether the worker produced replacement bytes. The parent
         # container's repack pass owns the real timestamp.
-        if self.path_info.path is None:
-            changed = bool(return_data)
-        else:
-            changed = self.final_path.stat().st_mtime != self._original_mtime
+        changed = bool(return_data) if self.path_info.path is None else replaced
         return ReportStats(
-            self.final_path,
+            self.final_path if replaced else self.original_path,
             converted=converted,
             path_info=self.path_info,
             config=self.config,

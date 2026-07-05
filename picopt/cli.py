@@ -202,6 +202,7 @@ def get_arguments(params: tuple[str, ...] | None = None) -> Namespace:
         "-r",
         "--recurse",
         action="store_true",
+        default=None,
         dest="recurse",
         help="Recurse down through directories on the command line.",
     )
@@ -209,7 +210,7 @@ def get_arguments(params: tuple[str, ...] | None = None) -> Namespace:
         "-v",
         "--verbose",
         action="count",
-        default=1,
+        default=None,
         dest="verbose",
         help="Display more output. Can be used multiple times.",
     )
@@ -256,12 +257,14 @@ def get_arguments(params: tuple[str, ...] | None = None) -> Namespace:
         "-n",
         "--near-lossless",
         action="store_true",
+        default=None,
         dest="near_lossless",
         help="Precompress lossless WebP images with near lossless pixel adjustments.",
     )
     parser.add_argument(
         "--png-max",
         action="store_true",
+        default=None,
         dest="png_max",
         help="Overzealously optimize pngs with -O5 and Zopfli.",
     )
@@ -269,6 +272,7 @@ def get_arguments(params: tuple[str, ...] | None = None) -> Namespace:
         "-S",
         "--no-symlinks",
         action="store_false",
+        default=None,
         dest="symlinks",
         help="Do not follow symlinks for files and directories",
     )
@@ -283,14 +287,15 @@ def get_arguments(params: tuple[str, ...] | None = None) -> Namespace:
         "-I",
         "--no-default-ignores",
         dest="ignore_defaults",
-        default=True,
         action="store_false",
+        default=None,
         help="Do not ignore dotfiles and sparsebundles.",
     )
     parser.add_argument(
         "-b",
         "--bigger",
         action="store_true",
+        default=None,
         dest="bigger",
         help="Save optimized files that are larger than the originals",
     )
@@ -298,6 +303,7 @@ def get_arguments(params: tuple[str, ...] | None = None) -> Namespace:
         "-t",
         "--timestamps",
         action="store_true",
+        default=None,
         dest="timestamps",
         help="Record the optimization time in a timestamps file.",
     )
@@ -306,7 +312,7 @@ def get_arguments(params: tuple[str, ...] | None = None) -> Namespace:
         "--timestamps-no-check-config",
         dest="timestamps_check_config",
         action="store_false",
-        default=True,
+        default=None,
         help="Do not compare program config options with loaded timestamps.",
     )
     parser.add_argument(
@@ -314,7 +320,7 @@ def get_arguments(params: tuple[str, ...] | None = None) -> Namespace:
         "--timestamps-ignore-archive-entry-mtimes",
         dest="timestamps_ignore_archive_entry_mtimes",
         action="store_true",
-        default=False,
+        default=None,
         help="Use the archive file timestamp instead of archive entry timestamps.",
     )
     parser.add_argument(
@@ -328,6 +334,7 @@ def get_arguments(params: tuple[str, ...] | None = None) -> Namespace:
         "-d",
         "--dry_run",
         action="store_true",
+        default=None,
         dest="dry_run",
         help="Report how much would be saved, but do not replace files.",
     )
@@ -335,6 +342,7 @@ def get_arguments(params: tuple[str, ...] | None = None) -> Namespace:
         "-L",
         "--list",
         action="store_true",
+        default=None,
         dest="list_only",
         help="Only list files that would be optimized",
     )
@@ -342,6 +350,7 @@ def get_arguments(params: tuple[str, ...] | None = None) -> Namespace:
         "-M",
         "--strip-metadata",
         action="store_false",
+        default=None,
         dest="keep_metadata",
         help="Strip metadata like EXIF, XMP and ICC Profiles",
     )
@@ -354,6 +363,16 @@ def get_arguments(params: tuple[str, ...] | None = None) -> Namespace:
         help="Number of parallel jobs to run simultaneously.",
     )
     parser.add_argument(
+        "--memory-limit",
+        action="store",
+        dest="memory_limit",
+        help=(
+            "Approximate peak memory budget for optimizing large archives, "
+            "e.g. 8G or 512M. Limits how many big archives run at once so the "
+            "process isn't OOM-killed. 0 (default) means auto: two-thirds of RAM."
+        ),
+    )
+    parser.add_argument(
         "-C",
         "--config",
         type=str,
@@ -364,6 +383,7 @@ def get_arguments(params: tuple[str, ...] | None = None) -> Namespace:
         "-p",
         "--preserve",
         action="store_true",
+        default=None,
         help="Preserve file attributes (uid, gid, mode, mtime) after optimization.",
     )
     parser.add_argument(
@@ -375,14 +395,45 @@ def get_arguments(params: tuple[str, ...] | None = None) -> Namespace:
     parser.add_argument(
         "--fail-fast",
         action="store_true",
+        default=None,
         dest="fail_fast",
         help="Stop all optimization on the first error encountered.",
     )
     parser.add_argument(
         "--fail-fast-container",
         action="store_true",
+        default=None,
         dest="fail_fast_container",
         help="When an inner repack fails, fail the entire top-level container.",
+    )
+    parser.add_argument(
+        "-w",
+        "--write-config",
+        action="store_true",
+        default=None,
+        dest="write_config",
+        help=(
+            "Write the merged config to your user config file, then run "
+            "normally. Run-mode flags (dry run, list only, and verbosity) "
+            "are not persisted."
+        ),
+    )
+    parser.add_argument(
+        "-W",
+        "--write-dir-config",
+        action="store_true",
+        default=None,
+        dest="write_dir_config",
+        help=(
+            "Write the invoked options into a .picopt.yaml in each target "
+            "directory (a file target's parent), then run normally."
+        ),
+    )
+    parser.add_argument(
+        "--write-config-file",
+        action="store",
+        dest="write_config_file",
+        help="Write the merged config to the given file path, then run normally.",
     )
     parser.add_argument(
         "-V",
@@ -415,9 +466,11 @@ def main(args: tuple[str, ...] | None = None) -> None:
     setup_logging(2)
     try:
         arguments = get_arguments(args)
-        setup_logging(arguments.picopt.verbose)
+        # Un-passed flags are None so config-file/env layers stay visible.
+        cli_verbose = arguments.picopt.verbose
+        setup_logging(1 if cli_verbose is None else cli_verbose)
         config = PicoptConfig().get_config(arguments)
-        walker = Walk(config)
+        walker = Walk(config, arguments)
         walker.walk()
     except ConfigError as err:
         logger.error(str(err))

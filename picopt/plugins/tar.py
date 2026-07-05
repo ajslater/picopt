@@ -118,7 +118,12 @@ class Tar(ArchiveHandler):
 
     @override
     def _get_archive(self) -> TarFile:
-        archive = tar_open(self.original_path, "r")  # noqa: SIM115
+        # In-archive members have no filesystem path; open from the buffer.
+        target = self.path_info.path_or_buffer()
+        if isinstance(target, BytesIO):
+            archive = tar_open(fileobj=target, mode="r")  # noqa: SIM115
+        else:
+            archive = tar_open(target, "r")  # noqa: SIM115
         if not archive:
             msg = f"Unknown archive type: {self.original_path}"
             raise ValueError(msg)
@@ -131,6 +136,12 @@ class Tar(ArchiveHandler):
 
     @override
     def _archive_readfile(self, archive, archiveinfo) -> bytes:
+        # extractfile() on a link member returns the link TARGET's stream
+        # (or raises for external targets); reading it would duplicate the
+        # target's bytes into the link entry on repack. Links, devices, and
+        # fifos carry no data of their own.
+        if not archiveinfo.isreg():
+            return b""
         if buf := archive.extractfile(archiveinfo):
             return buf.read()
         return b""
@@ -150,6 +161,11 @@ class Tar(ArchiveHandler):
     @override
     def _pack_info_one_file(self, archive, path_info) -> None:
         tarinfo: TarInfo = path_info.archiveinfo.to_tarinfo()
+        if not tarinfo.isreg():
+            # Symlinks, hardlinks, directories, devices: no data blocks.
+            # Mutating their size (or attaching data) corrupts the archive.
+            archive.addfile(tarinfo)
+            return
         data = path_info.data()
         tarinfo.size = len(data)
         archive.addfile(tarinfo, BytesIO(data))

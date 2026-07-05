@@ -10,6 +10,8 @@ import sys
 from pathlib import Path
 
 from picopt import cli
+from picopt.config import PicoptConfig
+from picopt.config.consts import TIMESTAMPS_CONFIG_KEYS
 from picopt.plugins.zip import Cbz, Zip
 from tests import IMAGES_DIR, get_test_dir
 
@@ -55,7 +57,9 @@ class TestCLI:
             Cbz.OUTPUT_FORMAT_STR,
             Zip.OUTPUT_FORMAT_STR,
         )
-        assert arguments.symlinks
+        # Un-passed flags stay None so config-file/env layers aren't
+        # shadowed; the config layer's defaults resolve symlinks to True.
+        assert arguments.symlinks is None
         self._test_get_arguments_aux(arguments)
 
     def test_main(self: Any) -> None:
@@ -74,3 +78,20 @@ class TestCLI:
             cli.main()
         except SystemExit as exc:
             assert exc.code == 1  # noqa: PT017
+
+    def test_memory_limit_parsing(self: Any) -> None:
+        """--memory-limit accepts suffixed sizes and resolves to bytes."""
+        for arg, expected in (("8G", 8 * 1024**3), ("512M", 512 * 1024**2)):
+            args = cli.get_arguments(("picopt", "--memory-limit", arg, str(TMP_ROOT)))
+            config = PicoptConfig().get_config(args)
+            assert config.memory_limit == expected
+
+    def test_memory_limit_auto(self: Any) -> None:
+        """The default (0/auto) resolves to a positive byte budget."""
+        args = cli.get_arguments(("picopt", str(TMP_ROOT)))
+        config = PicoptConfig().get_config(args)
+        assert config.memory_limit > 0
+
+    def test_memory_limit_not_in_timestamp_config(self: Any) -> None:
+        """memory_limit must not invalidate existing timestamps."""
+        assert "memory_limit" not in TIMESTAMPS_CONFIG_KEYS

@@ -4,6 +4,8 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+from loguru import logger
+
 from picopt.path import is_path_case_sensitive, is_path_ignored
 
 if TYPE_CHECKING:
@@ -42,19 +44,30 @@ class OldTimestamps:
 
     def _import_old_child_timestamps(self) -> None:
         stack = [self._root_dir]
+        visited: set[tuple[int, int]] = set()
         while stack:
             path = stack.pop()
-            if not self._config.symlinks and path.is_symlink():
-                continue
-            if path.is_dir():
-                if not is_path_ignored(
-                    self._config, path, ignore_case=self._ignore_case
-                ):
-                    stack.extend(path.iterdir())
-            elif path.name == OLD_TIMESTAMPS_NAME:
-                self._add_old_timestamp(path)
-                # consume child timestamps
-                self._timestamps._consumed_paths.add(path)  # noqa: SLF001
+            try:
+                if not self._config.symlinks and path.is_symlink():
+                    continue
+                if path.is_dir():
+                    # Symlink cycles must not walk forever.
+                    dir_stat = path.stat()
+                    dir_key = (dir_stat.st_dev, dir_stat.st_ino)
+                    if dir_key in visited:
+                        continue
+                    visited.add(dir_key)
+                    if not is_path_ignored(
+                        self._config, path, ignore_case=self._ignore_case
+                    ):
+                        stack.extend(path.iterdir())
+                elif path.name == OLD_TIMESTAMPS_NAME:
+                    self._add_old_timestamp(path)
+                    # consume child timestamps
+                    self._timestamps._consumed_paths.add(path)  # noqa: SLF001
+            except OSError as exc:
+                # An unreadable directory is not worth aborting the run.
+                logger.warning(f"Legacy timestamp import skipping {path}: {exc}")
 
     def import_old_timestamps(self) -> None:
         """Import all old timestamps."""
@@ -66,4 +79,6 @@ class OldTimestamps:
         self._config: PicoptSettings = config
         self._timestamps: Treestamps = timestamps
         self._root_dir: Path = self._timestamps.root_dir
-        self._ignore_case: bool = is_path_case_sensitive(self._root_dir)
+        # Ignore patterns match case-insensitively only on filesystems
+        # that are themselves case-insensitive.
+        self._ignore_case: bool = not is_path_case_sensitive(self._root_dir)

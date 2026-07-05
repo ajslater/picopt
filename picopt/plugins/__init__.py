@@ -23,10 +23,10 @@ import pkgutil
 from functools import cache
 from typing import TYPE_CHECKING
 
-from picopt.plugins.base import Detector, Handler, Plugin
+from picopt.plugins.base import ContainerHandler, Detector, Handler, Plugin
 
 if TYPE_CHECKING:
-    from collections.abc import Iterator
+    from collections.abc import Iterator, Mapping
 
     from picopt.plugins.base.format import FileFormat
 
@@ -43,10 +43,10 @@ def _discover() -> tuple[Plugin, ...]:
 
     plugins: list[Plugin] = []
     for module_info in pkgutil.iter_modules(plugins_pkg.__path__):
-        if module_info.ispkg:
-            continue  # skip the base/ subpackage
-        if module_info.name.startswith("_"):
+        if module_info.name.startswith("_") or module_info.name == "base":
             continue
+        # Plugins may be single modules or subpackages (e.g. webp/);
+        # either way the PLUGIN descriptor lives at the top level.
         module = importlib.import_module(f"picopt.plugins.{module_info.name}")
         plugin = getattr(module, "PLUGIN", None)
         if isinstance(plugin, Plugin):
@@ -183,3 +183,72 @@ def detectors() -> tuple[type[Detector], ...]:
         plugin.detector for plugin in iter_plugins() if plugin.detector is not None
     ]
     return tuple(sorted(found, key=lambda d: -d.PRIORITY))
+
+
+def is_pipeline_available(handler_cls: type[Handler], handler_stages: Mapping) -> bool:
+    """
+    Whether the config-time probe found a workable pipeline for a handler.
+
+    A handler is "available" iff every tier in its ``PIPELINE`` produced a
+    selected tool. Handlers with an empty PIPELINE (e.g. archive handlers
+    that pack via Python libraries, or PILPack sentinels) are always
+    available — there is nothing to be missing.
+    """
+    if not handler_cls.PIPELINE:
+        return True
+    return handler_cls in handler_stages
+
+
+def pick_route_handler(
+    file_format: FileFormat | None,
+    native: type[Handler] | None,
+    convert_chain: tuple[type[Handler], ...],
+    *,
+    convert: bool,
+    repack: bool,
+    convert_to: frozenset[str],
+    handler_stages: Mapping,
+) -> type[Handler] | None:
+    """
+    Pick the handler class for a format — the one routing decision.
+
+    Used by the factory at runtime and by the config layer to build the
+    startup formats summary, so the log can never drift from what the
+    walk actually does. Selection: the first convert-chain candidate whose
+    output the user asked for and whose pipeline probed available (archives
+    only convert during the repack pass), else the native handler if
+    available; repack callers additionally require a packing container.
+    """
+    if file_format is None:
+        return None
+    handler_cls: type[Handler] | None = None
+    if convert and (not file_format.archive or repack):
+        handler_cls = _pick_convert_handler(convert_chain, convert_to, handler_stages)
+    if (
+        handler_cls is None
+        and native is not None
+        and is_pipeline_available(native, handler_stages)
+    ):
+        handler_cls = native
+    if (
+        repack
+        and handler_cls is not None
+        and not (issubclass(handler_cls, ContainerHandler) and handler_cls.CAN_PACK)
+    ):
+        handler_cls = None
+    return handler_cls
+
+
+def _pick_convert_handler(
+    convert_chain: tuple[type[Handler], ...],
+    convert_to: frozenset[str],
+    handler_stages: Mapping,
+) -> type[Handler] | None:
+    """First convert candidate the user asked for whose pipeline is available."""
+    for candidate in convert_chain:
+        if candidate.OUTPUT_FORMAT_STR not in convert_to:
+            continue
+        if not is_pipeline_available(candidate, handler_stages):
+            continue
+        return candidate
+    return None

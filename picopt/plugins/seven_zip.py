@@ -15,6 +15,7 @@ from types import MappingProxyType
 from typing import TYPE_CHECKING, Any
 
 from py7zr import SevenZipFile, is_7zfile
+from py7zr.helpers import ArchiveTimestamp
 from py7zr.io import BytesIOFactory
 from typing_extensions import override
 
@@ -108,6 +109,7 @@ class SevenZip(ArchiveHandler):
         """Allocate the py7zr extraction factory."""
         super().__init__(*args, **kwargs)
         self._factory: BytesIOFactory = BytesIOFactory(maxsize)
+        self._extracted: dict[str, bytes] | None = None
 
     @override
     @classmethod
@@ -123,12 +125,25 @@ class SevenZip(ArchiveHandler):
     def _archive_readfile(self, archive, archiveinfo) -> bytes:
         if archiveinfo.is_directory:
             return b""
-        filename = archiveinfo.filename
-        archive.reset()
-        archive.extract(targets=[filename], factory=self._factory)
-        if not (data := self._factory.products.get(filename)):
-            return b""
-        return data.read()
+        if self._extracted is None:
+            # Solid 7z archives decompress from the start for every
+            # single-target extract — O(n^2) over members. Materialize
+            # everything in one pass instead; walk() reads every member's
+            # bytes anyway.
+            archive.reset()
+            archive.extract(factory=self._factory)
+            self._extracted = {
+                name: product.read() for name, product in self._factory.products.items()
+            }
+        return self._extracted.get(archiveinfo.filename, b"")
+
+    @override
+    def _walk_finish(self) -> None:
+        # Don't pickle the whole archive's bytes back with the handler;
+        # the children already carry their own data.
+        self._extracted = None
+        self._factory = BytesIOFactory(maxsize)
+        super()._walk_finish()
 
     @override
     def _archive_for_write(self, output_buffer: BytesIO) -> SevenZipFile:
@@ -140,8 +155,18 @@ class SevenZip(ArchiveHandler):
     @override
     def _pack_info_one_file(self, archive, path_info) -> None:
         data = BytesIO(path_info.data())
-        arcname = path_info.archiveinfo.filename()
-        archive.writef(data, arcname=arcname)
+        archiveinfo = path_info.archiveinfo
+        archive.writef(data, arcname=archiveinfo.filename())
+        # py7zr's writef API stamps every member with now() and offers no
+        # override; restore the original member mtime on the header entry
+        # it just appended.
+        mtime = archiveinfo.mtime()
+        if mtime is not None and archive.header.files_info.files:
+            stamp = ArchiveTimestamp.from_datetime(mtime)
+            file_info = archive.header.files_info.files[-1]
+            file_info["creationtime"] = stamp
+            file_info["lastwritetime"] = stamp
+            file_info["lastaccesstime"] = stamp
 
 
 class Cb7(SevenZip):

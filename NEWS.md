@@ -1,5 +1,81 @@
 # 📰 Picopt News
 
+## v6.6.0
+
+### Fixes
+
+- Files are now replaced atomically: a crash, kill, or full disk mid-write can
+  no longer destroy the original image.
+- Archive members whose optimization fails are kept in the repacked archive;
+  previously they were silently dropped.
+- Nested archives (e.g. a CBZ inside a ZIP) now optimize; previously they always
+  errored.
+- Archives keep their comments and member order through repack; tar symlinks and
+  hardlinks survive; 7z member times are preserved; pre-1980 member times no
+  longer crash conversion; legacy non-UTF8 zip member names are repaired.
+- Archive conversions compress each member by content; converting a rar, tar, or
+  7z no longer leaves every member stored uncompressed.
+- Files that fail to optimize are retried on the next timestamped run;
+  previously directory timestamps covered them and they were skipped forever.
+- One corrupt file inside an archive (e.g. a decompression bomb) no longer
+  aborts the entire run.
+- Boolean options set in config files or environment variables are no longer
+  ignored.
+- Requested archive conversions (e.g. CBR to CBZ) now happen even when the
+  contents are already optimized.
+- Lossless WebPs with large metadata inside archives are no longer misdetected
+  as lossy.
+- Owner-password-restricted PDFs keep their encryption; optimized PDF images
+  keep their color transform; more signed PDFs are detected and refused.
+- svgo no longer strips viewBox, and keeps title/desc metadata unless
+  `--strip-metadata` is given.
+- Conversions discarded for being bigger (and dry runs) are reported as skips,
+  not errors.
+- `--preserve` no longer fails as a non-root user when it cannot change
+  ownership; it still restores permissions and modification time.
+- Temporary files and animated-WebP frame directories are cleaned up when a tool
+  fails or a run is cancelled, instead of leaking to disk.
+- `picopt doctor` no longer reports missing tools and exits nonzero on healthy
+  installs.
+- Symlink loops, unreadable directories, and FIFOs no longer hang or crash the
+  walk.
+- Bad `--memory-limit` and `--after` values abort with clean error messages;
+  timezone-aware `--after` values are honored; lowercase format lists are
+  accepted for `-x` and `-c`.
+- `-I`/`--no-default-ignores` without `-i` no longer aborts at startup.
+- Existing timestamps are invalidated once after upgrading because the timestamp
+  config check gained new keys; the first `-t` run re-examines already-optimized
+  trees.
+
+### Features
+
+- Per-directory `.picopt.yaml` config files: pin any setting to a directory
+  tree. Deeper directories win; environment variables and the command line still
+  override. Editing one re-processes its tree on timestamped runs.
+- Write your invoked options to config files: `-w` to the user config, `-W` to a
+  `.picopt.yaml` in each target directory, `--write-config-file PATH` to an
+  explicit path.
+- Memory-aware scheduling: picopt now estimates the peak memory of large
+  archives and limits how many run at once so big libraries (e.g. multi-GB comic
+  archives) no longer exhaust RAM and get the process OOM-killed. Tune the
+  budget with the new `--memory-limit` option (e.g. `--memory-limit 8G`), which
+  reads as an approximate peak-memory target; the default is two-thirds of
+  detected RAM.
+- Incremental archive re-optimization: when a timestamped archive changes,
+  members older than its timestamp are skipped instead of re-optimized; `-E`
+  disables the member check. Timestamp files found inside archives are consumed
+  and removed on repack.
+
+### Performance
+
+- Archive member format detection runs in parallel workers instead of
+  serializing the scheduler.
+- Solid 7z archives extract in one pass instead of decompressing from the start
+  for every member.
+- The progress pre-scan is skipped in quiet mode, less image data is shipped
+  between processes, and scheduling under a memory limit no longer rescans the
+  whole queue on every completion.
+
 ## v6.5.2
 
 - Update to latest oxipng v10

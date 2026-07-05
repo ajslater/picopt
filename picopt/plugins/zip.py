@@ -31,8 +31,42 @@ from picopt.plugins.tar import Cbt, Tar, TarBz, TarGz, TarXz
 if TYPE_CHECKING:
     from io import BytesIO
     from pathlib import Path
+    from zipfile import ZipInfo
 
     from picopt.path import PathInfo
+
+# Already-compressed formats gain nothing from deflate; store them.
+_INCOMPRESSIBLE_SUFFIXES = frozenset(
+    {".avif", ".gif", ".jpeg", ".jpg", ".jxl", ".png", ".webp"}
+)
+_UTF8_FLAG_BIT = 0x800
+
+
+def _fix_zip_filename_encoding(zipinfo: ZipInfo) -> None:
+    """
+    Repair legacy zip member names that are really UTF-8.
+
+    Names without the UTF-8 flag are decoded as CP437 by zipfile; when the
+    original bytes were actually UTF-8 (common from other archivers), the
+    decoded string is mojibake and would be re-encoded that way forever on
+    repack. If the CP437 bytes round-trip strictly through UTF-8, prefer
+    that reading.
+    """
+    if zipinfo.flag_bits & _UTF8_FLAG_BIT:
+        return
+    try:
+        raw = zipinfo.filename.encode("cp437")
+        fixed = raw.decode("utf-8")
+    except (UnicodeEncodeError, UnicodeDecodeError):
+        return
+    if fixed != zipinfo.filename:
+        zipinfo.filename = fixed
+
+
+def _is_incompressible(filename: str) -> bool:
+    suffix = filename[filename.rfind(".") :].lower() if "." in filename else ""
+    return suffix in _INCOMPRESSIBLE_SUFFIXES
+
 
 # ---------------------------------------------------------------------------
 # Tool (always-available stdlib zipfile)
@@ -117,11 +151,17 @@ class Zip(ArchiveHandler):
 
     @override
     def _pack_info_one_file(self, archive, path_info) -> None:
-        zipinfo = path_info.archiveinfo.to_zipinfo()
-        if not self.config.keep_metadata and (
-            not zipinfo.compress_type or zipinfo.compress_type == ZIP_STORED
+        archiveinfo = path_info.archiveinfo
+        zipinfo = archiveinfo.to_zipinfo()
+        _fix_zip_filename_encoding(zipinfo)
+        if not archiveinfo.is_native_zipinfo or (
+            not self.config.keep_metadata and zipinfo.compress_type == ZIP_STORED
         ):
-            zipinfo.compress_type = ZIP_DEFLATED
+            # Converted from another archive format (or stripping metadata):
+            # choose compression by content instead of the ZipInfo default.
+            zipinfo.compress_type = (
+                ZIP_STORED if _is_incompressible(zipinfo.filename) else ZIP_DEFLATED
+            )
         archive.writestr(zipinfo, path_info.data())
 
 

@@ -3,20 +3,22 @@
 from __future__ import annotations
 
 import shutil
+from pathlib import Path
+from stat import S_ISDIR, S_ISREG
 from typing import TYPE_CHECKING
 
 from loguru import logger
 from treestamps import Treestamps
 
 from picopt import PROGRAM_NAME, WORKING_SUFFIX
+from picopt.config.consts import DIR_CONFIG_FILENAME
 from picopt.path import PathInfo, is_path_ignored
 from picopt.walk.legacy_timestamps import OLD_TIMESTAMPS_NAME
 
 if TYPE_CHECKING:
-    from pathlib import Path
-
     from treestamps import Grovestamps
 
+    from picopt.archive_stamps import ArchiveStamps
     from picopt.config.settings import PicoptSettings
     from picopt.log.reporter import Reporter
 
@@ -27,18 +29,21 @@ class WalkSkipper:
     _TIMESTAMPS_FILENAMES: frozenset[str] = frozenset(
         {*Treestamps.get_filenames(PROGRAM_NAME), OLD_TIMESTAMPS_NAME}
     )
+    # picopt's own metadata files, never optimization targets. Public so
+    # Walk._count can mirror the gate.
+    SKIP_FILENAMES: frozenset[str] = _TIMESTAMPS_FILENAMES | {DIR_CONFIG_FILENAME}
 
     def __init__(
         self,
         config: PicoptSettings,
         reporter: Reporter,
-        timestamps: Grovestamps | None = None,
+        timestamps: Grovestamps | ArchiveStamps | None = None,
         *,
         in_archive: bool = False,
     ) -> None:
         """Initialize."""
         self._config: PicoptSettings = config
-        self._timestamps: Grovestamps | None = timestamps
+        self._timestamps: Grovestamps | ArchiveStamps | None = timestamps
         self._in_archive: bool = in_archive
         self._reporter: Reporter = reporter
 
@@ -66,21 +71,32 @@ class WalkSkipper:
         path = path_info.path
 
         # File types
+        basename = Path(path_info.name()).name
         if not self._config.symlinks and path and path.is_symlink():
             reason = "symlink"
-        elif path_info.name() in self._TIMESTAMPS_FILENAMES:
-            legacy = "legacy " if path_info.name() == OLD_TIMESTAMPS_NAME else ""
+        elif basename == DIR_CONFIG_FILENAME:
+            reason = "picopt config"
+        elif basename in self._TIMESTAMPS_FILENAMES:
+            legacy = "legacy " if basename == OLD_TIMESTAMPS_NAME else ""
             reason = f"{legacy}timestamp"
         elif is_path_ignored(
             self._config,
             path_info.archive_pseudo_path(),
-            ignore_case=path_info.is_case_sensitive,
+            ignore_case=not path_info.is_case_sensitive,
         ):
             reason = "ignored"
         elif not self._in_archive and path and not path.exists():
             # Check disk last for performance
             reason = "not found"
             warn = True
+        elif (
+            not self._in_archive
+            and path
+            and (fs_stat := path_info.stat()) is not None
+            and not (S_ISREG(fs_stat.st_mode) or S_ISDIR(fs_stat.st_mode))
+        ):
+            # FIFOs, sockets, device nodes: opening a FIFO blocks forever.
+            reason = "not a regular file"
 
         self._log_skip(reason, path_info, warn=warn)
 

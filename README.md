@@ -110,15 +110,9 @@ When configured to convert GIFS to WebP, Animated GIFs are converted to WebP
 with the [gif2webp](https://developers.google.com/speed/webp/docs/gif2webp)
 binary if it exists. It is normally distributed as part of the webp package.
 
-#### Experimental option
-
-This experimental options is activated with an environment variable.
-
-Set `PICOPT_ENABLE_IMG2WEBP=1` to make picopt optimize animated WebPs and
-convert animated PNGs to webp with the
-[img2webp](https://developers.google.com/speed/webp/docs/img2webp) binary. In my
-experiments img2webp has performed worse than picopt's custom algorithm using
-PIL & cwebp
+Animated WebPs are optimized (and animated PNGs converted to WebP) with the
+[img2webp](https://developers.google.com/speed/webp/docs/img2webp) binary when
+it is available, falling back to picopt's internal algorithm using PIL & cwebp.
 
 ### SVG
 
@@ -243,6 +237,54 @@ Or you can install svgo with npm:
 npm install -G svgo
 ```
 
+## ⚙️ Configuration
+
+Picopt layers configuration from these sources, lowest to highest priority:
+packaged defaults, your user config file, a `-C CONFIG` file, per-directory
+`.picopt.yaml` files (see below), environment variables, and command line
+options. Every config file uses the same envelope:
+
+<!-- eslint-skip -->
+
+```yaml
+picopt:
+    recurse: true
+    convert_to: [WEBP, CBZ]
+```
+
+### Per-directory `.picopt.yaml` files
+
+A `.picopt.yaml` placed inside a target directory applies to that directory and
+everything under it. Files are discovered from each processed file's directory
+up to the command line target root (never above it), and deeper directories win
+over shallower ones. Environment variables and command line options still win
+over every directory file.
+
+<!-- eslint-skip -->
+
+```sh
+printf 'picopt:\n  convert_to: [CBZ]\n' > comics/.picopt.yaml
+picopt -rx CBR,CBZ .   # CBRs under comics/ convert; siblings don't
+```
+
+Any config key is accepted and validated, but run-scoped keys — `dry_run`,
+`list_only`, `timestamps`, `after`, `jobs`, `memory_limit`, `fail_fast`,
+`fail_fast_container`, `verbose`, and `paths` — are governed by the run-level
+value; setting them in a directory file has no per-directory effect. When
+timestamps (`-t`) are enabled, editing, adding, or removing any `.picopt.yaml`
+re-processes its tree on the next run.
+
+### Writing config files
+
+- `-w` / `--write-config` merges the options you invoked into your user config
+  file and then runs normally.
+- `-W` / `--write-dir-config` writes them into a `.picopt.yaml` in each target
+  directory (a file target's parent).
+- `--write-config-file PATH` writes them to an explicit path.
+
+Existing keys and comments in the target file survive the merge. Run-mode flags
+(`-d`, `-L`, verbosity) and the target paths are never persisted.
+
 ## ⌨️ Use Examples
 
 Optimize all JPEG files in a directory:
@@ -287,6 +329,22 @@ timestamps.
 ```sh
 picopt -rStc CBZ,WEBP -x TIFF,CBR,CBZ /Volumes/Media/Comics
 ```
+
+Optimize the same comic library, but cap memory use so multi-GB archives don't
+exhaust RAM:
+
+<!-- eslint-skip -->
+
+```sh
+picopt -rStc CBZ,WEBP -x TIFF,CBR,CBZ --memory-limit 6G /Volumes/Media/Comics
+```
+
+picopt holds each archive plus its decompressed pages in memory while
+optimizing, so large archives spread across many parallel workers can use a lot
+of RAM. `--memory-limit` is an approximate peak-memory target (default:
+two-thirds of detected RAM) that bounds how many large archives run at once — a
+single archive bigger than the whole budget still runs, on its own — and `-j`
+caps the number of parallel workers.
 
 Optimize all files, but only JPEG format files:
 

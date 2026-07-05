@@ -18,17 +18,17 @@ that absence as "this handler is unavailable" and falls through the
 The format → handler routing map is no longer built here at all — it lives
 in the registry as :func:`picopt.plugins.routes_by_format`.
 
-Important ordering invariant: ``CWebPTool.probe()`` mutates
-``WebPLossless.IS_MODERN_CWEBP`` as a side effect, and ``WebPLossless``
+Important ordering invariant: ``CWebPTool.probe()`` records on the
+shared ``CWEBP_TOOL`` singleton whether cwebp is modern, and WebP handler
 instances read that flag in ``__init__`` to widen their accepted input
 formats. The probe loop runs at config-construction time, before
-:class:`Walk` ever instantiates a handler, so the side effect is always in
-place by the time it matters. Don't reorder.
+:class:`Walk` ever instantiates a handler, so the flag is always in place
+by the time it matters. Don't reorder.
 """
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 
 from loguru import logger
 
@@ -40,7 +40,19 @@ if TYPE_CHECKING:
     from confuse import Subview
 
     from picopt.plugins.base import Handler, Tool
-    from picopt.plugins.base.format import FileFormat
+
+
+def _pick_tier_tool(
+    tier: tuple[Tool, ...],
+    disabled_program_names: frozenset[str],
+) -> Tool | None:
+    """Return the first available, non-disabled tool in a tier."""
+    for tool in tier:
+        if tool.name and tool.name in disabled_program_names:
+            continue
+        if tool.probe().available:
+            return tool
+    return None
 
 
 def _select_pipeline_for_handler(
@@ -53,25 +65,15 @@ def _select_pipeline_for_handler(
     Returns ``None`` if any tier has no available tool — that signals the
     handler can't run on this machine. Returns the empty tuple for handlers
     with an empty pipeline (e.g. archive packers that use only stdlib /
-    library code); those are unconditionally available.
+    library code); those are unconditionally available. Tiers whose tools
+    are all optional are skipped when nothing in them is available.
     """
-    if not handler_cls.PIPELINE:
-        return ()
     chosen: list[Tool] = []
     for tier in handler_cls.PIPELINE:
-        picked: Tool | None = None
-        for tool in tier:
-            if tool.name and tool.name in disabled_program_names:
-                continue
-            status = tool.probe()
-            if status.available:
-                picked = tool
-                break
+        picked = _pick_tier_tool(tier, disabled_program_names)
         if picked is not None:
             chosen.append(picked)
-        elif all(not tool.required for tool in tier):
-            continue
-        else:
+        elif any(tool.required for tool in tier):
             return None
     return tuple(chosen)
 
@@ -134,39 +136,17 @@ class ConfigHandlers:
         if stages is not None:
             handler_stages[handler_cls] = stages
 
-    def _set_format_handled_strs_for_format(
-        self,
-        file_format: FileFormat,
-        all_format_strs: frozenset[str],
-        convert_chain: tuple[type[Handler], ...],
-        convert_to: frozenset[str | Any],
-        handler_stages: dict[type[Handler], tuple[Tool, ...]],
-        convert_format_strs: dict[Any, Any],
-        handled_format_strs: set[Any],
-        native: type[Handler] | None,
-    ) -> None:
-        if file_format.format_str not in all_format_strs:
-            return
-        picked_via_convert = False
-        for candidate in convert_chain:
-            if candidate.OUTPUT_FORMAT_STR not in convert_to:
-                continue
-            if candidate not in handler_stages:
-                continue
-            convert_format_strs.setdefault(candidate.OUTPUT_FORMAT_STR, set()).add(
-                file_format.format_str
-            )
-            handled_format_strs.add(file_format.format_str)
-            picked_via_convert = True
-            break
-        if not picked_via_convert and native is not None and native in handler_stages:
-            handled_format_strs.add(file_format.format_str)
-
     def set_format_handler_map(self, config: Subview) -> None:
         """Probe handlers for the requested formats and store availability."""
         all_format_strs = self._get_config_set(config, "formats", "extra_formats")
         config["formats"].set(tuple(sorted(all_format_strs)))
         convert_to = self._get_config_set(config, "convert_to")
+        # Write the upcased lists back so template validation accepts
+        # lowercase user input for -x and -c exactly as it does for -f.
+        if extra_formats := self._get_config_set(config, "extra_formats"):
+            config["extra_formats"].set(tuple(sorted(extra_formats)))
+        if convert_to:
+            config["convert_to"].set(tuple(sorted(convert_to)))
 
         disabled_list: list[str] | None = config["disable_programs"].get(list)
         disabled_program_names = (
@@ -178,23 +158,32 @@ class ConfigHandlers:
             self._set_format_handler_stages(
                 handler_cls, handler_stages, disabled_program_names
             )
-        # Walk the routing table to compute the verbose-output summary. The
-        # routing layer will do this same lookup at runtime; we just mirror
-        # the result for the user-facing log.
+        # Build the verbose-output summary with the routing layer's own
+        # decision function so the log can never drift from what the walk
+        # actually does. repack=True for archives applies the same
+        # convert/CAN_PACK gates the repack pass will.
         handled_format_strs: set[str] = set()
         convert_format_strs: dict[str, set[str]] = {}
         routes = registry.routes_by_format()
         for file_format, (native, convert_chain) in routes.items():
-            self._set_format_handled_strs_for_format(
+            if file_format.format_str not in all_format_strs:
+                continue
+            picked = registry.pick_route_handler(
                 file_format,
-                all_format_strs,
-                convert_chain,
-                convert_to,
-                handler_stages,
-                convert_format_strs,
-                handled_format_strs,
                 native,
+                convert_chain,
+                convert=True,
+                repack=file_format.archive,
+                convert_to=convert_to,
+                handler_stages=handler_stages,
             )
+            if picked is None:
+                continue
+            handled_format_strs.add(file_format.format_str)
+            if picked is not native:
+                convert_format_strs.setdefault(picked.OUTPUT_FORMAT_STR, set()).add(
+                    file_format.format_str
+                )
         config["computed"]["handler_stages"].set(handler_stages)
 
         verbose: int = config["verbose"].get(int)

@@ -10,6 +10,12 @@ allowlist, which doesn't depend on the format registry at all.
 
 from typing import Final
 
+# Per-directory config files layer beneath env vars and CLI args but above
+# the user config. Named to be distinct from the timestamps file
+# ``.picopt_treestamps.yaml``. Lives here (a leaf module) so the walk layer
+# can import it without triggering the config package's heavy import chain.
+DIR_CONFIG_FILENAME: Final = ".picopt.yaml"
+
 TIMESTAMPS_CONFIG_KEYS: Final[frozenset[str]] = frozenset(
     {
         "bigger",
@@ -20,5 +26,8 @@ TIMESTAMPS_CONFIG_KEYS: Final[frozenset[str]] = frozenset(
         "near_lossless",
         "recurse",
         "symlinks",
+        # Changes which archive members are optimized, so flipping it must
+        # invalidate stamps like any other behavior-affecting option.
+        "timestamps_ignore_archive_entry_mtimes",
     }
 )

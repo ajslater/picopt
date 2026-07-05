@@ -44,7 +44,23 @@ def is_path_ignored(config: PicoptSettings, path: Path, *, ignore_case: bool) ->
 
 
 class PathInfo:
-    """Path Info object, mostly for passing down walk."""
+    """
+    The universal work item: one optimizable thing, wherever it lives.
+
+    Filesystem files, archive members, animation frames, and synthetic PDF
+    JPEG streams all flow through the same detection → handler → report
+    pipeline as PathInfos.
+
+    Mutable-identity contract: a PathInfo is created once per item and its
+    IDENTITY is shared across stages — including pickling into a worker
+    and back. After a worker optimizes an in-container entry, the
+    scheduler mutates the main process's original via
+    ``hydrate_optimized_path_info`` (``set_data``/``rename``) so the
+    parent container repacks the updated entry. Most read accessors cache
+    lazily; ``rename()`` invalidates the name-derived caches and
+    ``set_data()`` replaces the payload — add matching invalidation if a
+    new cached field depends on either.
+    """
 
     _UNSET = object()
 
@@ -98,6 +114,7 @@ class PathInfo:
         path: Path | None = None,
         frame: int | None = None,
         archiveinfo: ZipInfo | RarInfo | TarInfo | SevenZipInfo | None = None,
+        archive_index: int | None = None,
         data: bytes | None = None,
         noop: bool = False,
     ) -> None:
@@ -122,10 +139,16 @@ class PathInfo:
         self.archiveinfo: ArchiveInfo | None = (
             ArchiveInfo(archiveinfo) if archiveinfo else None
         )
+        # Position within the parent archive; repack uses it to preserve
+        # member order (EPUB requires mimetype first).
+        self.archive_index: int | None = archive_index
 
         # optionally computed
         self._data: bytes | None = data
         self._header_bytes: bytes | None = None
+        # (FileFormat | None, info-Mapping) cached by unpack workers via
+        # predetect_format(); None means detection has not run yet.
+        self.detected: tuple | None = None
 
         # always computed
         self._is_dir: bool | None = None

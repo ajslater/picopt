@@ -1,0 +1,342 @@
+"""Test that scheduler failure paths never drop archive members."""
+
+from pathlib import Path
+from typing import Any
+
+from picopt import cli
+from picopt.config import PicoptConfig
+from picopt.report import ReportStats
+from picopt.walk.scheduler import OptimizeLeafJob, Scheduler, _LeafEntry
+
+__all__ = ()  # hides module from pydocstring
+
+_MEMBER_PATH = Path("member.png")
+_ARCHIVE_PATH = Path("test.cbz")
+
+
+class _FakePathInfo:
+    """Minimal PathInfo stand-in for error-path bookkeeping."""
+
+    def __init__(
+        self, name: str, path: Path | None = None, top_path: Path | None = None
+    ) -> None:
+        self._name = name
+        self.path: Path | None = path
+        self.top_path: Path | None = top_path
+
+    def bytes_in(self) -> int:
+        return 100
+
+
+class _FakeContainerHandler:
+    """Minimal ContainerHandler stand-in for completion handling."""
+
+    def __init__(self, name: str) -> None:
+        self.path_info = _FakePathInfo(name)
+        self.original_path = Path(name)
+        self.repack_handler_class = None
+        self.hydrate_calls: list[tuple[Any, Any]] = []
+        self.staging_dir: Path | None = None
+        # The scheduler passes this to create_repack_handler.
+        self.config = None
+        self._optimized_contents: set[Any] = set()
+        self._do_repack = False
+
+    def get_staging_dir(self) -> Path | None:
+        return self.staging_dir
+
+    def get_optimized_contents(self) -> set[Any]:
+        return self._optimized_contents
+
+    def is_do_repack(self) -> bool:
+        return self._do_repack
+
+    def set_do_repack(self, *, do_repack: bool) -> None:
+        self._do_repack = do_repack
+
+    def hydrate_optimized_path_info(self, path_info: Any, report: Any) -> None:
+        self.hydrate_calls.append((path_info, report))
+
+
+class _FakeReporter:
+    """Records every report it is handed."""
+
+    def __init__(self) -> None:
+        self.reports: list[ReportStats] = []
+
+    def record_report(self, report: ReportStats) -> None:
+        self.reports.append(report)
+
+
+class _FakeTimestamps:
+    """Records every timestamp set() call."""
+
+    def __init__(self) -> None:
+        self.set_calls: list[tuple] = []
+
+    def set(self, *args, **kwargs) -> None:
+        self.set_calls.append((args, kwargs))
+
+
+def _make_scheduler(
+    *argv: str,
+) -> tuple[Scheduler, _FakeReporter, _FakeTimestamps]:
+    args = cli.get_arguments(("picopt", *argv, "."))
+    config = PicoptConfig().get_config(args)
+    reporter = _FakeReporter()
+    timestamps = _FakeTimestamps()
+    scheduler = Scheduler(
+        config=config,
+        executor=None,  # pyright: ignore[reportArgumentType]  # ty: ignore[invalid-argument-type]
+        timestamps=timestamps,  # pyright: ignore[reportArgumentType]  # ty: ignore[invalid-argument-type]
+        reporter=reporter,  # pyright: ignore[reportArgumentType]  # ty: ignore[invalid-argument-type]
+        max_workers=1000,
+        create_repack_handler=lambda _config, handler: handler,
+        child_enqueue_callback=lambda *_a: None,
+    )
+    return scheduler, reporter, timestamps
+
+
+class TestSchedulerErrorPaths:
+    """Errored members must be preserved in their parent container."""
+
+    def test_errored_leaf_kept_in_parent_contents(self: Any) -> None:
+        """A member whose optimization errors stays in the repacked archive."""
+        scheduler, reporter, _ = _make_scheduler()
+        parent_handler = _FakeContainerHandler(str(_ARCHIVE_PATH))
+        parent = scheduler.enqueue_container(parent_handler)  # pyright: ignore[reportArgumentType]  # ty: ignore[invalid-argument-type]
+
+        member_info = _FakePathInfo(str(_MEMBER_PATH))
+        job = OptimizeLeafJob(handler=None, path_info=member_info)  # pyright: ignore[reportArgumentType]  # ty: ignore[invalid-argument-type]
+        scheduler.enqueue_leaf(job, parent)
+        assert parent.pending == 1
+
+        report = ReportStats(_MEMBER_PATH, exc=ValueError("simulated failure"))
+        entry = _LeafEntry(job=job, parent=parent)
+        scheduler._handle_leaf_done(entry, report)
+
+        assert member_info in parent_handler.get_optimized_contents()
+        assert parent.pending == 0
+        assert parent.had_error
+        assert any(r.exc for r in reporter.reports)
+
+    def test_failed_nested_repack_kept_in_parent_contents(self: Any) -> None:
+        """A nested container whose repack fails stays in the parent archive."""
+        scheduler, reporter, _ = _make_scheduler()
+        parent_handler = _FakeContainerHandler(str(_ARCHIVE_PATH))
+        parent = scheduler.enqueue_container(parent_handler)  # pyright: ignore[reportArgumentType]  # ty: ignore[invalid-argument-type]
+
+        child_handler = _FakeContainerHandler("nested.cbz")
+        child = scheduler.enqueue_container(child_handler, parent)  # pyright: ignore[reportArgumentType]  # ty: ignore[invalid-argument-type]
+        assert parent.pending == 1
+
+        report = ReportStats(Path("nested.cbz"), exc=ValueError("repack failed"))
+        scheduler._handle_repack_done(child, report)
+
+        assert child_handler.path_info in parent_handler.get_optimized_contents()
+        assert parent.pending == 0
+        assert parent.had_error
+        assert any(r.exc for r in reporter.reports)
+
+
+class TestDirTimestampsOnError:
+    """Directories and containers with errored children must not be stamped."""
+
+    def test_errored_leaf_poisons_dir_timestamp(self: Any, tmp_path: Path) -> None:
+        """A failed file blocks the compacted dir stamp; successes don't."""
+        scheduler, _, timestamps = _make_scheduler()
+        scheduler.begin_dir(tmp_path, tmp_path)
+
+        member_path = tmp_path / "bad.png"
+        member_info = _FakePathInfo(str(member_path), path=member_path)
+        job = OptimizeLeafJob(handler=None, path_info=member_info)  # pyright: ignore[reportArgumentType]  # ty: ignore[invalid-argument-type]
+        scheduler.enqueue_leaf(job)
+
+        report = ReportStats(member_path, exc=ValueError("boom"))
+        scheduler._handle_leaf_done(_LeafEntry(job=job, parent=None), report)
+        scheduler.seal_dir(tmp_path)
+
+        assert tmp_path not in scheduler._dirs
+        assert not timestamps.set_calls
+
+    def test_clean_dir_still_gets_compacted_timestamp(
+        self: Any, tmp_path: Path
+    ) -> None:
+        """Without errors the dir stamp is written with compaction."""
+        scheduler, _, timestamps = _make_scheduler()
+        scheduler.begin_dir(tmp_path, tmp_path)
+
+        member_path = tmp_path / "good.png"
+        member_info = _FakePathInfo(str(member_path), path=member_path)
+        job = OptimizeLeafJob(handler=None, path_info=member_info)  # pyright: ignore[reportArgumentType]  # ty: ignore[invalid-argument-type]
+        scheduler.enqueue_leaf(job)
+
+        report = ReportStats(member_path, bytes_in=10, bytes_out=5, changed=True)
+        scheduler._handle_leaf_done(_LeafEntry(job=job, parent=None), report)
+        scheduler.seal_dir(tmp_path)
+
+        assert tmp_path not in scheduler._dirs
+        compacted = [c for c in timestamps.set_calls if c[1].get("compact")]
+        assert compacted
+
+    def test_failed_top_level_container_notifies_dir_tracker(
+        self: Any, tmp_path: Path
+    ) -> None:
+        """A failed container repack must not leak its directory tracker."""
+        scheduler, _, timestamps = _make_scheduler()
+        scheduler.begin_dir(tmp_path, tmp_path)
+
+        archive_path = tmp_path / "broken.cbz"
+        handler = _FakeContainerHandler(str(archive_path))
+        handler.path_info.path = archive_path
+        node = scheduler.enqueue_container(handler)  # pyright: ignore[reportArgumentType]  # ty: ignore[invalid-argument-type]
+
+        report = ReportStats(archive_path, exc=ValueError("repack failed"))
+        scheduler._handle_repack_done(node, report)
+        scheduler.seal_dir(tmp_path)
+
+        assert tmp_path not in scheduler._dirs
+        assert not timestamps.set_calls
+
+    def test_container_with_errored_member_not_timestamped(
+        self: Any, tmp_path: Path
+    ) -> None:
+        """A container whose member errored gets no timestamp on success."""
+        scheduler, _, timestamps = _make_scheduler()
+        archive_path = tmp_path / "partial.cbz"
+        handler = _FakeContainerHandler(str(archive_path))
+        handler.path_info.path = archive_path
+        handler.path_info.top_path = tmp_path
+        node = scheduler.enqueue_container(handler)  # pyright: ignore[reportArgumentType]  # ty: ignore[invalid-argument-type]
+        node.had_error = True
+
+        report = ReportStats(archive_path, bytes_in=10, bytes_out=5, changed=True)
+        scheduler._handle_repack_done(node, report)
+
+        assert not timestamps.set_calls
+
+
+class TestStagingCleanup:
+    """Worker staging dirs must be cleaned on rollback, not leaked."""
+
+    def test_unpack_wires_staging_dir_onto_node(self: Any, tmp_path: Path) -> None:
+        """The scheduler learns the staging dir from the unpacked handler."""
+        from picopt.walk.scheduler import UnpackResult
+
+        scheduler, _, _ = _make_scheduler()
+        handler = _FakeContainerHandler(str(tmp_path / "anim.webp"))
+        node = scheduler.enqueue_container(handler)  # pyright: ignore[reportArgumentType]  # ty: ignore[invalid-argument-type]
+
+        staging = tmp_path / "staging"
+        staging.mkdir()
+        handler.staging_dir = staging
+        scheduler._handle_unpack_done(
+            node,
+            UnpackResult(handler=handler, children=[]),  # pyright: ignore[reportArgumentType]  # ty: ignore[invalid-argument-type]
+        )
+        # The noop completion retires the node and cleans its staging.
+        assert not staging.exists()
+
+    def test_cancelled_subtree_cleans_staging(self: Any, tmp_path: Path) -> None:
+        """Rollback removes the worker's staging dir from disk."""
+        scheduler, _, _ = _make_scheduler()
+        handler = _FakeContainerHandler(str(tmp_path / "broken.cbz"))
+        node = scheduler.enqueue_container(handler)  # pyright: ignore[reportArgumentType]  # ty: ignore[invalid-argument-type]
+        staging = tmp_path / "staging"
+        staging.mkdir()
+        (staging / "frame_0.webp").write_bytes(b"x")
+        node.staging_dir = staging
+
+        scheduler._cancel_subtree(node, reason=None)
+
+        assert not staging.exists()
+
+
+class TestNestedConversionRename:
+    """Nested container repacks must hydrate renames onto the parent."""
+
+    def test_nested_repack_success_hydrates_parent(self: Any) -> None:
+        """The parent handler hydrates data and rename from the report."""
+        scheduler, _, _ = _make_scheduler()
+        parent_handler = _FakeContainerHandler(str(_ARCHIVE_PATH))
+        parent = scheduler.enqueue_container(parent_handler)  # pyright: ignore[reportArgumentType]  # ty: ignore[invalid-argument-type]
+        child_handler = _FakeContainerHandler("inner.cbr")
+        child = scheduler.enqueue_container(child_handler, parent)  # pyright: ignore[reportArgumentType]  # ty: ignore[invalid-argument-type]
+
+        report = ReportStats(
+            Path("inner.cbz"), bytes_in=10, bytes_out=5, changed=True, data=b"zipdata"
+        )
+        scheduler._handle_repack_done(child, report)
+
+        assert parent_handler.hydrate_calls == [(child_handler.path_info, report)]
+        assert child_handler.path_info in parent_handler.get_optimized_contents()
+        assert parent.had_work
+
+
+class TestFailFast:
+    """--fail-fast cancels everything on the first error."""
+
+    def test_fail_fast_cancels_all_live_tops_and_clears_queues(self: Any) -> None:
+        """One repack failure cancels every live top-level container."""
+        from picopt.walk.scheduler import NodeState
+
+        scheduler, reporter, timestamps = _make_scheduler("--fail-fast")
+        handler_a = _FakeContainerHandler("a.cbz")
+        handler_b = _FakeContainerHandler("b.cbz")
+        node_a = scheduler.enqueue_container(handler_a)  # pyright: ignore[reportArgumentType]  # ty: ignore[invalid-argument-type]
+        node_b = scheduler.enqueue_container(handler_b)  # pyright: ignore[reportArgumentType]  # ty: ignore[invalid-argument-type]
+
+        report = ReportStats(Path("a.cbz"), exc=ValueError("boom"))
+        scheduler._handle_repack_done(node_a, report)
+
+        assert node_a.state is NodeState.CANCELLED
+        assert node_b.state is NodeState.CANCELLED
+        assert not scheduler._ready
+        assert not scheduler._gated
+        assert any(r.exc for r in reporter.reports)
+        assert not timestamps.set_calls
+
+    def test_fail_fast_container_escalates_to_subtree_root_only(self: Any) -> None:
+        """An inner repack failure cancels its top container, not siblings."""
+        from picopt.walk.scheduler import NodeState
+
+        scheduler, reporter, _ = _make_scheduler("--fail-fast-container")
+        top_a = _FakeContainerHandler("a.cbz")
+        node_a = scheduler.enqueue_container(top_a)  # pyright: ignore[reportArgumentType]  # ty: ignore[invalid-argument-type]
+        inner = _FakeContainerHandler("a_inner.cbz")
+        node_inner = scheduler.enqueue_container(inner, node_a)  # pyright: ignore[reportArgumentType]  # ty: ignore[invalid-argument-type]
+        top_b = _FakeContainerHandler("b.cbz")
+        node_b = scheduler.enqueue_container(top_b)  # pyright: ignore[reportArgumentType]  # ty: ignore[invalid-argument-type]
+
+        report = ReportStats(Path("a_inner.cbz"), exc=ValueError("inner boom"))
+        scheduler._handle_repack_done(node_inner, report)
+
+        assert node_inner.state is NodeState.CANCELLED
+        assert node_a.state is NodeState.CANCELLED
+        # The sibling top-level container is untouched.
+        assert node_b.state is not NodeState.CANCELLED
+        assert any(r.exc for r in reporter.reports)
+
+    def test_late_leaf_result_for_cancelled_parent_is_dropped(self: Any) -> None:
+        """A leaf completing after its parent cancelled leaves no residue."""
+        from picopt.walk.scheduler import NodeState
+
+        scheduler, _, _ = _make_scheduler()
+        parent_handler = _FakeContainerHandler("late.cbz")
+        parent = scheduler.enqueue_container(parent_handler)  # pyright: ignore[reportArgumentType]  # ty: ignore[invalid-argument-type]
+        member_info = _FakePathInfo("member.png")
+        job = OptimizeLeafJob(handler=None, path_info=member_info)  # pyright: ignore[reportArgumentType]  # ty: ignore[invalid-argument-type]
+        scheduler.enqueue_leaf(job, parent)
+
+        scheduler._cancel_subtree(parent, reason=None)
+        assert parent.state is NodeState.CANCELLED
+
+        report = ReportStats(
+            Path("member.png"), bytes_in=10, bytes_out=5, changed=True, data=b"x"
+        )
+        scheduler._handle_leaf_done(_LeafEntry(job=job, parent=parent), report)
+
+        # Dropped on the floor: no contents, no hydration, pending drained.
+        assert member_info not in parent_handler.get_optimized_contents()
+        assert not parent_handler.hydrate_calls
+        assert parent.pending == 0

@@ -34,9 +34,9 @@ from picopt.plugins.base.handler import Handler
 
 if TYPE_CHECKING:
     from collections.abc import Generator
+    from pathlib import Path
 
-    from treestamps import Grovestamps
-
+    from picopt.archive_stamps import ArchiveStamps
     from picopt.config.settings import PicoptSettings
     from picopt.path import PathInfo
     from picopt.report import ReportStats
@@ -52,7 +52,7 @@ class ContainerHandler(Handler, ABC):
     def __init__(
         self,
         *args: Any,
-        timestamps: Grovestamps | None = None,
+        timestamps: ArchiveStamps | None = None,
         repack_handler_class: type[ContainerHandler] | None = None,
         comment: bytes | None = None,
         optimized_contents: set[PathInfo] | None = None,
@@ -62,19 +62,28 @@ class ContainerHandler(Handler, ABC):
         super().__init__(*args, **kwargs)
         # Config gets mutated for pickling protection during repack.
         self.config: PicoptSettings = copy(self.config)
-        self._timestamps: Grovestamps | None = timestamps
+        # A picklable slice of the run's treestamps: walk() executes in a
+        # worker process, so member skip checks and in-archive timestamp
+        # consumption must survive the pickle round trip.
+        self._timestamps: ArchiveStamps | None = timestamps
         self.repack_handler_class: type[ContainerHandler] | None = repack_handler_class
-        # Lazy import to avoid a cycle (walk.skip imports nothing of ours).
-        from picopt.walk.skip import WalkSkipper
-
-        # Workers don't share Reporter with the parent process; give each
-        # worker a detached one so skip-side counters/marks become no-ops.
-        self._skipper: WalkSkipper | None = WalkSkipper(
-            self.config, Reporter(), timestamps, in_archive=True
-        )
+        self._skipper: WalkSkipper | None = None
         self.comment: bytes | None = comment
         self._optimized_contents: set[PathInfo] = optimized_contents or set()
         self._do_repack: bool = bool(optimized_contents)
+
+    def _get_skipper(self) -> WalkSkipper:
+        """Build the walk skipper lazily; workers rebuild after pickling."""
+        if self._skipper is None:
+            # Lazy import to avoid a cycle (walk.skip imports nothing of ours).
+            from picopt.walk.skip import WalkSkipper
+
+            # Workers don't share Reporter with the parent process; give each
+            # worker a detached one so skip-side counters/marks become no-ops.
+            self._skipper = WalkSkipper(
+                self.config, Reporter(), self._timestamps, in_archive=True
+            )
+        return self._skipper
 
     # ----------------------------------------------------------- walk/unpack
 
@@ -85,7 +94,7 @@ class ContainerHandler(Handler, ABC):
     def _walk_finish(self) -> None:
         if self.config.verbose < 2:  # noqa: PLR2004
             return
-        if self._do_repack and self._skipper:
+        if self._do_repack:
             logger.info(f"Optimizing contents in {self.path_info.full_output_name()}")
         else:
             msg = (
@@ -124,6 +133,16 @@ class ContainerHandler(Handler, ABC):
         """Return optimized contents."""
         return self._optimized_contents
 
+    def get_staging_dir(self) -> Path | None:
+        """
+        Return the on-disk staging dir walk() created, if any.
+
+        The scheduler reads this off the pickle-roundtripped handler after
+        unpack so it can rmtree the staging on rollback, fail-fast, and
+        final cleanup — pack_into() only cleans it on the success path.
+        """
+        return None
+
     # ------------------------------------------------------------- packing
 
     def pack_into(self) -> BinaryIO:
@@ -147,9 +166,9 @@ class ContainerHandler(Handler, ABC):
         return self.pack_into()
 
     def __getstate__(self) -> dict[str, Any]:
-        """Drop Grovestamps for worker handoff; its ruamel.yaml Reader owns an un-picklable BufferedReader."""
+        """Drop the skipper for worker handoff; it rebuilds lazily."""
         state = self.__dict__.copy()
-        state["_timestamps"] = None
+        # _timestamps is an ArchiveStamps and manages its own picklability.
         state["_skipper"] = None
         return state
 

@@ -14,6 +14,9 @@ from rarfile import RarInfo
 _DATETIME_ATTRGETTER = attrgetter(
     "year", "month", "day", "hour", "minute", "second", "microsecond"
 )
+# The zip format cannot represent timestamps before 1980; zipfile raises on
+# them. Clamp older (or missing) member times to the epoch zipfile accepts.
+_ZIP_EPOCH: Final = (1980, 1, 1, 0, 0, 0)
 ArchiveInfoType: TypeAlias = TarInfo | RarInfo | ZipInfo | SevenZipInfo
 
 
@@ -32,6 +35,9 @@ class ArchiveInfo:
     def __init__(self, info: ArchiveInfoType) -> None:
         """Store the source info."""
         self.info: ArchiveInfoType = info
+        # True when the member came from a real zip; repack then preserves
+        # its compression method instead of choosing one by content.
+        self.is_native_zipinfo: bool = isinstance(info, ZipInfo)
         self._filename: str | None = None
         self._is_dir: bool | None = None
         self._mtime: float | None = None
@@ -117,14 +123,16 @@ class ArchiveInfo:
             case ZipInfo():
                 info = self.info
             case RarInfo():
-                kwargs = {}
-                if filename := self.filename():
-                    kwargs["filename"] = filename
-                if self.info.date_time:
-                    kwargs["date_time"] = self.info.date_time
-                info = ZipInfo(**kwargs)
+                filename = self.filename() or "NoName"
+                if date_time := self.info.date_time:
+                    clamped = max(tuple(date_time), _ZIP_EPOCH)
+                    info = ZipInfo(filename=filename, date_time=clamped)
+                else:
+                    info = ZipInfo(filename=filename)
             case _:  # TarInfo | SevenZipInfo
-                date_time = _DATETIME_ATTRGETTER(self.datetime())
+                dttm = self.datetime()
+                date_time = _DATETIME_ATTRGETTER(dttm)[:6] if dttm else _ZIP_EPOCH
+                date_time = max(date_time, _ZIP_EPOCH)
                 info = ZipInfo(filename=self.filename(), date_time=date_time)
         return info
 
