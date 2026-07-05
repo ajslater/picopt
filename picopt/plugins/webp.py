@@ -451,6 +451,11 @@ class WebPAnimatedLossless(ImageAnimated, ABC):
             shutil.rmtree(self._working_tmp_dir, ignore_errors=True)
             self._working_tmp_dir = None
 
+    @override
+    def get_staging_dir(self) -> Path | None:
+        """Expose the frame tmp dir so the scheduler can clean it on rollback."""
+        return self._working_tmp_dir
+
 
 class Img2WebPAnimatedLossless(WebPAnimatedLossless):
     """

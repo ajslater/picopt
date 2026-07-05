@@ -36,8 +36,12 @@ class _FakeContainerHandler:
         self.original_path = Path(name)
         self.repack_handler_class = None
         self.hydrate_calls: list[tuple[Any, Any]] = []
+        self.staging_dir: Path | None = None
         self._optimized_contents: set[Any] = set()
         self._do_repack = False
+
+    def get_staging_dir(self) -> Path | None:
+        return self.staging_dir
 
     def get_optimized_contents(self) -> set[Any]:
         return self._optimized_contents
@@ -148,7 +152,7 @@ class TestDirTimestampsOnError:
         scheduler._handle_leaf_done(_LeafEntry(job=job, parent=None), report)
         scheduler.seal_dir(tmp_path)
 
-        assert tmp_path not in scheduler._dir_trackers
+        assert tmp_path not in scheduler._dirs
         assert not timestamps.set_calls
 
     def test_clean_dir_still_gets_compacted_timestamp(
@@ -167,7 +171,7 @@ class TestDirTimestampsOnError:
         scheduler._handle_leaf_done(_LeafEntry(job=job, parent=None), report)
         scheduler.seal_dir(tmp_path)
 
-        assert tmp_path not in scheduler._dir_trackers
+        assert tmp_path not in scheduler._dirs
         compacted = [c for c in timestamps.set_calls if c[1].get("compact")]
         assert compacted
 
@@ -187,7 +191,7 @@ class TestDirTimestampsOnError:
         scheduler._handle_repack_done(node, report)
         scheduler.seal_dir(tmp_path)
 
-        assert tmp_path not in scheduler._dir_trackers
+        assert tmp_path not in scheduler._dirs
         assert not timestamps.set_calls
 
     def test_container_with_errored_member_not_timestamped(
@@ -206,6 +210,42 @@ class TestDirTimestampsOnError:
         scheduler._handle_repack_done(node, report)
 
         assert not timestamps.set_calls
+
+
+class TestStagingCleanup:
+    """Worker staging dirs must be cleaned on rollback, not leaked."""
+
+    def test_unpack_wires_staging_dir_onto_node(self: Any, tmp_path: Path) -> None:
+        """The scheduler learns the staging dir from the unpacked handler."""
+        from picopt.walk.scheduler import UnpackResult
+
+        scheduler, _, _ = _make_scheduler()
+        handler = _FakeContainerHandler(str(tmp_path / "anim.webp"))
+        node = scheduler.enqueue_container(handler)  # pyright: ignore[reportArgumentType]  # ty: ignore[invalid-argument-type]
+
+        staging = tmp_path / "staging"
+        staging.mkdir()
+        handler.staging_dir = staging
+        scheduler._handle_unpack_done(
+            node,
+            UnpackResult(handler=handler, children=[]),  # pyright: ignore[reportArgumentType]  # ty: ignore[invalid-argument-type]
+        )
+        # The noop completion retires the node and cleans its staging.
+        assert not staging.exists()
+
+    def test_cancelled_subtree_cleans_staging(self: Any, tmp_path: Path) -> None:
+        """Rollback removes the worker's staging dir from disk."""
+        scheduler, _, _ = _make_scheduler()
+        handler = _FakeContainerHandler(str(tmp_path / "broken.cbz"))
+        node = scheduler.enqueue_container(handler)  # pyright: ignore[reportArgumentType]  # ty: ignore[invalid-argument-type]
+        staging = tmp_path / "staging"
+        staging.mkdir()
+        (staging / "frame_0.webp").write_bytes(b"x")
+        node.staging_dir = staging
+
+        scheduler._cancel_subtree(node, reason=None)
+
+        assert not staging.exists()
 
 
 class TestNestedConversionRename:

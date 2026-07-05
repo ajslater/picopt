@@ -34,6 +34,7 @@ from picopt.plugins.base.handler import Handler
 
 if TYPE_CHECKING:
     from collections.abc import Generator
+    from pathlib import Path
 
     from picopt.archive_stamps import ArchiveStamps
     from picopt.config.settings import PicoptSettings
@@ -131,6 +132,16 @@ class ContainerHandler(Handler, ABC):
     ) -> set[PathInfo]:
         """Return optimized contents."""
         return self._optimized_contents
+
+    def get_staging_dir(self) -> Path | None:
+        """
+        Return the on-disk staging dir walk() created, if any.
+
+        The scheduler reads this off the pickle-roundtripped handler after
+        unpack so it can rmtree the staging on rollback, fail-fast, and
+        final cleanup — pack_into() only cleans it on the success path.
+        """
+        return None
 
     # ------------------------------------------------------------- packing
 

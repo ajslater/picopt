@@ -36,6 +36,7 @@ from typing import TYPE_CHECKING
 
 from picopt.report import ReportStats
 from picopt.walk.detect_format import predetect_format
+from picopt.walk.dir_timestamps import DirTimestamper
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -94,12 +95,11 @@ class UnpackResult:
     pre-walk() state.
 
     Attributes the worker's walk() may have mutated on the handler that
-    matter to the main thread (grep `ContainerHandler` subclasses for the
-    exact field names; they vary per concrete class):
+    matter to the main thread:
 
-    - staging dir path (attribute name varies: `_tmp_path`, `_unpack_dir`,
-      etc. — whatever the concrete handler uses internally). The main
-      thread needs this to rmtree on cleanup or rollback.
+    - staging dir path — read uniformly via ``get_staging_dir()`` and
+      stored on the node. The main thread needs this to rmtree on
+      cleanup or rollback.
     - `comment` (bytes | None) — archive comment extracted during walk.
       `create_repack_handler` reads this and passes it to the repack
       handler constructor.
@@ -208,18 +208,6 @@ class _LeafEntry:
     cost: int = 0  # memory budget charged for a standalone leaf (0 otherwise)
 
 
-@dataclass
-class _DirTracker:
-    """Track pending children of a walked directory for timestamp writes."""
-
-    top_path: Path
-    pending: int = 0
-    sealed: bool = False
-    # A child errored: writing a compacted dir timestamp would cover the
-    # failed file and permanently skip it on subsequent runs.
-    errored: bool = False
-
-
 # ------------------------------------------------------------------- scheduler
 
 
@@ -266,7 +254,7 @@ class Scheduler:
         self._inflight_repack: dict[Future, ContainerNode] = {}
         self._live_nodes: set[ContainerNode] = set()
 
-        self._dir_trackers: dict[Path, _DirTracker] = {}
+        self._dirs = DirTimestamper(timestamps)
         self._fail_fast_triggered: bool = False
 
         # Memory-aware admission. `_byte_budget <= 0` disables the gate.
@@ -287,7 +275,7 @@ class Scheduler:
         if parent is not None:
             parent.pending += 1
         elif job.path_info.path is not None:
-            self._dir_enqueue(job.path_info.path)
+            self._dirs.enqueue_child(job.path_info.path)
 
     def enqueue_container(
         self, handler: ContainerHandler, parent: ContainerNode | None = None
@@ -299,7 +287,7 @@ class Scheduler:
             parent.children.append(node)
             parent.pending += 1
         elif handler.path_info.path is not None:
-            self._dir_enqueue(handler.path_info.path)
+            self._dirs.enqueue_child(handler.path_info.path)
         self._ready.append((UnpackJob(handler=handler), node))
         return node
 
@@ -314,32 +302,19 @@ class Scheduler:
         self._record_totals(report)
         self._write_timestamp(report, top_path)
         if report.exc and report.path is not None:
-            self._mark_dir_errored(report.path.parent)
+            self._dirs.mark_errored(report.path.parent)
 
     def begin_dir(self, top_path: Path, dir_path: Path) -> None:
         """Register a directory whose children are about to be enqueued."""
-        parent_tracker = self._dir_trackers.get(dir_path.parent)
-        if parent_tracker is not None:
-            parent_tracker.pending += 1
-        self._dir_trackers[dir_path] = _DirTracker(top_path=top_path)
+        self._dirs.begin_dir(top_path, dir_path)
 
     def seal_dir(self, dir_path: Path) -> None:
         """Mark a directory as fully enumerated; finalize if no pending children."""
-        tracker = self._dir_trackers.get(dir_path)
-        if tracker is None:
-            return
-        tracker.sealed = True
-        if tracker.pending <= 0:
-            self._finalize_dir(dir_path, tracker)
+        self._dirs.seal_dir(dir_path)
 
     def cancel_dir(self, dir_path: Path) -> None:
         """Remove a directory tracker without finalizing (used on walk errors)."""
-        tracker = self._dir_trackers.pop(dir_path, None)
-        if tracker is None:
-            return
-        parent_dir = dir_path.parent
-        if parent_dir in self._dir_trackers:
-            self._dir_child_done(parent_dir)
+        self._dirs.cancel_dir(dir_path)
 
     def run(self) -> None:
         """Drain ready, gated, and inflight until all are empty."""
@@ -376,8 +351,7 @@ class Scheduler:
             + len(self._inflight_repack)
         )
 
-    @staticmethod
-    def _drop_cancelled_ready_job(job: Job, node: ContainerNode) -> None:
+    def _drop_cancelled_ready_job(self, job: Job, node: ContainerNode) -> None:
         """
         Decrement parent pending counter for a leaf of a cancelled subtree.
 
@@ -389,7 +363,7 @@ class Scheduler:
             case UnpackJob() | RepackJob():
                 pass
             case _:
-                node.pending = max(0, node.pending - 1)
+                self._child_done(node)
 
     def _track_submitted_job(
         self, fut: Future, job: Job, node: ContainerNode | None
@@ -572,6 +546,7 @@ class Scheduler:
         # walk()-mutated twin. See UnpackResult docstring for which
         # attributes this restores.
         node.handler = result.handler
+        node.staging_dir = result.handler.get_staging_dir()
 
         if node.state is NodeState.CANCELLED:
             self._cleanup_node_staging(node)
@@ -606,7 +581,7 @@ class Scheduler:
             if parent.state is NodeState.CANCELLED:
                 # drop on the floor, but still decrement so parent can
                 # eventually finalize (its own cancel walk will handle it)
-                parent.pending = max(0, parent.pending - 1)
+                self._child_done(parent)
                 return
             if report.exc is None:
                 parent.handler.hydrate_optimized_path_info(entry.job.path_info, report)
@@ -620,15 +595,14 @@ class Scheduler:
                 self._reporter.record_report(report)
                 parent.handler.get_optimized_contents().add(entry.job.path_info)
                 parent.had_error = True
-            parent.pending = max(0, parent.pending - 1)
-            self._maybe_start_repack(parent)
+            self._child_done(parent)
             return
 
         # Top-level directory leaf: straight to totals + timestamps.
         self._record_totals(report)
         self._write_timestamp(report, entry.job.path_info.top_path)
         if entry.job.path_info.path is not None:
-            self._dir_child_done(
+            self._dirs.child_done(
                 entry.job.path_info.path.parent, errored=bool(report.exc)
             )
 
@@ -655,8 +629,7 @@ class Scheduler:
             # repack doesn't drop this member from the rebuilt archive.
             node.parent.handler.get_optimized_contents().add(node.handler.path_info)
             node.parent.had_error = True
-            node.parent.pending = max(0, node.parent.pending - 1)
-            self._maybe_start_repack(node.parent)
+            self._child_done(node.parent)
         else:
             self._notify_dir_of_top_level_error(node)
 
@@ -664,7 +637,7 @@ class Scheduler:
         """Tell a failed top-level container's directory tracker it is done."""
         path = node.handler.path_info.path
         if path is not None:
-            self._dir_child_done(path.parent, errored=True)
+            self._dirs.child_done(path.parent, errored=True)
 
     def _handle_repack_done(self, node: ContainerNode, report: ReportStats) -> None:
         """Process a RepackJob completion (or synthesized no-op/error)."""
@@ -689,7 +662,7 @@ class Scheduler:
                 self._write_timestamp(report, top_path)
             self._cleanup_node_staging(node)
             if node.handler.path_info.path is not None:
-                self._dir_child_done(
+                self._dirs.child_done(
                     node.handler.path_info.path.parent, errored=node.had_error
                 )
         else:
@@ -706,8 +679,7 @@ class Scheduler:
                 parent.had_error = True
             # Our staging lives until the PARENT's repack reads us, so we
             # don't rmtree here. Parent's repack completion triggers it.
-            parent.pending = max(0, parent.pending - 1)
-            self._maybe_start_repack(parent)
+            self._child_done(parent)
 
         node.state = NodeState.DONE
         self._retire_node(node)
@@ -715,6 +687,17 @@ class Scheduler:
         for child in node.children:
             # node.children is all ContainerNodes no check needed
             self._cleanup_node_staging(child)
+
+    def _child_done(self, node: ContainerNode) -> None:
+        """
+        One child of ``node`` finished (or was dropped); maybe repack.
+
+        The single place a container's pending counter decrements.
+        _maybe_start_repack() itself refuses cancelled/repacking/done
+        nodes, so this is safe on every completion path.
+        """
+        node.pending = max(0, node.pending - 1)
+        self._maybe_start_repack(node)
 
     def _maybe_start_repack(self, node: ContainerNode) -> None:
         """If pending == 0, enqueue RepackJob or synthesize no-op completion."""
@@ -760,41 +743,6 @@ class Scheduler:
         """Write a timestamp if timestamps are enabled and no error."""
         if self._timestamps and report.path is not None and not report.exc:
             self._timestamps.set(top_path, report.path)
-
-    def _dir_enqueue(self, child_path: Path) -> None:
-        """Increment a directory's pending count for a newly enqueued child."""
-        tracker = self._dir_trackers.get(child_path.parent)
-        if tracker is not None:
-            tracker.pending += 1
-
-    def _mark_dir_errored(self, dir_path: Path) -> None:
-        """Poison a directory's timestamp write after a child error."""
-        tracker = self._dir_trackers.get(dir_path)
-        if tracker is not None:
-            tracker.errored = True
-
-    def _dir_child_done(self, parent_dir: Path, *, errored: bool = False) -> None:
-        """Decrement a directory's pending count; finalize when ready."""
-        tracker = self._dir_trackers.get(parent_dir)
-        if tracker is None:
-            return
-        if errored:
-            tracker.errored = True
-        tracker.pending -= 1
-        if tracker.pending <= 0 and tracker.sealed:
-            self._finalize_dir(parent_dir, tracker)
-
-    def _finalize_dir(self, dir_path: Path, tracker: _DirTracker) -> None:
-        """Write directory timestamp with compaction and cascade to parent."""
-        del self._dir_trackers[dir_path]
-        # An errored child means this directory is not fully optimized; a
-        # compacted dir stamp would cover the failed file and skip it on
-        # every future run. Per-file stamps for the successes remain.
-        if self._timestamps and not tracker.errored:
-            self._timestamps.set(tracker.top_path, dir_path, compact=True)
-        parent_dir = dir_path.parent
-        if parent_dir in self._dir_trackers:
-            self._dir_child_done(parent_dir, errored=tracker.errored)
 
     def _cleanup_node_staging(self, node: ContainerNode) -> None:
         """Rmtree this node's staging_dir, swallowing errors."""
