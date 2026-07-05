@@ -78,8 +78,10 @@ class _FakeTimestamps:
         self.set_calls.append((args, kwargs))
 
 
-def _make_scheduler() -> tuple[Scheduler, _FakeReporter, _FakeTimestamps]:
-    args = cli.get_arguments(("picopt", "."))
+def _make_scheduler(
+    *argv: str,
+) -> tuple[Scheduler, _FakeReporter, _FakeTimestamps]:
+    args = cli.get_arguments(("picopt", *argv, "."))
     config = PicoptConfig().get_config(args)
     reporter = _FakeReporter()
     timestamps = _FakeTimestamps()
@@ -269,3 +271,72 @@ class TestNestedConversionRename:
         assert parent_handler.hydrate_calls == [(child_handler.path_info, report)]
         assert child_handler.path_info in parent_handler.get_optimized_contents()
         assert parent.had_work
+
+
+class TestFailFast:
+    """--fail-fast cancels everything on the first error."""
+
+    def test_fail_fast_cancels_all_live_tops_and_clears_queues(self: Any) -> None:
+        """One repack failure cancels every live top-level container."""
+        from picopt.walk.scheduler import NodeState
+
+        scheduler, reporter, timestamps = _make_scheduler("--fail-fast")
+        handler_a = _FakeContainerHandler("a.cbz")
+        handler_b = _FakeContainerHandler("b.cbz")
+        node_a = scheduler.enqueue_container(handler_a)  # pyright: ignore[reportArgumentType]  # ty: ignore[invalid-argument-type]
+        node_b = scheduler.enqueue_container(handler_b)  # pyright: ignore[reportArgumentType]  # ty: ignore[invalid-argument-type]
+
+        report = ReportStats(Path("a.cbz"), exc=ValueError("boom"))
+        scheduler._handle_repack_done(node_a, report)
+
+        assert node_a.state is NodeState.CANCELLED
+        assert node_b.state is NodeState.CANCELLED
+        assert not scheduler._ready
+        assert not scheduler._gated
+        assert any(r.exc for r in reporter.reports)
+        assert not timestamps.set_calls
+
+    def test_fail_fast_container_escalates_to_subtree_root_only(self: Any) -> None:
+        """An inner repack failure cancels its top container, not siblings."""
+        from picopt.walk.scheduler import NodeState
+
+        scheduler, reporter, _ = _make_scheduler("--fail-fast-container")
+        top_a = _FakeContainerHandler("a.cbz")
+        node_a = scheduler.enqueue_container(top_a)  # pyright: ignore[reportArgumentType]  # ty: ignore[invalid-argument-type]
+        inner = _FakeContainerHandler("a_inner.cbz")
+        node_inner = scheduler.enqueue_container(inner, node_a)  # pyright: ignore[reportArgumentType]  # ty: ignore[invalid-argument-type]
+        top_b = _FakeContainerHandler("b.cbz")
+        node_b = scheduler.enqueue_container(top_b)  # pyright: ignore[reportArgumentType]  # ty: ignore[invalid-argument-type]
+
+        report = ReportStats(Path("a_inner.cbz"), exc=ValueError("inner boom"))
+        scheduler._handle_repack_done(node_inner, report)
+
+        assert node_inner.state is NodeState.CANCELLED
+        assert node_a.state is NodeState.CANCELLED
+        # The sibling top-level container is untouched.
+        assert node_b.state is not NodeState.CANCELLED
+        assert any(r.exc for r in reporter.reports)
+
+    def test_late_leaf_result_for_cancelled_parent_is_dropped(self: Any) -> None:
+        """A leaf completing after its parent cancelled leaves no residue."""
+        from picopt.walk.scheduler import NodeState
+
+        scheduler, _, _ = _make_scheduler()
+        parent_handler = _FakeContainerHandler("late.cbz")
+        parent = scheduler.enqueue_container(parent_handler)  # pyright: ignore[reportArgumentType]  # ty: ignore[invalid-argument-type]
+        member_info = _FakePathInfo("member.png")
+        job = OptimizeLeafJob(handler=None, path_info=member_info)  # pyright: ignore[reportArgumentType]  # ty: ignore[invalid-argument-type]
+        scheduler.enqueue_leaf(job, parent)
+
+        scheduler._cancel_subtree(parent, reason=None)
+        assert parent.state is NodeState.CANCELLED
+
+        report = ReportStats(
+            Path("member.png"), bytes_in=10, bytes_out=5, changed=True, data=b"x"
+        )
+        scheduler._handle_leaf_done(_LeafEntry(job=job, parent=parent), report)
+
+        # Dropped on the floor: no contents, no hydration, pending drained.
+        assert member_info not in parent_handler.get_optimized_contents()
+        assert not parent_handler.hydrate_calls
+        assert parent.pending == 0
