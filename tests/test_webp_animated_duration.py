@@ -8,8 +8,9 @@ each duration up to img2webp's 1ms minimum.
 """
 
 from pathlib import Path
-from types import SimpleNamespace
 
+from picopt import cli
+from picopt.config import PicoptConfig
 from picopt.plugins.webp.animated import Img2WebPAnimatedLossless
 
 __all__ = ()
@@ -18,7 +19,7 @@ __all__ = ()
 def _make_handler(durations: tuple[int, ...]) -> Img2WebPAnimatedLossless:
     """Build a handler bypassing __init__, with only what img2webp_args reads."""
     handler = Img2WebPAnimatedLossless.__new__(Img2WebPAnimatedLossless)
-    handler.config = SimpleNamespace(near_lossless=False)
+    handler.config = PicoptConfig().get_config(cli.get_arguments(("picopt", ".")))
     handler.frame_info = {"duration": durations}
     handler._frame_paths = [
         Path(f"frame_{i:02d}.webp") for i in range(1, len(durations) + 1)
