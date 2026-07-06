@@ -320,13 +320,17 @@ class Handler(ABC):
         final_data_buffer.close()
         return return_data
 
+    def _should_replace(self, bytes_in: int, bytes_out: int) -> bool:
+        """Report whether the new buffer is a real improvement worth keeping."""
+        if self.config.dry_run or bytes_out <= 0:
+            return False
+        return bytes_out < bytes_in or self.config.bigger
+
     def _cleanup_after_optimize(self, final_data_buffer: BinaryIO) -> ReportStats:
         """Replace the old file with the better one or discard the new wasteful one."""
         bytes_in = self.path_info.bytes_in()
         bytes_out = self._get_buffer_len(final_data_buffer)
-        replaced = not self.config.dry_run and (
-            bytes_out > 0 and (bytes_out < bytes_in or self.config.bigger)
-        )
+        replaced = self._should_replace(bytes_in, bytes_out)
         return_data = self._cleanup_after_optimize_get_return_data(
             final_data_buffer, replaced=replaced
         )

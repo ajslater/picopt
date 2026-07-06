@@ -1,5 +1,13 @@
 # 📰 Picopt News
 
+## v6.6.1
+
+### Fixes
+
+- Animated WebP images with zero-duration frames no longer fail to optimize.
+- The `Optimizing formats` summary is no longer repeated once per directory when
+  using `-W` or per-directory `.picopt.yaml` files.
+
 ## v6.6.0
 
 ### Fixes
@@ -91,7 +99,7 @@
 - Faster metadata extraction
 - Defer animated image duration doublecheck to only WebP animated and only at
   handler time. Speeds up other animated images.
-- Use rich_argparse to format cli help.
+- Use rich\_argparse to format cli help.
 
 ## v6.4.0
 
@@ -233,7 +241,7 @@
     - Support converting losslessly converting MPO to JPEG (choose primary
       image)
     - Internal oxipng replaces external optipng for png compression.
-    - Better support for preserving EXIF, ICC_PROFILE, & XMP data across
+    - Better support for preserving EXIF, ICC\_PROFILE, & XMP data across
       optimization and conversion.
     - `--destroy-metadata` option becomes `--strip-metadata`
     - `--near-lossless` option for lossless WebP.
@@ -276,7 +284,7 @@
 
 ## v3.3.1
 
-- Upstream treestamps fixes crashes and check_config option.
+- Upstream treestamps fixes crashes and check\_config option.
 
 ## v3.3.0
 
@@ -376,7 +384,7 @@
     - EPub support. ePub contents are never converted.
     - TIFF support
 - Timestamps
-    - Timestamps are now kept in .picopt_treestamps.yaml files.
+    - Timestamps are now kept in .picopt\_treestamps.yaml files.
     - Picopt will convert and clean up old style timestamps.
     - Timestamps are now recorded after optimizing every image for each image
       individually instead of directories, preserving progress.
@@ -426,7 +434,7 @@
 ## v1.6.3
 
 - Don't use pngout on 16 bit pngs because it crashes
-- Fix broken option -D --optimize_after
+- Fix broken option -D --optimize\_after
 
 ## v1.6.2
 
@@ -488,7 +496,7 @@
 
 - Print found picopt timestamps
 - Lots of linting
-- Fix jpeg_multithread flag
+- Fix jpeg\_multithread flag
 - moved tests out of picopt module
 
 ## v1.3.2

@@ -14,7 +14,7 @@ __all__ = ()
 
 
 @pytest.fixture(autouse=True)
-def _isolate_config(monkeypatch, tmp_path):
+def _isolate_config(monkeypatch, tmp_path):  # pyright: ignore[reportUnusedFunction]
     """Point confuse at an empty config dir and scrub picopt env vars."""
     for key in list(os.environ):
         if key.startswith("PICOPT"):

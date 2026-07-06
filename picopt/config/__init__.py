@@ -394,6 +394,8 @@ class PicoptConfig(ConfigHandlers):
         args: Namespace | None = None,
         dir_config_files: tuple[Path, ...] = (),
         modname: str = PROGRAM_NAME,
+        *,
+        print_summary: bool = False,
     ) -> Configuration:
         """
         Build a fully-layered, normalized confuse Configuration.
@@ -421,7 +423,7 @@ class PicoptConfig(ConfigHandlers):
         self._set_after(config_program)
         self._set_memory_limit(config_program)
         self._set_timestamps(config_program)
-        self.set_format_handler_map(config_program)
+        self.set_format_handler_map(config_program, print_summary=print_summary)
         return config
 
     @staticmethod
@@ -434,7 +436,7 @@ class PicoptConfig(ConfigHandlers):
         self, args: Namespace | None = None, modname: str = PROGRAM_NAME
     ) -> PicoptSettings:
         """Get the validated, frozen settings layered from defaults/env/args."""
-        config = self._build_config(args, modname=modname)
+        config = self._build_config(args, modname=modname, print_summary=True)
         # Validate (via _config_to_settings) before persisting so a bad
         # command line can't poison a config file. get_config passes no
         # directory files, so -w output round-trips via -C unchanged.

@@ -136,32 +136,18 @@ class ConfigHandlers:
         if stages is not None:
             handler_stages[handler_cls] = stages
 
-    def set_format_handler_map(self, config: Subview) -> None:
-        """Probe handlers for the requested formats and store availability."""
-        all_format_strs = self._get_config_set(config, "formats", "extra_formats")
-        config["formats"].set(tuple(sorted(all_format_strs)))
-        convert_to = self._get_config_set(config, "convert_to")
-        # Write the upcased lists back so template validation accepts
-        # lowercase user input for -x and -c exactly as it does for -f.
-        if extra_formats := self._get_config_set(config, "extra_formats"):
-            config["extra_formats"].set(tuple(sorted(extra_formats)))
-        if convert_to:
-            config["convert_to"].set(tuple(sorted(convert_to)))
-
-        disabled_list: list[str] | None = config["disable_programs"].get(list)
-        disabled_program_names = (
-            frozenset(disabled_list) if disabled_list else frozenset()
-        )
-
-        handler_stages: dict[type[Handler], tuple[Tool, ...]] = {}
-        for handler_cls in _enabled_handler_classes(all_format_strs):
-            self._set_format_handler_stages(
-                handler_cls, handler_stages, disabled_program_names
-            )
-        # Build the verbose-output summary with the routing layer's own
-        # decision function so the log can never drift from what the walk
-        # actually does. repack=True for archives applies the same
-        # convert/CAN_PACK gates the repack pass will.
+    def _log_formats_summary(
+        self,
+        verbose: int,
+        all_format_strs: frozenset[str],
+        convert_to: frozenset[str],
+        handler_stages: dict[type[Handler], tuple[Tool, ...]],
+    ) -> None:
+        """Log the run-wide "Optimizing formats" banner."""
+        # Build the summary with the routing layer's own decision function
+        # so the log can never drift from what the walk actually does.
+        # repack=True for archives applies the same convert/CAN_PACK gates
+        # the repack pass will.
         handled_format_strs: set[str] = set()
         convert_format_strs: dict[str, set[str]] = {}
         routes = registry.routes_by_format()
@@ -184,7 +170,40 @@ class ConfigHandlers:
                 convert_format_strs.setdefault(picked.OUTPUT_FORMAT_STR, set()).add(
                     file_format.format_str
                 )
+        self._print_formats_config(verbose, handled_format_strs, convert_format_strs)
+
+    def set_format_handler_map(
+        self, config: Subview, *, print_summary: bool = False
+    ) -> None:
+        """Probe handlers for the requested formats and store availability."""
+        all_format_strs = self._get_config_set(config, "formats", "extra_formats")
+        config["formats"].set(tuple(sorted(all_format_strs)))
+        convert_to = self._get_config_set(config, "convert_to")
+        # Write the upcased lists back so template validation accepts
+        # lowercase user input for -x and -c exactly as it does for -f.
+        if extra_formats := self._get_config_set(config, "extra_formats"):
+            config["extra_formats"].set(tuple(sorted(extra_formats)))
+        if convert_to:
+            config["convert_to"].set(tuple(sorted(convert_to)))
+
+        disabled_list: list[str] | None = config["disable_programs"].get(list)
+        disabled_program_names = (
+            frozenset(disabled_list) if disabled_list else frozenset()
+        )
+
+        handler_stages: dict[type[Handler], tuple[Tool, ...]] = {}
+        for handler_cls in _enabled_handler_classes(all_format_strs):
+            self._set_format_handler_stages(
+                handler_cls, handler_stages, disabled_program_names
+            )
         config["computed"]["handler_stages"].set(handler_stages)
 
-        verbose: int = config["verbose"].get(int)
-        self._print_formats_config(verbose, handled_format_strs, convert_format_strs)
+        # The banner is a run-wide summary. Emit it only for the top-level
+        # build, never for the per-directory .picopt.yaml resolutions that
+        # rebuild this config once per directory during the walk (which, with
+        # -W or any planted .picopt.yaml, would repeat it for every directory).
+        if print_summary:
+            verbose: int = config["verbose"].get(int)
+            self._log_formats_summary(
+                verbose, all_format_strs, convert_to, handler_stages
+            )

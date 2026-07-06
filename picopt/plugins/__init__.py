@@ -221,30 +221,52 @@ def pick_route_handler(
     """
     if file_format is None:
         return None
-    handler_cls: type[Handler] | None = None
-    if convert and (not file_format.archive or repack):
-        handler_cls = _pick_convert_handler(convert_chain, convert_to, handler_stages)
+    handler_cls = _pick_convert_handler(
+        convert_chain,
+        convert_to,
+        handler_stages,
+        file_format,
+        convert=convert,
+        repack=repack,
+    )
     if (
         handler_cls is None
         and native is not None
         and is_pipeline_available(native, handler_stages)
     ):
         handler_cls = native
-    if (
-        repack
-        and handler_cls is not None
-        and not (issubclass(handler_cls, ContainerHandler) and handler_cls.CAN_PACK)
-    ):
+    if repack and not _can_pack_repack(handler_cls):
         handler_cls = None
     return handler_cls
+
+
+def _can_pack_repack(handler_cls: type[Handler] | None) -> bool:
+    """Report whether the handler is a container that can pack itself back up."""
+    return (
+        handler_cls is not None
+        and issubclass(handler_cls, ContainerHandler)
+        and handler_cls.CAN_PACK
+    )
 
 
 def _pick_convert_handler(
     convert_chain: tuple[type[Handler], ...],
     convert_to: frozenset[str],
     handler_stages: Mapping,
+    file_format: FileFormat,
+    *,
+    convert: bool,
+    repack: bool,
 ) -> type[Handler] | None:
-    """First convert candidate the user asked for whose pipeline is available."""
+    """
+    First convert candidate the user asked for whose pipeline is available.
+
+    Returns ``None`` when conversion doesn't apply at all: the caller didn't
+    request it, or it's an archive outside the repack pass (archives only
+    convert while repacking).
+    """
+    if not convert or (file_format.archive and not repack):
+        return None
     for candidate in convert_chain:
         if candidate.OUTPUT_FORMAT_STR not in convert_to:
             continue

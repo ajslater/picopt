@@ -63,43 +63,44 @@ class WalkSkipper:
         self._reporter.stats.record_skipped()
         self._reporter.progress.mark_skipped()
 
-    def _is_skippable(self, path_info: PathInfo) -> bool:
-        """Handle things that are not optimizable files."""
-        reason = ""
-        warn = False
-
+    def _skip_reason_fs(self, path_info: PathInfo) -> tuple[str, bool]:
+        """Disk checks, done last for performance and skipped inside archives."""
         path = path_info.path
+        if self._in_archive or not path:
+            return "", False
+        if not path.exists():
+            return "not found", True
+        fs_stat = path_info.stat()
+        if fs_stat is not None and not (
+            S_ISREG(fs_stat.st_mode) or S_ISDIR(fs_stat.st_mode)
+        ):
+            # FIFOs, sockets, device nodes: opening a FIFO blocks forever.
+            return "not a regular file", False
+        return "", False
 
-        # File types
+    def _skip_reason(self, path_info: PathInfo) -> tuple[str, bool]:
+        """Return ``(reason, warn)`` for an unoptimizable file, else ``("", False)``."""
+        path = path_info.path
         basename = Path(path_info.name()).name
         if not self._config.symlinks and path and path.is_symlink():
-            reason = "symlink"
-        elif basename == DIR_CONFIG_FILENAME:
-            reason = "picopt config"
-        elif basename in self._TIMESTAMPS_FILENAMES:
+            return "symlink", False
+        if basename == DIR_CONFIG_FILENAME:
+            return "picopt config", False
+        if basename in self._TIMESTAMPS_FILENAMES:
             legacy = "legacy " if basename == OLD_TIMESTAMPS_NAME else ""
-            reason = f"{legacy}timestamp"
-        elif is_path_ignored(
+            return f"{legacy}timestamp", False
+        if is_path_ignored(
             self._config,
             path_info.archive_pseudo_path(),
             ignore_case=not path_info.is_case_sensitive,
         ):
-            reason = "ignored"
-        elif not self._in_archive and path and not path.exists():
-            # Check disk last for performance
-            reason = "not found"
-            warn = True
-        elif (
-            not self._in_archive
-            and path
-            and (fs_stat := path_info.stat()) is not None
-            and not (S_ISREG(fs_stat.st_mode) or S_ISDIR(fs_stat.st_mode))
-        ):
-            # FIFOs, sockets, device nodes: opening a FIFO blocks forever.
-            reason = "not a regular file"
+            return "ignored", False
+        return self._skip_reason_fs(path_info)
 
+    def _is_skippable(self, path_info: PathInfo) -> bool:
+        """Handle things that are not optimizable files."""
+        reason, warn = self._skip_reason(path_info)
         self._log_skip(reason, path_info, warn=warn)
-
         return bool(reason)
 
     def _clean_up_working_files(self, path: Path) -> None:

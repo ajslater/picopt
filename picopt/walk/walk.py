@@ -352,6 +352,24 @@ class Walk:
         )
         self.walk_file(path_info, scheduler)
 
+    @staticmethod
+    def _count_stops_here(
+        settings: PicoptSettings,
+        path: Path,
+        name: str,
+        *,
+        is_symlink: bool,
+        is_dir: bool,
+    ) -> bool:
+        """Whether the walk would not recurse into ``path`` (mirror walk_file)."""
+        return bool(
+            not settings.recurse
+            or (not settings.symlinks and is_symlink)
+            or name in WalkSkipper.SKIP_FILENAMES
+            or not is_dir
+            or is_path_ignored(settings, path, ignore_case=False)
+        )
+
     def _count(
         self,
         top_path: Path,
@@ -372,12 +390,8 @@ class Walk:
         settings = self._dirconfig.get_settings(
             top_path, path if is_dir else path.parent
         )
-        if (
-            not settings.recurse
-            or (not settings.symlinks and is_symlink)
-            or name in WalkSkipper.SKIP_FILENAMES
-            or not is_dir
-            or is_path_ignored(settings, path, ignore_case=False)
+        if self._count_stops_here(
+            settings, path, name, is_symlink=is_symlink, is_dir=is_dir
         ):
             return 1
         try:

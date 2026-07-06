@@ -36,8 +36,7 @@ readme = "README.md"
 requires-python = ">=3.10"
 license = { text = "GPL-3.0-only" }
 name = "picopt"
-version = "6.6.0"
-
+version = "6.6.1"
 [[project.authors]]
 name = "AJ Slater"
 email = "aj@slater.net"
@@ -141,6 +140,9 @@ pythonVersion = "3.10"
 failOnWarnings = false
 reportAny = false
 reportExplicitAny = false
+# ruff format canonicalizes adjacent string literals to implicit
+# concatenation, so this basedpyright check can never be satisfied.
+reportImplicitStringConcatenation = false
 reportImportCycles = true
 reportIncompatibleUnannotatedOverride = true
 reportMissingParameterType = false
@@ -320,8 +322,8 @@ ignore-variadic-names = true
 ignore-overlong-task-comments = true
 
 [tool.ruff.lint.per-file-ignores]
-"bin/*" = ["T201", "T203"]
 "tests/*" = ["D101", "D102", "SLF001", "T201", "T203"]
+"bin/*" = ["T201", "T203"]
 
 [tool.ruff.lint.pylint]
 max-args = 8
