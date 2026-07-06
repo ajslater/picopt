@@ -4,6 +4,7 @@
 
 ### Fixes
 
+- Animated WebP images with zero-duration frames no longer fail to optimize.
 - The `Optimizing formats` summary is no longer repeated once per directory when
   using `-W` or per-directory `.picopt.yaml` files.
 

@@ -229,7 +229,10 @@ class Img2WebPAnimatedLossless(WebPAnimatedLossless):
             if frame_path is None:
                 continue
             if frame_duration is not None:
-                out += ["-d", str(frame_duration)]
+                # img2webp rejects durations <= 0 ("Invalid negative
+                # duration"). Some sources (e.g. scraped animated WebPs)
+                # carry 0ms frame durations, so clamp to its 1ms minimum.
+                out += ["-d", str(max(1, int(frame_duration)))]
             out.append(str(frame_path))
         return tuple(out)
 
