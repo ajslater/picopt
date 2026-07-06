@@ -37,7 +37,6 @@ requires-python = ">=3.10"
 license = { text = "GPL-3.0-only" }
 name = "picopt"
 version = "6.6.1"
-
 [[project.authors]]
 name = "AJ Slater"
 email = "aj@slater.net"
@@ -320,8 +319,8 @@ ignore-variadic-names = true
 ignore-overlong-task-comments = true
 
 [tool.ruff.lint.per-file-ignores]
-"bin/*" = ["T201", "T203"]
 "tests/*" = ["D101", "D102", "SLF001", "T201", "T203"]
+"bin/*" = ["T201", "T203"]
 
 [tool.ruff.lint.pylint]
 max-args = 8
