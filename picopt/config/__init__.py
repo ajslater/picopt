@@ -276,7 +276,7 @@ def _write_configs(config: Configuration, nns: Namespace) -> None:
 class PicoptConfig(ConfigHandlers):
     """Construct Picopt Config."""
 
-    def _set_after(self, config: Subview) -> None:
+    def _set_after(self, config: Subview, *, print_summary: bool) -> None:
         after = config["after"].get()
         if after is None:
             return
@@ -292,10 +292,11 @@ class PicoptConfig(ConfigHandlers):
             # values are interpreted as local time, like mktime did.
             timestamp = after_dt.timestamp()
         config["after"].set(timestamp)
-        after = time.ctime(timestamp)
-        logger.info(f"Optimizing after {after}")
+        if print_summary:
+            after = time.ctime(timestamp)
+            logger.info(f"Optimizing after {after}")
 
-    def _set_memory_limit(self, config: Subview) -> None:
+    def _set_memory_limit(self, config: Subview, *, print_summary: bool) -> None:
         """
         Resolve the memory budget (in bytes) used to throttle large archives.
 
@@ -311,7 +312,7 @@ class PicoptConfig(ConfigHandlers):
         if limit <= 0:
             limit = int(_detect_total_ram() * _DEFAULT_MEMORY_FRACTION)
         config["memory_limit"].set(limit)
-        if config["verbose"].get(int) > 1:
+        if print_summary and config["verbose"].get(int) > 1:
             logger.info(f"Memory budget for large archives: {limit // 1024**2} MiB")
 
     @staticmethod
@@ -350,7 +351,7 @@ class PicoptConfig(ConfigHandlers):
         if ignore_text:
             logger.info(ignore_text)
 
-    def _set_ignore(self, config: Subview) -> None:
+    def _set_ignore(self, config: Subview, *, print_summary: bool) -> None:
         """Compute ignore regexp."""
         ignore_list: list[str] = sorted(frozenset(config["ignore"].get(list)))
         ignore_defaults: bool = config["ignore_defaults"].get(bool)
@@ -364,10 +365,24 @@ class PicoptConfig(ConfigHandlers):
         )
         config["computed"]["ignore"]["case"].set(ignore)
         config["computed"]["ignore"]["ignore_case"].set(ignore_ignore_case)
-        if verbose > 1:
+        if print_summary and verbose > 1:
             self._print_ignores(ignore_single_stars, ignore_defaults=ignore_defaults)
 
-    def _set_timestamps(self, config: Subview) -> None:
+    @staticmethod
+    def _print_timestamps(config: Subview, *, timestamps: bool) -> None:
+        if timestamps:
+            roots: set[Path] = set()
+            paths: Iterable = config["paths"].get(list)
+            for path_str in paths:
+                path = Path(path_str)
+                roots.add(path if path.is_dir() else path.parent)
+            roots_str = ", ".join(sorted(str(p) for p in roots))
+            ts_str = f"Setting a timestamp file at the top of each directory tree: {roots_str}"
+        else:
+            ts_str = "Not setting timestamps."
+        logger.info(ts_str)
+
+    def _set_timestamps(self, config: Subview, *, print_summary: bool) -> None:
         """Set the timestamps attribute."""
         timestamps = (
             config["timestamps"].get(bool)
@@ -375,19 +390,8 @@ class PicoptConfig(ConfigHandlers):
             and not config["list_only"].get(bool)
         )
         config["timestamps"].set(timestamps)
-        verbose: int = config["verbose"].get(int)
-        if verbose > 1:
-            if timestamps:
-                roots: set[Path] = set()
-                paths: Iterable = config["paths"].get(list)
-                for path_str in paths:
-                    path = Path(path_str)
-                    roots.add(path if path.is_dir() else path.parent)
-                roots_str = ", ".join(sorted(str(p) for p in roots))
-                ts_str = f"Setting a timestamp file at the top of each directory tree: {roots_str}"
-            else:
-                ts_str = "Not setting timestamps."
-            logger.info(ts_str)
+        if print_summary and config["verbose"].get(int) > 1:
+            self._print_timestamps(config, timestamps=timestamps)
 
     def _build_config(
         self,
@@ -419,10 +423,10 @@ class PicoptConfig(ConfigHandlers):
         if args:
             config.set_args(args)
         config_program = config[PROGRAM_NAME]
-        self._set_ignore(config_program)
-        self._set_after(config_program)
-        self._set_memory_limit(config_program)
-        self._set_timestamps(config_program)
+        self._set_ignore(config_program, print_summary=print_summary)
+        self._set_after(config_program, print_summary=print_summary)
+        self._set_memory_limit(config_program, print_summary=print_summary)
+        self._set_timestamps(config_program, print_summary=print_summary)
         self.set_format_handler_map(config_program, print_summary=print_summary)
         return config
 
