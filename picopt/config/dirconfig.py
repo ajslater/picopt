@@ -37,7 +37,12 @@ class DirConfig:
     # dry_run with run-level timestamps would stamp files that were never
     # optimized, wrong-skipping them forever. Validated in the file per
     # the full-schema decision, but governed at run level.
-    _RUN_LEVEL_KEYS = ("dry_run", "list_only", "timestamps")
+    _RUN_LEVEL_KEYS = ("dry_run", "list_only")
+    # Mid-walk directories additionally pin timestamps: stamp trees are
+    # built per top path before the walk, so a subdirectory config cannot
+    # toggle stamping mid-tree. The tree root's own config IS honored —
+    # see get_tree_settings().
+    _MID_WALK_PINNED_KEYS = (*_RUN_LEVEL_KEYS, "timestamps")
 
     def __init__(
         self,
@@ -55,6 +60,9 @@ class DirConfig:
         self._dir_config_files: dict[Path, Path | None] = {}
         # Cache of resolved settings keyed by the file's directory.
         self._settings: dict[Path, PicoptSettings] = {}
+        # Separate cache for tree-root settings: the same directory's
+        # mid-walk settings pin ``timestamps`` and must not collide.
+        self._tree_settings: dict[Path, PicoptSettings] = {}
         # Failure reasons already reported, so each is logged only once.
         self._failed: set[str] = set()
 
@@ -112,11 +120,11 @@ class DirConfig:
         if self._stats is not None:
             self._stats.record_error(config_file, msg)
 
-    def _force_run_level_keys(self, settings: PicoptSettings) -> PicoptSettings:
+    def _force_run_level_keys(
+        self, settings: PicoptSettings, keys: tuple[str, ...] = _MID_WALK_PINNED_KEYS
+    ) -> PicoptSettings:
         """Pin run-mode keys to the run-level values."""
-        overrides = {
-            key: getattr(self._global_settings, key) for key in self._RUN_LEVEL_KEYS
-        }
+        overrides = {key: getattr(self._global_settings, key) for key in keys}
         return replace(settings, **overrides)
 
     def get_settings(self, top_path: Path, dir_path: Path) -> PicoptSettings:
@@ -145,3 +153,33 @@ class DirConfig:
             settings = self._global_settings
         self._settings[dir_path] = settings
         return settings
+
+    def get_tree_settings(self, top_path: Path) -> PicoptSettings:
+        """
+        Resolve a tree root's effective settings for timestamps purposes.
+
+        Unlike :meth:`get_settings`, the root ``.picopt.yaml`` is honored
+        for ``timestamps`` too — only ``dry_run``/``list_only`` stay pinned
+        (and they already mask ``timestamps`` off inside the config build).
+        CLI and env still win over the file via the normal layering. A file
+        target resolves its parent directory's config.
+        """
+        root_dir = top_path if top_path.is_dir() else top_path.parent
+        if (cached := self._tree_settings.get(root_dir)) is None:
+            cached = self._resolve_tree_settings(root_dir)
+            self._tree_settings[root_dir] = cached
+        return cached
+
+    def _resolve_tree_settings(self, root_dir: Path) -> PicoptSettings:
+        """Resolve the tree root's own config; fall back like get_settings."""
+        dir_files = self._discover(root_dir, root_dir)
+        if not dir_files:
+            return self._global_settings
+        try:
+            return self._force_run_level_keys(
+                self._picopt_config.get_dir_settings(self._args, dir_files),
+                keys=self._RUN_LEVEL_KEYS,
+            )
+        except (ConfigError, YAMLError, OSError) as exc:
+            self._record_failure(dir_files, exc)
+            return self._global_settings

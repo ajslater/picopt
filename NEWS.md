@@ -4,8 +4,27 @@
 
 ### Fixes
 
+- Timestamps are no longer silently invalidated when options come from a tree
+  root's `.picopt.yaml` instead of identical CLI flags: the config check now
+  compares each tree's effective configuration, directory configs included.
+- `timestamps: true` in a tree root's `.picopt.yaml` (e.g. written by `-W -t`)
+  now enables timestamping for that tree without `-t`. CLI flags still win, and
+  `--dry-run` / `--list` still disable stamping.
+- Timestamp invalidation is now per tree and value-based: comment or formatting
+  edits to `.picopt.yaml` files, rewriting them with `-W`, or running with a
+  different set of top paths no longer invalidate stamps — only actual option
+  changes do.
+- Discarding stamps because the configuration changed now prints a warning
+  naming the differing options instead of silently re-optimizing.
 - Verbose timestamps, ignores, after, and memory budget summaries are no longer
   repeated once per directory when using per-directory `.picopt.yaml` files.
+
+### Migration note
+
+- Existing timestamp files will mismatch once after this upgrade because the
+  stored config changed shape. Either let the first timestamped run re-examine
+  each tree once, or run once with `-N` (`--timestamps-no-check-config`) to keep
+  the old stamps.
 
 ## v6.6.1
 

@@ -379,7 +379,7 @@ class PicoptConfig(ConfigHandlers):
             roots_str = ", ".join(sorted(str(p) for p in roots))
             ts_str = f"Setting a timestamp file at the top of each directory tree: {roots_str}"
         else:
-            ts_str = "Not setting timestamps."
+            ts_str = "Not setting timestamps at the run level."
         logger.info(ts_str)
 
     def _set_timestamps(self, config: Subview, *, print_summary: bool) -> None:

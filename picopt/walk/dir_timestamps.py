@@ -8,7 +8,7 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from pathlib import Path
 
-    from treestamps import Grovestamps
+    from picopt.walk.grove import Grove
 
 
 @dataclass
@@ -33,7 +33,7 @@ class DirTimestamper:
     written with compaction and completion cascades to the parent tracker.
     """
 
-    def __init__(self, timestamps: Grovestamps | None) -> None:
+    def __init__(self, timestamps: Grove | None) -> None:
         """Store the timestamps sink."""
         self._timestamps = timestamps
         self._trackers: dict[Path, _DirTracker] = {}

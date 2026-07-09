@@ -43,16 +43,15 @@ from picopt.walk.detect_format import detect_format
 if TYPE_CHECKING:
     from collections.abc import Mapping
 
-    from treestamps import Grovestamps
-
     from picopt.config.settings import PicoptSettings
     from picopt.log.reporter import Reporter
     from picopt.path import PathInfo
     from picopt.plugins.base.format import FileFormat
+    from picopt.walk.grove import Grove
 
 
 def _build_archive_stamps(
-    path_info: PathInfo, timestamps: Grovestamps | None
+    path_info: PathInfo, timestamps: Grove | None
 ) -> ArchiveStamps | None:
     """
     Build the picklable timestamps slice an archive's unpack worker uses.
@@ -60,7 +59,7 @@ def _build_archive_stamps(
     Seeds the slice with the tree's serialized stamps (``dump_dict`` —
     the same config-headed mapping treestamps round-trips through disk)
     so member entry-mtime skip checks work in the worker, where the real
-    Grovestamps cannot travel.
+    the Grove cannot travel.
     """
     if timestamps is None:
         return None
@@ -179,7 +178,7 @@ class HandlerFactory:
     def create_handler(
         self,
         path_info: PathInfo,
-        timestamps: Grovestamps | None = None,
+        timestamps: Grove | None = None,
         settings: PicoptSettings | None = None,
     ) -> Handler | None:
         """

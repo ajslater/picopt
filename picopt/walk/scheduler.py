@@ -42,12 +42,11 @@ if TYPE_CHECKING:
     from collections.abc import Callable
     from pathlib import Path
 
-    from treestamps import Grovestamps
-
     from picopt.config.settings import PicoptSettings
     from picopt.log.reporter import Reporter
     from picopt.path import PathInfo
     from picopt.plugins.base import ContainerHandler, ImageHandler
+    from picopt.walk.grove import Grove
 
 
 # --------------------------------------------------------------------- state
@@ -226,7 +225,7 @@ class Scheduler:
         *,
         config: PicoptSettings,
         executor: ProcessPoolExecutor,
-        timestamps: Grovestamps | None,
+        timestamps: Grove | None,
         reporter: Reporter,
         max_workers: int,
         create_repack_handler: Callable[
