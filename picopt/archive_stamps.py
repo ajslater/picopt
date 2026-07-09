@@ -15,8 +15,8 @@ class ArchiveStamps:
     """
     Read-only timestamps view an archive's unpack worker can use.
 
-    Grovestamps holds unpicklable ruamel state, so archive handlers carry
-    this instead: the tree's config (picklable by design) plus a seed of
+    The walk's Grove trees hold unpicklable ruamel state, so archive
+    handlers carry this instead: the tree's config (picklable by design) plus a seed of
     the archive's effective ancestor timestamp. A real, detached
     :class:`Treestamps` is rebuilt lazily in the worker; it is never
     ``set()`` or dumped, so it never opens a WAL or writes to disk. That
@@ -53,8 +53,8 @@ class ArchiveStamps:
         return self._tree
 
     def get_timestamp(self, top_path: Path, path: Path | str) -> float | None:
-        """Grovestamps-compatible ancestor-max timestamp lookup."""
-        del top_path  # one tree only; kept for Grovestamps API parity
+        """Grove-compatible ancestor-max timestamp lookup."""
+        del top_path  # one tree only; kept for Grove API parity
         return self._get_tree().get(path)
 
     def loads(self, path: str | Path, yaml_str: str | bytes) -> None:

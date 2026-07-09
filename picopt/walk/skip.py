@@ -5,7 +5,7 @@ from __future__ import annotations
 import shutil
 from pathlib import Path
 from stat import S_ISDIR, S_ISREG
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Protocol
 
 from loguru import logger
 from treestamps import Treestamps
@@ -16,11 +16,22 @@ from picopt.path import PathInfo, is_path_ignored
 from picopt.walk.legacy_timestamps import OLD_TIMESTAMPS_NAME
 
 if TYPE_CHECKING:
-    from treestamps import Grovestamps
-
-    from picopt.archive_stamps import ArchiveStamps
     from picopt.config.settings import PicoptSettings
     from picopt.log.reporter import Reporter
+
+
+class StampGetter(Protocol):
+    """
+    Timestamp lookup surface shared by Grove and ArchiveStamps.
+
+    A structural type instead of the concrete classes: importing Grove
+    here would close an import cycle through the plugins package (which
+    imports this module for in-archive skipping).
+    """
+
+    def get_timestamp(self, top_path: Path, path: Path | str) -> float | None:
+        """Return the effective ancestor-max timestamp for path."""
+        ...
 
 
 class WalkSkipper:
@@ -37,17 +48,17 @@ class WalkSkipper:
         self,
         config: PicoptSettings,
         reporter: Reporter,
-        timestamps: Grovestamps | ArchiveStamps | None = None,
+        timestamps: StampGetter | None = None,
         *,
         in_archive: bool = False,
     ) -> None:
         """Initialize."""
         self._config: PicoptSettings = config
-        self._timestamps: Grovestamps | ArchiveStamps | None = timestamps
+        self._timestamps: StampGetter | None = timestamps
         self._in_archive: bool = in_archive
         self._reporter: Reporter = reporter
 
-    def set_timestamps(self, timestamps: Grovestamps) -> None:
+    def set_timestamps(self, timestamps: StampGetter) -> None:
         """Reset the timestamps after they've been established."""
         self._timestamps = timestamps
 

@@ -5,16 +5,14 @@ from __future__ import annotations
 import os
 import traceback
 from concurrent.futures import ProcessPoolExecutor
-from hashlib import sha256
 from pathlib import Path
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 
 from loguru import logger
-from treestamps import Grovestamps, GrovestampsConfig, Treestamps
+from treestamps import Treestamps
 
-from picopt import PROGRAM_NAME
 from picopt.config import PicoptConfig
-from picopt.config.consts import DIR_CONFIG_FILENAME, TIMESTAMPS_CONFIG_KEYS
+from picopt.config.consts import DIR_CONFIG_FILENAME
 from picopt.config.dirconfig import DirConfig
 from picopt.exceptions import PicoptError
 from picopt.log import console
@@ -25,6 +23,7 @@ from picopt.log.summary import render as render_summary
 from picopt.path import PathInfo, is_path_ignored
 from picopt.plugins.base import ContainerHandler, Handler, ImageHandler
 from picopt.report import ReportStats
+from picopt.walk.grove import Grove
 from picopt.walk.handler_factory import HandlerFactory
 from picopt.walk.legacy_timestamps import OldTimestamps
 from picopt.walk.scheduler import ContainerNode, OptimizeLeafJob, Scheduler
@@ -74,7 +73,7 @@ class Walk:
         self._executor: ProcessPoolExecutor = ProcessPoolExecutor(
             max_workers=self._config.jobs or None
         )
-        self._timestamps: Grovestamps | None = None  # reassigned at start of run
+        self._timestamps: Grove | None = None  # reassigned at start of run
         self._skipper: WalkSkipper = WalkSkipper(config, self._reporter)
         self._handler_factory: HandlerFactory = HandlerFactory(config, self._reporter)
         # Per-directory .picopt.yaml resolution; args re-layer so CLI wins.
@@ -96,82 +95,18 @@ class Walk:
             self._dir_skippers[dir_path] = skipper
         return skipper
 
-    @staticmethod
-    def _config_candidates(root: Path, *, is_dir: bool) -> list[Path]:
-        """List candidate ``.picopt.yaml`` files for one target path."""
-        # A single-file target only sees its own directory's config.
-        if not is_dir:
-            return [root.parent / DIR_CONFIG_FILENAME]
-        try:
-            return sorted(root.rglob(DIR_CONFIG_FILENAME))
-        except OSError:
-            return []
-
-    @staticmethod
-    def _config_chunk(root: Path, config_file: Path, *, is_dir: bool) -> bytes | None:
-        """Return one config file's fingerprint contribution, or None."""
-        try:
-            data = config_file.read_bytes()
-        except OSError:
-            # Covers missing files and directories named like the config.
-            return None
-        # A path relative to the target keeps the digest stable across
-        # cwd/mount changes; add/remove/rename still flips it.
-        rel = config_file.relative_to(root) if is_dir else config_file.name
-        return str(rel).encode() + b"\0" + data + b"\0"
-
-    def _dir_config_fingerprint(self) -> str:
-        """
-        Hash every ``.picopt.yaml`` under the target paths.
-
-        Folded into the treestamps ``program_config`` so that editing,
-        adding, or removing any directory config flips the digest and the
-        affected tree re-processes on the next run — over-invalidation
-        that is always safe (re-checking an already-optimized file is a
-        cheap skip) and never wrong-skips a file whose effective config
-        changed.
-        """
-        hasher = sha256()
-        seen: set[Path] = set()
-        for path in self._config.paths:
-            root = Path(path)
-            is_dir = root.is_dir()
-            for config_file in self._config_candidates(root, is_dir=is_dir):
-                if config_file in seen:
-                    continue
-                seen.add(config_file)
-                chunk = self._config_chunk(root, config_file, is_dir=is_dir)
-                if chunk is not None:
-                    hasher.update(chunk)
-        return hasher.hexdigest()
-
     def _init_timestamps(self) -> None:
-        """Init timestamps."""
-        if not self._config.timestamps:
+        """Init per-tree timestamps from each tree root's resolved settings."""
+        grove = Grove(self._top_paths, self._dirconfig, self._config)
+        self._stats.timestamps_active = bool(self._config.after) or bool(grove)
+        if not grove:
             return
-        # Treestamps filters program_config by program_config_keys; build a
-        # shallow Mapping with only those keys so we don't have to serialize
-        # the whole frozen dataclass (especially the computed sub-fields,
-        # which carry re.Pattern objects and class-keyed dicts).
-        program_config: dict[str, Any] = {
-            key: getattr(self._config, key) for key in TIMESTAMPS_CONFIG_KEYS
-        }
-        # Fold a fingerprint of the directory configs into the program
-        # config so any change to a .picopt.yaml invalidates its tree's
-        # timestamps (the single global program_config can't otherwise see
-        # per-directory config changes).
-        program_config["_dir_config_fingerprint"] = self._dir_config_fingerprint()
-        config = GrovestampsConfig(
-            paths=self._top_paths,
-            program_name=PROGRAM_NAME,
-            verbose=self._config.verbose,
-            symlinks=self._config.symlinks,
-            ignore=self._config.ignore,
-            check_config=self._config.timestamps_check_config,
-            program_config=program_config,
-            program_config_keys=TIMESTAMPS_CONFIG_KEYS | {"_dir_config_fingerprint"},
-        )
-        self._timestamps = Grovestamps(config)
+        self._timestamps = grove
+        if not self._config.timestamps:
+            # Run-level -t is off: these trees were activated by their
+            # root directory configs.
+            roots = ", ".join(sorted(str(p) for p in grove))
+            logger.info(f"Timestamps enabled by {DIR_CONFIG_FILENAME} for: {roots}")
         for timestamps in self._timestamps.values():
             OldTimestamps(self._config, timestamps).import_old_timestamps()
         self._skipper.set_timestamps(self._timestamps)

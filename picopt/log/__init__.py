@@ -2,11 +2,14 @@
 
 from __future__ import annotations
 
+import logging
 from contextlib import suppress
 from typing import TYPE_CHECKING, Final
 
 from loguru import logger
 from rich.console import Console
+from rich.markup import escape
+from typing_extensions import override
 
 from picopt.log.styles import LEVEL_STYLES
 
@@ -14,6 +17,26 @@ if TYPE_CHECKING:
     from loguru import Record
 
 __all__ = ("console", "logger", "setup")
+
+
+class _InterceptHandler(logging.Handler):
+    """Route stdlib logging (e.g. treestamps warnings) through loguru."""
+
+    @override
+    def emit(self, record: logging.LogRecord) -> None:
+        try:
+            level: str | int = logger.level(record.levelname).name
+        except ValueError:
+            level = record.levelno
+        # Walk out of the logging module so loguru reports the real caller.
+        frame, depth = logging.currentframe(), 2
+        while frame and frame.f_code.co_filename == logging.__file__:
+            frame = frame.f_back
+            depth += 1
+        logger.opt(depth=depth, exception=record.exc_info).log(
+            level, record.getMessage()
+        )
+
 
 # Single Console for everything — both Rich Progress and the loguru sink
 # share it so the live region and log lines stay in sync.
@@ -48,7 +71,9 @@ def _sink(message: object) -> None:
     record: Record = message.record  # pyright: ignore[reportAttributeAccessIssue],# ty: ignore[unresolved-attribute]
     level = record["level"].name
     style = LEVEL_STYLES.get(level, "white")
-    text = record["message"]
+    # Escape so bracketed path segments (comics: "Title [en]") aren't
+    # parsed as Rich markup and silently dropped.
+    text = escape(record["message"])
     console.print(f"[{style}]{text}[/{style}]", highlight=False, soft_wrap=True)
 
 
@@ -64,6 +89,11 @@ def setup(verbose: int) -> None:
             logger.level("CONFIG", no=22, color="<cyan>")
         _configured = True
 
+    # WARNING and up so third-party DEBUG/INFO chatter stays out of the
+    # console; force keeps the second setup() call from cli idempotent.
+    logging.basicConfig(
+        handlers=[_InterceptHandler()], level=logging.WARNING, force=True
+    )
     logger.remove()
     if verbose > 0:
         logger.add(
