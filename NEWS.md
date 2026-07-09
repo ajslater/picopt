@@ -1,5 +1,12 @@
 # 📰 Picopt News
 
+## v6.6.2
+
+### Fixes
+
+- Verbose timestamps, ignores, after, and memory budget summaries are no longer
+  repeated once per directory when using per-directory `.picopt.yaml` files.
+
 ## v6.6.1
 
 ### Fixes
