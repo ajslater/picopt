@@ -34,6 +34,7 @@ from typing import TYPE_CHECKING, Any
 from PIL import Image, UnidentifiedImageError
 
 from picopt import plugins as registry
+from picopt.exceptions import UnreadableImageError
 from picopt.pillow.webp_lossless import is_lossless as _webp_is_lossless
 from picopt.plugins.base.format import FileFormat
 from picopt.plugins.pil_convertible import is_tiff_lossless
@@ -86,7 +87,14 @@ def _extract_image_info(
             _extract_image_info_from_image(image, info, keep_metadata=keep_metadata)
             image.verify()
     except UnidentifiedImageError:
+        # Not an image at all: normal, the non-PIL detectors take over.
         pass
+    except OSError as exc:
+        # PIL recognized the format but the contents are corrupt (e.g. a
+        # BMP with pixel depth 0). An expected per-file condition, not a
+        # bug: raise the picopt flavor so guards skip the stack trace.
+        msg = f"unreadable image ({exc})"
+        raise UnreadableImageError(msg) from exc
     return image_format_str, info
 
 

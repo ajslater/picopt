@@ -16,6 +16,9 @@
   changes do.
 - Discarding stamps because the configuration changed now prints a warning
   naming the differing options instead of silently re-optimizing.
+- Corrupt images that PIL recognizes but cannot parse (e.g. a BMP with an
+  unsupported pixel depth) are reported as a one-line warning and counted in the
+  summary instead of dumping a stack trace.
 - Verbose timestamps, ignores, after, and memory budget summaries are no longer
   repeated once per directory when using per-directory `.picopt.yaml` files.
 

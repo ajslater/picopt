@@ -18,7 +18,6 @@ from __future__ import annotations
 
 import os
 import subprocess
-import traceback
 from abc import ABC, abstractmethod
 from io import BufferedReader, BytesIO
 from pathlib import Path
@@ -28,6 +27,7 @@ from typing import TYPE_CHECKING, BinaryIO, Final
 from loguru import logger
 
 from picopt import WORKING_SUFFIX
+from picopt.exceptions import print_exc_unless_expected
 from picopt.path import DOUBLE_SUFFIX, PathInfo
 from picopt.plugins.base.format import FileFormat
 from picopt.report import ReportStats
@@ -235,7 +235,7 @@ class Handler(ABC):
             buffer = self.optimize()
             return self._cleanup_after_optimize(buffer)
         except Exception as exc:
-            traceback.print_exc()
+            print_exc_unless_expected(exc)
             return self.error(exc)
 
     # --------------------------------------------------------------- cleanup

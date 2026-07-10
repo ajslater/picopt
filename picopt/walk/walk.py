@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import os
-import traceback
 from concurrent.futures import ProcessPoolExecutor
 from pathlib import Path
 from typing import TYPE_CHECKING
@@ -14,7 +13,7 @@ from treestamps import Treestamps
 from picopt.config import PicoptConfig
 from picopt.config.consts import DIR_CONFIG_FILENAME
 from picopt.config.dirconfig import DirConfig
-from picopt.exceptions import PicoptError
+from picopt.exceptions import PicoptError, print_exc_unless_expected
 from picopt.log import console
 from picopt.log.progress import make_progress
 from picopt.log.reporter import Reporter
@@ -135,7 +134,7 @@ class Walk:
                 # A member that can't even be sniffed (e.g. a decompression
                 # bomb) is one error, not a run-ender. Pass it through
                 # unmodified so the repacked archive keeps it.
-                traceback.print_exc()
+                print_exc_unless_expected(exc)
                 report = ReportStats(
                     path=Path(path_info.full_output_name()),
                     bytes_in=path_info.bytes_in(),
@@ -270,7 +269,7 @@ class Walk:
             if handler := self._walk_file_get_handler(path_info, scheduler):
                 self._handle_file(handler, path_info, scheduler)
         except Exception as exc:
-            traceback.print_exc()
+            print_exc_unless_expected(exc)
             report = ReportStats(
                 path=path_info.path or Path(),
                 bytes_in=path_info.bytes_in(),

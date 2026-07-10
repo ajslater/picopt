@@ -34,6 +34,7 @@ from enum import Enum, auto
 from itertools import chain
 from typing import TYPE_CHECKING
 
+from picopt.exceptions import print_exc_unless_expected
 from picopt.report import ReportStats
 from picopt.walk.detect_format import predetect_format
 from picopt.walk.dir_timestamps import DirTimestamper
@@ -137,7 +138,7 @@ class UnpackJob:
                 predetect_format(child, keep_metadata=keep_metadata)
             return UnpackResult(handler=self.handler, children=children)
         except Exception as exc:
-            traceback.print_exc()
+            print_exc_unless_expected(exc)
             return UnpackResult(handler=self.handler, children=[], exc=exc)
 
 
@@ -166,7 +167,7 @@ class RepackJob:
         try:
             return self.handler.repack()
         except Exception as exc:
-            traceback.print_exc()
+            print_exc_unless_expected(exc)
             return self.handler.error(exc)
 
 
