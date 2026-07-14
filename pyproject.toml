@@ -140,9 +140,6 @@ pythonVersion = "3.10"
 failOnWarnings = false
 reportAny = false
 reportExplicitAny = false
-# ruff format canonicalizes adjacent string literals to implicit
-# concatenation, so this basedpyright check can never be satisfied.
-reportImplicitStringConcatenation = false
 reportImportCycles = true
 reportIncompatibleUnannotatedOverride = true
 reportMissingParameterType = false
@@ -157,6 +154,7 @@ reportUnknownParameterType = false
 reportUnknownVariableType = false
 reportUnusedCallResult = false
 reportUnusedParameter = false
+reportImplicitStringConcatenation = false
 
 [tool.codespell]
 builtin = "clear,code,rare"
