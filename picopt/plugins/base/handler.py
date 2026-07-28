@@ -56,6 +56,11 @@ class Handler(ABC):
     - ``PIPELINE``: tuple-of-tuples of :class:`Tool` instances. The outer
       tuple is sequential pipeline tiers; each inner tuple is alternatives
       for that tier. This replaces the old ``PROGRAMS`` mechanism.
+    - ``CONFIG_ENABLED_KEY``: name of a boolean config option that must be
+      true for this handler to run at all. Empty means always enabled.
+      Handlers that fail the check are simply left out of the probed
+      handler map, which the routing layer already reads as "unavailable"
+      and falls through.
     """
 
     SUFFIXES: tuple[str, ...] = ()
@@ -65,6 +70,7 @@ class Handler(ABC):
     )
     INPUT_FILE_FORMATS: frozenset[FileFormat] = frozenset()
     PIPELINE: tuple[tuple[Tool, ...], ...] = ()
+    CONFIG_ENABLED_KEY: str = ""
 
     # ------------------------------------------------------------------ init
 

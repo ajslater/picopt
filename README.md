@@ -31,6 +31,10 @@ their current format.
 - JPEG images are optimized with MozJpeg's jpegtran.
 - WEBP Lossy images are not optimized. There is no current way to preserve
   information without running it through a lossy process again.
+- Lossy (XYB encoded) JPEG XL images are not optimized, for the same reason.
+- JPEG images are the one exception to the rule above: they may be converted to
+  JPEG XL losslessly, because JPEG XL can store the original JPEG bitstream and
+  restore it byte for byte. This is opt-in, see below.
 
 ### Lossless Images
 
@@ -39,8 +43,11 @@ a great deal smaller than uncompressed bitmaps like BMP. As such the best
 practice is probably to convert all lossless images to WebP Lossless as now all
 major browsers support it. The only downside is that decoding WebP Lossless
 takes on average 50% more CPU than PNG. All major desktop and mobile browsers
-support WEBP. WEBP is the lossless format of choice. Until perhaps JPEG XL
-support arrives for browsers.
+support WEBP. WEBP is the lossless format of choice, until JPEG XL support
+arrives for browsers.
+
+Lossless JPEG XL is usually smaller still, and picopt can convert to it with
+`-c JXL`. Browser support remains limited, so it is not the default target.
 
 ### Sequenced Images
 
@@ -52,15 +59,15 @@ substitute.
 ### Conversion
 
 By default, picopt does not convert images between formats. You must turn on
-conversion to PNG or WebP explicitly.
+conversion to JXL, PNG or WebP explicitly.
 
 ## 🖼️ Formats
 
-- By default picopt will optimize GIF, JPEG, PNG, and WEBP images.
+- By default picopt will optimize GIF, JPEG, JXL, PNG, and WEBP images.
 - Picopt can optionally optimize SVG images, ZIP, ePub, and CBZ containers.
 - Picopt can convert many lossless images such as BMP, CBR, CUR, DIB, FITS, GIF,
   IMT, PCX, PIXAR, PNG, PPM, PSD, QOI, SGI, SPIDER, SUN, TGA, TIFF, XBM, and XPM
-  into PNG and WEBP.
+  into JXL, PNG and WEBP.
 - Picopt can convert Animated GIF, TIFF, and FLI into Animated PNG or WebP
   files.
 - Picopt can convert Animated GIF, TIFF, FLI, and PNG into Animated WebP files.
@@ -83,6 +90,33 @@ picopt -x BMP -c WEBP big_old.bmp
 ### JPEG
 
 Picopt uses an internal mozjpeg python module to optimize JPEG images.
+
+### JPEG XL
+
+Picopt reads and writes JPEG XL with the internal
+[pillow-jxl-plugin](https://github.com/Isotr0py/pillow-jpegxl-plugin) module.
+
+Lossless JXL images are re-encoded at the highest size-targeting effort. Lossy
+(XYB encoded) JXL images are left alone, as lossy WebP is.
+
+Converting JPEG to JPEG XL is lossless and reversible: JPEG XL stores the
+original JPEG bitstream, so the exact original file can be restored later.
+Because picopt otherwise never uses a lossy image as a conversion source, this
+one needs its own flag in addition to the conversion target:
+
+<!-- eslint-skip -->
+
+```sh
+picopt -c JXL --convert-jpeg-to-jxl photos
+```
+
+Two caveats. `--strip-metadata` cannot apply to this conversion, since keeping
+the JPEG restorable means keeping all of its bytes. And picopt will not
+re-optimize a JXL that carries JPEG reconstruction data, because re-encoding it
+would silently discard the ability to restore the original JPEG.
+
+Animated JPEG XL is not supported in either direction; the encoder cannot read
+or write it.
 
 ### PNG & APNG
 

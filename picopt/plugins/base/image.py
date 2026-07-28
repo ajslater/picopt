@@ -84,6 +84,19 @@ class ImageHandler(Handler):
         }
         return MappingProxyType(info)
 
+    # ---------------------------------------------------------- image munging
+
+    def prepare_image(self, image: Image.Image, format_str: str) -> Image.Image:
+        """
+        Return the image to hand to ``Image.save``.
+
+        A hook for encoders that accept only a subset of PIL modes; the
+        default saves whatever was opened. Symmetric with
+        :meth:`prepare_info`, which does the same job for the info dict.
+        """
+        del format_str
+        return image
+
     # ----------------------------------------------------------- pil_save
 
     def pil_save(
@@ -106,7 +119,7 @@ class ImageHandler(Handler):
         info = self.prepare_info(format_str)
         output_buffer = BytesIO()
         with Image.open(input_buffer) as image:
-            image.save(
+            self.prepare_image(image, format_str).save(
                 output_buffer,
                 format_str,
                 save_all=True,

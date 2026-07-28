@@ -70,6 +70,7 @@ class PicoptSettings:
 
     # User-facing scalar options
     bigger: bool
+    convert_jpeg_to_jxl: bool
     dry_run: bool
     fail_fast: bool
     fail_fast_container: bool

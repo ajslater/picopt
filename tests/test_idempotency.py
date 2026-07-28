@@ -18,9 +18,11 @@ IMAGE_FNS = (
     "test_jpg.jpg",
     "test_gif.gif",
     "test_webp_lossless.webp",
+    # A lossless JXL, which is re-encoded natively.
+    "test_jxl_lossless.jxl",
 )
 CBZ_FN = "test_cbz.cbz"
-FORMATS_ARG = "PNG,JPEG,GIF,WEBP,CBZ"
+FORMATS_ARG = "PNG,JPEG,GIF,WEBP,JXL,CBZ"
 
 
 def _pixels(path: Path) -> bytes:

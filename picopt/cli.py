@@ -269,6 +269,17 @@ def get_arguments(params: tuple[str, ...] | None = None) -> Namespace:
         help="Overzealously optimize pngs with -O5 and Zopfli.",
     )
     parser.add_argument(
+        "--convert-jpeg-to-jxl",
+        action="store_true",
+        default=None,
+        dest="convert_jpeg_to_jxl",
+        help=(
+            "Also convert JPEG images when converting to JXL. This is "
+            "lossless JPEG recompression: the original JPEG can be restored "
+            "from the JXL byte for byte. Requires -c JXL."
+        ),
+    )
+    parser.add_argument(
         "-S",
         "--no-symlinks",
         action="store_false",

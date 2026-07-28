@@ -1,5 +1,22 @@
 # 📰 Picopt News
 
+## v6.7.0
+
+### Features
+
+- JPEG XL support, read and write, using the internal
+  [pillow-jxl-plugin](https://github.com/Isotr0py/pillow-jpegxl-plugin) module.
+- JXL is now optimized by default. `.jxl` files that previous versions ignored
+  are re-encoded on a plain `picopt -r` run. Only lossless JXL is touched; lossy
+  (XYB encoded) JXL is left alone, as lossy WebP is.
+- Lossless images convert to JXL with `-c JXL`, which now leads the preference
+  order for still images ahead of WEBP and PNG.
+- New `--convert-jpeg-to-jxl` converts JPEG to JXL losslessly and reversibly:
+  the JXL stores the original JPEG bitstream and can restore it byte for byte.
+  It requires `-c JXL` as well, because picopt otherwise never converts from a
+  lossy source. Files carrying that reconstruction data are never re-encoded, so
+  the original JPEG stays recoverable.
+
 ## v6.6.3
 
 ### Fixes

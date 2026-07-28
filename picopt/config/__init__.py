@@ -87,6 +87,7 @@ def _build_template() -> MappingTemplate:
                 {
                     "after": Optional(float),
                     "bigger": bool,
+                    "convert_jpeg_to_jxl": bool,
                     "convert_to": Optional(Sequence(Choice(convert_to_format_strs))),
                     "disable_programs": Sequence(str),
                     "dry_run": bool,
@@ -484,6 +485,7 @@ def _settings_from_attrdict(ad: Any) -> PicoptSettings:
     return PicoptSettings(
         after=ad.after,
         bigger=ad.bigger,
+        convert_jpeg_to_jxl=ad.convert_jpeg_to_jxl,
         convert_to=tuple(ad.convert_to) if ad.convert_to is not None else None,
         disable_programs=tuple(ad.disable_programs),
         dry_run=ad.dry_run,
