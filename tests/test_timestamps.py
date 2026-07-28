@@ -28,6 +28,7 @@ DEFAULT_CONFIG = {
     "bigger": False,
     "convert_jpeg_to_jxl": False,
     "convert_to": [],
+    "convert_webp_to_jxl": False,
     "formats": ["GIF", "JPEG", "JXL", "PNG", "SVG", "WEBP"],
     "keep_metadata": True,
     "ignore": [],

@@ -101,17 +101,24 @@ Lossless JXL images are re-encoded at the highest size-targeting effort. Lossy
 
 Converting JPEG to JPEG XL is lossless and reversible: JPEG XL stores the
 original JPEG bitstream, so the exact original file can be restored later.
-Because picopt otherwise never uses a lossy image as a conversion source, this
-one needs its own flag in addition to the conversion target:
+
+JPEG and WebP are both formats picopt processes by default, so naming them with
+`-x` cannot express a choice about them, and each has its own flag instead:
 
 <!-- eslint-skip -->
 
 ```sh
-picopt -c JXL --convert-jpeg-to-jxl photos
+picopt -c JXL --convert-jpeg-to-jxl --convert-webp-to-jxl photos
 ```
 
-Two caveats. `--strip-metadata` cannot apply to this conversion, since keeping
-the JPEG restorable means keeping all of its bytes. And picopt will not
+JPEG needs one because picopt otherwise never uses a lossy image as a conversion
+source. WebP needs one because JPEG XL is still far less widely supported than
+WebP, and converting away from a format every browser reads should be a
+deliberate act. Without them, `-c JXL` converts only GIF and PNG, plus whatever
+else you name with `-x`.
+
+Two caveats on the JPEG conversion. `--strip-metadata` cannot apply to it, since
+keeping the JPEG restorable means keeping all of its bytes. And picopt will not
 re-optimize a JXL that carries JPEG reconstruction data, because re-encoding it
 would silently discard the ability to restore the original JPEG.
 

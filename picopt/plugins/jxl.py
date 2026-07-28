@@ -2,7 +2,7 @@
 JPEG XL format plugin.
 
 Owns: JXL (still). Tool: the ``pillow-jxl-plugin`` Pillow codec, driven
-in-process. Two handlers with different jobs:
+in-process. Three handlers with different jobs:
 
 * :class:`JxlLossless` re-encodes lossless JXL in place and is the target
   for every lossless still conversion. Only files that
@@ -10,9 +10,16 @@ in-process. Two handlers with different jobs:
   (XYB-encoded) JXL is left alone exactly as lossy WebP is.
 * :class:`JxlFromJpeg` converts JPEG to JXL by lossless bitstream
   reconstruction, which is reversible: the original JPEG can be restored
-  byte for byte. It is doubly opt-in — ``--convert-to JXL`` *and*
-  ``--convert-jpeg-to-jxl`` — because picopt otherwise never uses a lossy
-  format as a conversion source.
+  byte for byte.
+* :class:`JxlFromWebP` converts lossless WebP to JXL.
+
+The last two exist only to carry their own opt-in flag, so each is doubly
+gated: ``--convert-to JXL`` *and* its own option. JPEG needs that because
+picopt otherwise never uses a lossy format as a conversion source. WebP
+needs it because JXL support in the wider world is still thin, and
+converting away from a format every browser reads deserves to be
+deliberate. Both are formats picopt processes by default, so the usual
+"name the source with ``-x``" gate cannot express the choice.
 
 Animation is deliberately absent: the codec can neither read nor write
 animated JXL, so no animated route points here in either direction.
@@ -204,28 +211,44 @@ class JxlFromJpeg(ImageHandler):
     PIPELINE: tuple[tuple[Tool, ...], ...] = ((JpegXlReconstructTool(),),)
 
 
+class JxlFromWebP(JxlLossless):
+    """
+    Lossless WebP to JXL, gated behind its own option.
+
+    Identical to its parent in every respect but the gate. It is a separate
+    class only because the flag hangs off the handler, and JxlLossless also
+    serves PNG, GIF and native JXL, which must stay ungated.
+    """
+
+    INPUT_FILE_FORMATS = frozenset({WebPLossless.OUTPUT_FILE_FORMAT})
+    CONFIG_ENABLED_KEY = "convert_webp_to_jxl"
+
+
 # ---------------------------------------------------------------------------
 # Plugin descriptor
 # ---------------------------------------------------------------------------
 
 PLUGIN = Plugin(
     name="JXL",
-    handlers=(JxlLossless, JxlFromJpeg),
+    handlers=(JxlLossless, JxlFromJpeg, JxlFromWebP),
     routes=(
-        # Native, plus the reverse conversions out of JXL.
+        # Native, plus the reverse conversions out of JXL. Converting away
+        # from JXL to a more widely readable format is never gated.
         Route(
             file_format=JxlLossless.OUTPUT_FILE_FORMAT,
             native=JxlLossless,
             convert=(WebPLossless, Png),
         ),
-        # Lossless still sources. Formats owned by pil_convertible (BMP,
-        # TIFF, PNM, …) get JXL added to their convert chain there.
+        # Lossless still sources that convert on a plain -c JXL. Formats
+        # owned by pil_convertible (BMP, TIFF, PNM, …) get JXL added to
+        # their convert chain there, and still need their own -x.
         Route(file_format=Png.OUTPUT_FILE_FORMAT, convert=(JxlLossless,)),
         Route(file_format=Gif.OUTPUT_FILE_FORMAT, convert=(JxlLossless,)),
-        Route(file_format=WebPLossless.OUTPUT_FILE_FORMAT, convert=(JxlLossless,)),
-        # The one lossy source picopt will convert, and only on request.
+        # Sources picopt processes by default, so -x cannot gate them and
+        # each carries its own opt-in flag instead.
         Route(file_format=Jpeg.OUTPUT_FILE_FORMAT, convert=(JxlFromJpeg,)),
+        Route(file_format=WebPLossless.OUTPUT_FILE_FORMAT, convert=(JxlFromWebP,)),
     ),
-    convert_targets=(JxlLossless, JxlFromJpeg),
+    convert_targets=(JxlLossless, JxlFromJpeg, JxlFromWebP),
     default_enabled=True,
 )

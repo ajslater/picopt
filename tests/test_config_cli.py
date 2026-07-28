@@ -11,7 +11,7 @@ from picopt import cli
 from picopt.config import PicoptConfig
 from picopt.doctor import PicoptDoctor
 from picopt.plugins.base.tool import Tool, ToolStatus
-from picopt.plugins.jxl import JxlFromJpeg, JxlLossless
+from picopt.plugins.jxl import JxlFromJpeg, JxlFromWebP, JxlLossless
 
 __all__ = ()
 
@@ -81,17 +81,27 @@ class TestConfigValidation:
 class TestHandlerConfigGate:
     """A handler declaring CONFIG_ENABLED_KEY only runs when the flag is on."""
 
-    def test_jpeg_to_jxl_handler_absent_by_default(self) -> None:
+    def test_gated_handlers_absent_by_default(self) -> None:
         settings = _get_settings("-c", "JXL")
         assert JxlFromJpeg.CONFIG_ENABLED_KEY == "convert_jpeg_to_jxl"
+        assert JxlFromWebP.CONFIG_ENABLED_KEY == "convert_webp_to_jxl"
         assert JxlFromJpeg not in settings.computed.handler_stages
-        # The unconditional handler alongside it is still available.
+        assert JxlFromWebP not in settings.computed.handler_stages
+        # The unconditional handler alongside them is still available.
         assert JxlLossless in settings.computed.handler_stages
 
     def test_jpeg_to_jxl_handler_present_when_enabled(self) -> None:
         settings = _get_settings("-c", "JXL", "--convert-jpeg-to-jxl")
         assert settings.convert_jpeg_to_jxl is True
         assert JxlFromJpeg in settings.computed.handler_stages
+        # Each flag gates only its own handler.
+        assert JxlFromWebP not in settings.computed.handler_stages
+
+    def test_webp_to_jxl_handler_present_when_enabled(self) -> None:
+        settings = _get_settings("-c", "JXL", "--convert-webp-to-jxl")
+        assert settings.convert_webp_to_jxl is True
+        assert JxlFromWebP in settings.computed.handler_stages
+        assert JxlFromJpeg not in settings.computed.handler_stages
 
 
 class _FakeTool(Tool):

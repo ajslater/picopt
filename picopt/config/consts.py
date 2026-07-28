@@ -19,10 +19,11 @@ DIR_CONFIG_FILENAME: Final = ".picopt.yaml"
 TIMESTAMPS_CONFIG_KEYS: Final[frozenset[str]] = frozenset(
     {
         "bigger",
-        # Changes which files are converted, so it must invalidate stamps
-        # for the same reason convert_to does.
+        # These change which files are converted, so they must invalidate
+        # stamps for the same reason convert_to does.
         "convert_jpeg_to_jxl",
         "convert_to",
+        "convert_webp_to_jxl",
         "formats",
         "ignore",
         "keep_metadata",

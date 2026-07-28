@@ -25,13 +25,16 @@ FNS = MappingProxyType(
         # Lossless still sources convert.
         "test_png.png": (7967, 4152, ("jxl", 3927)),
         "test_gif.gif": (138952, 138944, ("jxl", 115204)),
-        # A JPEG must NOT convert without the extra opt-in.
+        # Neither of these convert without their own opt-in flag.
         "test_jpg.jpg": (97373, 87913, ("jpg", 87913)),
+        "test_webp_lossless.webp": (5334, 3870, ("webp", 3870)),
     }
 )
 
 JPEG_SRC = "test_jpg.jpg"
 JPEG_JXL_SIZE = 78762
+WEBP_SRC = "test_webp_lossless.webp"
+WEBP_JXL_SIZE = 3901
 
 
 @pytest.mark.parametrize("fn", FNS)
@@ -117,6 +120,45 @@ class TestJxlFromJpeg(BaseTest):
         assert path.read_bytes() == first
         has_reconstruction, _ = self._reconstruct(path)
         assert has_reconstruction
+
+
+@pytest.mark.parametrize("fn", [WEBP_SRC])
+class TestJxlFromWebP(BaseTest):
+    """Test the opt-in lossless WebP to JXL conversion."""
+
+    TMP_ROOT: Path = get_test_dir()
+    SOURCE_DIR: Path = IMAGES_DIR
+    FNS: MappingProxyType[str, tuple] = FNS
+
+    def test_convert_webp_to_jxl(self: "TestJxlFromWebP", fn: str) -> None:
+        """With the flag, a lossless WebP becomes a JXL."""
+        args = (
+            PROGRAM_NAME,
+            "-rvv",
+            "-c",
+            "JXL",
+            "--convert-webp-to-jxl",
+            str(self.TMP_ROOT),
+        )
+        cli.main(args)
+        path = (self.TMP_ROOT / fn).with_suffix(".jxl")
+        assert path.exists()
+        assert not (self.TMP_ROOT / fn).exists()
+        assert_size_close(path.stat().st_size, WEBP_JXL_SIZE)
+
+    def test_jpeg_flag_does_not_enable_webp(self: "TestJxlFromWebP", fn: str) -> None:
+        """Each flag gates only its own source format."""
+        args = (
+            PROGRAM_NAME,
+            "-rvv",
+            "-c",
+            "JXL",
+            "--convert-jpeg-to-jxl",
+            str(self.TMP_ROOT),
+        )
+        cli.main(args)
+        assert (self.TMP_ROOT / fn).exists()
+        assert not (self.TMP_ROOT / fn).with_suffix(".jxl").exists()
 
 
 EXTRA_FNS = MappingProxyType(

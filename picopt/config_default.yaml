@@ -3,6 +3,7 @@ picopt:
   bigger: False
   convert_jpeg_to_jxl: False
   convert_to: []
+  convert_webp_to_jxl: False
   disable_programs: []
   dry_run: False
   fail_fast: False

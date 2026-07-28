@@ -51,6 +51,7 @@ def _make_settings(*, dry_run: bool = False, preserve: bool = False) -> PicoptSe
     return PicoptSettings(
         bigger=False,
         convert_jpeg_to_jxl=False,
+        convert_webp_to_jxl=False,
         dry_run=dry_run,
         fail_fast=False,
         fail_fast_container=False,

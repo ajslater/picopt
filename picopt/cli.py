@@ -280,6 +280,17 @@ def get_arguments(params: tuple[str, ...] | None = None) -> Namespace:
         ),
     )
     parser.add_argument(
+        "--convert-webp-to-jxl",
+        action="store_true",
+        default=None,
+        dest="convert_webp_to_jxl",
+        help=(
+            "Also convert lossless WebP images when converting to JXL. Off "
+            "by default because JXL is still far less widely supported than "
+            "WebP. Requires -c JXL."
+        ),
+    )
+    parser.add_argument(
         "-S",
         "--no-symlinks",
         action="store_false",

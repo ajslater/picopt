@@ -13,9 +13,13 @@
   order for still images ahead of WEBP and PNG.
 - New `--convert-jpeg-to-jxl` converts JPEG to JXL losslessly and reversibly:
   the JXL stores the original JPEG bitstream and can restore it byte for byte.
-  It requires `-c JXL` as well, because picopt otherwise never converts from a
-  lossy source. Files carrying that reconstruction data are never re-encoded, so
-  the original JPEG stays recoverable.
+  Files carrying that reconstruction data are never re-encoded, so the original
+  JPEG stays recoverable.
+- New `--convert-webp-to-jxl` converts lossless WebP to JXL. Off by default
+  because JXL support is still much thinner than WebP's.
+- Both flags require `-c JXL` as well. JPEG and WEBP are formats picopt already
+  processes by default, so unlike BMP or TIFF they cannot be gated by naming
+  them with `-x`. A plain `-c JXL` still converts only GIF and PNG.
 
 ## v6.6.3
 
