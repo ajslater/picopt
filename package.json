@@ -54,12 +54,7 @@
       "preset-lint-consistent",
       "preset-lint-markdown-style-guide",
       "preset-lint-recommended",
-      "preset-prettier",
-      [
-        "lint-no-duplicate-headings",
-        false
-      ],
-      "lint-no-duplicate-headings-in-section"
+      "preset-prettier"
     ]
   },
   "devDependencies": {
@@ -97,7 +92,6 @@
     "prettier-plugin-nginx": "^1.0.3",
     "prettier-plugin-packagejson": "^3.0.2",
     "prettier-plugin-toml": "^2.0.6",
-    "prettier-plugin-xml": "^0.1.0",
     "remark-cli": "^12.0.1",
     "remark-gfm": "^4.0.1",
     "remark-lint-no-duplicate-headings-in-section": "^4.0.1",
