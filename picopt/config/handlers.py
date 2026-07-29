@@ -126,12 +126,23 @@ class ConfigHandlers:
             from_list = ", ".join(sorted(sources))
             logger.info(f"Converting {from_list} to {target}")
 
+    @staticmethod
+    def _is_handler_config_enabled(handler_cls: type[Handler], config: Subview) -> bool:
+        """Honor a handler's opt-in config flag, if it declares one."""
+        key = handler_cls.CONFIG_ENABLED_KEY
+        if not key:
+            return True
+        return key in config and bool(config[key].get(bool))
+
     def _set_format_handler_stages(
         self,
         handler_cls: type[Handler],
         handler_stages: dict[type[Handler], tuple[Tool, ...]],
         disabled_program_names: frozenset[str],
+        config: Subview,
     ) -> None:
+        if not self._is_handler_config_enabled(handler_cls, config):
+            return
         stages = _select_pipeline_for_handler(handler_cls, disabled_program_names)
         if stages is not None:
             handler_stages[handler_cls] = stages
@@ -194,7 +205,7 @@ class ConfigHandlers:
         handler_stages: dict[type[Handler], tuple[Tool, ...]] = {}
         for handler_cls in _enabled_handler_classes(all_format_strs):
             self._set_format_handler_stages(
-                handler_cls, handler_stages, disabled_program_names
+                handler_cls, handler_stages, disabled_program_names, config
             )
         config["computed"]["handler_stages"].set(handler_stages)
 

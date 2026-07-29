@@ -221,7 +221,7 @@ class ExternalTool(Tool):
 
     def __init__(self) -> None:
         """Init cached path."""
-        self._cached_path: Path | None | object = _UNSET
+        self._cached_path: Path | object | None = _UNSET
 
     def _path(self) -> Path | None:
         if self._cached_path is _UNSET:

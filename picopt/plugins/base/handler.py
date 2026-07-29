@@ -18,7 +18,6 @@ from __future__ import annotations
 
 import os
 import subprocess
-import traceback
 from abc import ABC, abstractmethod
 from io import BufferedReader, BytesIO
 from pathlib import Path
@@ -28,6 +27,7 @@ from typing import TYPE_CHECKING, BinaryIO, Final
 from loguru import logger
 
 from picopt import WORKING_SUFFIX
+from picopt.exceptions import print_exc_unless_expected
 from picopt.path import DOUBLE_SUFFIX, PathInfo
 from picopt.plugins.base.format import FileFormat
 from picopt.report import ReportStats
@@ -56,6 +56,11 @@ class Handler(ABC):
     - ``PIPELINE``: tuple-of-tuples of :class:`Tool` instances. The outer
       tuple is sequential pipeline tiers; each inner tuple is alternatives
       for that tier. This replaces the old ``PROGRAMS`` mechanism.
+    - ``CONFIG_ENABLED_KEY``: name of a boolean config option that must be
+      true for this handler to run at all. Empty means always enabled.
+      Handlers that fail the check are simply left out of the probed
+      handler map, which the routing layer already reads as "unavailable"
+      and falls through.
     """
 
     SUFFIXES: tuple[str, ...] = ()
@@ -65,6 +70,7 @@ class Handler(ABC):
     )
     INPUT_FILE_FORMATS: frozenset[FileFormat] = frozenset()
     PIPELINE: tuple[tuple[Tool, ...], ...] = ()
+    CONFIG_ENABLED_KEY: str = ""
 
     # ------------------------------------------------------------------ init
 
@@ -235,7 +241,7 @@ class Handler(ABC):
             buffer = self.optimize()
             return self._cleanup_after_optimize(buffer)
         except Exception as exc:
-            traceback.print_exc()
+            print_exc_unless_expected(exc)
             return self.error(exc)
 
     # --------------------------------------------------------------- cleanup

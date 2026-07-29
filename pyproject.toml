@@ -20,6 +20,7 @@ dependencies = [
   "oxipng-pybind>=1.0",
   "piexif~=1.1",
   "pikepdf>=10.5.1",
+  "pillow-jxl-plugin~=1.3",
   "Pillow>=12.0",
   "py7zr~=1.0",
   "python-dateutil~=2.8",
@@ -31,12 +32,12 @@ dependencies = [
   "typing-extensions~=4.13",
 ]
 description = "A multi format lossless image optimizer that uses external tools"
-keywords = ["cbr", "cbz", "image", "jpg", "png"]
+keywords = ["cbr", "cbz", "image", "jpg", "jxl", "png"]
 readme = "README.md"
 requires-python = ">=3.10"
 license = { text = "GPL-3.0-only" }
 name = "picopt"
-version = "6.6.2"
+version = "6.7.0"
 [[project.authors]]
 name = "AJ Slater"
 email = "aj@slater.net"
@@ -140,9 +141,6 @@ pythonVersion = "3.10"
 failOnWarnings = false
 reportAny = false
 reportExplicitAny = false
-# ruff format canonicalizes adjacent string literals to implicit
-# concatenation, so this basedpyright check can never be satisfied.
-reportImplicitStringConcatenation = false
 reportImportCycles = true
 reportIncompatibleUnannotatedOverride = true
 reportMissingParameterType = false
@@ -157,6 +155,7 @@ reportUnknownParameterType = false
 reportUnknownVariableType = false
 reportUnusedCallResult = false
 reportUnusedParameter = false
+reportImplicitStringConcatenation = false
 
 [tool.codespell]
 builtin = "clear,code,rare"
@@ -252,11 +251,13 @@ extend-ignore = [
   "E501",
   "ISC001",
   "PERF203",
+  "PLC0415",
   "S101",
   "W191",
 ]
 extend-select = [
   "A",
+  "AIR",
   "ARG",
   "ASYNC",
   "B",
@@ -273,6 +274,7 @@ extend-select = [
   "EXE",
   "F",
   "FA",
+  "FAST",
   "FBT",
   "FIX",
   "FLY",
@@ -284,9 +286,12 @@ extend-select = [
   "ISC",
   "LOG",
   "N",
+  "NPY",
+  "PD",
   "PERF",
   "PGH",
   "PIE",
+  "PLC",
   "PLE",
   "PLR",
   "PLW",

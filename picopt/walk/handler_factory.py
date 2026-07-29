@@ -25,13 +25,13 @@ Handler-class selection rules for an input :class:`FileFormat` ``ff``:
 
 from __future__ import annotations
 
-from traceback import print_exc
 from typing import TYPE_CHECKING, Any
 
 from loguru import logger
 
 from picopt import plugins as registry
 from picopt.archive_stamps import ArchiveStamps
+from picopt.exceptions import print_exc_unless_expected
 from picopt.plugins.base import (
     ArchiveHandler,
     ContainerHandler,
@@ -140,7 +140,7 @@ class HandlerFactory:
                 f"{path_info.full_output_name()}: {exc}"
             )
             logger.warning(msg)
-            print_exc()
+            print_exc_unless_expected(exc)
 
         if not repack_handler_class and config.verbose > 1 and not config.list_only:
             fmt = str(file_format) if file_format else "unknown"
@@ -169,8 +169,9 @@ class HandlerFactory:
                 convert=path_info.convert,
             )
         except OSError as exc:
-            logger.warning(f"getting handler for {path_info.full_output_name()}: {exc}")
-            print_exc()
+            logger.warning(f"{path_info.full_output_name()}: {exc}")
+            self._reporter.stats.record_warning(path_info.path, str(exc))
+            print_exc_unless_expected(exc)
             file_format = None
             info = {}
         return file_format, handler_cls, info
