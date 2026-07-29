@@ -14,6 +14,10 @@ Two-phase dispatch:
    * TIFF lossless-vs-lossy depends on the ``compression`` info key;
      :func:`picopt.plugins.pil_convertible.is_tiff_lossless` owns the
      codec set.
+   * JXL is lossless or lossy at the same format string too, and the codec
+     exposes neither that nor whether the file carries JPEG reconstruction
+     data; :func:`picopt.pillow.jxl.is_lossless` parses the codestream
+     header to decide.
 
    Every other PIL format string is checked against
    :func:`registry.lossless_format_strs`.
@@ -35,6 +39,8 @@ from PIL import Image, UnidentifiedImageError
 
 from picopt import plugins as registry
 from picopt.exceptions import UnreadableImageError
+from picopt.pillow.jxl import JXL_FORMAT_STR as _JXL_FORMAT_STR
+from picopt.pillow.jxl import is_lossless as _jxl_is_lossless
 from picopt.pillow.webp_lossless import is_lossless as _webp_is_lossless
 from picopt.plugins.base.format import FileFormat
 from picopt.plugins.pil_convertible import is_tiff_lossless
@@ -107,6 +113,9 @@ def _is_lossless(
     if image_format_str == _WEBP_FORMAT_STR:
         with path_info.fp_or_buffer() as buffer:
             return _webp_is_lossless(buffer)
+    if image_format_str == _JXL_FORMAT_STR:
+        with path_info.fp_or_buffer() as buffer:
+            return _jxl_is_lossless(buffer)
     if image_format_str == _TIFF_FORMAT_STR:
         return is_tiff_lossless(dict(info))
     return image_format_str in registry.lossless_format_strs()

@@ -46,6 +46,7 @@ from PIL.XpmImagePlugin import XpmImageFile
 
 from picopt.plugins.base import Plugin, Route
 from picopt.plugins.base.format import FileFormat
+from picopt.plugins.jxl import JxlLossless
 from picopt.plugins.png import Png, PngAnimated
 from picopt.plugins.webp import (
     Img2WebPAnimatedLossless,
@@ -147,10 +148,11 @@ _ANIMATED_FILE_FORMATS: tuple[FileFormat, ...] = tuple(
 # ---------------------------------------------------------------------------
 
 # Convert targets for still PIL inputs, in preference order.
-# WebPLossless wins because lossless WebP usually beats lossless PNG on
-# size for natural images; Png is the fallback when the user has WebP
-# disabled.
-_STILL_CONVERT_TARGETS = (WebPLossless, Png)
+# JxlLossless wins because lossless JPEG XL generally beats both;
+# WebPLossless comes next because lossless WebP usually beats lossless PNG
+# on size for natural images; Png is the fallback when the user has the
+# others disabled.
+_STILL_CONVERT_TARGETS = (JxlLossless, WebPLossless, Png)
 
 # Convert targets for animated PIL inputs (FLI, multipage TIFF, …).
 # webpmux is intentionally absent because it can only read existing
