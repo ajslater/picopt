@@ -2,19 +2,22 @@
 
 from __future__ import annotations
 
-import json
 from collections.abc import Mapping
-from contextlib import suppress
 from hashlib import sha256
 from pathlib import Path
+from types import MappingProxyType
 from typing import TYPE_CHECKING, Any, Final
 
-from ruamel.yaml import YAML, YAMLError
-from treestamps import Treestamps, TreestampsConfig
+from treestamps import Treestamps, TreestampsConfig, dir_config_fingerprint
 from typing_extensions import override
 
 from picopt import PROGRAM_NAME
-from picopt.config.consts import DIR_CONFIG_FILENAME, TIMESTAMPS_CONFIG_KEYS
+from picopt.config.consts import (
+    DIR_CONFIG_FILENAME,
+    RETIRED_TIMESTAMPS_CONFIG_DEFAULTS,
+    TIMESTAMPS_CONFIG_DEFAULTS,
+    TIMESTAMPS_CONFIG_KEYS,
+)
 
 if TYPE_CHECKING:
     from collections.abc import Iterable, Iterator
@@ -24,88 +27,31 @@ if TYPE_CHECKING:
 
 _FINGERPRINT_KEY: Final = "_dir_config_fingerprint"
 _PROGRAM_CONFIG_KEYS: Final = TIMESTAMPS_CONFIG_KEYS | {_FINGERPRINT_KEY}
-
-
-def _canonical_json(value: Any) -> str:
-    """Serialize a canonical value deterministically."""
-    return json.dumps(value, sort_keys=True, default=str)
-
-
-def _canonical(value: Any) -> Any:
-    """Convert parsed yaml values to a JSON-representable canonical form."""
-    if isinstance(value, Mapping):
-        return {str(key): _canonical(sub) for key, sub in value.items()}
-    if isinstance(value, list | tuple):
-        return [_canonical(sub) for sub in value]
-    if isinstance(value, set | frozenset):
-        # Sort by serialized form: key=str would tie 1 with "1" and leave
-        # the order at the mercy of the process hash seed.
-        return sorted((_canonical(sub) for sub in value), key=_canonical_json)
-    return value
-
-
-def _config_values_chunk(root: Path, config_file: Path) -> bytes | None:
-    """
-    Return one config file's fingerprint contribution, or None.
-
-    The contribution is the file's parsed, canonicalized ``picopt:``
-    section — so comment, whitespace, and key-order edits don't change
-    the digest, only option values do. Unparseable files (including
-    pathological yaml that exhausts the recursion limit) contribute
-    their raw bytes instead (conservative: any edit invalidates).
-    """
-    try:
-        data = config_file.read_bytes()
-    except OSError:
-        # Covers missing files and directories named like the config.
-        return None
-    try:
-        parsed = YAML(typ="safe").load(data)
-        section = parsed.get(PROGRAM_NAME) if isinstance(parsed, dict) else None
-        payload = _canonical_json(_canonical(section)).encode()
-    except (YAMLError, RecursionError):
-        # RecursionError: recursive anchors survive safe-load as
-        # self-referential dicts, and deep flow nesting blows the
-        # composer before it can raise a YAMLError.
-        payload = data
-    # A path relative to the tree root keeps the digest stable across
-    # cwd/mount changes; add/remove/rename still flips it. Digesting the
-    # payload gives fixed-length framing: raw-byte payloads could
-    # otherwise embed NULs that forge chunk boundaries.
-    rel = config_file.relative_to(root)
-    return str(rel).encode() + b"\0" + sha256(payload).digest()
+# A tree with no sub-directory config files hashes to the empty digest, so
+# that is the default for stamp files written before the key existed.
+_EMPTY_FINGERPRINT: Final = sha256(b"").hexdigest()
+_PROGRAM_CONFIG_DEFAULTS: Final[Mapping[str, Any]] = MappingProxyType(
+    {
+        **TIMESTAMPS_CONFIG_DEFAULTS,
+        **RETIRED_TIMESTAMPS_CONFIG_DEFAULTS,
+        _FINGERPRINT_KEY: _EMPTY_FINGERPRINT,
+    }
+)
+_KEY_LABELS: Final[Mapping[str, str]] = MappingProxyType(
+    {_FINGERPRINT_KEY: f"sub-directory {DIR_CONFIG_FILENAME} contents"}
+)
+_NOTE: Final = ("Safe to delete: picopt will re-optimize this tree on the next run.",)
 
 
 def _dir_config_fingerprint(root_dir: Path) -> str:
     """
-    Hash the option values of every ``.picopt.yaml`` strictly below the root.
+    Hash the option values of every config file strictly below the root.
 
     The root's own config file is excluded: its options are already
     recorded as values in the tree's program config, so only configs the
     recorded values can't see — those in subdirectories — need the digest.
-    Editing, adding, or removing any of them flips it and the tree
-    re-processes on the next run: over-invalidation that is always safe
-    and never wrong-skips a file whose effective config changed. A tree
-    rooted at a file shares its stamp file with directory runs of the
-    same root dir, so both hash identically to keep them from
-    invalidating each other.
     """
-    hasher = sha256()
-    own_config = root_dir / DIR_CONFIG_FILENAME
-    candidates = []
-    # Collect incrementally: a mid-scan OSError (py<3.13 propagates
-    # non-permission errors) keeps what was found instead of degrading
-    # to the empty — most permissive — digest.
-    with suppress(OSError):
-        candidates.extend(
-            config_file
-            for config_file in root_dir.rglob(DIR_CONFIG_FILENAME)
-            if config_file != own_config
-        )
-    for config_file in sorted(candidates):
-        if (chunk := _config_values_chunk(root_dir, config_file)) is not None:
-            hasher.update(chunk)
-    return hasher.hexdigest()
+    return dir_config_fingerprint(root_dir, DIR_CONFIG_FILENAME, PROGRAM_NAME)
 
 
 class Grove(Mapping[Path, Treestamps]):
@@ -168,9 +114,12 @@ class Grove(Mapping[Path, Treestamps]):
             symlinks=resolved.symlinks,
             ignore=resolved.ignore,
             check_config=resolved.timestamps_check_config,
-            # Plain dict so CommonConfig.__post_init__ filters & normalizes.
+            # Plain dicts so CommonConfig.__post_init__ filters & normalizes.
             program_config=program_config,
             program_config_keys=_PROGRAM_CONFIG_KEYS,
+            program_config_defaults=dict(_PROGRAM_CONFIG_DEFAULTS),
+            program_config_key_labels=_KEY_LABELS,
+            note=_NOTE,
         )
         tree = Treestamps(config)
         tree.loadf_tree()
