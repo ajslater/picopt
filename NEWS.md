@@ -1,5 +1,14 @@
 # 📰 Picopt News
 
+## v6.8.1
+
+### Fixes
+
+- A timestamps file discarded for a config mismatch is now rewritten by the run
+  that discards it, even when that run optimizes nothing. Previously the
+  rejected file survived unchanged and warned about the same mismatch on every
+  subsequent run. Requires treestamps 5.0.1.
+
 ## v6.8.0
 
 ### Fixes

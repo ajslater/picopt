@@ -6,6 +6,7 @@ from collections.abc import Iterator
 from pathlib import Path
 
 import pytest
+from ruamel.yaml import YAML
 
 from picopt import PROGRAM_NAME, cli
 from tests import IMAGES_DIR, get_test_dir
@@ -146,3 +147,23 @@ class TestTreeRootTimestamps:
         out = capsys.readouterr().out
         assert "config mismatch" in out
         assert "bigger" in out
+
+    def test_config_mismatch_rewritten_when_nothing_optimized(self, capsys) -> None:
+        """A discarded timestamps file is rewritten by a run that optimizes nothing."""
+        shutil.copy(IMAGES_DIR / PNG_FN, TMP_ROOT / PNG_FN)
+        cli.main((PROGRAM_NAME, "-rtvx", "PNG", str(TMP_ROOT)))
+
+        # Without any optimizable file the mismatch run sets no file timestamps.
+        (TMP_ROOT / PNG_FN).unlink()
+        capsys.readouterr()
+        argv = (PROGRAM_NAME, "-rtbvx", "PNG", str(TMP_ROOT))
+        cli.main(argv)
+        assert "config mismatch" in capsys.readouterr().out
+
+        # The timestamps file now records the current config...
+        stamps = YAML(typ="safe").load(TMP_ROOT / TIMESTAMPS_FN)
+        assert stamps["config"]["bigger"] is True
+
+        # ...so the same run again loads it without warning.
+        cli.main(argv)
+        assert "config mismatch" not in capsys.readouterr().out
