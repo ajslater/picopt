@@ -2,6 +2,11 @@
 
 ## v6.8.0
 
+### Fixes
+
+- Config files are written atomically. A crash or full disk during `-w`, `-W`,
+  or `--write-config-file` can no longer truncate a hand-written config.
+
 ### Features
 
 - Timestamps survive picopt upgrades that record new options. Only a changed
