@@ -28,7 +28,7 @@ dependencies = [
   "rich-argparse~=1.8",
   "rich~=15.0",
   "ruamel-yaml>=0.18,<1.0",
-  "treestamps~=5.0.0",
+  "treestamps~=5.0.1",
   "typing-extensions~=4.13",
 ]
 description = "A multi format lossless image optimizer that uses external tools"
@@ -37,7 +37,7 @@ readme = "README.md"
 requires-python = ">=3.10"
 license = { text = "GPL-3.0-only" }
 name = "picopt"
-version = "6.8.0"
+version = "6.8.1"
 [[project.authors]]
 name = "AJ Slater"
 email = "aj@slater.net"
@@ -81,7 +81,7 @@ docs = ["mkapi~=4.4", "mkdocs-minify-plugin~=0.8", "mkdocs~=1.6"]
 ci = ["requests~=2.32"]
 
 [build-system]
-requires = ["uv_build~=0.11.2"]
+requires = ["uv_build~=0.12.0"]
 build-backend = "uv_build"
 
 [tool.uv.build-backend]
