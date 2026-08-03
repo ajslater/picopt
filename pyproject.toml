@@ -84,10 +84,6 @@ ci = ["requests~=2.32"]
 requires = ["uv_build~=0.11.2"]
 build-backend = "uv_build"
 
-# TEMPORARY dev wiring for unreleased treestamps; remove before release.
-[tool.uv.sources]
-treestamps = { path = "../treestamps", editable = true }
-
 [tool.uv.build-backend]
 module-root = ""
 source-include = [
