@@ -10,7 +10,7 @@ from confuse.exceptions import ConfigError
 from ruamel.yaml import YAML
 
 from picopt import PROGRAM_NAME, cli
-from picopt.config import PicoptConfig, _target_dir_config_paths
+from picopt.config import PicoptConfig, _target_dir_config_paths, merge_config_file
 from picopt.config.settings import PicoptSettings
 
 __all__ = ()
@@ -136,3 +136,42 @@ def test_target_dir_config_paths_dedupes_and_uses_parent(tmp_path: Path) -> None
     paths = (str(tmp_path), str(target_file), str(tmp_path))
     targets = _target_dir_config_paths(paths)
     assert targets == [tmp_path / ".picopt.yaml"]
+
+
+class TestAtomicConfigWrite:
+    """merge_config_file never leaves a truncated config behind."""
+
+    SEED = "# keep this comment\npicopt:\n  near_lossless: true\n"
+
+    @staticmethod
+    def _crash(_self: Path, _target: Path) -> Path:
+        """Fail the way a full disk or a kill would."""
+        msg = "simulated crash"
+        raise OSError(msg)
+
+    def test_crash_during_replace_preserves_original(
+        self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+    ) -> None:
+        """A crash at the rename leaves the target fully old, with no leftovers."""
+        config_path = tmp_path / "config.yaml"
+        config_path.write_text(self.SEED)
+        monkeypatch.setattr(Path, "replace", self._crash)
+
+        with pytest.raises(OSError, match="simulated crash"):
+            merge_config_file(config_path, config_path, {"recurse": True})
+
+        assert config_path.read_text() == self.SEED
+        assert list(tmp_path.iterdir()) == [config_path]
+
+    def test_successful_write_leaves_no_temp_files(self, tmp_path: Path) -> None:
+        """A normal write replaces the target and cleans up after itself."""
+        config_path = tmp_path / "config.yaml"
+        config_path.write_text(self.SEED)
+
+        merge_config_file(config_path, config_path, {"recurse": True})
+
+        section = _load_section(config_path)
+        assert section["recurse"] is True
+        assert section["near_lossless"] is True
+        assert "# keep this comment" in config_path.read_text()
+        assert list(tmp_path.iterdir()) == [config_path]

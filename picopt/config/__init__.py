@@ -15,6 +15,7 @@ import sys
 import time
 from contextlib import suppress
 from pathlib import Path
+from tempfile import NamedTemporaryFile
 from typing import TYPE_CHECKING, Any, Final
 
 from confuse import Configuration, MappingTemplate
@@ -208,8 +209,10 @@ def merge_config_file(target: Path, base_path: Path, options: dict) -> None:
     Merge ``options`` into ``base_path``'s config section and write to ``target``.
 
     Round-trip loads ``base_path`` so existing keys and comments survive,
-    then writes owner-only. Raises ``YAMLError`` or ``OSError`` on
-    read/write failure so callers decide whether it is fatal.
+    then writes owner-only via a sibling temp file and an atomic replace, so
+    a crash mid-write cannot truncate a hand-authored config. Raises
+    ``YAMLError`` or ``OSError`` on read/write failure so callers decide
+    whether it is fatal.
     """
     yaml = YAML()
     data = yaml.load(base_path.read_text()) if base_path.is_file() else None
@@ -221,11 +224,25 @@ def merge_config_file(target: Path, base_path: Path, options: dict) -> None:
         data[PROGRAM_NAME] = section
     section.update(options)
     target.parent.mkdir(parents=True, exist_ok=True)
-    with target.open("w") as stream:
-        yaml.dump(data, stream)
-    # Best effort: filesystems without POSIX modes (e.g. FAT) just skip it.
-    with suppress(OSError):
-        target.chmod(0o600)
+    # A unique temp name, not a fixed sibling: two concurrent writers to the
+    # same target would otherwise unlink each other's temp mid-write. Same
+    # directory keeps the replace off a cross-device path.
+    tmp = NamedTemporaryFile(  # noqa: SIM115
+        "w", dir=target.parent, prefix=target.name + ".", delete=False
+    )
+    tmp_path = Path(tmp.name)
+    try:
+        with tmp:
+            yaml.dump(data, tmp)
+            tmp.flush()
+            os.fsync(tmp.fileno())
+        # Best effort: filesystems without POSIX modes (e.g. FAT) just skip
+        # it. Set before the replace so the target is never briefly wider.
+        with suppress(OSError):
+            tmp_path.chmod(0o600)
+        tmp_path.replace(target)
+    finally:
+        tmp_path.unlink(missing_ok=True)
 
 
 def _write_merged_config(
