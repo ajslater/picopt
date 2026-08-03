@@ -312,8 +312,9 @@ Any config key is accepted and validated, but run-scoped keys — `dry_run`,
 `list_only`, `timestamps`, `after`, `jobs`, `memory_limit`, `fail_fast`,
 `fail_fast_container`, `verbose`, and `paths` — are governed by the run-level
 value; setting them in a directory file has no per-directory effect. When
-timestamps (`-t`) are enabled, editing, adding, or removing any `.picopt.yaml`
-re-processes its tree on the next run.
+timestamps (`-t`) are enabled, editing an option value in any `.picopt.yaml`, or
+adding or removing one, re-processes its tree on the next run. Comment and
+formatting edits do not.
 
 ### Writing config files
 
@@ -325,6 +326,39 @@ re-processes its tree on the next run.
 
 Existing keys and comments in the target file survive the merge. Run-mode flags
 (`-d`, `-L`, verbosity) and the target paths are never persisted.
+
+### The two files
+
+Picopt keeps two kinds of file in your directories, and they are opposites:
+
+`.picopt.yaml` is **your input**. You write it, picopt only reads it (or merges
+your invoked options into it when you ask with `-W`). Commit it.
+
+`.picopt_treestamps.yaml` — plus a `.picopt_treestamps.wal.yaml` while a run is
+in progress — is **picopt's memory**. It records when each file was last
+optimized, so already-optimized files are skipped on the next `-t` run. It is
+written by the program, never applied as configuration, and safe to delete: the
+tree is simply re-optimized on the next run. Keep it out of version control or
+commit it, whichever suits you; picopt does not care.
+
+Its header holds a snapshot of the options that produced those timestamps — not
+a copy of your `.picopt.yaml`, but of the _resolved_ options from every layer,
+including flags and environment variables that live in no file. When those
+options change, the recorded timestamps no longer describe what a run would do,
+so they are discarded and the tree is re-examined. Picopt prints which options
+differed. Options that don't affect which files are selected are not recorded,
+and adding or retiring a recorded option does not invalidate anything by itself:
+only a changed value does.
+
+Timestamp files you should know about:
+
+- Deleting one re-optimizes that tree.
+- Running from a higher directory absorbs and removes the stamp files beneath
+  it.
+- Stamp files inside archives are consumed and dropped when the archive is
+  repacked.
+- `-N` / `--timestamps-no-check-config` skips the option comparison for a run,
+  keeping timestamps that would otherwise be discarded.
 
 ## ⌨️ Use Examples
 

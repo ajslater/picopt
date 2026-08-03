@@ -1,5 +1,31 @@
 # 📰 Picopt News
 
+## v6.8.0
+
+### Fixes
+
+- Config files are written atomically. A crash or full disk during `-w`, `-W`,
+  or `--write-config-file` can no longer truncate a hand-written config.
+
+### Features
+
+- Timestamps survive picopt upgrades that record new options. Only a changed
+  option value invalidates them, so stamp files written before an option joined
+  the recorded set stay valid at its default. Timestamps from before 6.7.0 work
+  again.
+- Timestamp files now open with a comment explaining what they are, that they
+  are machine-written, and that deleting one just re-optimizes that tree.
+- Discarding timestamps because a sub-directory `.picopt.yaml` changed now says
+  so, instead of naming an internal key.
+- README documents `.picopt_treestamps.yaml`: what it records, that it is never
+  applied as configuration, and that it is safe to delete.
+
+### Changes
+
+- Requires treestamps 5.0.0. Timestamp files no longer duplicate `ignore` and
+  `symlinks` in a second block. Existing timestamp files still load, and
+  upgrading invalidates nothing.
+
 ## v6.7.0
 
 ### Features
