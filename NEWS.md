@@ -2,177 +2,168 @@
 
 ## v6.8.1
 
-### Fixes
-
-- A timestamps file discarded for a config mismatch is now rewritten by the run
-  that discards it, even when that run optimizes nothing. Previously the
-  rejected file survived unchanged and warned about the same mismatch on every
-  subsequent run. Requires treestamps 5.0.1.
+- Fixes
+    - A timestamps file discarded for a config mismatch is now rewritten by the
+      run that discards it, even when that run optimizes nothing. Previously the
+      rejected file survived unchanged and warned about the same mismatch on
+      every subsequent run. Requires treestamps 5.0.1.
 
 ## v6.8.0
 
-### Fixes
-
-- Config files are written atomically. A crash or full disk during `-w`, `-W`,
-  or `--write-config-file` can no longer truncate a hand-written config.
-
-### Features
-
-- Timestamps survive picopt upgrades that record new options. Only a changed
-  option value invalidates them, so stamp files written before an option joined
-  the recorded set stay valid at its default. Timestamps from before 6.7.0 work
-  again.
-- Timestamp files now open with a comment explaining what they are, that they
-  are machine-written, and that deleting one just re-optimizes that tree.
-- Discarding timestamps because a sub-directory `.picopt.yaml` changed now says
-  so, instead of naming an internal key.
-- README documents `.picopt_treestamps.yaml`: what it records, that it is never
-  applied as configuration, and that it is safe to delete.
-
-### Changes
-
-- Requires treestamps 5.0.0. Timestamp files no longer duplicate `ignore` and
-  `symlinks` in a second block. Existing timestamp files still load, and
-  upgrading invalidates nothing.
+- Fixes
+    - Config files are written atomically. A crash or full disk during `-w`,
+      `-W`, or `--write-config-file` can no longer truncate a hand-written
+      config.
+- Features
+    - Timestamps survive picopt upgrades that record new options. Only a changed
+      option value invalidates them, so stamp files written before an option
+      joined the recorded set stay valid at its default. Timestamps from before
+      6.7.0 work again.
+    - Timestamp files now open with a comment explaining what they are, that
+      they are machine-written, and that deleting one just re-optimizes that
+      tree.
+    - Discarding timestamps because a sub-directory `.picopt.yaml` changed now
+      says so, instead of naming an internal key.
+    - README documents `.picopt_treestamps.yaml`: what it records, that it is
+      never applied as configuration, and that it is safe to delete.
+- Changes
+    - Requires treestamps 5.0.0. Timestamp files no longer duplicate `ignore`
+      and `symlinks` in a second block. Existing timestamp files still load, and
+      upgrading invalidates nothing.
 
 ## v6.7.0
 
-### Features
-
-- JPEG XL support, read and write, using the internal
-  [pillow-jxl-plugin](https://github.com/Isotr0py/pillow-jpegxl-plugin) module.
-- JXL is now optimized by default. `.jxl` files that previous versions ignored
-  are re-encoded on a plain `picopt -r` run. Only lossless JXL is touched; lossy
-  (XYB encoded) JXL is left alone, as lossy WebP is.
-- Lossless images convert to JXL with `-c JXL`, which now leads the preference
-  order for still images ahead of WEBP and PNG.
-- New `--convert-jpeg-to-jxl` converts JPEG to JXL losslessly and reversibly:
-  the JXL stores the original JPEG bitstream and can restore it byte for byte.
-  Files carrying that reconstruction data are never re-encoded, so the original
-  JPEG stays recoverable.
-- New `--convert-webp-to-jxl` converts lossless WebP to JXL. Off by default
-  because JXL support is still much thinner than WebP's.
-- Both flags require `-c JXL` as well. JPEG and WEBP are formats picopt already
-  processes by default, so unlike BMP or TIFF they cannot be gated by naming
-  them with `-x`. A plain `-c JXL` still converts only GIF and PNG.
+- Features
+    - JPEG XL support, read and write, using the internal
+      [pillow-jxl-plugin](https://github.com/Isotr0py/pillow-jpegxl-plugin)
+      module.
+    - JXL is now optimized by default. `.jxl` files that previous versions
+      ignored are re-encoded on a plain `picopt -r` run. Only lossless JXL is
+      touched; lossy (XYB encoded) JXL is left alone, as lossy WebP is.
+    - Lossless images convert to JXL with `-c JXL`, which now leads the
+      preference order for still images ahead of WEBP and PNG.
+    - New `--convert-jpeg-to-jxl` converts JPEG to JXL losslessly and
+      reversibly: the JXL stores the original JPEG bitstream and can restore it
+      byte for byte. Files carrying that reconstruction data are never
+      re-encoded, so the original JPEG stays recoverable.
+    - New `--convert-webp-to-jxl` converts lossless WebP to JXL. Off by default
+      because JXL support is still much thinner than WebP's.
+    - Both flags require `-c JXL` as well. JPEG and WEBP are formats picopt
+      already processes by default, so unlike BMP or TIFF they cannot be gated
+      by naming them with `-x`. A plain `-c JXL` still converts only GIF and
+      PNG.
 
 ## v6.6.3
 
-### Fixes
-
-- Corrupt images that PIL recognizes but cannot parse (e.g. a BMP with an
-  unsupported pixel depth) are reported as a one-line warning and counted in the
-  summary instead of dumping a stack trace.
+- Fixes
+    - Corrupt images that PIL recognizes but cannot parse (e.g. a BMP with an
+      unsupported pixel depth) are reported as a one-line warning and counted in
+      the summary instead of dumping a stack trace.
 
 ## v6.6.2
 
-### Fixes
-
-- Timestamps are no longer silently invalidated when options come from a tree
-  root's `.picopt.yaml` instead of identical CLI flags: the config check now
-  compares each tree's effective configuration, directory configs included.
-- `timestamps: true` in a tree root's `.picopt.yaml` (e.g. written by `-W -t`)
-  now enables timestamping for that tree without `-t`. CLI flags still win, and
-  `--dry-run` / `--list` still disable stamping.
-- Timestamp invalidation is now per tree and value-based: comment or formatting
-  edits to `.picopt.yaml` files, rewriting them with `-W`, or running with a
-  different set of top paths no longer invalidate stamps — only actual option
-  changes do.
-- Discarding stamps because the configuration changed now prints a warning
-  naming the differing options instead of silently re-optimizing.
-- Verbose timestamps, ignores, after, and memory budget summaries are no longer
-  repeated once per directory when using per-directory `.picopt.yaml` files.
-
-### Migration note
-
-- Existing timestamp files will mismatch once after this upgrade because the
-  stored config changed shape. Either let the first timestamped run re-examine
-  each tree once, or run once with `-N` (`--timestamps-no-check-config`) to keep
-  the old stamps.
+- Fixes
+    - Timestamps are no longer silently invalidated when options come from a
+      tree root's `.picopt.yaml` instead of identical CLI flags: the config
+      check now compares each tree's effective configuration, directory configs
+      included.
+    - `timestamps: true` in a tree root's `.picopt.yaml` (e.g. written by
+      `-W -t`) now enables timestamping for that tree without `-t`. CLI flags
+      still win, and `--dry-run` / `--list` still disable stamping.
+    - Timestamp invalidation is now per tree and value-based: comment or
+      formatting edits to `.picopt.yaml` files, rewriting them with `-W`, or
+      running with a different set of top paths no longer invalidate stamps —
+      only actual option changes do.
+    - Discarding stamps because the configuration changed now prints a warning
+      naming the differing options instead of silently re-optimizing.
+    - Verbose timestamps, ignores, after, and memory budget summaries are no
+      longer repeated once per directory when using per-directory `.picopt.yaml`
+      files.
+- Migration note
+    - Existing timestamp files will mismatch once after this upgrade because the
+      stored config changed shape. Either let the first timestamped run
+      re-examine each tree once, or run once with `-N`
+      (`--timestamps-no-check-config`) to keep the old stamps.
 
 ## v6.6.1
 
-### Fixes
-
-- Animated WebP images with zero-duration frames no longer fail to optimize.
-- The `Optimizing formats` summary is no longer repeated once per directory when
-  using `-W` or per-directory `.picopt.yaml` files.
+- Fixes
+    - Animated WebP images with zero-duration frames no longer fail to optimize.
+    - The `Optimizing formats` summary is no longer repeated once per directory
+      when using `-W` or per-directory `.picopt.yaml` files.
 
 ## v6.6.0
 
-### Fixes
-
-- Files are now replaced atomically: a crash, kill, or full disk mid-write can
-  no longer destroy the original image.
-- Archive members whose optimization fails are kept in the repacked archive;
-  previously they were silently dropped.
-- Nested archives (e.g. a CBZ inside a ZIP) now optimize; previously they always
-  errored.
-- Archives keep their comments and member order through repack; tar symlinks and
-  hardlinks survive; 7z member times are preserved; pre-1980 member times no
-  longer crash conversion; legacy non-UTF8 zip member names are repaired.
-- Archive conversions compress each member by content; converting a rar, tar, or
-  7z no longer leaves every member stored uncompressed.
-- Files that fail to optimize are retried on the next timestamped run;
-  previously directory timestamps covered them and they were skipped forever.
-- One corrupt file inside an archive (e.g. a decompression bomb) no longer
-  aborts the entire run.
-- Boolean options set in config files or environment variables are no longer
-  ignored.
-- Requested archive conversions (e.g. CBR to CBZ) now happen even when the
-  contents are already optimized.
-- Lossless WebPs with large metadata inside archives are no longer misdetected
-  as lossy.
-- Owner-password-restricted PDFs keep their encryption; optimized PDF images
-  keep their color transform; more signed PDFs are detected and refused.
-- svgo no longer strips viewBox, and keeps title/desc metadata unless
-  `--strip-metadata` is given.
-- Conversions discarded for being bigger (and dry runs) are reported as skips,
-  not errors.
-- `--preserve` no longer fails as a non-root user when it cannot change
-  ownership; it still restores permissions and modification time.
-- Temporary files and animated-WebP frame directories are cleaned up when a tool
-  fails or a run is cancelled, instead of leaking to disk.
-- `picopt doctor` no longer reports missing tools and exits nonzero on healthy
-  installs.
-- Symlink loops, unreadable directories, and FIFOs no longer hang or crash the
-  walk.
-- Bad `--memory-limit` and `--after` values abort with clean error messages;
-  timezone-aware `--after` values are honored; lowercase format lists are
-  accepted for `-x` and `-c`.
-- `-I`/`--no-default-ignores` without `-i` no longer aborts at startup.
-- Existing timestamps are invalidated once after upgrading because the timestamp
-  config check gained new keys; the first `-t` run re-examines already-optimized
-  trees.
-
-### Features
-
-- Per-directory `.picopt.yaml` config files: pin any setting to a directory
-  tree. Deeper directories win; environment variables and the command line still
-  override. Editing one re-processes its tree on timestamped runs.
-- Write your invoked options to config files: `-w` to the user config, `-W` to a
-  `.picopt.yaml` in each target directory, `--write-config-file PATH` to an
-  explicit path.
-- Memory-aware scheduling: picopt now estimates the peak memory of large
-  archives and limits how many run at once so big libraries (e.g. multi-GB comic
-  archives) no longer exhaust RAM and get the process OOM-killed. Tune the
-  budget with the new `--memory-limit` option (e.g. `--memory-limit 8G`), which
-  reads as an approximate peak-memory target; the default is two-thirds of
-  detected RAM.
-- Incremental archive re-optimization: when a timestamped archive changes,
-  members older than its timestamp are skipped instead of re-optimized; `-E`
-  disables the member check. Timestamp files found inside archives are consumed
-  and removed on repack.
-
-### Performance
-
-- Archive member format detection runs in parallel workers instead of
-  serializing the scheduler.
-- Solid 7z archives extract in one pass instead of decompressing from the start
-  for every member.
-- The progress pre-scan is skipped in quiet mode, less image data is shipped
-  between processes, and scheduling under a memory limit no longer rescans the
-  whole queue on every completion.
+- Fixes
+    - Files are now replaced atomically: a crash, kill, or full disk mid-write
+      can no longer destroy the original image.
+    - Archive members whose optimization fails are kept in the repacked archive;
+      previously they were silently dropped.
+    - Nested archives (e.g. a CBZ inside a ZIP) now optimize; previously they
+      always errored.
+    - Archives keep their comments and member order through repack; tar symlinks
+      and hardlinks survive; 7z member times are preserved; pre-1980 member
+      times no longer crash conversion; legacy non-UTF8 zip member names are
+      repaired.
+    - Archive conversions compress each member by content; converting a rar,
+      tar, or 7z no longer leaves every member stored uncompressed.
+    - Files that fail to optimize are retried on the next timestamped run;
+      previously directory timestamps covered them and they were skipped
+      forever.
+    - One corrupt file inside an archive (e.g. a decompression bomb) no longer
+      aborts the entire run.
+    - Boolean options set in config files or environment variables are no longer
+      ignored.
+    - Requested archive conversions (e.g. CBR to CBZ) now happen even when the
+      contents are already optimized.
+    - Lossless WebPs with large metadata inside archives are no longer
+      misdetected as lossy.
+    - Owner-password-restricted PDFs keep their encryption; optimized PDF images
+      keep their color transform; more signed PDFs are detected and refused.
+    - svgo no longer strips viewBox, and keeps title/desc metadata unless
+      `--strip-metadata` is given.
+    - Conversions discarded for being bigger (and dry runs) are reported as
+      skips, not errors.
+    - `--preserve` no longer fails as a non-root user when it cannot change
+      ownership; it still restores permissions and modification time.
+    - Temporary files and animated-WebP frame directories are cleaned up when a
+      tool fails or a run is cancelled, instead of leaking to disk.
+    - `picopt doctor` no longer reports missing tools and exits nonzero on
+      healthy installs.
+    - Symlink loops, unreadable directories, and FIFOs no longer hang or crash
+      the walk.
+    - Bad `--memory-limit` and `--after` values abort with clean error messages;
+      timezone-aware `--after` values are honored; lowercase format lists are
+      accepted for `-x` and `-c`.
+    - `-I`/`--no-default-ignores` without `-i` no longer aborts at startup.
+    - Existing timestamps are invalidated once after upgrading because the
+      timestamp config check gained new keys; the first `-t` run re-examines
+      already-optimized trees.
+- Features
+    - Per-directory `.picopt.yaml` config files: pin any setting to a directory
+      tree. Deeper directories win; environment variables and the command line
+      still override. Editing one re-processes its tree on timestamped runs.
+    - Write your invoked options to config files: `-w` to the user config, `-W`
+      to a `.picopt.yaml` in each target directory, `--write-config-file PATH`
+      to an explicit path.
+    - Memory-aware scheduling: picopt now estimates the peak memory of large
+      archives and limits how many run at once so big libraries (e.g. multi-GB
+      comic archives) no longer exhaust RAM and get the process OOM-killed. Tune
+      the budget with the new `--memory-limit` option (e.g.
+      `--memory-limit 8G`), which reads as an approximate peak-memory target;
+      the default is two-thirds of detected RAM.
+    - Incremental archive re-optimization: when a timestamped archive changes,
+      members older than its timestamp are skipped instead of re-optimized; `-E`
+      disables the member check. Timestamp files found inside archives are
+      consumed and removed on repack.
+- Performance
+    - Archive member format detection runs in parallel workers instead of
+      serializing the scheduler.
+    - Solid 7z archives extract in one pass instead of decompressing from the
+      start for every member.
+    - The progress pre-scan is skipped in quiet mode, less image data is shipped
+      between processes, and scheduling under a memory limit no longer rescans
+      the whole queue on every completion.
 
 ## v6.5.2
 
