@@ -1,6 +1,5 @@
 __pycache__
 .*cache/
-.circleci
 .claude
 .git
 .venv
@@ -15,6 +14,7 @@ bun.lock
 dist
 node_modules
 package-lock.json
+tasks
 test-results
 tests/**/*.json
 tests/**/*.xml

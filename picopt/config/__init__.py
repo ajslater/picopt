@@ -157,7 +157,7 @@ def _parse_memory_str(value: object) -> int | None:
     """
     Parse a memory size (int bytes or a K/M/G/T-suffixed string) to bytes.
 
-    Returns None for unparseable values so the caller can reject them
+    Returns None for unparsable values so the caller can reject them
     instead of silently falling back to auto-detection.
     """
     if isinstance(value, (int, float)):
@@ -305,7 +305,7 @@ class PicoptConfig(ConfigHandlers):
             try:
                 after_dt = parse(after)
             except (ValueError, OverflowError) as exc:
-                msg = f"Unparseable --after value {after!r}: {exc}"
+                msg = f"Unparsable --after value {after!r}: {exc}"
                 raise ConfigError(msg) from exc
             # datetime.timestamp() honors an explicit timezone; naive
             # values are interpreted as local time, like mktime did.
@@ -326,7 +326,7 @@ class PicoptConfig(ConfigHandlers):
         raw = config["memory_limit"].get()
         limit = _parse_memory_str(raw)
         if limit is None:
-            msg = f"Unparseable --memory-limit value: {raw!r}"
+            msg = f"Unparsable --memory-limit value: {raw!r}"
             raise ConfigError(msg)
         if limit <= 0:
             limit = int(_detect_total_ram() * _DEFAULT_MEMORY_FRACTION)

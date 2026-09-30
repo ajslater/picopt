@@ -17,7 +17,7 @@ __all__ = ()
 
 
 @pytest.fixture(autouse=True)
-def _isolate(monkeypatch, tmp_path) -> None:  # pyright: ignore[reportUnusedFunction]
+def _isolate(monkeypatch, tmp_path) -> None:
     """Scrub env and isolate the user config so defaults really are defaults."""
     for key in list(os.environ):
         if key.startswith("PICOPT"):

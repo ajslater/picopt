@@ -334,8 +334,8 @@ class WebPMuxAnimatedLossless(WebPAnimatedLossless):
     def webpmux_pack_args(self) -> tuple[str, ...]:
         """Args for external tool."""
         out: list[str] = []
-        for index, dur in self._durations.items():
-            out.extend(["-frame", str(self._frame_path(index)), f"+{dur}"])
+        for index, duration in self._durations.items():
+            out.extend(["-frame", str(self._frame_path(index)), f"+{duration}"])
         out.extend(["-loop", "0", "-o", "-"])
         return tuple(out)
 

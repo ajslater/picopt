@@ -82,7 +82,7 @@ class ArchiveInfo:
                     self._is_dir = self.info.isdir()
                 case SevenZipInfo():
                     self._is_dir = bool(self.info.is_directory)
-        return self._is_dir  # ty: ignore[invalid-return-type]
+        return self._is_dir
 
     def datetime(self) -> datetime | None:
         """Return mtime as a datetime."""

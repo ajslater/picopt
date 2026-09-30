@@ -1,6 +1,5 @@
 __pycache__
 .*cache
-.circleci
 .claude
 .coverage*
 .DS_Store
