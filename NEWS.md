@@ -1,5 +1,10 @@
 # 📰 Picopt News
 
+## v6.8.2
+
+- Dep
+    - Update confuse dependency
+
 ## v6.8.1
 
 - Fixes
