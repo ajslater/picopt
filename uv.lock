@@ -1875,7 +1875,7 @@ test = [
 
 [package.metadata]
 requires-dist = [
-    { name = "confuse", specifier = "~=2.3.0" },
+    { name = "confuse", specifier = "~=2.3" },
     { name = "defusedxml", specifier = ">=0.7,<1.0" },
     { name = "filetype", specifier = "~=1.2" },
     { name = "humanize", specifier = "~=4.12" },
