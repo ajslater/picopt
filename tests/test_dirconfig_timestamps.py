@@ -19,7 +19,7 @@ TIMESTAMPS_FN = f".{PROGRAM_NAME}_treestamps.yaml"
 
 
 @pytest.fixture(autouse=True)
-def _isolate(monkeypatch, tmp_path) -> Iterator[None]:  # pyright: ignore[reportUnusedFunction]
+def _isolate(monkeypatch, tmp_path) -> Iterator[None]:
     """Scrub env, isolate the user config, and build a fresh tree."""
     for key in list(os.environ):
         if key.startswith("PICOPT"):

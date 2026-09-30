@@ -410,7 +410,7 @@ class Pdf(ContainerHandler):
         try:
             # Preserve /DecodeParms (e.g. /ColorTransform): the optimized
             # bytes are still a JPEG with the same color encoding, and
-            # dropping the parms can corrupt colors in some readers.
+            # dropping them can corrupt colors in some readers.
             decode_parms = obj.get(pikepdf.Name.DecodeParms, None)
             obj.write(
                 optimized, filter=pikepdf.Name.DCTDecode, decode_parms=decode_parms

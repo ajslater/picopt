@@ -31,7 +31,7 @@ def _pixels(path: Path) -> bytes:
 
 
 @pytest.fixture(autouse=True)
-def _setup_and_teardown() -> Iterator[None]:  # pyright: ignore[reportUnusedFunction]
+def _setup_and_teardown() -> Iterator[None]:
     shutil.rmtree(TMP_ROOT, ignore_errors=True)
     TMP_ROOT.mkdir(parents=True)
     yield

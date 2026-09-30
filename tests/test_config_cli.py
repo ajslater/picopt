@@ -52,11 +52,11 @@ class TestConfigLayering:
 class TestConfigValidation:
     """Bad values abort at startup with a clean error, not deep in the run."""
 
-    def test_unparseable_memory_limit_aborts(self) -> None:
+    def test_unparsable_memory_limit_aborts(self) -> None:
         with pytest.raises(ConfigError, match="memory-limit"):
             _get_settings("--memory-limit", "banana")
 
-    def test_unparseable_after_aborts(self) -> None:
+    def test_unparsable_after_aborts(self) -> None:
         with pytest.raises(ConfigError, match="after"):
             _get_settings("-A", "not/a/date/at all")
 

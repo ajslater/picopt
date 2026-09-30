@@ -158,8 +158,8 @@ reportImplicitStringConcatenation = false
 
 [tool.codespell]
 builtin = "clear,code,rare"
-ignore-words-list = "coverd,crate,deque,falsy,iff,ro,searchd,thead,versio,wan,warmup,ws"
-skip = "*.pdf,*.svg,*~,./bun.lock,./dist,./node_modules,./package-lock.json,./package.json,./test-results,./uv.lock,/uv.lock,__pycache__,bun.lock,dist,htmlcov,node_modules,package.json,test-results,typings,uv.lock"
+ignore-words-list = "coverd,crate,deque,falsy,flate,iff,ro,searchd,thead,versio,wan,warmup,ws"
+skip = "*.pdf,*.svg,*~,./bun.lock,./dist,./node_modules,./package-lock.json,./package.json,./tasks,./test-results,./uv.lock,/uv.lock,__pycache__,bun.lock,dist,htmlcov,node_modules,package.json,test-results,typings,uv.lock"
 
 [tool.complexipy]
 failed = true

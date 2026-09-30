@@ -85,7 +85,7 @@ class PathInfo:
             if default is self._UNSET:
                 msg = f"PathInfo requires a {attr} argument."
                 raise ValueError(msg)
-            return default() if callable(default) else default  # ty: ignore[call-top-callable]
+            return default() if callable(default) else default
 
         self.top_path: Path = cast("Path", pick(top_path, "top_path"))
         self.convert: bool = cast("bool", pick(convert, "convert"))
