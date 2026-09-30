@@ -158,27 +158,12 @@ reportImplicitStringConcatenation = false
 
 [tool.codespell]
 builtin = "clear,code,rare"
-check-hidden = true
-ignore-words-list = "coverd,crate,falsy,iff,ro,searchd,thead,versio,wan,warmup,ws"
-skip = "*.svg,*~,.*,.*/*,./bun.lock,./dist,./node_modules,./package-lock.json,./package.json,./test-results,./uv.lock,/uv.lock,__pycache__,bun.lock,dist,htmlcov,node_modules,package.json,test-results,typings,uv.lock"
+ignore-words-list = "coverd,crate,deque,falsy,iff,ro,searchd,thead,versio,wan,warmup,ws"
+skip = "*.pdf,*.svg,*~,./bun.lock,./dist,./node_modules,./package-lock.json,./package.json,./test-results,./uv.lock,/uv.lock,__pycache__,bun.lock,dist,htmlcov,node_modules,package.json,test-results,typings,uv.lock"
 
 [tool.complexipy]
 failed = true
 paths = ["picopt", "tests"]
-exclude = [
-  "**/__pycache__",
-  "*/.*",
-  ".cache",
-  ".git",
-  ".github",
-  ".venv",
-  "frontend",
-  "node_modules",
-  "site",
-  "test-results",
-  "typings",
-  "vulture_ignorelist.py"
-]
 
 [tool.coverage.html]
 directory = "test-results/coverage"
@@ -354,18 +339,14 @@ exclude = [
 
 [tool.vulture]
 exclude = [
-  "**/.*",
-  "**/__pycache__",
-  "**/node_modules",
-  "*/.*",
-  "*/__pycache__*",
-  "*/node_modules*",
-  "dist/",
-  "frontend/",
-  "site",
-  "test-results/",
-  "test_results/",
-  "typings/"
+  "*/.venv/*",
+  "*/__pycache__/*",
+  "*/dist/*",
+  "*/frontend/*",
+  "*/node_modules/*",
+  "*/site/*",
+  "*/test-results/*",
+  "*/typings/*"
 ]
 min_confidence = 61
 sort_by_size = true
