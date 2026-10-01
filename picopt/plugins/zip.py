@@ -154,6 +154,14 @@ class Zip(ArchiveHandler):
         archiveinfo = path_info.archiveinfo
         zipinfo = archiveinfo.to_zipinfo()
         _fix_zip_filename_encoding(zipinfo)
+        if zipinfo.is_dir():
+            # Header-only entry. mkdir() writes the header as given, unlike
+            # writestr(), so clear what a source entry's data stream left.
+            zipinfo.compress_type = ZIP_STORED
+            zipinfo.flag_bits = 0
+            zipinfo.CRC = zipinfo.compress_size = zipinfo.file_size = 0
+            archive.mkdir(zipinfo)
+            return
         if not archiveinfo.is_native_zipinfo or (
             not self.config.keep_metadata and zipinfo.compress_type == ZIP_STORED
         ):

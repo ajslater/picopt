@@ -3,6 +3,7 @@
 from datetime import UTC, datetime
 from operator import attrgetter
 from pathlib import Path
+from stat import S_IFDIR
 from tarfile import DIRTYPE, REGTYPE, SYMTYPE, TarInfo
 from typing import Final, TypeAlias, assert_never
 from zipfile import ZipInfo
@@ -17,6 +18,8 @@ _DATETIME_ATTRGETTER = attrgetter(
 # The zip format cannot represent timestamps before 1980; zipfile raises on
 # them. Clamp older (or missing) member times to the epoch zipfile accepts.
 _ZIP_EPOCH: Final = (1980, 1, 1, 0, 0, 0)
+# drwxr-xr-x in the unix high word, plus the MS-DOS directory flag.
+_ZIP_DIR_ATTR: Final = ((S_IFDIR | 0o755) << 16) | 0x10
 ArchiveInfoType: TypeAlias = TarInfo | RarInfo | ZipInfo | SevenZipInfo
 
 
@@ -131,21 +134,23 @@ class ArchiveInfo:
         """Convert to ZipInfo."""
         match src := self.info:
             case ZipInfo():
-                info = src
+                return src
             case RarInfo():
                 filename = self.filename() or "NoName"
-                if date_time := src.date_time:
-                    clamped = max(tuple(date_time), _ZIP_EPOCH)
-                    info = ZipInfo(filename=filename, date_time=clamped)
-                else:
-                    info = ZipInfo(filename=filename)
+                date_time = tuple(src.date_time) if src.date_time else _ZIP_EPOCH
             case TarInfo() | SevenZipInfo():
+                filename = self.filename()
                 dttm = self.datetime()
                 date_time = _DATETIME_ATTRGETTER(dttm)[:6] if dttm else _ZIP_EPOCH
-                date_time = max(date_time, _ZIP_EPOCH)
-                info = ZipInfo(filename=self.filename(), date_time=date_time)
             case _:
                 assert_never(src)
+        date_time = max(date_time, _ZIP_EPOCH)
+        if not self.is_dir():
+            return ZipInfo(filename=filename, date_time=date_time)
+        # Tar and 7z directory names lack the trailing slash that marks a
+        # zip directory; without it the entry extracts as an empty file.
+        info = ZipInfo(filename=filename.rstrip("/") + "/", date_time=date_time)
+        info.external_attr = _ZIP_DIR_ATTR
         return info
 
     def to_tarinfo(self) -> TarInfo:
