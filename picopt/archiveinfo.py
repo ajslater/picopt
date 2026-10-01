@@ -1,5 +1,6 @@
 """Archive Info Converter."""
 
+from dataclasses import dataclass
 from datetime import UTC, datetime
 from operator import attrgetter
 from pathlib import Path
@@ -20,10 +21,19 @@ _DATETIME_ATTRGETTER = attrgetter(
 _ZIP_EPOCH: Final = (1980, 1, 1, 0, 0, 0)
 # drwxr-xr-x in the unix high word, plus the MS-DOS directory flag.
 _ZIP_DIR_ATTR: Final = ((S_IFDIR | 0o755) << 16) | 0x10
-# rw-r--r-- for converted files that bring no usable unix mode: 7z and rar
-# members, and tar links.
+# rw-r--r-- for converted files that bring no usable unix mode: rar members,
+# 7z members without one, and links.
 _DEFAULT_FILE_MODE: Final = 0o644
 ArchiveInfoType: TypeAlias = TarInfo | RarInfo | ZipInfo | SevenZipInfo
+
+
+@dataclass
+class SevenZipMemberInfo(SevenZipInfo):
+    """py7zr's FileInfo plus the member attributes its list() drops."""
+
+    # Raw 7z attributes: Windows flags, and a unix type and mode when present.
+    attributes: int | None = None
+    posix_mode: int | None = None
 
 
 class SevenZipInfoDefaults:
@@ -133,6 +143,16 @@ class ArchiveInfo:
                     assert_never(info)
         return self._mtime
 
+    def _file_mode(self) -> int:
+        """Return a regular member's own permission bits, else rw-r--r--."""
+        match src := self.info:
+            case TarInfo() if src.isreg():
+                return S_IMODE(src.mode)
+            case SevenZipMemberInfo(is_file=True, posix_mode=int() as mode):
+                return mode
+            case _:
+                return _DEFAULT_FILE_MODE
+
     def to_zipinfo(self) -> ZipInfo:
         """Convert to ZipInfo."""
         match src := self.info:
@@ -150,13 +170,8 @@ class ArchiveInfo:
         date_time = max(date_time, _ZIP_EPOCH)
         if not self.is_dir():
             # Without a mode ZipFile writes ?rw------- (0o600, no file type).
-            mode = (
-                S_IMODE(src.mode)
-                if isinstance(src, TarInfo) and src.isreg()
-                else _DEFAULT_FILE_MODE
-            )
             info = ZipInfo(filename=filename, date_time=date_time)
-            info.external_attr = (S_IFREG | mode) << 16
+            info.external_attr = (S_IFREG | self._file_mode()) << 16
             return info
         # Tar and 7z directory names lack the trailing slash that marks a
         # zip directory; without it the entry extracts as an empty file.
