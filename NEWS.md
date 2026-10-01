@@ -1,5 +1,18 @@
 # 📰 Picopt News
 
+## v6.9.0
+
+- Fixes
+    - Converting tar or 7z to zip or cbz, or repacking 7z or cb7, no longer
+      turns directories into empty files that break extraction.
+    - Converted and repacked archives no longer make files rw-------. Tar and 7z
+      permissions and 7z symlinks are kept; rar files get rw-r--r--.
+- Changes
+    - Require Python 3.11.
+- Dep
+    - Update treestamps dependency to 5.1.1.
+    - Require py7zr 1.1.
+
 ## v6.8.2
 
 - Dep

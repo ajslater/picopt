@@ -9,7 +9,7 @@ from typing import TYPE_CHECKING
 from humanize import naturalsize
 from rich.table import Table
 
-from picopt.log.styles import MARKS
+from picopt.log.styles import MARKS, MarkKind
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -107,36 +107,40 @@ def _counts_table(stats: Stats) -> Table:
     table = Table(title="Summary", show_header=False, title_style="bold")
     table.add_column("Metric")
     table.add_column("Count", justify="right")
-    table.add_row("Skipped", str(stats.skipped), style=MARKS["skipped"].style)
+    table.add_row("Skipped", str(stats.skipped), style=MARKS[MarkKind.SKIPPED].style)
     if stats.timestamps_active:
         table.add_row(
             "Skipped (timestamp)",
             str(stats.skipped_timestamp),
-            style=MARKS["skipped_timestamp"].style,
+            style=MARKS[MarkKind.SKIPPED_TIMESTAMP].style,
         )
     if stats.copied:
         table.add_row(
-            "Copied unchanged", str(stats.copied), style=MARKS["copied"].style
+            "Copied unchanged", str(stats.copied), style=MARKS[MarkKind.COPIED].style
         )
-    table.add_row("Saved", str(len(stats.saved)), style=MARKS["saved"].style)
+    table.add_row("Saved", str(len(stats.saved)), style=MARKS[MarkKind.SAVED].style)
     if stats.converted:
         table.add_row(
-            "Converted", str(len(stats.converted)), style=MARKS["converted"].style
+            "Converted",
+            str(len(stats.converted)),
+            style=MARKS[MarkKind.CONVERTED].style,
         )
     if stats.lost:
-        table.add_row("Lost", str(len(stats.lost)), style=MARKS["lost"].style)
+        table.add_row("Lost", str(len(stats.lost)), style=MARKS[MarkKind.LOST].style)
     if stats.dry_run_active:
         table.add_row(
             "Would optimize (dry run)",
             str(len(stats.dry_run)),
-            style=MARKS["dry_run"].style,
+            style=MARKS[MarkKind.DRY_RUN].style,
         )
     if stats.warnings:
         table.add_row(
-            "Warnings", str(len(stats.warnings)), style=MARKS["warning"].style
+            "Warnings", str(len(stats.warnings)), style=MARKS[MarkKind.WARNING].style
         )
     if stats.errors:
-        table.add_row("Errors", str(len(stats.errors)), style=MARKS["error"].style)
+        table.add_row(
+            "Errors", str(len(stats.errors)), style=MARKS[MarkKind.ERROR].style
+        )
     return table
 
 
@@ -171,8 +175,8 @@ def _bytes_summary(stats: Stats, *, dry_run: bool) -> str:
 def render(stats: Stats, console: Console, *, dry_run: bool = False) -> None:
     """Print the summary to the given Rich console."""
     console.print(_counts_table(stats))
-    _print_pairs(console, "Warnings", stats.warnings, MARKS["warning"].style)
-    _print_pairs(console, "Errors", stats.errors, MARKS["error"].style)
+    _print_pairs(console, "Warnings", stats.warnings, MARKS[MarkKind.WARNING].style)
+    _print_pairs(console, "Errors", stats.errors, MARKS[MarkKind.ERROR].style)
     summary_line = _bytes_summary(stats, dry_run=dry_run)
     console.print(summary_line, highlight=False)
     if dry_run:

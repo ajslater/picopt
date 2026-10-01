@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import threading
 from collections import defaultdict, deque
-from typing import TYPE_CHECKING, Final
+from typing import TYPE_CHECKING, Final, Self
 
 from rich.progress import (
     MofNCompleteColumn,
@@ -16,9 +16,9 @@ from rich.progress import (
     TimeElapsedColumn,
 )
 from rich.text import Text
-from typing_extensions import Self, override
+from typing_extensions import override
 
-from picopt.log.styles import MARKS
+from picopt.log.styles import MARKS, MarkKind
 
 if TYPE_CHECKING:
     from types import TracebackType
@@ -36,15 +36,15 @@ __all__ = (
 # Marks that count as a finished file and advance the bar.
 _FILE_MARKS: Final = frozenset(
     {
-        "skipped",
-        "skipped_timestamp",
-        "copied",
-        "lost",
-        "dry_run",
-        "saved",
-        "converted",
-        "consumed_timestamp",
-        "error",
+        MarkKind.SKIPPED,
+        MarkKind.SKIPPED_TIMESTAMP,
+        MarkKind.COPIED,
+        MarkKind.LOST,
+        MarkKind.DRY_RUN,
+        MarkKind.SAVED,
+        MarkKind.CONVERTED,
+        MarkKind.CONSUMED_TIMESTAMP,
+        MarkKind.ERROR,
     }
 )
 
@@ -116,7 +116,7 @@ class ProgressContext:
         if self._enabled and self._progress is not None:
             self._progress.__exit__(exc_type, exc_val, exc_tb)
 
-    def _mark(self, kind: str) -> None:
+    def _mark(self, kind: MarkKind) -> None:
         if (
             not self._enabled
             or self._progress is None
@@ -131,47 +131,47 @@ class ProgressContext:
 
     def mark_skipped(self) -> None:
         """Mark a file as skipped (ignored, not handled, etc.)."""
-        self._mark("skipped")
+        self._mark(MarkKind.SKIPPED)
 
     def mark_skipped_timestamp(self) -> None:
         """Mark a file as skipped because its timestamp is older than recorded."""
-        self._mark("skipped_timestamp")
+        self._mark(MarkKind.SKIPPED_TIMESTAMP)
 
     def mark_copied(self) -> None:
         """Mark archive contents copied through unchanged."""
-        self._mark("copied")
+        self._mark(MarkKind.COPIED)
 
     def mark_lost(self) -> None:
         """Mark a file whose optimized result was bigger than the original."""
-        self._mark("lost")
+        self._mark(MarkKind.LOST)
 
     def mark_dry_run(self) -> None:
         """Mark a file as no-op on dry run."""
-        self._mark("dry_run")
+        self._mark(MarkKind.DRY_RUN)
 
     def mark_saved(self) -> None:
         """Mark a successfully optimized file (smaller than original)."""
-        self._mark("saved")
+        self._mark(MarkKind.SAVED)
 
     def mark_converted(self) -> None:
         """Mark a successfully converted file."""
-        self._mark("converted")
+        self._mark(MarkKind.CONVERTED)
 
     def mark_packed(self) -> None:
         """Mark a file packed into an archive."""
-        self._mark("packed")
+        self._mark(MarkKind.PACKED)
 
     def mark_consumed_timestamp(self) -> None:
         """Mark a timestamp consumed from inside an archive."""
-        self._mark("consumed_timestamp")
+        self._mark(MarkKind.CONSUMED_TIMESTAMP)
 
     def mark_warning(self) -> None:
         """Mark a non-fatal issue (no bar advance)."""
-        self._mark("warning")
+        self._mark(MarkKind.WARNING)
 
     def mark_error(self) -> None:
         """Mark a fatal error processing a file."""
-        self._mark("error")
+        self._mark(MarkKind.ERROR)
 
 
 def make_progress(

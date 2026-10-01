@@ -165,6 +165,7 @@ class ContainerHandler(Handler, ABC):
             logger.info(f"Repacking {self.path_info.full_output_name()}…")
         return self.pack_into()
 
+    @override
     def __getstate__(self) -> dict[str, Any]:
         """Drop the skipper for worker handoff; it rebuilds lazily."""
         state = self.__dict__.copy()

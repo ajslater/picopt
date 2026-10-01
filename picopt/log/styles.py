@@ -24,6 +24,7 @@ so longtime users see the same colors for the same outcomes:
 from __future__ import annotations
 
 from dataclasses import dataclass
+from enum import StrEnum, auto
 from types import MappingProxyType
 from typing import TYPE_CHECKING, Final
 
@@ -34,7 +35,24 @@ __all__ = (
     "LEVEL_STYLES",
     "MARKS",
     "Mark",
+    "MarkKind",
 )
+
+
+class MarkKind(StrEnum):
+    """Per-event progress mark kinds; values are the lowercase names."""
+
+    SKIPPED = auto()
+    SKIPPED_TIMESTAMP = auto()
+    COPIED = auto()
+    LOST = auto()
+    DRY_RUN = auto()
+    SAVED = auto()
+    CONVERTED = auto()
+    PACKED = auto()
+    CONSUMED_TIMESTAMP = auto()
+    WARNING = auto()
+    ERROR = auto()
 
 
 @dataclass(frozen=True, slots=True)
@@ -48,37 +66,37 @@ class Mark:
 # Per-outcome marks. Keys mirror the printer-method names they replace,
 # so call sites read naturally (``progress.mark_saved()`` matches the old
 # ``printer.saved(...)``).
-MARKS: Final[Mapping[str, Mark]] = MappingProxyType(
+MARKS: Final[Mapping[MarkKind, Mark]] = MappingProxyType(
     {
         # Per-file marks (advance the progress bar).
-        "skipped": Mark(".", "bright_black"),
-        "skipped_timestamp": Mark(".", "bright_green dim bold"),
-        "copied": Mark(".", "green"),
-        "lost": Mark(".", "bright_blue bold"),
-        "dry_run": Mark(".", "bright_black bold"),
-        "saved": Mark(".", "bright_white"),
-        "converted": Mark(".", "bright_cyan"),
-        "packed": Mark(".", "white"),
-        "consumed_timestamp": Mark(".", "magenta"),
-        "warning": Mark("!", "bright_yellow"),
-        "error": Mark("X", "bright_red"),
+        MarkKind.SKIPPED: Mark(".", "bright_black"),
+        MarkKind.SKIPPED_TIMESTAMP: Mark(".", "bright_green dim bold"),
+        MarkKind.COPIED: Mark(".", "green"),
+        MarkKind.LOST: Mark(".", "bright_blue bold"),
+        MarkKind.DRY_RUN: Mark(".", "bright_black bold"),
+        MarkKind.SAVED: Mark(".", "bright_white"),
+        MarkKind.CONVERTED: Mark(".", "bright_cyan"),
+        MarkKind.PACKED: Mark(".", "white"),
+        MarkKind.CONSUMED_TIMESTAMP: Mark(".", "magenta"),
+        MarkKind.WARNING: Mark("!", "bright_yellow"),
+        MarkKind.ERROR: Mark("X", "bright_red"),
     }
 )
 
 
-def _style(key: str) -> str:
-    return MARKS[key].style
+def _style(kind: MarkKind) -> str:
+    return MARKS[kind].style
 
 
 # Loguru level → Rich style. Levels that correspond to a per-event mark
 # share that mark's style so log lines and progress chars match.
 LEVEL_STYLES: Final[Mapping[str, str]] = MappingProxyType(
     {
-        "DEBUG": _style("skipped"),
+        "DEBUG": _style(MarkKind.SKIPPED),
         "INFO": "cyan",
-        "SUCCESS": _style("saved"),
-        "WARNING": _style("warning"),
-        "ERROR": _style("error"),
-        "CRITICAL": _style("error"),
+        "SUCCESS": _style(MarkKind.SAVED),
+        "WARNING": _style(MarkKind.WARNING),
+        "ERROR": _style(MarkKind.ERROR),
+        "CRITICAL": _style(MarkKind.ERROR),
     }
 )

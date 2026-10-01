@@ -6,6 +6,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
 from treestamps import Treestamps
+from typing_extensions import override
 
 if TYPE_CHECKING:
     from treestamps.tree.config import TreestampsConfig
@@ -38,6 +39,7 @@ class ArchiveStamps:
         self._tree: Treestamps | None = None
         self.filename: str = Treestamps.get_filename(tree_config.program_name)
 
+    @override
     def __getstate__(self) -> dict[str, Any]:
         """Drop the lazily built tree; it holds unpicklable ruamel state."""
         state = self.__dict__.copy()
