@@ -3,10 +3,8 @@
 ## v6.9.0
 
 - Fixes
-    - Converting a tar or 7z archive to zip or cbz kept its directories as
-      directories. Previously each became an empty regular file beside its own
-      contents, so the converted archive could not be fully extracted. Directory
-      entries are now header-only in every repacked zip.
+    - Converting tar or 7z to zip or cbz, or repacking 7z or cb7, no longer
+      turns directories into empty files that break extraction.
 - Changes
     - Require Python 3.11.
 - Dep

@@ -1,5 +1,6 @@
 """Test archive metadata fidelity through repack: comments, order, times, compression."""
 
+import os
 import shutil
 from collections.abc import Iterator
 from datetime import UTC, datetime
@@ -31,6 +32,7 @@ MTIME_TOLERANCE_SECS = 2.0
 DIR_NAME = "pages"
 DIR_TEXT_FN = f"{DIR_NAME}/notes.txt"
 ZIP_DATA_DESCRIPTOR_FLAG = 0x08
+DIR_MODE = 0o755
 
 
 def _run_picopt(*args: str) -> None:
@@ -224,6 +226,34 @@ class TestArchiveFidelity:
             assert (
                 abs(info.creationtime.timestamp() - KNOWN_MTIME) < MTIME_TOLERANCE_SECS
             )
+
+    def test_seven_zip_directory_survives_repack(self, tmp_path: Path) -> None:
+        """A 7z directory member repacks as a directory, not an empty file."""
+        src_dir = tmp_path / DIR_NAME
+        src_dir.mkdir()
+        shutil.copy(IMAGES_DIR / PNG_FN, src_dir / PNG_FN)
+        os.utime(src_dir, (KNOWN_MTIME, KNOWN_MTIME))
+        sz_path = TMP_ROOT / "dirs.7z"
+        with SevenZipFile(sz_path, "w") as szf:
+            szf.writeall(src_dir, DIR_NAME)
+        orig_size = sz_path.stat().st_size
+
+        _run_picopt("-rvx", "7Z,PNG")
+
+        assert sz_path.stat().st_size < orig_size
+        out_dir = TMP_ROOT / "extracted"
+        with SevenZipFile(sz_path, "r") as szf:
+            dirinfo = szf.list()[0]
+            assert dirinfo.filename == DIR_NAME
+            assert dirinfo.is_directory
+            assert dirinfo.creationtime is not None
+            assert (
+                abs(dirinfo.creationtime.timestamp() - KNOWN_MTIME)
+                < MTIME_TOLERANCE_SECS
+            )
+            assert szf.files[0].posix_mode == DIR_MODE
+            szf.extract(out_dir)
+        assert (out_dir / DIR_NAME / PNG_FN).is_file()
 
 
 class TestZipFilenameEncoding:
