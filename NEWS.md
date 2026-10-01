@@ -5,10 +5,8 @@
 - Fixes
     - Converting tar or 7z to zip or cbz, or repacking 7z or cb7, no longer
       turns directories into empty files that break extraction.
-    - Files converted from tar or 7z to zip or cbz keep their permissions; those
-      from rar get rw-r--r--, not rw-------.
-    - Repacking 7z or cb7 keeps member permissions and symlinks instead of
-      making every file a rw------- regular file.
+    - Converted and repacked archives no longer make files rw-------. Tar and 7z
+      permissions and 7z symlinks are kept; rar files get rw-r--r--.
 - Changes
     - Require Python 3.11.
 - Dep
