@@ -21,6 +21,7 @@ from py7zr.helpers import ArchiveTimestamp
 from py7zr.io import BytesIOFactory
 from typing_extensions import override
 
+from picopt.archiveinfo import SevenZipMemberInfo
 from picopt.plugins.base import (
     ArchiveHandler,
     Detector,
@@ -119,7 +120,16 @@ class SevenZip(ArchiveHandler):
     @override
     @staticmethod
     def _archive_infolist(archive):
-        return archive.list()
+        # list() drops each member's attributes, which hold its unix type and
+        # mode; carry them over from the parallel files list.
+        return tuple(
+            SevenZipMemberInfo(
+                **vars(info),
+                attributes=file.file_properties().get("attributes"),
+                posix_mode=file.posix_mode,
+            )
+            for info, file in zip(archive.list(), archive.files, strict=True)
+        )
 
     @override
     def _archive_readfile(self, archive, archiveinfo) -> bytes:
@@ -160,21 +170,26 @@ class SevenZip(ArchiveHandler):
             # py7zr writes directory entries only from real directories;
             # writef() would add an empty regular file instead.
             with TemporaryDirectory() as tmp_dir:
-                # drwxr-xr-x, as picopt writes directories into zips.
+                # drwxr-xr-x, as picopt writes directories into zips, unless
+                # the source attributes restored below replace it.
                 Path(tmp_dir).chmod(0o755)
                 archive.write(tmp_dir, arcname=arcname)
         else:
             archive.writef(BytesIO(path_info.data()), arcname=arcname)
         # py7zr stamps every member with now() or the temporary directory's
-        # times and offers no override; restore the original member mtime on
-        # the header entry it just appended.
+        # times, gives every file rw-------, and offers no override; restore
+        # the original member's mtime and attributes on the header entry it
+        # just appended.
+        file_info = archive.header.files_info.files[-1]
         mtime = archiveinfo.mtime()
-        if mtime is not None and archive.header.files_info.files:
+        if mtime is not None:
             stamp = ArchiveTimestamp.from_datetime(mtime)
-            file_info = archive.header.files_info.files[-1]
             file_info["creationtime"] = stamp
             file_info["lastwritetime"] = stamp
             file_info["lastaccesstime"] = stamp
+        info = archiveinfo.info
+        if isinstance(info, SevenZipMemberInfo) and info.attributes is not None:
+            file_info["attributes"] = info.attributes
 
 
 class Cb7(SevenZip):
