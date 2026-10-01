@@ -3,7 +3,7 @@
 from datetime import UTC, datetime
 from operator import attrgetter
 from pathlib import Path
-from stat import S_IFDIR
+from stat import S_IFDIR, S_IFREG, S_IMODE
 from tarfile import DIRTYPE, REGTYPE, SYMTYPE, TarInfo
 from typing import Final, TypeAlias, assert_never
 from zipfile import ZipInfo
@@ -20,6 +20,9 @@ _DATETIME_ATTRGETTER = attrgetter(
 _ZIP_EPOCH: Final = (1980, 1, 1, 0, 0, 0)
 # drwxr-xr-x in the unix high word, plus the MS-DOS directory flag.
 _ZIP_DIR_ATTR: Final = ((S_IFDIR | 0o755) << 16) | 0x10
+# rw-r--r-- for converted files that bring no usable unix mode: 7z and rar
+# members, and tar links.
+_DEFAULT_FILE_MODE: Final = 0o644
 ArchiveInfoType: TypeAlias = TarInfo | RarInfo | ZipInfo | SevenZipInfo
 
 
@@ -146,7 +149,15 @@ class ArchiveInfo:
                 assert_never(src)
         date_time = max(date_time, _ZIP_EPOCH)
         if not self.is_dir():
-            return ZipInfo(filename=filename, date_time=date_time)
+            # Without a mode ZipFile writes ?rw------- (0o600, no file type).
+            mode = (
+                S_IMODE(src.mode)
+                if isinstance(src, TarInfo) and src.isreg()
+                else _DEFAULT_FILE_MODE
+            )
+            info = ZipInfo(filename=filename, date_time=date_time)
+            info.external_attr = (S_IFREG | mode) << 16
+            return info
         # Tar and 7z directory names lack the trailing slash that marks a
         # zip directory; without it the entry extracts as an empty file.
         info = ZipInfo(filename=filename.rstrip("/") + "/", date_time=date_time)
