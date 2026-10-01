@@ -10,7 +10,7 @@
 - Changes
     - Require Python 3.11.
 - Dep
-    - Update treestamps dependency to 5.1.0.
+    - Update treestamps dependency to 5.1.1.
 
 ## v6.8.2
 
