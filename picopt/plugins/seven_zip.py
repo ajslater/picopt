@@ -10,7 +10,9 @@ installed.
 from __future__ import annotations
 
 from io import BytesIO
+from pathlib import Path
 from sys import maxsize
+from tempfile import TemporaryDirectory
 from types import MappingProxyType
 from typing import TYPE_CHECKING, Any
 
@@ -31,8 +33,6 @@ from picopt.plugins.base import (
 from picopt.plugins.base.format import FileFormat
 
 if TYPE_CHECKING:
-    from pathlib import Path
-
     from picopt.path import PathInfo
 
 
@@ -154,12 +154,20 @@ class SevenZip(ArchiveHandler):
 
     @override
     def _pack_info_one_file(self, archive, path_info) -> None:
-        data = BytesIO(path_info.data())
         archiveinfo = path_info.archiveinfo
-        archive.writef(data, arcname=archiveinfo.filename())
-        # py7zr's writef API stamps every member with now() and offers no
-        # override; restore the original member mtime on the header entry
-        # it just appended.
+        arcname = archiveinfo.filename()
+        if archiveinfo.is_dir():
+            # py7zr writes directory entries only from real directories;
+            # writef() would add an empty regular file instead.
+            with TemporaryDirectory() as tmp_dir:
+                # drwxr-xr-x, as picopt writes directories into zips.
+                Path(tmp_dir).chmod(0o755)
+                archive.write(tmp_dir, arcname=arcname)
+        else:
+            archive.writef(BytesIO(path_info.data()), arcname=arcname)
+        # py7zr stamps every member with now() or the temporary directory's
+        # times and offers no override; restore the original member mtime on
+        # the header entry it just appended.
         mtime = archiveinfo.mtime()
         if mtime is not None and archive.header.files_info.files:
             stamp = ArchiveTimestamp.from_datetime(mtime)
