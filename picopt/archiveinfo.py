@@ -1,6 +1,6 @@
 """Archive Info Converter."""
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from operator import attrgetter
 from pathlib import Path
 from tarfile import DIRTYPE, REGTYPE, SYMTYPE, TarInfo
@@ -93,7 +93,7 @@ class ArchiveInfo:
                     if date_time := self.info.date_time:
                         dttm = datetime(*date_time)  # noqa: DTZ001
                 case TarInfo():
-                    dttm = datetime.fromtimestamp(self.info.mtime, tz=timezone.utc)
+                    dttm = datetime.fromtimestamp(self.info.mtime, tz=UTC)
                 case SevenZipInfo():
                     dttm = self.info.creationtime
                 case _:  # RarInfo
@@ -101,7 +101,7 @@ class ArchiveInfo:
 
             if dttm:
                 if not dttm.tzinfo:
-                    dttm = dttm.replace(tzinfo=timezone.utc)
+                    dttm = dttm.replace(tzinfo=UTC)
                 self._dttm = dttm
         return self._dttm
 

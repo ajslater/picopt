@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import threading
 from collections import defaultdict, deque
-from typing import TYPE_CHECKING, Final
+from typing import TYPE_CHECKING, Final, Self
 
 from rich.progress import (
     MofNCompleteColumn,
@@ -16,7 +16,7 @@ from rich.progress import (
     TimeElapsedColumn,
 )
 from rich.text import Text
-from typing_extensions import Self, override
+from typing_extensions import override
 
 from picopt.log.styles import MARKS
 

@@ -1,7 +1,7 @@
 """Test comic format."""
 
 import shutil
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from hashlib import sha256
 from pathlib import Path
 from types import MappingProxyType
@@ -76,7 +76,7 @@ class TestTimestamps:
     ) -> None:
         """Write timestamp."""
         if ts is None:
-            ts = datetime.now(tz=timezone.utc).timestamp()
+            ts = datetime.now(tz=UTC).timestamp()
         if config is None:
             config = DEFAULT_CONFIG
         ts_config = {**LEGACY_TREESTAMPS_CONFIG}
@@ -225,7 +225,7 @@ class TestTimestamps:
     ) -> None:
         """Write wal."""
         if ts is None:
-            ts = datetime.now(tz=timezone.utc).timestamp()
+            ts = datetime.now(tz=UTC).timestamp()
         if config is None:
             config = DEFAULT_CONFIG
         ts_config = {**LEGACY_TREESTAMPS_CONFIG}
