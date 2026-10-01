@@ -6,6 +6,7 @@ from collections.abc import Iterator
 from datetime import UTC, datetime
 from io import BytesIO, UnsupportedOperation
 from pathlib import Path
+from stat import S_IFREG
 from tarfile import DIRTYPE, LNKTYPE, SYMTYPE, TarFile, TarInfo
 from zipfile import ZIP_DEFLATED, ZIP_STORED, ZipFile, ZipInfo
 
@@ -32,6 +33,9 @@ MTIME_TOLERANCE_SECS = 2.0
 DIR_NAME = "pages"
 DIR_TEXT_FN = f"{DIR_NAME}/notes.txt"
 ZIP_DATA_DESCRIPTOR_FLAG = 0x08
+EXEC_FN = "run.sh"
+FILE_MODE = 0o644
+EXEC_MODE = 0o755
 DIR_MODE = 0o755
 
 
@@ -128,6 +132,22 @@ class TestArchiveFidelity:
         with ZipFile(zip_path, "r") as zf:
             assert zf.getinfo("notes.txt").compress_type == ZIP_DEFLATED
             assert zf.getinfo(PNG_FN).compress_type == ZIP_STORED
+
+    def test_tar_file_modes_survive_conversion(self) -> None:
+        """Converted tar members keep their permissions as regular zip files."""
+        tar_path = TMP_ROOT / "modes.tar"
+        with TarFile(tar_path, "w") as tf:
+            for name, mode in (("notes.txt", FILE_MODE), (EXEC_FN, EXEC_MODE)):
+                info = TarInfo(name)
+                info.size = len(TEXT_DATA)
+                info.mode = mode
+                tf.addfile(info, BytesIO(TEXT_DATA))
+        _run_picopt("-rvx", "TAR,ZIP", "-c", "ZIP")
+        zip_path = TMP_ROOT / "modes.zip"
+        assert zip_path.exists()
+        with ZipFile(zip_path, "r") as zf:
+            assert zf.getinfo("notes.txt").external_attr >> 16 == S_IFREG | FILE_MODE
+            assert zf.getinfo(EXEC_FN).external_attr >> 16 == S_IFREG | EXEC_MODE
 
     def test_tar_directory_converts_to_zip_directory(self) -> None:
         """A tar directory member becomes a zip directory entry."""
@@ -314,3 +334,31 @@ class TestArchiveInfoDirectories:
         zipinfo = ArchiveInfo(info).to_zipinfo()
         assert zipinfo.filename == DIR_TEXT_FN
         assert not zipinfo.is_dir()
+
+
+class TestArchiveInfoFileModes:
+    """to_zipinfo gives converted files a regular-file mode."""
+
+    def test_seven_zip_file_to_zipinfo_mode(self) -> None:
+        """7z members expose no mode, so files default to rw-r--r--."""
+        info = FileInfo(
+            filename=PNG_FN,
+            compressed=None,
+            uncompressed=0,
+            archivable=True,
+            is_directory=False,
+            is_file=True,
+            is_symlink=False,
+            creationtime=None,
+            crc32=None,
+        )
+        zipinfo = ArchiveInfo(info).to_zipinfo()
+        assert zipinfo.external_attr >> 16 == S_IFREG | FILE_MODE
+
+    def test_tar_symlink_to_zipinfo_mode(self) -> None:
+        """A non-regular tar member does not lend its mode to a zip file."""
+        info = TarInfo("link")
+        info.type = SYMTYPE
+        info.mode = 0o777
+        zipinfo = ArchiveInfo(info).to_zipinfo()
+        assert zipinfo.external_attr >> 16 == S_IFREG | FILE_MODE
