@@ -402,8 +402,8 @@ class Pdf(ContainerHandler):
         try:
             original_raw = obj.read_raw_bytes()
             optimized = child.data()
-        except Exception:
-            logger.error(f"Error reading PDF image: {obj}")
+        except Exception as exc:
+            exc.add_note(f"Error reading PDF image: {obj}")
             raise
         if not optimized or len(optimized) >= len(original_raw):
             return 0
@@ -415,8 +415,8 @@ class Pdf(ContainerHandler):
             obj.write(
                 optimized, filter=pikepdf.Name.DCTDecode, decode_parms=decode_parms
             )
-        except Exception:
-            logger.error(f"Error writing optimized PDF image {obj}")
+        except Exception as exc:
+            exc.add_note(f"Error writing optimized PDF image {obj}")
             raise
         return 1
 

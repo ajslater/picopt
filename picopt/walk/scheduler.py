@@ -32,7 +32,7 @@ from concurrent.futures import FIRST_COMPLETED, Future, ProcessPoolExecutor, wai
 from dataclasses import dataclass, field
 from enum import Enum, auto
 from itertools import chain
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, assert_never
 
 from picopt.exceptions import print_exc_unless_expected
 from picopt.report import ReportStats
@@ -362,8 +362,10 @@ class Scheduler:
         match job:
             case UnpackJob() | RepackJob():
                 pass
-            case _:
+            case OptimizeLeafJob():
                 self._child_done(node)
+            case _:
+                assert_never(job)
 
     def _track_submitted_job(
         self, fut: Future, job: Job, node: ContainerNode | None
@@ -382,6 +384,8 @@ class Scheduler:
                 assert node is not None
                 node.state = NodeState.REPACKING
                 self._inflight_repack[fut] = node
+            case _:
+                assert_never(job)
 
     def _est_cost(self, path_info: PathInfo) -> int:
         """Estimate peak resident memory for a top-level item, in bytes."""
@@ -405,8 +409,10 @@ class Scheduler:
             case OptimizeLeafJob():
                 if node is None:  # standalone directory leaf
                     return True, self._est_cost(job.path_info)
-            case _:  # RepackJob and progress on already-admitted containers
+            case RepackJob():
                 pass
+            case _:
+                assert_never(job)
         return False, 0
 
     def _admits(self, cost: int) -> bool:

@@ -21,7 +21,7 @@ from picopt.config import PicoptConfig
 from picopt.doctor import PicoptDoctor
 from picopt.exceptions import PicoptError
 from picopt.log import setup as setup_logging
-from picopt.log.styles import MARKS
+from picopt.log.styles import MARKS, MarkKind
 from picopt.walk.walk import Walk
 
 if TYPE_CHECKING:
@@ -126,18 +126,18 @@ def _comma_join(
 # Order + label for each mark in the help epilogue legend. The char and
 # style are pulled from the centralized MARKS table so the legend can
 # never drift from what the bar actually renders.
-CHAR_KEY_LABELS: tuple[tuple[str, str], ...] = (
-    ("skipped", "skipped"),
-    ("skipped_timestamp", "skipped by timestamp"),
-    ("copied", "copied archive contents unchanged"),
-    ("lost", "optimized bigger than original"),
-    ("dry_run", "noop on dry run"),
-    ("saved", "optimized in same format"),
-    ("converted", "converted to another format"),
-    ("packed", "packed into archive"),
-    ("consumed_timestamp", "consumed timestamp from archive"),
-    ("warning", "WARNING"),
-    ("error", "ERROR"),
+CHAR_KEY_LABELS: tuple[tuple[MarkKind, str], ...] = (
+    (MarkKind.SKIPPED, "skipped"),
+    (MarkKind.SKIPPED_TIMESTAMP, "skipped by timestamp"),
+    (MarkKind.COPIED, "copied archive contents unchanged"),
+    (MarkKind.LOST, "optimized bigger than original"),
+    (MarkKind.DRY_RUN, "noop on dry run"),
+    (MarkKind.SAVED, "optimized in same format"),
+    (MarkKind.CONVERTED, "converted to another format"),
+    (MarkKind.PACKED, "packed into archive"),
+    (MarkKind.CONSUMED_TIMESTAMP, "consumed timestamp from archive"),
+    (MarkKind.WARNING, "WARNING"),
+    (MarkKind.ERROR, "ERROR"),
 )
 
 

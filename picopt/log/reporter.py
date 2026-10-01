@@ -3,11 +3,11 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Literal, TypeAlias, assert_never
 
 from picopt.log import console
 from picopt.log.progress import ProgressContext
-from picopt.log.styles import MARKS
+from picopt.log.styles import MARKS, MarkKind
 from picopt.log.summary import Stats
 
 if TYPE_CHECKING:
@@ -16,6 +16,11 @@ if TYPE_CHECKING:
     from picopt.report import ReportStats
 
 __all__ = ("Reporter",)
+
+# The marks a finished, error-free file can be classified as.
+_Outcome: TypeAlias = Literal[
+    MarkKind.DRY_RUN, MarkKind.CONVERTED, MarkKind.SAVED, MarkKind.LOST
+]
 
 
 @dataclass(slots=True)
@@ -37,7 +42,7 @@ class Reporter:
         if report.exc is not None:
             self.stats.record_error(report.path, str(report.exc))
             self.progress.mark_error()
-            self._print_outcome(report.report_text(), "error")
+            self._print_outcome(report.report_text(), MarkKind.ERROR)
             return
 
         bytes_out = (
@@ -51,38 +56,37 @@ class Reporter:
         self._record_kind(kind, report.path)
         self._print_outcome(report.report_text(), kind)
 
-    def _record_kind(self, kind: str, path: Path | None) -> None:
+    def _record_kind(self, kind: _Outcome, path: Path | None) -> None:
         """Dispatch to the explicit sink pair for a classified outcome."""
         match kind:
-            case "dry_run":
+            case MarkKind.DRY_RUN:
                 if path is not None:
                     self.stats.record_dry_run(path)
                 self.progress.mark_dry_run()
-            case "converted":
+            case MarkKind.CONVERTED:
                 if path is not None:
                     self.stats.record_converted(path)
                 self.progress.mark_converted()
-            case "saved":
+            case MarkKind.SAVED:
                 if path is not None:
                     self.stats.record_saved(path)
                 self.progress.mark_saved()
-            case "lost":
+            case MarkKind.LOST:
                 if path is not None:
                     self.stats.record_lost(path)
                 self.progress.mark_lost()
             case _:
-                msg = f"Unknown report outcome kind: {kind}"
-                raise ValueError(msg)
+                assert_never(kind)
 
     @staticmethod
-    def _classify(report: ReportStats) -> str:
+    def _classify(report: ReportStats) -> _Outcome:
         if report.test:
-            return "dry_run"
+            return MarkKind.DRY_RUN
         if report.saved > 0:
-            return "converted" if report.converted else "saved"
-        return "lost"
+            return MarkKind.CONVERTED if report.converted else MarkKind.SAVED
+        return MarkKind.LOST
 
-    def _print_outcome(self, text: str, kind: str) -> None:
+    def _print_outcome(self, text: str, kind: MarkKind) -> None:
         if self.verbose < 2:  # noqa: PLR2004
             return
         style = MARKS[kind].style

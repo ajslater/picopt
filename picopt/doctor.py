@@ -18,7 +18,7 @@ from __future__ import annotations
 import sys
 from pathlib import Path
 from types import MappingProxyType
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Never
 
 from rich.markup import escape
 
@@ -244,7 +244,7 @@ class PicoptDoctor:
         return min(self.missing_required, 1)
 
     @classmethod
-    def doctor_mode(cls) -> None:
+    def doctor_mode(cls) -> Never:
         """Create the doctor and perform a checkup."""
         doctor = cls()
         sys.exit(doctor.checkup())

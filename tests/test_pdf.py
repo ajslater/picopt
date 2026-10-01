@@ -33,9 +33,10 @@ from __future__ import annotations
 import hashlib
 import shutil
 import subprocess
+from enum import StrEnum
 from pathlib import Path
 from types import MappingProxyType
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, assert_never
 
 import pikepdf
 import pytest
@@ -56,7 +57,7 @@ PDF_FIXTURE_DIR = Path(__file__).parent / "test_files" / "pdf"
 # ---------------------------------------------------------------------------
 
 
-class Outcome:
+class Outcome(StrEnum):
     """What we expect picopt -x PDF to do to a given fixture."""
 
     SHRINKS = "shrinks"
@@ -91,7 +92,7 @@ class Outcome:
 # notice if a fixture gets corrupted or accidentally rebuilt with very
 # different parameters, while still tolerating the small drift pikepdf
 # introduces between versions.
-FIXTURES: MappingProxyType[str, tuple[str, int, bool, int]] = MappingProxyType(
+FIXTURES: MappingProxyType[str, tuple[Outcome, int, bool, int]] = MappingProxyType(
     {
         "photo_jpeg.pdf": (Outcome.SHRINKS, 20, True, 30543),
         "smask.pdf": (Outcome.SHRINKS, 15, True, 9803),
@@ -193,26 +194,29 @@ class TestPdfFixtures(BaseTest):
 
         after = path.stat().st_size
 
-        if outcome == Outcome.SHRINKS:
-            assert after < before, f"{fn}: expected shrink, got {before} -> {after}"
-            saved_pct = (before - after) * 100 / before
-            assert saved_pct >= min_savings, (
-                f"{fn}: expected ≥{min_savings}% saved, got {saved_pct:.1f}%"
-            )
-        elif outcome == Outcome.UNCHANGED:
-            assert after == before, (
-                f"{fn}: expected byte-identical, got {before} -> {after}"
-            )
-        elif outcome == Outcome.REFUSED:
-            assert after == before, (
-                f"{fn}: refused fixture must be unchanged on disk, "
-                f"got {before} -> {after}"
-            )
-            # Original file content must survive verbatim (not just same
-            # length): the refused-PDF guarantee is "we did not touch it".
-            assert path.read_bytes() == source.read_bytes(), (
-                f"{fn}: refused fixture bytes differ from source"
-            )
+        match outcome:
+            case Outcome.SHRINKS:
+                assert after < before, f"{fn}: expected shrink, got {before} -> {after}"
+                saved_pct = (before - after) * 100 / before
+                assert saved_pct >= min_savings, (
+                    f"{fn}: expected ≥{min_savings}% saved, got {saved_pct:.1f}%"
+                )
+            case Outcome.UNCHANGED:
+                assert after == before, (
+                    f"{fn}: expected byte-identical, got {before} -> {after}"
+                )
+            case Outcome.REFUSED:
+                assert after == before, (
+                    f"{fn}: refused fixture must be unchanged on disk, "
+                    f"got {before} -> {after}"
+                )
+                # Original file content must survive verbatim (not just same
+                # length): the refused-PDF guarantee is "we did not touch it".
+                assert path.read_bytes() == source.read_bytes(), (
+                    f"{fn}: refused fixture bytes differ from source"
+                )
+            case _:
+                assert_never(outcome)
 
     def test_picopt_pdf_still_parses(self: TestPdfFixtures, fn: str) -> None:
         """Whatever picopt produced (or left behind) must still be a valid PDF."""

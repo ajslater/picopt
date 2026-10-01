@@ -4,7 +4,7 @@ from datetime import UTC, datetime
 from operator import attrgetter
 from pathlib import Path
 from tarfile import DIRTYPE, REGTYPE, SYMTYPE, TarInfo
-from typing import Final, TypeAlias
+from typing import Final, TypeAlias, assert_never
 from zipfile import ZipInfo
 
 from py7zr import FileInfo as SevenZipInfo
@@ -50,24 +50,28 @@ class ArchiveInfo:
     def filename(self):
         """Return archive filename."""
         if self._filename is None:
-            match self.info:
+            match info := self.info:
                 case TarInfo():
-                    self._filename = self.info.name or ""
-                case _:  # ZipInfo | SevenZipInfo | RarInfo
-                    self._filename = self.info.filename or ""
+                    self._filename = info.name or ""
+                case ZipInfo() | SevenZipInfo() | RarInfo():
+                    self._filename = info.filename or ""
+                case _:
+                    assert_never(info)
         return self._filename
 
     def rename(self, filename: str | Path) -> None:
         """Rename archiveinfo."""
         filename = str(filename)
-        match self.info:
+        match info := self.info:
             case ZipInfo() | SevenZipInfo():
-                self.info.filename = filename
+                info.filename = filename
             case TarInfo():
-                self.info.name = filename
-            case _:
-                msg = f"{self.info} cannot be renamed."
+                info.name = filename
+            case RarInfo():
+                msg = f"{info} cannot be renamed."
                 raise TypeError(msg)
+            case _:
+                assert_never(info)
 
         # clear filename cache
         self._filename = None
@@ -75,29 +79,33 @@ class ArchiveInfo:
     def is_dir(self) -> bool:
         """Is a directory."""
         if self._is_dir is None:
-            match self.info:
+            match info := self.info:
                 case ZipInfo() | RarInfo():
-                    self._is_dir = self.info.is_dir()
+                    self._is_dir = info.is_dir()
                 case TarInfo():
-                    self._is_dir = self.info.isdir()
+                    self._is_dir = info.isdir()
                 case SevenZipInfo():
-                    self._is_dir = bool(self.info.is_directory)
+                    self._is_dir = bool(info.is_directory)
+                case _:
+                    assert_never(info)
         return self._is_dir
 
     def datetime(self) -> datetime | None:
         """Return mtime as a datetime."""
         if self._dttm is None:
             dttm: datetime | None = None
-            match self.info:
+            match info := self.info:
                 case ZipInfo():
-                    if date_time := self.info.date_time:
+                    if date_time := info.date_time:
                         dttm = datetime(*date_time)  # noqa: DTZ001
                 case TarInfo():
-                    dttm = datetime.fromtimestamp(self.info.mtime, tz=UTC)
+                    dttm = datetime.fromtimestamp(info.mtime, tz=UTC)
                 case SevenZipInfo():
-                    dttm = self.info.creationtime
-                case _:  # RarInfo
-                    dttm = self.info.mtime or None
+                    dttm = info.creationtime
+                case RarInfo():
+                    dttm = info.mtime or None
+                case _:
+                    assert_never(info)
 
             if dttm:
                 if not dttm.tzinfo:
@@ -108,45 +116,51 @@ class ArchiveInfo:
     def mtime(self) -> float | None:
         """Return Modified Timestamp."""
         if self._mtime is None:
-            match self.info:
+            match info := self.info:
                 case TarInfo():
-                    self._mtime = self.info.mtime
-                case _:  # SevenZipInfo | ZipInfo | RarInfo
+                    self._mtime = info.mtime
+                case SevenZipInfo() | ZipInfo() | RarInfo():
                     dttm = self.datetime()
                     if dttm is not None:
                         self._mtime = dttm.timestamp()
+                case _:
+                    assert_never(info)
         return self._mtime
 
     def to_zipinfo(self) -> ZipInfo:
         """Convert to ZipInfo."""
-        match self.info:
+        match src := self.info:
             case ZipInfo():
-                info = self.info
+                info = src
             case RarInfo():
                 filename = self.filename() or "NoName"
-                if date_time := self.info.date_time:
+                if date_time := src.date_time:
                     clamped = max(tuple(date_time), _ZIP_EPOCH)
                     info = ZipInfo(filename=filename, date_time=clamped)
                 else:
                     info = ZipInfo(filename=filename)
-            case _:  # TarInfo | SevenZipInfo
+            case TarInfo() | SevenZipInfo():
                 dttm = self.datetime()
                 date_time = _DATETIME_ATTRGETTER(dttm)[:6] if dttm else _ZIP_EPOCH
                 date_time = max(date_time, _ZIP_EPOCH)
                 info = ZipInfo(filename=self.filename(), date_time=date_time)
+            case _:
+                assert_never(src)
         return info
 
     def to_tarinfo(self) -> TarInfo:
         """Convert to TarInfo."""
-        match self.info:
+        match src := self.info:
             case TarInfo():
-                return self.info
+                return src
             case ZipInfo() | RarInfo():
                 kwargs = {}
                 if name := self.filename():
                     kwargs["name"] = name
-            case _:  # SevenZipInfo
-                kwargs = {"name": self.info.filename}
+            case SevenZipInfo():
+                kwargs = {"name": src.filename}
+            case _:
+                assert_never(src)
         info = TarInfo(**kwargs)
         mtime = self.mtime()
         if mtime is not None:
@@ -155,29 +169,29 @@ class ArchiveInfo:
 
     def to_sevenzipinfo(self) -> FileInfo:
         """Convert to SevenZip FileInfo."""
-        if isinstance(self.info, SevenZipInfo):
-            return self.info
-
-        match self.info:
+        match src := self.info:
+            case SevenZipInfo():
+                return src
             case ZipInfo():
-                filename = self.info.filename
-                is_dir = self.info.is_dir()
-                # X is_file = self.info.is_file() # python 3.11?
+                filename = src.filename
+                is_dir = src.is_dir()
+                # ZipInfo has no is_file() or is_symlink().
                 is_file = not is_dir
-                # X is_symlink = self.info.is_symlink() # python 3.13
                 is_symlink = False
             case RarInfo():
-                filename = self.info.filename
-                is_dir = self.info.is_dir()
-                is_file = self.info.is_file()
-                is_symlink = self.info.is_symlink()
-            case _:  # TarInfo
-                filename = self.info.name
-                is_dir = self.info.type == DIRTYPE
-                is_file = self.info.type == REGTYPE
-                is_symlink = self.info.type == SYMTYPE
+                filename = src.filename
+                is_dir = src.is_dir()
+                is_file = src.is_file()
+                is_symlink = src.is_symlink()
+            case TarInfo():
+                filename = src.name
+                is_dir = src.type == DIRTYPE
+                is_file = src.type == REGTYPE
+                is_symlink = src.type == SYMTYPE
+            case _:
+                assert_never(src)
         if filename is None:
-            msg = f"Cannot create 7zr file, filename is None in source: {self.info}"
+            msg = f"Cannot create 7zr file, filename is None in source: {src}"
             raise ValueError(msg)
         return SevenZipInfo(
             filename,
