@@ -1,15 +1,8 @@
 __pycache__
-.*cache/
 .claude
 .git
-.venv
 *.sh
 *Dockerfile
-/node_modules
-/test-results
-/tests/**/*.json
-/tests/**/*.xml
-/tests/**/*.yaml
 bun.lock
 dist
 node_modules
