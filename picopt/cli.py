@@ -109,7 +109,8 @@ def _comma_join(
 ) -> str:
     """Sort and join a sequence into a human readable string."""
     formats = tuple(sorted(formats))
-    if len(formats) == 2:  # noqa: PLR2004
+    # Failed plugins can shrink these lists, even to nothing.
+    if len(formats) <= 2:  # noqa: PLR2004
         return " or ".join(formats)
     if final_and:
         final = formats[-1]
@@ -477,6 +478,15 @@ def get_arguments(params: tuple[str, ...] | None = None) -> Namespace:
     return Namespace(picopt=pns)
 
 
+def _warn_failed_plugins() -> None:
+    """Name each plugin a broken format library disabled."""
+    for failure in registry.failed_plugins():
+        logger.warning(
+            f"Plugin '{failure.module}' disabled: {failure.error}. "
+            f"Run '{PROGRAM_NAME} doctor' for details."
+        )
+
+
 def main(args: tuple[str, ...] | None = None) -> None:
     """Process command line arguments and walk inputs."""
     # `picopt doctor` is a separate top-level subcommand. It sniffs the cli, if it
@@ -486,6 +496,7 @@ def main(args: tuple[str, ...] | None = None) -> None:
     PicoptDoctor.parse_cli()
 
     setup_logging(2)
+    _warn_failed_plugins()
     try:
         arguments = get_arguments(args)
         # Un-passed flags are None so config-file/env layers stay visible.

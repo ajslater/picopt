@@ -7,6 +7,8 @@
       file: JXL without pillow-jxl-plugin, WebP from a Pillow without libwebp,
       compressed tarballs from a Python without bz2 or lzma, and RAR from an
       unrar that can't extract RAR5.
+    - A broken rarfile, py7zr or pikepdf install now disables only its own
+      formats, with a warning, instead of stopping every run.
 
 ## v6.9.1
 
