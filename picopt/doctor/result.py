@@ -2,8 +2,10 @@
 
 from __future__ import annotations
 
+import os
 from dataclasses import dataclass
 from enum import StrEnum
+from pathlib import Path
 from types import MappingProxyType
 from typing import TYPE_CHECKING, Final
 
@@ -67,6 +69,15 @@ class CheckResult:
     detail: str = ""
     # A command or edit that resolves the row, printed beneath it.
     fix: str = ""
+
+
+def display_path(path: str | Path) -> str:
+    """Show a path with the home directory as ~."""
+    text = str(path)
+    home = str(Path.home())
+    if text == home or text.startswith(home + os.sep):
+        return "~" + text[len(home) :]
+    return text
 
 
 def describe(exc: BaseException) -> str:

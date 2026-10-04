@@ -197,7 +197,8 @@ that is the `unrar` package from non-free or multiverse, not `unrar-free`.
 Picopt requires Python 3.11 or greater installed on whichever system you use.
 
 Picopt is most effective with these binary dependencies installed. We must
-install these first
+install these first. Afterwards, [`picopt doctor`](#doctor) shows which ones
+picopt finds.
 
 #### macOS
 
@@ -280,6 +281,25 @@ Or you can install svgo with npm:
 ```sh
 npm install -G svgo
 ```
+
+### Doctor
+
+`picopt doctor [OPTIONS]` checks whether a run with the same options will work
+on this machine, and says why not. It reports:
+
+- the Python packages picopt needs, and whether their versions fit;
+- every external program picopt can use, with an install command for each one
+  that is missing;
+- whether your config files and `PICOPT_*` environment variables load, the keys
+  in them that picopt doesn't know, and where each non-default option was set;
+- what the run does with each enabled format, and which formats it would skip.
+
+The options are diagnosed, not run: nothing is optimized or written, and `-w`,
+`-W` and `--write-config-file` are ignored. `picopt doctor -q` shows only the
+problems. The doctor exits 1 when the run would fail or skip an enabled format,
+and 0 otherwise.
+
+A target named `doctor` must be passed as `./doctor`.
 
 ## ⚙️ Configuration
 

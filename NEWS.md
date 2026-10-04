@@ -2,6 +2,10 @@
 
 ## v6.10.0
 
+- Features
+    - `picopt doctor` takes run options and checks that run: config errors,
+      unknown config keys, where each option was set, and the enabled formats it
+      would skip. `picopt doctor -q` shows only problems.
 - Fixes
     - Formats a broken install can't write are skipped instead of failing every
       file: JXL without pillow-jxl-plugin, WebP from a Pillow without libwebp,
@@ -9,6 +13,9 @@
       unrar that can't extract RAR5.
     - A broken rarfile, py7zr or pikepdf install now disables only its own
       formats, with a warning, instead of stopping every run.
+- Changes
+    - `picopt doctor` exits 1 only when a run with its options would fail or
+      skip an enabled format, not whenever any tool is missing.
 - Dep
     - Require packaging.
 
