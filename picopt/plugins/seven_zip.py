@@ -32,6 +32,7 @@ from picopt.plugins.base import (
     Tool,
 )
 from picopt.plugins.base.format import FileFormat
+from picopt.plugins.zip import Cbz, Zip
 
 if TYPE_CHECKING:
     from picopt.path import PathInfo
@@ -213,8 +214,8 @@ PLUGIN = Plugin(
     name="7Z",
     handlers=(SevenZip, Cb7),
     routes=(
-        Route(file_format=SevenZip.OUTPUT_FILE_FORMAT, native=SevenZip),
-        Route(file_format=Cb7.OUTPUT_FILE_FORMAT, native=Cb7),
+        Route(file_format=SevenZip.OUTPUT_FILE_FORMAT, native=SevenZip, convert=(Zip,)),
+        Route(file_format=Cb7.OUTPUT_FILE_FORMAT, native=Cb7, convert=(Cbz,)),
     ),
     detector=SevenZipDetector,
     default_enabled=False,

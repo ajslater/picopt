@@ -9,9 +9,7 @@ from tarfile import DIRTYPE, REGTYPE, SYMTYPE, TarInfo
 from typing import Final, TypeAlias, assert_never
 from zipfile import ZipInfo
 
-from py7zr import FileInfo as SevenZipInfo
-from py7zr.py7zr import FileInfo
-from rarfile import RarInfo
+from picopt.archive_libs import RarInfo, SevenZipInfo
 
 _DATETIME_ATTRGETTER = attrgetter(
     "year", "month", "day", "hour", "minute", "second", "microsecond"
@@ -198,7 +196,7 @@ class ArchiveInfo:
             info.mtime = mtime
         return info
 
-    def to_sevenzipinfo(self) -> FileInfo:
+    def to_sevenzipinfo(self) -> SevenZipInfo:
         """Convert to SevenZip FileInfo."""
         match src := self.info:
             case SevenZipInfo():

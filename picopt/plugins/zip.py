@@ -24,8 +24,6 @@ from picopt.plugins.base import (
 )
 from picopt.plugins.base.format import FileFormat
 from picopt.plugins.base.tool import StdLibTool
-from picopt.plugins.rar import Cbr, Rar
-from picopt.plugins.seven_zip import Cb7, SevenZip
 from picopt.plugins.tar import Cbt, Tar, TarBz, TarGz, TarXz
 
 if TYPE_CHECKING:
@@ -209,18 +207,15 @@ PLUGIN = Plugin(
         Route(file_format=Zip.OUTPUT_FILE_FORMAT, native=Zip),
         Route(file_format=Cbz.OUTPUT_FILE_FORMAT, native=Cbz),
         Route(file_format=EPub.OUTPUT_FILE_FORMAT, native=EPub),
-        # Rar
-        Route(file_format=Rar.OUTPUT_FILE_FORMAT, convert=(Zip,)),
-        Route(file_format=Cbr.OUTPUT_FILE_FORMAT, convert=(Cbz,)),
+        # RAR and 7z declare their own routes to Zip and Cbz: importing their
+        # plugins here would disable this one whenever rarfile or py7zr
+        # fails to import.
         # Tar
         Route(file_format=Tar.OUTPUT_FILE_FORMAT, convert=(Zip,)),
         Route(file_format=TarGz.OUTPUT_FILE_FORMAT, convert=(Zip,)),
         Route(file_format=TarBz.OUTPUT_FILE_FORMAT, convert=(Zip,)),
         Route(file_format=TarXz.OUTPUT_FILE_FORMAT, convert=(Zip,)),
         Route(file_format=Cbt.OUTPUT_FILE_FORMAT, convert=(Cbz,)),
-        # SevenZip
-        Route(file_format=SevenZip.OUTPUT_FILE_FORMAT, convert=(Zip,)),
-        Route(file_format=Cb7.OUTPUT_FILE_FORMAT, convert=(Cbz,)),
     ),
     convert_targets=(Zip, Cbz),
     detector=ZipDetector,

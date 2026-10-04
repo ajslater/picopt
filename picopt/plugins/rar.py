@@ -29,6 +29,7 @@ from picopt.plugins.base import (
     Tool,
 )
 from picopt.plugins.base.format import FileFormat
+from picopt.plugins.zip import Cbz, Zip
 
 if TYPE_CHECKING:
     from io import BytesIO
@@ -261,8 +262,8 @@ PLUGIN = Plugin(
     handlers=(Rar, Cbr),
     routes=(
         # Native: yes (we can read it). Convert: required (we can't write it).
-        Route(file_format=Rar.OUTPUT_FILE_FORMAT, native=Rar),
-        Route(file_format=Cbr.OUTPUT_FILE_FORMAT, native=Cbr),
+        Route(file_format=Rar.OUTPUT_FILE_FORMAT, native=Rar, convert=(Zip,)),
+        Route(file_format=Cbr.OUTPUT_FILE_FORMAT, native=Cbr, convert=(Cbz,)),
     ),
     detector=RarDetector,
     default_enabled=False,
