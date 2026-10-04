@@ -79,7 +79,8 @@ _INSTALL_HINTS: MappingProxyType[str, MappingProxyType[str, str]] = MappingProxy
         "unrar": MappingProxyType(
             {
                 _BREW: "brew install rar",
-                _APT: "apt install unrar",
+                # RARLAB's unrar, not the unrar-free package.
+                _APT: "apt install unrar (Debian non-free or Ubuntu multiverse)",
                 _DNF: "dnf install unrar",
             }
         ),
@@ -156,6 +157,8 @@ class PicoptDoctor:
             bits.append(f"[dim white]\\[{escape(status.path)}][/dim white]")
         if not status.available and status.error:
             bits.extend(["-", f"[red]{escape(status.error)}[/red]"])
+        elif status.detail:
+            bits.append(f"([green]{escape(status.detail)}[/green])")
         elif isinstance(tool, CWebPTool):
             flag = "modern" if tool.is_modern else "legacy"
             flag_color = "green" if tool.is_modern else "cyan"

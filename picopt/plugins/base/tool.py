@@ -30,7 +30,7 @@ from __future__ import annotations
 import shutil
 import subprocess
 from abc import ABC, abstractmethod
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from importlib.metadata import version as module_version
 from pathlib import Path
 from platform import python_version
@@ -52,6 +52,8 @@ class ToolStatus:
     path: str = ""
     error: str = ""
     required: bool = True
+    # What a functional probe proved beyond presence, shown by the doctor.
+    detail: str = ""
 
 
 class Tool(ABC):
@@ -196,6 +198,28 @@ class PILSaveTool(InternalTool):
         self.target_format_str = target_format_str
         # if save_kwargs is not None:
         self.save_kwargs = save_kwargs
+
+    def save_unsupported_reason(self) -> str:
+        """Why Pillow can't save the target format, or "" if it can."""
+        from PIL import Image
+
+        # pil_save always passes save_all=True, which looks the format up in
+        # SAVE_ALL. Pillow fills its registries lazily, and a codec built
+        # without its library (libwebp) or a missing plugin (pillow_jxl)
+        # registers no handler, so routing must not pick this tool.
+        Image.init()
+        if self.target_format_str in Image.SAVE_ALL:
+            return ""
+        return f"Pillow has no {self.target_format_str} save support"
+
+    @override
+    def _probe(self) -> ToolStatus:
+        status = super()._probe()
+        if not status.available or not self.target_format_str:
+            return status
+        if reason := self.save_unsupported_reason():
+            return replace(status, available=False, error=reason)
+        return status
 
     @override
     def run_stage(self, handler, buf: BinaryIO) -> BinaryIO:

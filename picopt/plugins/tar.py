@@ -15,6 +15,8 @@ hand-maintained list inside the dispatcher.
 
 from __future__ import annotations
 
+from dataclasses import replace
+from importlib import import_module
 from io import BytesIO
 from tarfile import TarFile, TarInfo, is_tarfile
 from tarfile import open as tar_open
@@ -33,7 +35,7 @@ from picopt.plugins.base import (
     Tool,
 )
 from picopt.plugins.base.format import FileFormat
-from picopt.plugins.base.tool import StdLibTool
+from picopt.plugins.base.tool import StdLibTool, ToolStatus
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -47,10 +49,40 @@ if TYPE_CHECKING:
 
 
 class TarTool(StdLibTool):
-    """The Python stdlib :mod:`tarfile` module. Always present."""
+    """
+    The Python stdlib :mod:`tarfile` module, plus its compression codec.
+
+    tarfile imports ``zlib``, ``bz2`` and ``lzma`` only when it opens an
+    archive that needs one, and a Python built without the library (the
+    classic pyenv build without xz headers) lacks the module. Probing the
+    codec here lets routing drop just that handler.
+    """
 
     name = "tarfile"
     module_name = "tarfile"
+
+    def __init__(self, codec_module: str = "") -> None:
+        """Set the codec module this handler's archives need."""
+        self.codec_module = codec_module
+
+    @override
+    def probe_version(self) -> str:
+        version = super().probe_version()
+        if self.codec_module:
+            version += f" +{self.codec_module}"
+        return version
+
+    @override
+    def _probe(self) -> ToolStatus:
+        status = super()._probe()
+        if not status.available or not self.codec_module:
+            return status
+        try:
+            import_module(self.codec_module)
+        except ImportError as exc:
+            error = f"Python has no {self.codec_module} module: {exc}"
+            return replace(status, available=False, error=error)
+        return status
 
     @override
     def run_pack(self, handler: Handler) -> BytesIO:
@@ -178,6 +210,7 @@ class TarGz(Tar):
     SUFFIXES: tuple[str, ...] = (".tar.gz", ".tgz")
     OUTPUT_FILE_FORMAT = FileFormat(OUTPUT_FORMAT_STR, archive=True)
     INPUT_FILE_FORMATS = frozenset({OUTPUT_FILE_FORMAT})
+    PIPELINE: tuple[tuple[Tool, ...], ...] = ((TarTool("zlib"),),)
     WRITE_MODE: str = "w:gz"
     COMPRESS_KWARGS: MappingProxyType[str, Any] = MappingProxyType({"compresslevel": 9})
 
@@ -189,6 +222,7 @@ class TarBz(Tar):
     SUFFIXES: tuple[str, ...] = (".tar.bz2", ".tbz")
     OUTPUT_FILE_FORMAT = FileFormat(OUTPUT_FORMAT_STR, archive=True)
     INPUT_FILE_FORMATS = frozenset({OUTPUT_FILE_FORMAT})
+    PIPELINE: tuple[tuple[Tool, ...], ...] = ((TarTool("bz2"),),)
     WRITE_MODE: str = "w:bz2"
     COMPRESS_KWARGS: MappingProxyType[str, Any] = MappingProxyType({"compresslevel": 9})
 
@@ -200,6 +234,7 @@ class TarXz(Tar):
     SUFFIXES: tuple[str, ...] = (".tar.xz", ".txz")
     OUTPUT_FILE_FORMAT = FileFormat(OUTPUT_FORMAT_STR, archive=True)
     INPUT_FILE_FORMATS = frozenset({OUTPUT_FILE_FORMAT})
+    PIPELINE: tuple[tuple[Tool, ...], ...] = ((TarTool("lzma"),),)
     WRITE_MODE: str = "w:xz"
     COMPRESS_KWARGS: MappingProxyType[str, Any] = MappingProxyType({"preset": 9})
 

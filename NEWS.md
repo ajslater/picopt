@@ -1,5 +1,13 @@
 # 📰 Picopt News
 
+## v6.10.0
+
+- Fixes
+    - Formats a broken install can't write are skipped instead of failing every
+      file: JXL without pillow-jxl-plugin, WebP from a Pillow without libwebp,
+      compressed tarballs from a Python without bz2 or lzma, and RAR from an
+      unrar that can't extract RAR5.
+
 ## v6.9.1
 
 - Fixes
