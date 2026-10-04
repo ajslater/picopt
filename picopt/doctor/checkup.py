@@ -8,19 +8,20 @@ from typing import TYPE_CHECKING, Final, Never
 
 from picopt import plugins as registry
 from picopt.doctor.config import SECTION as CONFIG_SECTION
-from picopt.doctor.config import check_config
+from picopt.doctor.config import ConfigReport, check_config
 from picopt.doctor.environment import render_environment
 from picopt.doctor.formats import SECTION as FORMATS_SECTION
 from picopt.doctor.formats import check_formats
 from picopt.doctor.packages import SECTION as PACKAGES_SECTION
 from picopt.doctor.packages import check_packages
+from picopt.doctor.paths import check_paths, unchecked_paths
 from picopt.doctor.render import (
     render_heading,
     render_rows,
     render_section,
     render_summary,
 )
-from picopt.doctor.result import FAIL, OFF, WARN, CheckResult, describe
+from picopt.doctor.result import FAIL, OFF, CheckResult, describe
 from picopt.doctor.tools import ToolTree
 from picopt.log import setup as setup_logging
 
@@ -31,7 +32,6 @@ if TYPE_CHECKING:
     from picopt.plugins.base import Plugin
 
 _PLUGINS_SECTION: Final = "Plugins"
-_PATHS_SECTION: Final = "Paths"
 
 
 def _failed_plugin_rows() -> list[CheckResult]:
@@ -99,7 +99,7 @@ class PicoptDoctor:
             self.tree.render(plugins)
             self._tree_rendered = True
 
-    def _check_config(self) -> PicoptSettings | None:
+    def _check_config(self) -> ConfigReport | None:
         try:
             report = check_config(self._arguments)
         except Exception as exc:
@@ -109,7 +109,7 @@ class PicoptDoctor:
             self._add_section(CONFIG_SECTION, (row,))
             return None
         self._add_section(CONFIG_SECTION, report.results)
-        return report.settings
+        return report
 
     def _check_formats(self, settings: PicoptSettings | None) -> None:
         if settings is None:
@@ -122,11 +122,19 @@ class PicoptDoctor:
             rows = _guarded(FORMATS_SECTION, lambda: check_formats(settings))
         self._add_section(FORMATS_SECTION, rows)
 
-    def _check_paths(self) -> None:
-        if paths := self._arguments.picopt.paths:
-            detail = f"not analysed yet: {', '.join(paths)}"
-            row = CheckResult(_PATHS_SECTION, "paths", WARN, detail)
-            self._add_section(_PATHS_SECTION, (row,))
+    def _check_paths(self, report: ConfigReport | None) -> None:
+        """Report each target's .picopt.yaml files and stamps."""
+        if report is None or report.settings is None:
+            sections = unchecked_paths(self._arguments)
+        else:
+            settings, picopt_config = report.settings, report.picopt_config
+            try:
+                sections = check_paths(self._arguments, picopt_config, settings)
+            except Exception as exc:
+                detail = f"crashed: {describe(exc)}"
+                sections = [("Paths", [CheckResult("Paths", "check", FAIL, detail)])]
+        for title, rows in sections:
+            self._add_section(title, rows)
 
     def exit_code(self) -> int:
         """1 if a run would fail or skip an enabled format, else 0."""
@@ -141,9 +149,9 @@ class PicoptDoctor:
         self._add_section(PACKAGES_SECTION, check_packages())
         self._check_plugins()
         # The verdict sections come last, where the terminal leaves them.
-        settings = self._check_config()
-        self._check_formats(settings)
-        self._check_paths()
+        report = self._check_config()
+        self._check_formats(report.settings if report is not None else None)
+        self._check_paths(report)
         extra = self.tree.summary() if self._tree_rendered else ""
         render_summary(self.results, extra)
         return self.exit_code()

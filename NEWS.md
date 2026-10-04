@@ -3,9 +3,10 @@
 ## v6.10.0
 
 - Features
-    - `picopt doctor` takes run options and checks that run: config errors,
-      unknown config keys, where each option was set, and the enabled formats it
-      would skip. `picopt doctor -q` shows only problems.
+    - `picopt doctor` takes run options and paths and checks that run: config
+      errors, unknown config keys, where each option was set, the enabled
+      formats it would skip, each path's `.picopt.yaml` files, and whether its
+      timestamps would be kept. `picopt doctor -q` shows only problems.
 - Fixes
     - Formats a broken install can't write are skipped instead of failing every
       file: JXL without pillow-jxl-plugin, WebP from a Pillow without libwebp,

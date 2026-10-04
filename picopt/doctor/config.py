@@ -37,6 +37,7 @@ from picopt.doctor.result import (
     CheckResult,
     describe,
     display_path,
+    one_line,
 )
 
 if TYPE_CHECKING:
@@ -249,7 +250,7 @@ def _write_flag_rows(arguments: Namespace) -> list[CheckResult]:
 def _read_failure(exc: Exception) -> CheckResult:
     """Return the error a run reports before exiting 78, as a FAIL row."""
     # confuse's read errors name the file.
-    detail = str(exc) if isinstance(exc, ConfigError) else describe(exc)
+    detail = one_line(str(exc)) if isinstance(exc, ConfigError) else describe(exc)
     return CheckResult(SECTION, "read", FAIL, detail)
 
 
@@ -269,7 +270,7 @@ def check_config(arguments: Namespace) -> ConfigReport:
         # The run's build and validation, without get_config's writes.
         settings = picopt_config.get_dir_settings(arguments, ())
     except ConfigError as exc:
-        rows.append(CheckResult(SECTION, "invalid", FAIL, str(exc)))
+        rows.append(CheckResult(SECTION, "invalid", FAIL, one_line(str(exc))))
     except Exception as exc:
         rows.append(CheckResult(SECTION, "invalid", FAIL, describe(exc)))
     if settings is not None:

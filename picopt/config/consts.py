@@ -23,6 +23,24 @@ from picopt import PROGRAM_NAME
 # can import it without triggering the config package's heavy import chain.
 DIR_CONFIG_FILENAME: Final = ".picopt.yaml"
 
+# Options the walk reads once, at startup, from the run-level config. Set in
+# a .picopt.yaml they change nothing for that directory, apart from
+# timestamps, which a tree root's own file does control.
+RUN_SCOPED_KEYS: Final[frozenset[str]] = frozenset(
+    {
+        "after",
+        "dry_run",
+        "fail_fast",
+        "fail_fast_container",
+        "jobs",
+        "list_only",
+        "memory_limit",
+        "paths",
+        "timestamps",
+        "verbose",
+    }
+)
+
 TIMESTAMPS_CONFIG_KEYS: Final[frozenset[str]] = frozenset(
     {
         "bigger",
