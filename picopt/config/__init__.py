@@ -16,6 +16,7 @@ import time
 from contextlib import suppress
 from pathlib import Path
 from tempfile import NamedTemporaryFile
+from types import MappingProxyType
 from typing import TYPE_CHECKING, Any, Final, NamedTuple
 
 from confuse import Configuration, MappingTemplate
@@ -57,7 +58,7 @@ __all__ = (
 
 if TYPE_CHECKING:
     from argparse import Namespace
-    from collections.abc import Iterable
+    from collections.abc import Iterable, Mapping
 
     from confuse import Subview
 
@@ -322,6 +323,10 @@ def _write_configs(config: Configuration, nns: Namespace) -> None:
             _write_merged_config(target, target, options, verbose)
 
 
+# No keys pinned over the layered config sources.
+_NO_PINS: Final[Mapping[str, object]] = MappingProxyType({})
+
+
 class PicoptConfig(ConfigHandlers):
     """Construct Picopt Config."""
 
@@ -472,6 +477,7 @@ class PicoptConfig(ConfigHandlers):
         dir_config_files: tuple[Path, ...] = (),
         modname: str = PROGRAM_NAME,
         *,
+        pinned: Mapping[str, object] = _NO_PINS,
         print_summary: bool = False,
     ) -> Configuration:
         """
@@ -485,9 +491,13 @@ class PicoptConfig(ConfigHandlers):
         over shallower ones, and env/CLI still win over every directory
         file. Shared by :meth:`get_config` (no directory files) and
         :class:`picopt.config.dirconfig.DirConfig` (per-directory chain).
+        ``pinned`` values override every source before normalizing, so
+        computed values like the ``timestamps`` mask see them too.
         """
         config = self.layer_sources(args, dir_config_files, modname)
         config_program = config[PROGRAM_NAME]
+        for key, value in pinned.items():
+            config_program[key].set(value)
         self._set_ignore(config_program, print_summary=print_summary)
         self._set_after(config_program, print_summary=print_summary)
         self._set_memory_limit(config_program, print_summary=print_summary)
@@ -521,6 +531,7 @@ class PicoptConfig(ConfigHandlers):
         self,
         args: Namespace | None,
         dir_config_files: tuple[Path, ...],
+        pinned: Mapping[str, object] = _NO_PINS,
     ) -> PicoptSettings:
         """
         Resolve settings with per-directory config files layered in.
@@ -528,9 +539,10 @@ class PicoptConfig(ConfigHandlers):
         Like :meth:`get_config` but for the per-directory chain: the
         directory ``.picopt.yaml`` files layer beneath env/CLI and above
         the user config, and the write flags are never triggered. Used by
-        :class:`picopt.config.dirconfig.DirConfig`.
+        :class:`picopt.config.dirconfig.DirConfig`, which passes ``pinned``
+        to hold run-mode keys at their run-level values.
         """
-        config = self._build_config(args, dir_config_files)
+        config = self._build_config(args, dir_config_files, pinned=pinned)
         return self._config_to_settings(config)
 
 

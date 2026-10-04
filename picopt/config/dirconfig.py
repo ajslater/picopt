@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from dataclasses import replace
 from typing import TYPE_CHECKING
 
 from confuse.exceptions import ConfigError
@@ -120,12 +119,15 @@ class DirConfig:
         if self._stats is not None:
             self._stats.record_error(config_file, msg)
 
-    def _force_run_level_keys(
-        self, settings: PicoptSettings, keys: tuple[str, ...] = _MID_WALK_PINNED_KEYS
+    def _resolve_pinned(
+        self, dir_files: tuple[Path, ...], keys: tuple[str, ...] = _MID_WALK_PINNED_KEYS
     ) -> PicoptSettings:
-        """Pin run-mode keys to the run-level values."""
-        overrides = {key: getattr(self._global_settings, key) for key in keys}
-        return replace(settings, **overrides)
+        """Resolve ``dir_files`` with run-mode keys pinned to the run-level values."""
+        # Pinned before the build normalizes, not replaced after it: the
+        # build masks timestamps off with dry_run/list_only, so a file's own
+        # dry_run would otherwise turn the tree's stamps off.
+        pinned = {key: getattr(self._global_settings, key) for key in keys}
+        return self._picopt_config.get_dir_settings(self._args, dir_files, pinned)
 
     def get_settings(self, top_path: Path, dir_path: Path) -> PicoptSettings:
         """
@@ -145,9 +147,7 @@ class DirConfig:
         if not dir_files:
             return self._global_settings
         try:
-            settings = self._force_run_level_keys(
-                self._picopt_config.get_dir_settings(self._args, dir_files)
-            )
+            settings = self._resolve_pinned(dir_files)
         except (ConfigError, YAMLError, OSError) as exc:
             self._record_failure(dir_files, exc)
             settings = self._global_settings
@@ -159,8 +159,8 @@ class DirConfig:
         Resolve a tree root's effective settings for timestamps purposes.
 
         Unlike :meth:`get_settings`, the root ``.picopt.yaml`` is honored
-        for ``timestamps`` too — only ``dry_run``/``list_only`` stay pinned
-        (and they already mask ``timestamps`` off inside the config build).
+        for ``timestamps`` too — only ``dry_run``/``list_only`` stay pinned,
+        so only their run-level values can mask ``timestamps`` off.
         CLI and env still win over the file via the normal layering. A file
         target resolves its parent directory's config.
         """
@@ -176,10 +176,7 @@ class DirConfig:
         if not dir_files:
             return self._global_settings
         try:
-            return self._force_run_level_keys(
-                self._picopt_config.get_dir_settings(self._args, dir_files),
-                keys=self._RUN_LEVEL_KEYS,
-            )
+            return self._resolve_pinned(dir_files, keys=self._RUN_LEVEL_KEYS)
         except (ConfigError, YAMLError, OSError) as exc:
             self._record_failure(dir_files, exc)
             return self._global_settings
