@@ -7,7 +7,6 @@ import sys
 import traceback
 from argparse import Action, ArgumentParser, Namespace
 from functools import cache
-from importlib.metadata import PackageNotFoundError, version
 from typing import TYPE_CHECKING, Any, ClassVar
 
 from confuse.exceptions import ConfigError
@@ -15,27 +14,17 @@ from loguru import logger
 from rich_argparse import RawDescriptionRichHelpFormatter
 from typing_extensions import override
 
-from picopt import PROGRAM_NAME
+from picopt import PROGRAM_NAME, get_version
 from picopt import plugins as registry
 from picopt.config import PicoptConfig
-from picopt.doctor import PicoptDoctor
 from picopt.exceptions import PicoptError
 from picopt.log import setup as setup_logging
 from picopt.log.styles import MARKS, MarkKind
-from picopt.walk.walk import Walk
 
 if TYPE_CHECKING:
     from collections.abc import Collection, Sequence
 
 _LIST_DELIMITER = ","
-
-
-@cache
-def _get_version() -> str:
-    try:
-        return version(PROGRAM_NAME)
-    except PackageNotFoundError:
-        return "test"
 
 
 def _default_format_strs() -> tuple[str, ...]:
@@ -179,14 +168,25 @@ class PicoptHelpFormatter(RawDescriptionRichHelpFormatter):
     reads coherently.
     """
 
-    highlights: ClassVar[list[str]] = [
-        *RawDescriptionRichHelpFormatter.highlights,
-        rf"\b(?P<metavar>{'|'.join(re.escape(f) for f in registry.all_format_strs())})\b",
-    ]
+    highlights: ClassVar[list[str]] = [*RawDescriptionRichHelpFormatter.highlights]
+
+
+@cache
+def _highlight_format_strs() -> None:
+    """
+    Add the format names to the help highlights, once.
+
+    Deferred from the class body because it runs plugin discovery, which
+    importing this module must not: the doctor reports a discovery crash
+    instead of dying with it.
+    """
+    pattern = "|".join(re.escape(f) for f in registry.all_format_strs())
+    PicoptHelpFormatter.highlights.append(rf"\b(?P<metavar>{pattern})\b")
 
 
 def get_arguments(params: tuple[str, ...] | None = None) -> Namespace:
     """Parse the command line."""
+    _highlight_format_strs()
     all_format_strs = registry.all_format_strs()
     default_format_strs = _default_format_strs()
     lossless_convert_to = _lossless_image_convert_to_format_strs()
@@ -462,7 +462,7 @@ def get_arguments(params: tuple[str, ...] | None = None) -> Namespace:
         "-V",
         "--version",
         action="version",
-        version=f"%(prog)s {_get_version()}",
+        version=f"%(prog)s {get_version()}",
     )
     parser.add_argument(
         "paths",
@@ -493,11 +493,19 @@ def main(args: tuple[str, ...] | None = None) -> None:
     # detects doctor mode it runs a checkup and exits the program.
     # Do this before constructing the main argparser so we don't have to refactor
     # the existing CLI into subparsers.
-    PicoptDoctor.parse_cli()
+    argv = args or tuple(sys.argv)
+    if len(argv) > 1 and argv[1] == "doctor":
+        from picopt.doctor import PicoptDoctor
+
+        PicoptDoctor.doctor_mode()
+
+    # Imported here, not at module level: the walk pulls in treestamps,
+    # which neither the doctor nor argument parsing needs.
+    from picopt.walk.walk import Walk
 
     setup_logging(2)
-    _warn_failed_plugins()
     try:
+        _warn_failed_plugins()
         arguments = get_arguments(args)
         # Un-passed flags are None so config-file/env layers stay visible.
         cli_verbose = arguments.picopt.verbose

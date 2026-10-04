@@ -9,6 +9,8 @@
       unrar that can't extract RAR5.
     - A broken rarfile, py7zr or pikepdf install now disables only its own
       formats, with a warning, instead of stopping every run.
+- Dep
+    - Require packaging.
 
 ## v6.9.1
 
