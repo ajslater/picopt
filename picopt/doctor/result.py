@@ -80,9 +80,14 @@ def display_path(path: str | Path) -> str:
     return text
 
 
+def one_line(text: str) -> str:
+    """Collapse multi-line error text, such as YAML parser errors."""
+    return " ".join(text.split())
+
+
 def describe(exc: BaseException) -> str:
-    """Exception text, prefixed with its type."""
-    return f"{type(exc).__name__}: {exc}"
+    """Exception text on one line, prefixed with its type."""
+    return one_line(f"{type(exc).__name__}: {exc}")
 
 
 def plural(count: int, word: str, plural_word: str = "") -> str:
