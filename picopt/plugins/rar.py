@@ -9,9 +9,12 @@ configured.
 
 from __future__ import annotations
 
+from datetime import UTC, datetime, timedelta
+from functools import wraps
 from types import MappingProxyType
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Final
 
+import rarfile
 from rarfile import RarFile, is_rarfile
 from typing_extensions import override
 
@@ -30,6 +33,61 @@ if TYPE_CHECKING:
     from pathlib import Path
 
     from picopt.path import PathInfo
+
+
+# ---------------------------------------------------------------------------
+# rarfile patch: sub-second timestamp overflow
+# ---------------------------------------------------------------------------
+
+_NS_PER_SECOND: Final = 1_000_000_000
+_PROBE_DATETIME: Final = datetime(2020, 1, 1, tzinfo=UTC)
+# Any remainder of a second or more trips the bug. The value is arbitrary.
+_PROBE_NSEC: Final = 1_500_000_000
+
+
+def _is_nsec_overflow_broken() -> bool:
+    """Report whether rarfile still crashes on an overlong remainder."""
+    try:
+        rarfile.to_nsdatetime(_PROBE_DATETIME, _PROBE_NSEC)
+    except ValueError:
+        return True
+    return False
+
+
+def _patch_nsec_overflow() -> None:
+    """
+    Carry whole seconds out of rarfile's to_nsdatetime nanosecond argument.
+
+    rarfile <= 4.5 raises ``ValueError: microsecond must be in 0..999999``
+    from ``RarFile.__init__`` when a RAR3 extended timestamp carries a
+    sub-second remainder of one second or more, which some third-party
+    packers write. Its ``_parse_xtime`` builds the remainder from three bytes
+    (up to 1.68 seconds in 100ns units) and hands it to ``to_nsdatetime``
+    unclamped, so the archive can't be opened at all.
+
+    Probing behavior instead of marking the module makes this a no-op both
+    when already patched and when a future rarfile fixes the bug.
+    """
+    if not _is_nsec_overflow_broken():
+        return
+    original = rarfile.to_nsdatetime
+
+    @wraps(original)
+    def to_nsdatetime(dttm: datetime, nsec: int) -> datetime:
+        if nsec >= _NS_PER_SECOND:
+            extra_seconds, nsec = divmod(nsec, _NS_PER_SECOND)
+            dttm += timedelta(seconds=extra_seconds)
+        return original(dttm, nsec)
+
+    # Rebinding a module function is valid at run time, but ty types each
+    # def as its own function and accepts no other in its place.
+    rarfile.to_nsdatetime = to_nsdatetime  # ty: ignore[invalid-assignment]
+
+
+# Every process that opens a RAR imports this module first: workers do so to
+# unpickle the handler. The import lock keeps concurrent imports from
+# stacking wrappers.
+_patch_nsec_overflow()
 
 
 # ---------------------------------------------------------------------------

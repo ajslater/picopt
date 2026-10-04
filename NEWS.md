@@ -1,5 +1,11 @@
 # 📰 Picopt News
 
+## v6.9.1
+
+- Fixes
+    - Some RAR and CBR archives no longer fail with "microsecond must be in
+      0..999999".
+
 ## v6.9.0
 
 - Fixes
