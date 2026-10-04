@@ -263,8 +263,9 @@ def pick_route_handler(
     startup formats summary, so the log can never drift from what the
     walk actually does. Selection: the first convert-chain candidate whose
     output the user asked for and whose pipeline probed available (archives
-    only convert during the repack pass), else the native handler if
-    available; repack callers additionally require a packing container.
+    only convert during the repack pass), else the native handler or a
+    same-format stand-in for it; repack callers additionally require a
+    packing container.
     """
     if file_format is None:
         return None
@@ -276,12 +277,10 @@ def pick_route_handler(
         convert=convert,
         repack=repack,
     )
-    if (
-        handler_cls is None
-        and native is not None
-        and is_pipeline_available(native, handler_stages)
-    ):
-        handler_cls = native
+    if handler_cls is None:
+        handler_cls = _pick_native_handler(
+            file_format, native, convert_chain, handler_stages
+        )
     if repack and not _can_pack_repack(handler_cls):
         handler_cls = None
     return handler_cls
@@ -294,6 +293,33 @@ def _can_pack_repack(handler_cls: type[Handler] | None) -> bool:
         and issubclass(handler_cls, ContainerHandler)
         and handler_cls.CAN_PACK
     )
+
+
+def _pick_native_handler(
+    file_format: FileFormat,
+    native: type[Handler] | None,
+    convert_chain: tuple[type[Handler], ...],
+    handler_stages: Mapping,
+) -> type[Handler] | None:
+    """
+    Return the native handler if available, else the first stand-in that is.
+
+    A convert-chain candidate that writes the input's own format optimizes
+    in place, so it can replace an unavailable native without converting
+    anything: animated WebP falls back from webpmux to img2webp or Pillow.
+    Formats without a native handler are convert-only and get no stand-in.
+    """
+    if native is None:
+        return None
+    stand_ins = (
+        candidate
+        for candidate in convert_chain
+        if file_format.format_str == candidate.OUTPUT_FORMAT_STR
+    )
+    for candidate in (native, *stand_ins):
+        if is_pipeline_available(candidate, handler_stages):
+            return candidate
+    return None
 
 
 def _pick_convert_handler(

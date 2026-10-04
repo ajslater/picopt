@@ -12,6 +12,7 @@
       file: JXL without pillow-jxl-plugin, WebP from a Pillow without libwebp,
       compressed tarballs from a Python without bz2 or lzma, and RAR from an
       unrar that can't extract RAR5.
+    - Animated WebP is optimized without webpmux instead of skipped.
     - A broken rarfile, py7zr or pikepdf install now disables only its own
       formats, with a warning, instead of stopping every run.
     - `dry_run` or `list_only` in a tree root's `.picopt.yaml` no longer turns

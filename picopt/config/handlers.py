@@ -115,7 +115,10 @@ class FormatRoute:
     @property
     def converts(self) -> bool:
         """Whether the output is another format."""
-        return self.picked is not None and self.picked is not self.native
+        return (
+            self.picked is not None
+            and self.file_format.format_str != self.picked.OUTPUT_FORMAT_STR
+        )
 
 
 def _pick(
