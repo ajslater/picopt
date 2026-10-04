@@ -163,9 +163,8 @@ class JxlLossless(ImageHandler):
     # OUTPUT_FILE_FORMAT is deliberately absent: pil_save short-circuits when
     # the input is already an acceptable input format, which for a
     # single-tier JXL -> JXL pipeline would make re-optimization a no-op.
-    # Png is listed so this handler is probed whenever PNG is requested,
-    # which is what makes `-f PNG -c JXL` work.
-    INPUT_FILE_FORMATS = frozenset({Png.OUTPUT_FILE_FORMAT})
+    # Config probes it for `-c JXL` through the convert routes below.
+    INPUT_FILE_FORMATS: frozenset[FileFormat] = frozenset()
     SUFFIXES: tuple[str, ...] = (".jxl",)
 
     PIL2_KWARGS: MappingProxyType[str, Any] = MappingProxyType(

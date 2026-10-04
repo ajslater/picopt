@@ -8,6 +8,8 @@
       formats it would skip, each path's `.picopt.yaml` files, and whether its
       timestamps would be kept. `picopt doctor -q` shows only problems.
 - Fixes
+    - Converting to a `-c` format no longer also needs it in `-x`, e.g.
+      `-x RAR -c ZIP`.
     - Formats a broken install can't write are skipped instead of failing every
       file: JXL without pillow-jxl-plugin, WebP from a Pillow without libwebp,
       compressed tarballs from a Python without bz2 or lzma, and RAR from an

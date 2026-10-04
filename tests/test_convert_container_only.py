@@ -36,7 +36,7 @@ class TestConvertContainerOnly:
             tf.add(member_path, MEMBER_NAME)
         member_path.unlink()
 
-        cli.main((PROGRAM_NAME, "-rvx", "TAR,ZIP", "-c", "ZIP", str(TMP_ROOT)))
+        cli.main((PROGRAM_NAME, "-rvx", "TAR", "-c", "ZIP", str(TMP_ROOT)))
 
         zip_path = TMP_ROOT / "docs.zip"
         assert zip_path.exists()

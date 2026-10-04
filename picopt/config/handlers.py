@@ -36,7 +36,7 @@ from loguru import logger
 from picopt import plugins as registry
 
 if TYPE_CHECKING:
-    from collections.abc import Iterable, Mapping
+    from collections.abc import Mapping
 
     from confuse import Subview
 
@@ -80,25 +80,40 @@ def _select_pipeline_for_handler(
     return tuple(chosen)
 
 
-def _enabled_handler_classes(
+def enabled_handler_classes(
     requested_format_strs: frozenset[str],
-) -> Iterable[type[Handler]]:
+    convert_to: frozenset[str],
+) -> tuple[type[Handler], ...]:
     """
-    Every handler whose OUTPUT_FORMAT_STR or input format is requested.
+    Every handler a run with these formats and convert targets can use.
 
     A handler is "in scope" for probing if any FileFormat it can receive
     appears in the user's --formats / --extra-formats set, OR if its
-    OUTPUT_FORMAT_STR does. We probe everything in scope so the routing
-    layer has accurate availability info to fall back through.
+    OUTPUT_FORMAT_STR does, OR if it is a --convert-to target that an
+    enabled format's convert chain reaches (so ``-x RAR -c ZIP`` probes Zip
+    without ``-x ZIP``). We probe everything in scope so the routing layer
+    has accurate availability info to fall back through.
     """
+    convert_handlers = {
+        handler_cls
+        for file_format, (_, convert_chain) in registry.routes_by_format().items()
+        if file_format.format_str in requested_format_strs
+        for handler_cls in convert_chain
+        if handler_cls.OUTPUT_FORMAT_STR in convert_to
+    }
+    enabled: list[type[Handler]] = []
     for plugin in registry.iter_plugins():
         for handler_cls in plugin.handlers:
             handler_format_strs = {handler_cls.OUTPUT_FORMAT_STR}
             handler_format_strs.update(
                 ff.format_str for ff in handler_cls.INPUT_FILE_FORMATS
             )
-            if handler_format_strs & requested_format_strs:
-                yield handler_cls
+            if (
+                handler_format_strs & requested_format_strs
+                or handler_cls in convert_handlers
+            ):
+                enabled.append(handler_cls)
+    return tuple(enabled)
 
 
 @dataclass(frozen=True, slots=True)
@@ -272,7 +287,7 @@ class ConfigHandlers:
         )
 
         handler_stages: dict[type[Handler], tuple[Tool, ...]] = {}
-        for handler_cls in _enabled_handler_classes(all_format_strs):
+        for handler_cls in enabled_handler_classes(all_format_strs, convert_to):
             self._set_format_handler_stages(
                 handler_cls, handler_stages, disabled_program_names, config
             )

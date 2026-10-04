@@ -13,7 +13,11 @@ from itertools import groupby
 from typing import TYPE_CHECKING, Final
 
 from picopt import plugins as registry
-from picopt.config.handlers import FormatRoute, formats_summary
+from picopt.config.handlers import (
+    FormatRoute,
+    enabled_handler_classes,
+    formats_summary,
+)
 from picopt.doctor.result import FAIL, OFF, OK, WARN, CheckResult
 from picopt.doctor.tools import install_hint, tool_name
 
@@ -36,6 +40,11 @@ class _Context:
         self.convert_to: frozenset[str] = frozenset(settings.convert_to or ())
         self.handler_stages: Mapping[type, tuple] = settings.computed.handler_stages
         self.disabled: frozenset[str] = frozenset(settings.disable_programs)
+        # The handlers config probed; the rest are absent from handler_stages
+        # however healthy their tools are.
+        self.probed: frozenset[type[Handler]] = frozenset(
+            enabled_handler_classes(self.enabled, self.convert_to)
+        )
 
 
 # ── Describing a route ────────────────────────────────────────────────
@@ -121,11 +130,15 @@ def _install_fix(tools: Iterable[Tool]) -> str:
     return "install: " + "; ".join(hints) if hints else ""
 
 
-def _in_scope(handler_cls: type[Handler], ctx: _Context) -> bool:
-    """Whether config probed this handler at all; see _enabled_handler_classes."""
-    format_strs = {handler_cls.OUTPUT_FORMAT_STR}
-    format_strs.update(ff.format_str for ff in handler_cls.INPUT_FILE_FORMATS)
-    return bool(format_strs & ctx.enabled)
+def _routed_from(handler_cls: type[Handler]) -> list[str]:
+    """List the format strings whose routes lead to a handler."""
+    return sorted(
+        {
+            file_format.format_str
+            for file_format, (native, chain) in registry.routes_by_format().items()
+            if handler_cls is native or handler_cls in chain
+        }
+    )
 
 
 def _why_unavailable(handler_cls: type[Handler], ctx: _Context) -> tuple[str, str]:
@@ -133,8 +146,10 @@ def _why_unavailable(handler_cls: type[Handler], ctx: _Context) -> tuple[str, st
     key = handler_cls.CONFIG_ENABLED_KEY
     if key and not getattr(ctx.settings, key, False):
         return f"needs --{key.replace('_', '-')}", ""
-    if not _in_scope(handler_cls, ctx):
-        return f"needs -x {handler_cls.OUTPUT_FORMAT_STR}", ""
+    if handler_cls not in ctx.probed:
+        # Config probes every handler an enabled format routes to, so only an
+        # opt-in conversion whose source formats are all off lands here.
+        return f"needs -x {' or '.join(_routed_from(handler_cls))}", ""
     if tools := _missing_tools(handler_cls, ctx):
         return f"no available tool: {_tool_list(tools, ctx)}", _install_fix(tools)
     return "unavailable", ""

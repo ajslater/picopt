@@ -331,7 +331,7 @@ over every directory file.
 
 ```sh
 printf 'picopt:\n  convert_to: [CBZ]\n' > comics/.picopt.yaml
-picopt -rx CBR,CBZ .   # CBRs under comics/ convert; siblings don't
+picopt -rx CBR .   # CBRs under comics/ convert; siblings don't
 ```
 
 Any config key is accepted and validated, but run-scoped keys — `dry_run`,

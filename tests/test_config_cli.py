@@ -12,6 +12,8 @@ from picopt.config import PicoptConfig
 from picopt.doctor.tools import ToolTree
 from picopt.plugins.base.tool import Tool, ToolStatus
 from picopt.plugins.jxl import JxlFromJpeg, JxlFromWebP, JxlLossless
+from picopt.plugins.png import Png
+from picopt.plugins.zip import Zip
 
 __all__ = ()
 
@@ -102,6 +104,19 @@ class TestHandlerConfigGate:
         assert settings.convert_webp_to_jxl is True
         assert JxlFromWebP in settings.computed.handler_stages
         assert JxlFromJpeg not in settings.computed.handler_stages
+
+
+class TestConvertTargetProbed:
+    """A -c target an enabled format converts to is probed without -x."""
+
+    def test_archive_target(self) -> None:
+        settings = _get_settings("-x", "RAR", "-c", "ZIP")
+        assert "ZIP" not in settings.formats
+        assert Zip in settings.computed.handler_stages
+
+    def test_image_target(self) -> None:
+        settings = _get_settings("-f", "BMP", "-c", "PNG")
+        assert Png in settings.computed.handler_stages
 
 
 class _FakeTool(Tool):
