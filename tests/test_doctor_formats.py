@@ -75,7 +75,7 @@ def test_probe_error_is_named(
     unrar = Rar.PIPELINE[0][0]
     status = ToolStatus(name="unrar", available=False, error="cannot extract RAR5")
     monkeypatch.setattr(unrar, "_probed_status", status)
-    _, out = run_doctor(capsys, "-q", "-x", "RAR,ZIP", "-c", "ZIP")
+    _, out = run_doctor(capsys, "-q", "-x", "RAR", "-c", "ZIP")
     row = find_row(out, "FAIL", "RAR")
     assert row == "FAIL RAR no available tool: unrar (cannot extract RAR5)"
 
@@ -112,9 +112,23 @@ def test_unpackable_archive_needs_convert(capsys: pytest.CaptureFixture[str]) ->
     assert find_row(out, "FAIL", "RAR") == "FAIL RAR read only: add -c ZIP"
 
 
-def test_convert_target_must_be_enabled(capsys: pytest.CaptureFixture[str]) -> None:
-    _, out = run_doctor(capsys, "-x", "RAR", "-c", "ZIP")
-    assert find_row(out, "FAIL", "RAR") == "FAIL RAR -c ZIP needs -x ZIP"
+def test_convert_target_needs_no_extra_format(
+    monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """-c ZIP alone makes RAR convert; ZIP itself needn't be enabled."""
+    set_available(monkeypatch, (Rar.PIPELINE[0][0],), available=True)
+    code, out = run_doctor(capsys, "-x", "RAR", "-c", "ZIP")
+    assert code == 0, out
+    row = find_row(out, "ok", "RAR")
+    assert row == "ok RAR Rar: unrar, repacked to ZIP with Zip: zipfile"
+
+
+def test_opt_in_flag_without_source_format(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    _, out = run_doctor(capsys, "-f", "PNG", "-c", "JXL", "--convert-jpeg-to-jxl")
+    row = find_row(out, "WARN", "--convert-jpeg-to-jxl")
+    assert row == "WARN --convert-jpeg-to-jxl JxlFromJpeg needs -x JPEG"
 
 
 def test_archive_needs_its_reader_to_convert(
@@ -122,7 +136,7 @@ def test_archive_needs_its_reader_to_convert(
 ) -> None:
     """Converting RAR to ZIP still needs unrar to unpack it."""
     set_available(monkeypatch, (Rar.PIPELINE[0][0],), available=False)
-    code, out = run_doctor(capsys, "-x", "RAR,ZIP", "-c", "ZIP")
+    code, out = run_doctor(capsys, "-x", "RAR", "-c", "ZIP")
     assert code == 1
     assert find_row(out, "FAIL", "RAR") == "FAIL RAR no available tool: unrar"
 
