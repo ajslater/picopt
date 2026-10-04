@@ -28,6 +28,7 @@ by the time it matters. Don't reorder.
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
 from loguru import logger
@@ -35,11 +36,12 @@ from loguru import logger
 from picopt import plugins as registry
 
 if TYPE_CHECKING:
-    from collections.abc import Iterable
+    from collections.abc import Iterable, Mapping
 
     from confuse import Subview
 
     from picopt.plugins.base import Handler, Tool
+    from picopt.plugins.base.format import FileFormat
 
 
 def _pick_tier_tool(
@@ -99,6 +101,85 @@ def _enabled_handler_classes(
                 yield handler_cls
 
 
+@dataclass(frozen=True, slots=True)
+class FormatRoute:
+    """The routing decision for one enabled file format."""
+
+    file_format: FileFormat
+    native: type[Handler] | None
+    convert_chain: tuple[type[Handler], ...]
+    # The handler that writes the output, or None when the walk skips the
+    # format. For archives it is the repack handler.
+    picked: type[Handler] | None
+
+    @property
+    def converts(self) -> bool:
+        """Whether the output is another format."""
+        return self.picked is not None and self.picked is not self.native
+
+
+def _pick(
+    file_format: FileFormat,
+    native: type[Handler] | None,
+    convert_chain: tuple[type[Handler], ...],
+    convert_to: frozenset[str],
+    handler_stages: Mapping,
+) -> type[Handler] | None:
+    """Pick the handler the walk would, through both archive passes."""
+    first_pass = registry.pick_route_handler(
+        file_format,
+        native,
+        convert_chain,
+        convert=True,
+        repack=False,
+        convert_to=convert_to,
+        handler_stages=handler_stages,
+    )
+    if first_pass is None or not file_format.archive:
+        return first_pass
+    # An archive is unpacked by the first pass's handler, then repacked by
+    # the one the repack pass picks, which must also exist.
+    return registry.pick_route_handler(
+        file_format,
+        native,
+        convert_chain,
+        convert=True,
+        repack=True,
+        convert_to=convert_to,
+        handler_stages=handler_stages,
+    )
+
+
+def formats_summary(
+    all_format_strs: frozenset[str],
+    convert_to: frozenset[str],
+    handler_stages: Mapping,
+) -> tuple[FormatRoute, ...]:
+    """
+    Route every enabled file format the way the walk will.
+
+    Built on the routing layer's own decision function, so the startup
+    banner and the doctor can never drift from what the walk actually does.
+    Sorted by format string, so each format's variants are adjacent.
+    """
+    routes = [
+        FormatRoute(
+            file_format,
+            native,
+            convert_chain,
+            _pick(file_format, native, convert_chain, convert_to, handler_stages),
+        )
+        for file_format, (native, convert_chain) in registry.routes_by_format().items()
+        if file_format.format_str in all_format_strs
+    ]
+    return tuple(
+        sorted(
+            routes,
+            key=lambda route: (route.file_format.format_str, str(route.file_format)),
+        )
+    )
+
+
 class ConfigHandlers:
     """Build the per-handler pipeline selection from the merged config."""
 
@@ -155,32 +236,17 @@ class ConfigHandlers:
         handler_stages: dict[type[Handler], tuple[Tool, ...]],
     ) -> None:
         """Log the run-wide "Optimizing formats" banner."""
-        # Build the summary with the routing layer's own decision function
-        # so the log can never drift from what the walk actually does.
-        # repack=True for archives applies the same convert/CAN_PACK gates
-        # the repack pass will.
         handled_format_strs: set[str] = set()
         convert_format_strs: dict[str, set[str]] = {}
-        routes = registry.routes_by_format()
-        for file_format, (native, convert_chain) in routes.items():
-            if file_format.format_str not in all_format_strs:
+        for route in formats_summary(all_format_strs, convert_to, handler_stages):
+            if route.picked is None:
                 continue
-            picked = registry.pick_route_handler(
-                file_format,
-                native,
-                convert_chain,
-                convert=True,
-                repack=file_format.archive,
-                convert_to=convert_to,
-                handler_stages=handler_stages,
-            )
-            if picked is None:
-                continue
-            handled_format_strs.add(file_format.format_str)
-            if picked is not native:
-                convert_format_strs.setdefault(picked.OUTPUT_FORMAT_STR, set()).add(
-                    file_format.format_str
-                )
+            format_str = route.file_format.format_str
+            handled_format_strs.add(format_str)
+            if route.converts:
+                convert_format_strs.setdefault(
+                    route.picked.OUTPUT_FORMAT_STR, set()
+                ).add(format_str)
         self._print_formats_config(verbose, handled_format_strs, convert_format_strs)
 
     def set_format_handler_map(

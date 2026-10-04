@@ -150,9 +150,11 @@ def get_dot_color_key() -> str:
             "[argparse.groups]doctor mode:[/argparse.groups]",
             (
                 f" [argparse.prog]{PROGRAM_NAME}[/argparse.prog]"
-                " [argparse.args]doctor[/argparse.args]"
-                "\t\tDoctor mode shows available tools."
+                " [argparse.args]doctor[/argparse.args] [OPTIONS] [PATH ...]"
             ),
+            "\tCheck tools, dependencies and config for a run with these options.",
+            "\tAdd -q to show only problems. A target named doctor must be",
+            "\tpassed as ./doctor.",
         )
     )
     return "\n".join(lines)
@@ -184,21 +186,35 @@ def _highlight_format_strs() -> None:
     PicoptHelpFormatter.highlights.append(rf"\b(?P<metavar>{pattern})\b")
 
 
-def get_arguments(params: tuple[str, ...] | None = None) -> Namespace:
-    """Parse the command line."""
+_DOCTOR_DESCRIPTION = (
+    "Check whether a run with these options will work on this machine, and "
+    "why not. Takes every run option and diagnoses it without optimizing or "
+    "writing anything. Exits 1 if a run would fail or skip an enabled format."
+)
+_DOCTOR_EPILOG = "-q shows only problems. -w, -W and --write-config-file are ignored."
+
+
+def build_parser(*, doctor: bool = False) -> ArgumentParser:
+    """Build the run parser, or the doctor's, which takes the same options."""
     _highlight_format_strs()
     all_format_strs = registry.all_format_strs()
     default_format_strs = _default_format_strs()
     lossless_convert_to = _lossless_image_convert_to_format_strs()
     archive_convert_from = _archive_convert_from_format_strs()
 
-    description = "Losslessly optimizes and optionally converts images."
-    epilog = get_dot_color_key()
-    parser = ArgumentParser(
-        description=description,
-        epilog=epilog,
-        formatter_class=PicoptHelpFormatter,
-    )
+    if doctor:
+        parser = ArgumentParser(
+            prog=f"{PROGRAM_NAME} doctor",
+            description=_DOCTOR_DESCRIPTION,
+            epilog=_DOCTOR_EPILOG,
+            formatter_class=PicoptHelpFormatter,
+        )
+    else:
+        parser = ArgumentParser(
+            description="Losslessly optimizes and optionally converts images.",
+            epilog=get_dot_color_key(),
+            formatter_class=PicoptHelpFormatter,
+        )
     parser.add_argument(
         "-r",
         "--recurse",
@@ -468,10 +484,21 @@ def get_arguments(params: tuple[str, ...] | None = None) -> Namespace:
         "paths",
         metavar="path",
         type=str,
-        nargs="+",
-        help="File or directory paths to optimize",
+        nargs="*" if doctor else "+",
+        help=(
+            "File or directory paths to check"
+            if doctor
+            else "File or directory paths to optimize"
+        ),
     )
+    return parser
 
+
+def get_arguments(
+    params: tuple[str, ...] | None = None, *, doctor: bool = False
+) -> Namespace:
+    """Parse the command line."""
+    parser = build_parser(doctor=doctor)
     if params is not None:
         params = params[1:]
     pns = parser.parse_args(params)
@@ -497,7 +524,13 @@ def main(args: tuple[str, ...] | None = None) -> None:
     if len(argv) > 1 and argv[1] == "doctor":
         from picopt.doctor import PicoptDoctor
 
-        PicoptDoctor.doctor_mode()
+        try:
+            doctor_arguments = get_arguments((argv[0], *argv[2:]), doctor=True)
+        except Exception:
+            # Building the parser runs plugin discovery. If that crashes,
+            # check the defaults: the doctor reports the crash itself.
+            doctor_arguments = None
+        PicoptDoctor.doctor_mode(doctor_arguments)
 
     # Imported here, not at module level: the walk pulls in treestamps,
     # which neither the doctor nor argument parsing needs.
