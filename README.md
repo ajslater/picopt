@@ -185,6 +185,9 @@ Picopt uncompresses, optimizes and rezips
 aware that CBR rar archives may only be rezipped into CBZs instead of CBR. Comic
 book archive optimization is not turned on by default to prevent surprises.
 
+Reading RAR and CBR needs RARLAB's `unrar` on your path. On Debian and Ubuntu
+that is the `unrar` package from non-free or multiverse, not `unrar-free`.
+
 ## 📦 Install
 
 ### System Dependencies

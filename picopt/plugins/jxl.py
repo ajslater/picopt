@@ -37,7 +37,7 @@ from loguru import logger
 from PIL import Image
 from typing_extensions import override
 
-from picopt.pillow.jxl import JXL_FORMAT_STR
+from picopt.pillow.jxl import JXL_FORMAT_STR, PILLOW_JXL_IMPORT_ERROR
 from picopt.plugins.base import (
     Handler,
     ImageHandler,
@@ -82,6 +82,17 @@ _MODE_SUBSTITUTES: Final[MappingProxyType[str, str]] = MappingProxyType(
 # ---------------------------------------------------------------------------
 # Tools
 # ---------------------------------------------------------------------------
+
+
+class PILJxlSaveTool(PILSaveTool):
+    """Pillow's JXL save, which exists only when pillow_jxl imported."""
+
+    @override
+    def save_unsupported_reason(self) -> str:
+        reason = super().save_unsupported_reason()
+        if reason and PILLOW_JXL_IMPORT_ERROR is not None:
+            reason += f": {PILLOW_JXL_IMPORT_ERROR}"
+        return reason
 
 
 class JpegXlReconstructTool(InternalTool):
@@ -161,7 +172,7 @@ class JxlLossless(ImageHandler):
         {"lossless": True, "effort": _EFFORT}
     )
     PIPELINE: tuple[tuple[Tool, ...], ...] = (
-        (PILSaveTool(target_format_str=JXL_FORMAT_STR, name="pil2jxl"),),
+        (PILJxlSaveTool(target_format_str=JXL_FORMAT_STR, name="pil2jxl"),),
     )
 
     @override
