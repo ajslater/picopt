@@ -72,6 +72,23 @@ class TestTreeRootTimestamps:
         cli.main(argv)
         assert (TMP_ROOT / PNG_FN).stat().st_mtime_ns == optimized_mtime
 
+    @pytest.mark.parametrize("run_level_key", ["dry_run", "list_only"])
+    def test_root_yaml_run_level_key_keeps_stamps(self, run_level_key: str) -> None:
+        """A root yaml's dry_run/list_only is pinned, so it can't mask stamps off."""
+        # bigger keeps every re-optimized result, so only a stamp skips a rewrite.
+        _write_dir_config(
+            TMP_ROOT, f"picopt:\n  bigger: true\n  {run_level_key}: true\n"
+        )
+        shutil.copy(IMAGES_DIR / PNG_FN, TMP_ROOT / PNG_FN)
+        argv = (PROGRAM_NAME, "-rtvx", "PNG", str(TMP_ROOT))
+
+        cli.main(argv)
+        assert (TMP_ROOT / TIMESTAMPS_FN).is_file()
+        optimized_mtime = (TMP_ROOT / PNG_FN).stat().st_mtime_ns
+
+        cli.main(argv)
+        assert (TMP_ROOT / PNG_FN).stat().st_mtime_ns == optimized_mtime
+
     def test_root_yaml_comment_edit_keeps_stamps(self) -> None:
         """Only option values invalidate the root config, not file bytes."""
         yaml_body = "picopt:\n  recurse: true\n  timestamps: true\n  bigger: false\n"

@@ -14,6 +14,8 @@
       unrar that can't extract RAR5.
     - A broken rarfile, py7zr or pikepdf install now disables only its own
       formats, with a warning, instead of stopping every run.
+    - `dry_run` or `list_only` in a tree root's `.picopt.yaml` no longer turns
+      off timestamps for that tree.
 - Changes
     - `picopt doctor` exits 1 only when a run with its options would fail or
       skip an enabled format, not whenever any tool is missing.
