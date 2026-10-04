@@ -94,14 +94,24 @@ def _missing_tools(handler_cls: type[Handler], ctx: _Context) -> list[Tool]:
     return missing
 
 
+# The usual probe error says only what the tool's name already does.
+_NOT_FOUND_SUFFIX: Final = "not found in PATH"
+
+
+def _tool_reason(tool: Tool, ctx: _Context) -> str:
+    """Name a missing tool, with why when it was found but failed its probe."""
+    name = tool_name(tool)
+    if name in ctx.disabled:
+        return f"{name} (disabled)"
+    error = tool.probe().error
+    if error and not error.endswith(_NOT_FOUND_SUFFIX):
+        # -q hides the tool tree, so this row is the only place it shows.
+        return f"{name} ({error})"
+    return name
+
+
 def _tool_list(tools: Sequence[Tool], ctx: _Context) -> str:
-    names = []
-    for tool in tools:
-        name = tool_name(tool)
-        if name in ctx.disabled:
-            name += " (disabled)"
-        names.append(name)
-    return ", ".join(dict.fromkeys(names))
+    return ", ".join(dict.fromkeys(_tool_reason(tool, ctx) for tool in tools))
 
 
 def _install_fix(tools: Iterable[Tool]) -> str:

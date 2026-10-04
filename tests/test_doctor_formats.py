@@ -8,7 +8,7 @@ from picopt import PROGRAM_NAME, cli
 from picopt import plugins as registry
 from picopt.config import PicoptConfig
 from picopt.config.handlers import ConfigHandlers
-from picopt.plugins.base.tool import ExternalTool, PILSaveTool
+from picopt.plugins.base.tool import ExternalTool, PILSaveTool, ToolStatus
 from picopt.plugins.rar import Rar
 from picopt.plugins.svg import Svg
 from picopt.plugins.webp.const import WEBP_FORMAT_STR
@@ -64,6 +64,18 @@ def test_pip_only_defaults_pass(
     # Animated WebP has no Pillow route without -c WEBP: a gap, not a failure.
     row = find_row(out, "WARN", "WEBP animated")
     assert row == "WARN WEBP animated no available tool: webpmux"
+
+
+def test_probe_error_is_named(
+    monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """A tool that was found but failed its probe says why, even with -q."""
+    unrar = Rar.PIPELINE[0][0]
+    status = ToolStatus(name="unrar", available=False, error="cannot extract RAR5")
+    monkeypatch.setattr(unrar, "_probed_status", status)
+    _, out = run_doctor(capsys, "-q", "-x", "RAR,ZIP", "-c", "ZIP")
+    row = find_row(out, "FAIL", "RAR")
+    assert row == "FAIL RAR no available tool: unrar (cannot extract RAR5)"
 
 
 def test_disabled_program_is_named(
