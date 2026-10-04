@@ -26,7 +26,8 @@ def _run_blocked(
     """Run code in a fresh interpreter where ``library`` fails to import."""
     # Imports are cached per process, so blocking a library needs a new one.
     script = f"import sys\nsys.modules[{library!r}] = None\n{code}"
-    env = {**os.environ, "PICOPTDIR": str(tmp_path / "config")}
+    # Wide enough that no report row wraps.
+    env = {**os.environ, "PICOPTDIR": str(tmp_path / "config"), "COLUMNS": "200"}
     return subprocess.run(  # noqa: S603
         (sys.executable, "-c", script),
         capture_output=True,
@@ -65,6 +66,19 @@ class TestBrokenLibrary:
         warning = f"Plugin '{module}' disabled"
         assert result.stdout.count(warning) == 1, result.stdout
         assert library in result.stdout
+
+    def test_doctor_reports_failed_plugin(
+        self, library: str, module: str, tmp_path: Path
+    ) -> None:
+        code = "from picopt import cli\ncli.main(('picopt', 'doctor'))\n"
+        result = _run_blocked(library, code, tmp_path)
+        assert result.returncode == 1, result.stderr
+        assert "Traceback" not in result.stderr
+        [row] = [
+            line for line in result.stdout.splitlines() if "failed to load" in line
+        ]
+        assert row.split()[:2] == ["FAIL", module]
+        assert library in row
 
 
 def test_placeholder_never_matches(tmp_path: Path) -> None:
