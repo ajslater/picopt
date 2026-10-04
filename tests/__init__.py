@@ -1,13 +1,19 @@
 """Tests init."""
 
+import atexit
 import inspect
+import shutil
+import tempfile
 from pathlib import Path
 
 TEST_FILES_DIR = Path("tests/test_files")
 IMAGES_DIR = TEST_FILES_DIR / "images"
 INVALID_DIR = TEST_FILES_DIR / "invalid"
 CONTAINER_DIR = TEST_FILES_DIR / "containers"
-TMP_ROOT = "/tmp"  # noqa: S108
+# A fresh root per test session so concurrent runs (e.g. from several git
+# worktrees) can't set up or tear down each other's files.
+TMP_ROOT = Path(tempfile.mkdtemp(prefix="picopt-"))
+atexit.register(shutil.rmtree, TMP_ROOT, ignore_errors=True)
 
 # Default tolerance for output size comparisons. Optimization tools (mozjpeg,
 # oxipng, cwebp, lzma, bz2, etc.) and their underlying libraries (libpng,
@@ -49,4 +55,4 @@ def get_test_dir() -> Path:
     else:
         module_name = "unknown"
 
-    return TMP_ROOT / Path("picopt-" + module_name)
+    return TMP_ROOT / module_name

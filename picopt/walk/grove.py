@@ -12,6 +12,7 @@ from treestamps import (
     GrovestampsConfig,
     Treestamps,
     TreestampsConfig,
+    TreestampsReport,
     dir_config_fingerprint,
 )
 from typing_extensions import override
@@ -119,7 +120,16 @@ class Grove(Grovestamps):
         run_config: PicoptSettings,
     ) -> None:
         """Build one loaded Treestamps per stamp-active top path."""
-        config = GrovestampsConfig(
+        super().__init__(self.grove_config(top_paths, dirconfig, run_config))
+
+    @staticmethod
+    def grove_config(
+        top_paths: Iterable[Path],
+        dirconfig: DirConfig,
+        run_config: PicoptSettings,
+    ) -> GrovestampsConfig:
+        """Build the config a run's grove loads with."""
+        return GrovestampsConfig(
             program_name=PROGRAM_NAME,
             paths=top_paths,
             # Keep every top path: the factory drops symlinked ones by
@@ -129,7 +139,24 @@ class Grove(Grovestamps):
                 _tree_config, dirconfig=dirconfig, run_config=run_config
             ),
         )
-        super().__init__(config)
+
+    @classmethod
+    def inspect_trees(
+        cls,
+        top_paths: Iterable[Path],
+        dirconfig: DirConfig,
+        run_config: PicoptSettings,
+        *,
+        children: bool = True,
+    ) -> dict[Path, TreestampsReport | None]:
+        """
+        Report what a run would make of each tree's stamp files.
+
+        Read-only: nothing is loaded, written or logged. Uses the run's own
+        config builder, so the report can't disagree with a run's load.
+        """
+        config = cls.grove_config(top_paths, dirconfig, run_config)
+        return cls.inspect(config, children=children)
 
     @override
     def set(

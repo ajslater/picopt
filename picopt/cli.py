@@ -7,7 +7,6 @@ import sys
 import traceback
 from argparse import Action, ArgumentParser, Namespace
 from functools import cache
-from importlib.metadata import PackageNotFoundError, version
 from typing import TYPE_CHECKING, Any, ClassVar
 
 from confuse.exceptions import ConfigError
@@ -15,27 +14,17 @@ from loguru import logger
 from rich_argparse import RawDescriptionRichHelpFormatter
 from typing_extensions import override
 
-from picopt import PROGRAM_NAME
+from picopt import PROGRAM_NAME, get_version
 from picopt import plugins as registry
 from picopt.config import PicoptConfig
-from picopt.doctor import PicoptDoctor
 from picopt.exceptions import PicoptError
 from picopt.log import setup as setup_logging
 from picopt.log.styles import MARKS, MarkKind
-from picopt.walk.walk import Walk
 
 if TYPE_CHECKING:
     from collections.abc import Collection, Sequence
 
 _LIST_DELIMITER = ","
-
-
-@cache
-def _get_version() -> str:
-    try:
-        return version(PROGRAM_NAME)
-    except PackageNotFoundError:
-        return "test"
 
 
 def _default_format_strs() -> tuple[str, ...]:
@@ -109,7 +98,8 @@ def _comma_join(
 ) -> str:
     """Sort and join a sequence into a human readable string."""
     formats = tuple(sorted(formats))
-    if len(formats) == 2:  # noqa: PLR2004
+    # Failed plugins can shrink these lists, even to nothing.
+    if len(formats) <= 2:  # noqa: PLR2004
         return " or ".join(formats)
     if final_and:
         final = formats[-1]
@@ -160,9 +150,11 @@ def get_dot_color_key() -> str:
             "[argparse.groups]doctor mode:[/argparse.groups]",
             (
                 f" [argparse.prog]{PROGRAM_NAME}[/argparse.prog]"
-                " [argparse.args]doctor[/argparse.args]"
-                "\t\tDoctor mode shows available tools."
+                " [argparse.args]doctor[/argparse.args] [OPTIONS] [PATH ...]"
             ),
+            "\tCheck tools, dependencies and config for a run with these options.",
+            "\tAdd -q to show only problems. A target named doctor must be",
+            "\tpassed as ./doctor.",
         )
     )
     return "\n".join(lines)
@@ -178,26 +170,51 @@ class PicoptHelpFormatter(RawDescriptionRichHelpFormatter):
     reads coherently.
     """
 
-    highlights: ClassVar[list[str]] = [
-        *RawDescriptionRichHelpFormatter.highlights,
-        rf"\b(?P<metavar>{'|'.join(re.escape(f) for f in registry.all_format_strs())})\b",
-    ]
+    highlights: ClassVar[list[str]] = [*RawDescriptionRichHelpFormatter.highlights]
 
 
-def get_arguments(params: tuple[str, ...] | None = None) -> Namespace:
-    """Parse the command line."""
+@cache
+def _highlight_format_strs() -> None:
+    """
+    Add the format names to the help highlights, once.
+
+    Deferred from the class body because it runs plugin discovery, which
+    importing this module must not: the doctor reports a discovery crash
+    instead of dying with it.
+    """
+    pattern = "|".join(re.escape(f) for f in registry.all_format_strs())
+    PicoptHelpFormatter.highlights.append(rf"\b(?P<metavar>{pattern})\b")
+
+
+_DOCTOR_DESCRIPTION = (
+    "Check whether a run with these options will work on this machine, and "
+    "why not. Takes every run option and diagnoses it without optimizing or "
+    "writing anything. Exits 1 if a run would fail or skip an enabled format."
+)
+_DOCTOR_EPILOG = "-q shows only problems. -w, -W and --write-config-file are ignored."
+
+
+def build_parser(*, doctor: bool = False) -> ArgumentParser:
+    """Build the run parser, or the doctor's, which takes the same options."""
+    _highlight_format_strs()
     all_format_strs = registry.all_format_strs()
     default_format_strs = _default_format_strs()
     lossless_convert_to = _lossless_image_convert_to_format_strs()
     archive_convert_from = _archive_convert_from_format_strs()
 
-    description = "Losslessly optimizes and optionally converts images."
-    epilog = get_dot_color_key()
-    parser = ArgumentParser(
-        description=description,
-        epilog=epilog,
-        formatter_class=PicoptHelpFormatter,
-    )
+    if doctor:
+        parser = ArgumentParser(
+            prog=f"{PROGRAM_NAME} doctor",
+            description=_DOCTOR_DESCRIPTION,
+            epilog=_DOCTOR_EPILOG,
+            formatter_class=PicoptHelpFormatter,
+        )
+    else:
+        parser = ArgumentParser(
+            description="Losslessly optimizes and optionally converts images.",
+            epilog=get_dot_color_key(),
+            formatter_class=PicoptHelpFormatter,
+        )
     parser.add_argument(
         "-r",
         "--recurse",
@@ -461,20 +478,40 @@ def get_arguments(params: tuple[str, ...] | None = None) -> Namespace:
         "-V",
         "--version",
         action="version",
-        version=f"%(prog)s {_get_version()}",
+        version=f"%(prog)s {get_version()}",
     )
     parser.add_argument(
         "paths",
         metavar="path",
         type=str,
-        nargs="+",
-        help="File or directory paths to optimize",
+        nargs="*" if doctor else "+",
+        help=(
+            "File or directory paths to check"
+            if doctor
+            else "File or directory paths to optimize"
+        ),
     )
+    return parser
 
+
+def get_arguments(
+    params: tuple[str, ...] | None = None, *, doctor: bool = False
+) -> Namespace:
+    """Parse the command line."""
+    parser = build_parser(doctor=doctor)
     if params is not None:
         params = params[1:]
     pns = parser.parse_args(params)
     return Namespace(picopt=pns)
+
+
+def _warn_failed_plugins() -> None:
+    """Name each plugin a broken format library disabled."""
+    for failure in registry.failed_plugins():
+        logger.warning(
+            f"Plugin '{failure.module}' disabled: {failure.error}. "
+            f"Run '{PROGRAM_NAME} doctor' for details."
+        )
 
 
 def main(args: tuple[str, ...] | None = None) -> None:
@@ -483,10 +520,25 @@ def main(args: tuple[str, ...] | None = None) -> None:
     # detects doctor mode it runs a checkup and exits the program.
     # Do this before constructing the main argparser so we don't have to refactor
     # the existing CLI into subparsers.
-    PicoptDoctor.parse_cli()
+    argv = args or tuple(sys.argv)
+    if len(argv) > 1 and argv[1] == "doctor":
+        from picopt.doctor import PicoptDoctor
+
+        try:
+            doctor_arguments = get_arguments((argv[0], *argv[2:]), doctor=True)
+        except Exception:
+            # Building the parser runs plugin discovery. If that crashes,
+            # check the defaults: the doctor reports the crash itself.
+            doctor_arguments = None
+        PicoptDoctor.doctor_mode(doctor_arguments)
+
+    # Imported here, not at module level: the walk pulls in treestamps,
+    # which neither the doctor nor argument parsing needs.
+    from picopt.walk.walk import Walk
 
     setup_logging(2)
     try:
+        _warn_failed_plugins()
         arguments = get_arguments(args)
         # Un-passed flags are None so config-file/env layers stay visible.
         cli_verbose = arguments.picopt.verbose

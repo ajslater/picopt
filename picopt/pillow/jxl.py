@@ -26,7 +26,6 @@ is parsed here. This should be a part of Pillow.
 
 from __future__ import annotations
 
-from contextlib import suppress
 from importlib import import_module
 from typing import TYPE_CHECKING, Final
 
@@ -35,13 +34,23 @@ from PIL import Image
 if TYPE_CHECKING:
     from typing import BinaryIO
 
-# Imported for its side effect alone: pillow_jxl registers the codec with
-# Pillow at import time and exposes nothing picopt calls directly, so a plain
-# `import` reads as unused and gets stripped by autofixers.
-# Suppressed so picopt still runs when the optional codec is absent; the
-# handlers then probe as unavailable and JXL files are simply skipped.
-with suppress(ImportError):
-    import_module("pillow_jxl")
+
+def _import_pillow_jxl() -> ImportError | None:
+    """Register the codec with Pillow; return the ImportError if it failed."""
+    # Imported for its side effect alone: pillow_jxl registers the codec with
+    # Pillow at import time and exposes nothing picopt calls directly, so a
+    # plain `import` reads as unused and gets stripped by autofixers.
+    try:
+        import_module("pillow_jxl")
+    except ImportError as exc:
+        return exc
+    return None
+
+
+# Kept rather than raised so picopt still runs when the codec is absent; the
+# handlers then probe as unavailable, name this error, and JXL files are
+# simply skipped.
+PILLOW_JXL_IMPORT_ERROR: Final[ImportError | None] = _import_pillow_jxl()
 
 JXL_FORMAT_STR: Final[str] = "JXL"
 

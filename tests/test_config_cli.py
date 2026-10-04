@@ -9,9 +9,11 @@ from typing_extensions import override
 
 from picopt import cli
 from picopt.config import PicoptConfig
-from picopt.doctor import PicoptDoctor
+from picopt.doctor.tools import ToolTree
 from picopt.plugins.base.tool import Tool, ToolStatus
 from picopt.plugins.jxl import JxlFromJpeg, JxlFromWebP, JxlLossless
+from picopt.plugins.png import Png
+from picopt.plugins.zip import Zip
 
 __all__ = ()
 
@@ -104,6 +106,19 @@ class TestHandlerConfigGate:
         assert JxlFromJpeg not in settings.computed.handler_stages
 
 
+class TestConvertTargetProbed:
+    """A -c target an enabled format converts to is probed without -x."""
+
+    def test_archive_target(self) -> None:
+        settings = _get_settings("-x", "RAR", "-c", "ZIP")
+        assert "ZIP" not in settings.formats
+        assert Zip in settings.computed.handler_stages
+
+    def test_image_target(self) -> None:
+        settings = _get_settings("-f", "BMP", "-c", "PNG")
+        assert Png in settings.computed.handler_stages
+
+
 class _FakeTool(Tool):
     """Probe-only tool with a fixed availability."""
 
@@ -156,7 +171,7 @@ class TestDoctorTierAccounting:
     """Tools in a tier are alternatives; one available tool satisfies it."""
 
     def test_tier_with_one_available_alternative_is_healthy(self: Any) -> None:
-        doctor = PicoptDoctor()
+        doctor = ToolTree()
         tier = (
             _FakeTool("missing-tool", available=False),
             _FakeTool("present-tool", available=True),
@@ -166,7 +181,7 @@ class TestDoctorTierAccounting:
         assert doctor.missing_required == 0
 
     def test_tier_with_no_available_tool_is_missing(self: Any) -> None:
-        doctor = PicoptDoctor()
+        doctor = ToolTree()
         tier = (
             _FakeTool("gone-a", available=False),
             _FakeTool("gone-b", available=False),
@@ -176,7 +191,7 @@ class TestDoctorTierAccounting:
         assert doctor.missing_required == 1
 
     def test_all_optional_tier_never_required(self: Any) -> None:
-        doctor = PicoptDoctor()
+        doctor = ToolTree()
         tier = (_FakeTool("extra", available=False, required=False),)
         doctor._checkup_handler_pipeline_tier(0, tier)
         assert doctor.total_required == 0

@@ -37,7 +37,7 @@ from loguru import logger
 from PIL import Image
 from typing_extensions import override
 
-from picopt.pillow.jxl import JXL_FORMAT_STR
+from picopt.pillow.jxl import JXL_FORMAT_STR, PILLOW_JXL_IMPORT_ERROR
 from picopt.plugins.base import (
     Handler,
     ImageHandler,
@@ -82,6 +82,17 @@ _MODE_SUBSTITUTES: Final[MappingProxyType[str, str]] = MappingProxyType(
 # ---------------------------------------------------------------------------
 # Tools
 # ---------------------------------------------------------------------------
+
+
+class PILJxlSaveTool(PILSaveTool):
+    """Pillow's JXL save, which exists only when pillow_jxl imported."""
+
+    @override
+    def save_unsupported_reason(self) -> str:
+        reason = super().save_unsupported_reason()
+        if reason and PILLOW_JXL_IMPORT_ERROR is not None:
+            reason += f": {PILLOW_JXL_IMPORT_ERROR}"
+        return reason
 
 
 class JpegXlReconstructTool(InternalTool):
@@ -152,16 +163,15 @@ class JxlLossless(ImageHandler):
     # OUTPUT_FILE_FORMAT is deliberately absent: pil_save short-circuits when
     # the input is already an acceptable input format, which for a
     # single-tier JXL -> JXL pipeline would make re-optimization a no-op.
-    # Png is listed so this handler is probed whenever PNG is requested,
-    # which is what makes `-f PNG -c JXL` work.
-    INPUT_FILE_FORMATS = frozenset({Png.OUTPUT_FILE_FORMAT})
+    # Config probes it for `-c JXL` through the convert routes below.
+    INPUT_FILE_FORMATS: frozenset[FileFormat] = frozenset()
     SUFFIXES: tuple[str, ...] = (".jxl",)
 
     PIL2_KWARGS: MappingProxyType[str, Any] = MappingProxyType(
         {"lossless": True, "effort": _EFFORT}
     )
     PIPELINE: tuple[tuple[Tool, ...], ...] = (
-        (PILSaveTool(target_format_str=JXL_FORMAT_STR, name="pil2jxl"),),
+        (PILJxlSaveTool(target_format_str=JXL_FORMAT_STR, name="pil2jxl"),),
     )
 
     @override

@@ -16,7 +16,8 @@ import time
 from contextlib import suppress
 from pathlib import Path
 from tempfile import NamedTemporaryFile
-from typing import TYPE_CHECKING, Any, Final
+from types import MappingProxyType
+from typing import TYPE_CHECKING, Any, Final, NamedTuple
 
 from confuse import Configuration, MappingTemplate
 from confuse.exceptions import ConfigError
@@ -44,11 +45,20 @@ from picopt.config.settings import (
 )
 from picopt.log import console
 
-__all__ = ("DIR_CONFIG_FILENAME", "PicoptConfig", "merge_config_file")
+__all__ = (
+    "DEFAULT_MEMORY_FRACTION",
+    "DIR_CONFIG_FILENAME",
+    "PicoptConfig",
+    "TotalRam",
+    "config_keys",
+    "detect_total_ram",
+    "merge_config_file",
+    "parse_memory_str",
+)
 
 if TYPE_CHECKING:
     from argparse import Namespace
-    from collections.abc import Iterable
+    from collections.abc import Iterable, Mapping
 
     from confuse import Subview
 
@@ -136,6 +146,18 @@ def _build_template() -> MappingTemplate:
     )
 
 
+# Template keys picopt computes itself; no config file may set them.
+_COMPUTED_KEY: Final = "computed"
+
+
+def config_keys() -> frozenset[str]:
+    """Every option key a config file or env var may set."""
+    program_template = _build_template().subtemplates[PROGRAM_NAME]
+    if not isinstance(program_template, MappingTemplate):
+        raise TypeError(program_template)
+    return frozenset(program_template.subtemplates) - {_COMPUTED_KEY}
+
+
 _MULTIPLE_STARS_RE: re.Pattern[str] = re.compile(r"\*+")
 _DEFAULT_IGNORE_REGEXPS = (r"^\.", r"\/\.", r"\.sparsebundle$")
 
@@ -148,12 +170,12 @@ _MEMORY_SUFFIXES: dict[str, int] = {
 }
 # Fraction of total RAM to budget by default. Two-thirds leaves ~a third for the
 # OS, file cache, and headroom above the (approximate) per-archive estimate.
-_DEFAULT_MEMORY_FRACTION = 2 / 3
+DEFAULT_MEMORY_FRACTION: Final = 2 / 3
 # Used only when total RAM can't be detected (e.g. no sysconf, no psutil).
 _FALLBACK_TOTAL_RAM = 4 * 1024**3
 
 
-def _parse_memory_str(value: object) -> int | None:
+def parse_memory_str(value: object) -> int | None:
     """
     Parse a memory size (int bytes or a K/M/G/T-suffixed string) to bytes.
 
@@ -175,20 +197,29 @@ def _parse_memory_str(value: object) -> int | None:
         return None
 
 
-def _detect_total_ram() -> int:
+class TotalRam(NamedTuple):
+    """Total physical RAM, and whether it was detected or assumed."""
+
+    total: int
+    detected: bool
+
+
+def detect_total_ram() -> TotalRam:
     """Best-effort total physical RAM in bytes, cross-platform."""
     try:
         # POSIX (Linux + macOS): total pages * page size.
-        return os.sysconf("SC_PAGE_SIZE") * os.sysconf("SC_PHYS_PAGES")
+        return TotalRam(
+            os.sysconf("SC_PAGE_SIZE") * os.sysconf("SC_PHYS_PAGES"), detected=True
+        )
     except (ValueError, OSError, AttributeError):
         pass
     try:
         import psutil
 
-        return int(psutil.virtual_memory().total)
+        return TotalRam(int(psutil.virtual_memory().total), detected=True)
     except Exception:
         # Any psutil import/read failure falls back to a safe fixed budget.
-        return _FALLBACK_TOTAL_RAM
+        return TotalRam(_FALLBACK_TOTAL_RAM, detected=False)
 
 
 def _invoked_cli_options(nns: Namespace) -> dict:
@@ -292,6 +323,10 @@ def _write_configs(config: Configuration, nns: Namespace) -> None:
             _write_merged_config(target, target, options, verbose)
 
 
+# No keys pinned over the layered config sources.
+_NO_PINS: Final[Mapping[str, object]] = MappingProxyType({})
+
+
 class PicoptConfig(ConfigHandlers):
     """Construct Picopt Config."""
 
@@ -324,12 +359,12 @@ class PicoptConfig(ConfigHandlers):
         a positive byte count.
         """
         raw = config["memory_limit"].get()
-        limit = _parse_memory_str(raw)
+        limit = parse_memory_str(raw)
         if limit is None:
             msg = f"Unparsable --memory-limit value: {raw!r}"
             raise ConfigError(msg)
         if limit <= 0:
-            limit = int(_detect_total_ram() * _DEFAULT_MEMORY_FRACTION)
+            limit = int(detect_total_ram().total * DEFAULT_MEMORY_FRACTION)
         config["memory_limit"].set(limit)
         if print_summary and config["verbose"].get(int) > 1:
             logger.info(f"Memory budget for large archives: {limit // 1024**2} MiB")
@@ -412,12 +447,37 @@ class PicoptConfig(ConfigHandlers):
         if print_summary and config["verbose"].get(int) > 1:
             self._print_timestamps(config, timestamps=timestamps)
 
+    @staticmethod
+    def layer_sources(
+        args: Namespace | None = None,
+        dir_config_files: tuple[Path, ...] = (),
+        modname: str = PROGRAM_NAME,
+    ) -> Configuration:
+        """
+        Layer the config sources without normalizing them.
+
+        The ``_set_*`` normalizers write computed values into an overlay
+        that hides which source a value came from, so the doctor reads
+        provenance and unknown keys from this raw stack instead.
+        """
+        config = Configuration(PROGRAM_NAME, modname=modname, read=False)
+        config.read()
+        if args and getattr(args, "picopt", None) and args.picopt.config:
+            config.set_file(args.picopt.config)
+        for dir_config_file in dir_config_files:
+            config.set_file(str(dir_config_file))
+        config.set_env()
+        if args:
+            config.set_args(args)
+        return config
+
     def _build_config(
         self,
         args: Namespace | None = None,
         dir_config_files: tuple[Path, ...] = (),
         modname: str = PROGRAM_NAME,
         *,
+        pinned: Mapping[str, object] = _NO_PINS,
         print_summary: bool = False,
     ) -> Configuration:
         """
@@ -431,17 +491,13 @@ class PicoptConfig(ConfigHandlers):
         over shallower ones, and env/CLI still win over every directory
         file. Shared by :meth:`get_config` (no directory files) and
         :class:`picopt.config.dirconfig.DirConfig` (per-directory chain).
+        ``pinned`` values override every source before normalizing, so
+        computed values like the ``timestamps`` mask see them too.
         """
-        config = Configuration(PROGRAM_NAME, modname=modname, read=False)
-        config.read()
-        if args and getattr(args, "picopt", None) and args.picopt.config:
-            config.set_file(args.picopt.config)
-        for dir_config_file in dir_config_files:
-            config.set_file(str(dir_config_file))
-        config.set_env()
-        if args:
-            config.set_args(args)
+        config = self.layer_sources(args, dir_config_files, modname)
         config_program = config[PROGRAM_NAME]
+        for key, value in pinned.items():
+            config_program[key].set(value)
         self._set_ignore(config_program, print_summary=print_summary)
         self._set_after(config_program, print_summary=print_summary)
         self._set_memory_limit(config_program, print_summary=print_summary)
@@ -475,6 +531,7 @@ class PicoptConfig(ConfigHandlers):
         self,
         args: Namespace | None,
         dir_config_files: tuple[Path, ...],
+        pinned: Mapping[str, object] = _NO_PINS,
     ) -> PicoptSettings:
         """
         Resolve settings with per-directory config files layered in.
@@ -482,9 +539,10 @@ class PicoptConfig(ConfigHandlers):
         Like :meth:`get_config` but for the per-directory chain: the
         directory ``.picopt.yaml`` files layer beneath env/CLI and above
         the user config, and the write flags are never triggered. Used by
-        :class:`picopt.config.dirconfig.DirConfig`.
+        :class:`picopt.config.dirconfig.DirConfig`, which passes ``pinned``
+        to hold run-mode keys at their run-level values.
         """
-        config = self._build_config(args, dir_config_files)
+        config = self._build_config(args, dir_config_files, pinned=pinned)
         return self._config_to_settings(config)
 
 

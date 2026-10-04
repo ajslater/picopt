@@ -1,12 +1,11 @@
 """
-``picopt doctor`` — report which optimization tools are available.
+The tool inventory: every plugin's handlers and their PIPELINE tools.
 
-Walks every plugin's handlers and probes their PIPELINE tools, printing a
-tree of plugin -> handler -> tier ->  tool with availability, version, and
-path. Optional tools that are missing are reported separately from
-required ones at the bottom.
+Prints a tree of plugin -> handler -> tier -> tool with availability,
+version, and path. It is an inventory, not a verdict: a missing tool matters
+only when an enabled format needs it, which the Formats section decides.
 
-When a tool is missing, the doctor shows a platform-appropriate install
+When a tool is missing, the tree shows a platform-appropriate install
 command (brew on macOS, apt on Debian/Ubuntu, dnf on Fedora/RHEL).
 
 Probing CWebPTool also surfaces (via the probed instance's ``is_modern``
@@ -16,18 +15,20 @@ flag) whether old or new cwebp behavior is in effect.
 from __future__ import annotations
 
 import sys
+from functools import cache
 from pathlib import Path
 from types import MappingProxyType
-from typing import TYPE_CHECKING, Any, Never
+from typing import TYPE_CHECKING
 
 from rich.markup import escape
 
-from picopt import plugins as registry
 from picopt.log import console
 from picopt.plugins.webp import CWebPTool
 
 if TYPE_CHECKING:
-    from collections.abc import Sequence
+    from collections.abc import Iterable
+
+    from picopt.plugins.base import Handler, Plugin, Tool, ToolStatus
 
 # ── Platform detection ────────────────────────────────────────────────
 
@@ -36,6 +37,7 @@ _APT = "apt"
 _DNF = "dnf"
 
 
+@cache
 def _detect_pkg_manager() -> str:
     if sys.platform == "darwin":
         return _BREW
@@ -79,7 +81,8 @@ _INSTALL_HINTS: MappingProxyType[str, MappingProxyType[str, str]] = MappingProxy
         "unrar": MappingProxyType(
             {
                 _BREW: "brew install rar",
-                _APT: "apt install unrar",
+                # RARLAB's unrar, not the unrar-free package.
+                _APT: "apt install unrar (Debian non-free or Ubuntu multiverse)",
                 _DNF: "dnf install unrar",
             }
         ),
@@ -109,26 +112,31 @@ _INSTALL_HINTS: MappingProxyType[str, MappingProxyType[str, str]] = MappingProxy
 )
 
 
-def _install_hint(tool_name: str, pkg_manager: str) -> str:
-    hints = _INSTALL_HINTS.get(tool_name, {})
-    return hints.get(pkg_manager, "")
+def tool_name(tool: Tool) -> str:
+    """Return the name a tool is shown, disabled and hinted by."""
+    return tool.name or type(tool).__name__
 
 
-# ── Doctor ────────────────────────────────────────────────────────────
+def install_hint(name: str) -> str:
+    """Return this platform's install command for a tool, or ""."""
+    hints = _INSTALL_HINTS.get(name, {})
+    return hints.get(_detect_pkg_manager(), "")
 
 
-class PicoptDoctor:
-    """Picopt doctor."""
+# ── Tree ──────────────────────────────────────────────────────────────
+
+
+class ToolTree:
+    """Print the tool inventory and count required tiers."""
 
     def __init__(self) -> None:
         """Init totals."""
         self.total_required = 0
         self.missing_required = 0
         self.missing_optional = 0
-        self._pkg_manager: str = _detect_pkg_manager()
 
     def _checkup_tool_get_tier_and_name(
-        self, status, tier_idx: int, tool
+        self, status: ToolStatus, tier_idx: int, tool: Tool
     ) -> tuple[list[str], bool]:
         tier_has_available = False
         if status.available:
@@ -142,13 +150,13 @@ class PicoptDoctor:
             else:
                 self.missing_optional += 1
                 tier_color = "cyan"
-        name = tool.name or type(tool).__name__
+        name = tool_name(tool)
         return [
             f"[{tier_color}]    tier {tier_idx} {prefix} {name}[/{tier_color}]"
         ], tier_has_available
 
     @staticmethod
-    def _checkup_tool_detail_bits(status, tool) -> list[str]:
+    def _checkup_tool_detail_bits(status: ToolStatus, tool: Tool) -> list[str]:
         bits: list[str] = []
         if status.version:
             bits.append(f"[bold black]{escape(status.version)}[/bold black]")
@@ -156,21 +164,22 @@ class PicoptDoctor:
             bits.append(f"[dim white]\\[{escape(status.path)}][/dim white]")
         if not status.available and status.error:
             bits.extend(["-", f"[red]{escape(status.error)}[/red]"])
+        elif status.detail:
+            bits.append(f"([green]{escape(status.detail)}[/green])")
         elif isinstance(tool, CWebPTool):
             flag = "modern" if tool.is_modern else "legacy"
             flag_color = "green" if tool.is_modern else "cyan"
             bits.append(f"([{flag_color}]{flag}[/{flag_color}])")
         return bits
 
-    def _checkup_tool_print_hint(self, status, tool) -> None:
+    @staticmethod
+    def _checkup_tool_print_hint(status: ToolStatus, tool: Tool) -> None:
         if status.available:
             return
-        tool_name = tool.name or type(tool).__name__
-        hint = _install_hint(tool_name, self._pkg_manager)
-        if hint:
+        if hint := install_hint(tool_name(tool)):
             console.print(f"[dim]             install: {escape(hint)}[/dim]")
 
-    def _checkup_tool(self, tier_idx, tool) -> bool:
+    def _checkup_tool(self, tier_idx: int, tool: Tool) -> bool:
         status = tool.probe()
         bits, tier_has_available = self._checkup_tool_get_tier_and_name(
             status, tier_idx, tool
@@ -180,7 +189,9 @@ class PicoptDoctor:
         self._checkup_tool_print_hint(status, tool)
         return tier_has_available
 
-    def _checkup_handler_pipeline_tier(self, tier_idx: int, tier) -> None:
+    def _checkup_handler_pipeline_tier(
+        self, tier_idx: int, tier: tuple[Tool, ...]
+    ) -> None:
         tier_has_available = False
         for tool in tier:
             tier_has_available |= self._checkup_tool(tier_idx, tool)
@@ -196,7 +207,7 @@ class PicoptDoctor:
                 f"[yellow]    !!! tier {tier_idx} has no available tool[/yellow]"
             )
 
-    def _checkup_handler(self, handler_cls) -> None:
+    def _checkup_handler(self, handler_cls: type[Handler]) -> None:
         console.print(f"[bold cyan]  {handler_cls.__name__}[/bold cyan]")
         if not handler_cls.PIPELINE:
             console.print("    (no external pipeline — always available)")
@@ -204,58 +215,26 @@ class PicoptDoctor:
         for tier_idx, tier in enumerate(handler_cls.PIPELINE):
             self._checkup_handler_pipeline_tier(tier_idx, tier)
 
-    def _checkup_plugin(self, plugin) -> None:
+    def _checkup_plugin(self, plugin: Plugin) -> None:
         if plugin.name == "PIL_CONVERTIBLE":
             return
         console.print(f"[yellow]{plugin.name}[/yellow]")
         for handler_cls in plugin.handlers:
             self._checkup_handler(handler_cls)
 
-    def _checkup_report(self) -> None:
-        available_tiers = self.total_required - self.missing_required
-        required_color = "red" if self.missing_required else "green"
-        optional_color = "cyan" if self.missing_optional else "green"
-
-        summary = (
-            "Summary: "
-            f"[{required_color}]"
-            f"{available_tiers}/{self.total_required} required tool tiers available"
-            f"[/{required_color}], "
-            f"[{required_color}]{self.missing_required} missing required"
-            f"[/{required_color}], "
-            f"[{optional_color}]{self.missing_optional} missing optional tools"
-            f"[/{optional_color}]."
-        )
-        console.print(summary)
-
-    def checkup(self) -> int:
-        """Run the doctor command. Returns a process exit code."""
+    def render(self, plugins: Iterable[Plugin]) -> None:
+        """Print the tree for these plugins."""
         header = (
-            "[yellow]Plugins[/yellow]\n"
-            "  [bold cyan]Formats[/bold cyan]\n"
-            "    [cyan]Tools[/cyan]"
+            "  [yellow]Plugin[/yellow]\n"
+            "    [bold cyan]Handler[/bold cyan]\n"
+            "      [cyan]Tools[/cyan]"
         )
         console.print(header)
-        for plugin in sorted(registry.iter_plugins(), key=lambda p: p.name):
+        for plugin in sorted(plugins, key=lambda p: p.name):
             self._checkup_plugin(plugin)
             console.print("")
 
-        self._checkup_report()
-        return min(self.missing_required, 1)
-
-    @classmethod
-    def doctor_mode(cls) -> Never:
-        """Create the doctor and perform a checkup."""
-        doctor = cls()
-        sys.exit(doctor.checkup())
-
-    @classmethod
-    def parse_cli(cls: type[Any], args: Sequence[str] | None = None) -> None:
-        """Parse the cli to to enter doctor mode or return."""
-        argv = args if args is not None else tuple(sys.argv)
-        if len(argv) >= 2 and argv[1] == "doctor":  # noqa: PLR2004
-            cls.doctor_mode()
-
-
-if __name__ == "__main__":
-    PicoptDoctor.doctor_mode()
+    def summary(self) -> str:
+        """Tier counts for the summary line."""
+        available = self.total_required - self.missing_required
+        return f"{available}/{self.total_required} required tool tiers available"

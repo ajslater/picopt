@@ -46,7 +46,7 @@ class TestDirConfigWalk:
         shutil.copy(CONTAINER_DIR / CBR_FN, comics / CBR_FN)
         shutil.copy(CONTAINER_DIR / CBR_FN, TMP_ROOT / CBR_FN)
 
-        cli.main((PROGRAM_NAME, "-rvx", "CBR,CBZ", str(TMP_ROOT)))
+        cli.main((PROGRAM_NAME, "-rvx", "CBR", str(TMP_ROOT)))
 
         # Converted under comics/ ...
         assert (comics / "test_cbr.cbz").is_file()

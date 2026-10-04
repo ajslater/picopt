@@ -12,11 +12,13 @@ Handler-class selection rules for an input :class:`FileFormat` ``ff``:
    ``routes_by_format()[ff].convert`` whose pipeline was probed available at
    config time and whose ``OUTPUT_FORMAT_STR`` is in the user's
    ``--convert-to`` set. The pipeline-availability filter is what makes the
-   WebP convert chain ``(Img2WebP, WebPMux, PILPack)`` actually fall through
-   to ``PILPack`` when the external tools are missing.
+   WebP convert chain ``(Img2WebP, PILPack)`` actually fall through to
+   ``PILPack`` when the external tools are missing.
 
 2. Otherwise, fall back to the native handler for that FileFormat, again only
-   if its pipeline is available.
+   if its pipeline is available. If it isn't, a convert-chain handler that
+   writes the input's own format stands in for it, so animated WebP without
+   webpmux is still optimized.
 
 3. For repack callers, the chosen handler must additionally have ``CAN_PACK``
    set, replacing the old ``isinstance(handler_cls, PackingContainerHandler |

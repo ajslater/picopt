@@ -185,6 +185,9 @@ Picopt uncompresses, optimizes and rezips
 aware that CBR rar archives may only be rezipped into CBZs instead of CBR. Comic
 book archive optimization is not turned on by default to prevent surprises.
 
+Reading RAR and CBR needs RARLAB's `unrar` on your path. On Debian and Ubuntu
+that is the `unrar` package from non-free or multiverse, not `unrar-free`.
+
 ## 📦 Install
 
 ### System Dependencies
@@ -194,7 +197,8 @@ book archive optimization is not turned on by default to prevent surprises.
 Picopt requires Python 3.11 or greater installed on whichever system you use.
 
 Picopt is most effective with these binary dependencies installed. We must
-install these first
+install these first. Afterwards, [`picopt doctor`](#doctor) shows which ones
+picopt finds.
 
 #### macOS
 
@@ -278,6 +282,28 @@ Or you can install svgo with npm:
 npm install -G svgo
 ```
 
+### Doctor
+
+`picopt doctor [OPTIONS] [PATH...]` checks whether a run with the same options
+will work on this machine, and says why not. It reports:
+
+- the Python packages picopt needs, and whether their versions fit;
+- every external program picopt can use, with an install command for each one
+  that is missing;
+- whether your config files and `PICOPT_*` environment variables load, the keys
+  in them that picopt doesn't know, and where each non-default option was set;
+- what the run does with each enabled format, and which formats it would skip;
+- for each `PATH`, its `.picopt.yaml` files (unknown keys, and options that have
+  no per-directory effect) and whether the run would keep or discard its
+  timestamps file, and why.
+
+The options are diagnosed, not run: nothing is optimized or written, not even a
+timestamps file, and `-w`, `-W` and `--write-config-file` are ignored.
+`picopt doctor -q` shows only the problems. The doctor exits 1 when the run
+would fail, skip an enabled format, or find a `PATH` missing, and 0 otherwise.
+
+A target named `doctor` must be passed as `./doctor`.
+
 ## ⚙️ Configuration
 
 Picopt layers configuration from these sources, lowest to highest priority:
@@ -305,7 +331,7 @@ over every directory file.
 
 ```sh
 printf 'picopt:\n  convert_to: [CBZ]\n' > comics/.picopt.yaml
-picopt -rx CBR,CBZ .   # CBRs under comics/ convert; siblings don't
+picopt -rx CBR .   # CBRs under comics/ convert; siblings don't
 ```
 
 Any config key is accepted and validated, but run-scoped keys — `dry_run`,

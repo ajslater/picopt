@@ -4,7 +4,8 @@ Plugin registry.
 On first access, the registry imports every module under ``picopt.plugins``
 that isn't itself the registry or a base. Each plugin module exposes a
 module-level ``PLUGIN`` constant of type :class:`~picopt.plugins.base.Plugin`,
-and the registry collects them.
+and the registry collects them. A plugin whose format library fails to
+import is disabled and listed by :func:`failed_plugins`.
 
 From the collected PLUGIN list, the registry builds the runtime tables that
 the rest of picopt asks for: the format → handler routing map, the
@@ -20,9 +21,11 @@ from __future__ import annotations
 
 import importlib
 import pkgutil
+from dataclasses import dataclass
 from functools import cache
 from typing import TYPE_CHECKING
 
+from picopt import PROGRAM_NAME
 from picopt.plugins.base import ContainerHandler, Detector, Handler, Plugin
 
 if TYPE_CHECKING:
@@ -36,27 +39,71 @@ if TYPE_CHECKING:
 # ---------------------------------------------------------------------------
 
 
+@dataclass(frozen=True, slots=True)
+class FailedPlugin:
+    """A plugin module disabled because a library it needs failed to import."""
+
+    module: str
+    error: ImportError
+
+
+@dataclass(frozen=True, slots=True)
+class Discovery:
+    """The plugins that loaded and the ones that didn't."""
+
+    plugins: tuple[Plugin, ...]
+    failures: tuple[FailedPlugin, ...]
+
+
+def _is_picopt_module(module_name: str | None) -> bool:
+    return module_name is not None and (
+        module_name == PROGRAM_NAME or module_name.startswith(f"{PROGRAM_NAME}.")
+    )
+
+
 @cache
-def _discover() -> tuple[Plugin, ...]:
-    """Walk picopt.plugins/ and return every PLUGIN constant found."""
+def _discover() -> Discovery:
+    """
+    Walk picopt.plugins/ and collect every PLUGIN constant found.
+
+    A plugin whose format library fails to import is recorded and skipped, so
+    a broken rarfile, py7zr or pikepdf disables only its own formats. Only
+    ImportError is isolated, and only from other packages: picopt's own
+    import bugs, and anything a library raises besides ImportError, still
+    abort.
+    """
     import picopt.plugins as plugins_pkg
 
     plugins: list[Plugin] = []
+    failures: list[FailedPlugin] = []
     for module_info in pkgutil.iter_modules(plugins_pkg.__path__):
         if module_info.name.startswith("_") or module_info.name == "base":
             continue
         # Plugins may be single modules or subpackages (e.g. webp/);
         # either way the PLUGIN descriptor lives at the top level.
-        module = importlib.import_module(f"picopt.plugins.{module_info.name}")
+        try:
+            module = importlib.import_module(f"picopt.plugins.{module_info.name}")
+        except ImportError as exc:
+            if _is_picopt_module(exc.name):
+                raise
+            # Not logged here: discovery runs at import time, before
+            # picopt's log sinks exist. cli.main reports these.
+            failures.append(FailedPlugin(module=module_info.name, error=exc))
+            continue
         plugin = getattr(module, "PLUGIN", None)
         if isinstance(plugin, Plugin):
             plugins.append(plugin)
-    return tuple(plugins)
+    return Discovery(plugins=tuple(plugins), failures=tuple(failures))
 
 
 def iter_plugins() -> Iterator[Plugin]:
     """Iterate every loaded plugin."""
-    yield from _discover()
+    yield from _discover().plugins
+
+
+def failed_plugins() -> tuple[FailedPlugin, ...]:
+    """Plugins disabled because a library they need failed to import."""
+    return _discover().failures
 
 
 def plugin_for_handler(handler_cls: type[Handler]) -> Plugin | None:
@@ -216,8 +263,9 @@ def pick_route_handler(
     startup formats summary, so the log can never drift from what the
     walk actually does. Selection: the first convert-chain candidate whose
     output the user asked for and whose pipeline probed available (archives
-    only convert during the repack pass), else the native handler if
-    available; repack callers additionally require a packing container.
+    only convert during the repack pass), else the native handler or a
+    same-format stand-in for it; repack callers additionally require a
+    packing container.
     """
     if file_format is None:
         return None
@@ -229,12 +277,10 @@ def pick_route_handler(
         convert=convert,
         repack=repack,
     )
-    if (
-        handler_cls is None
-        and native is not None
-        and is_pipeline_available(native, handler_stages)
-    ):
-        handler_cls = native
+    if handler_cls is None:
+        handler_cls = _pick_native_handler(
+            file_format, native, convert_chain, handler_stages
+        )
     if repack and not _can_pack_repack(handler_cls):
         handler_cls = None
     return handler_cls
@@ -247,6 +293,33 @@ def _can_pack_repack(handler_cls: type[Handler] | None) -> bool:
         and issubclass(handler_cls, ContainerHandler)
         and handler_cls.CAN_PACK
     )
+
+
+def _pick_native_handler(
+    file_format: FileFormat,
+    native: type[Handler] | None,
+    convert_chain: tuple[type[Handler], ...],
+    handler_stages: Mapping,
+) -> type[Handler] | None:
+    """
+    Return the native handler if available, else the first stand-in that is.
+
+    A convert-chain candidate that writes the input's own format optimizes
+    in place, so it can replace an unavailable native without converting
+    anything: animated WebP falls back from webpmux to img2webp or Pillow.
+    Formats without a native handler are convert-only and get no stand-in.
+    """
+    if native is None:
+        return None
+    stand_ins = (
+        candidate
+        for candidate in convert_chain
+        if file_format.format_str == candidate.OUTPUT_FORMAT_STR
+    )
+    for candidate in (native, *stand_ins):
+        if is_pipeline_available(candidate, handler_stages):
+            return candidate
+    return None
 
 
 def _pick_convert_handler(

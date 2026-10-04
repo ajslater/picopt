@@ -1,5 +1,36 @@
 # 📰 Picopt News
 
+## v6.10.0
+
+- Features
+    - `picopt doctor` takes run options and paths and checks that run: config
+      errors, unknown config keys, where each option was set, the enabled
+      formats it would skip, each path's `.picopt.yaml` files, and whether its
+      timestamps would be kept. `picopt doctor -q` shows only problems.
+- Fixes
+    - Converting to a `-c` format no longer also needs it in `-x`, e.g.
+      `-x RAR -c ZIP`.
+    - Formats a broken install can't write are skipped instead of failing every
+      file: JXL without pillow-jxl-plugin, WebP from a Pillow without libwebp,
+      compressed tarballs from a Python without bz2 or lzma, and RAR from an
+      unrar that can't extract RAR5.
+    - Animated WebP is optimized without webpmux instead of skipped.
+    - A broken rarfile, py7zr or pikepdf install now disables only its own
+      formats, with a warning, instead of stopping every run.
+    - `dry_run` or `list_only` in a tree root's `.picopt.yaml` no longer turns
+      off timestamps for that tree.
+- Changes
+    - `picopt doctor` exits 1 only when a run with its options would fail or
+      skip an enabled format, not whenever any tool is missing.
+- Dep
+    - Require packaging.
+
+## v6.9.1
+
+- Fixes
+    - Some RAR and CBR archives no longer fail with "microsecond must be in
+      0..999999".
+
 ## v6.9.0
 
 - Fixes

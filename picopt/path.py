@@ -1,17 +1,20 @@
 """Data classes."""
 
-from io import BufferedReader, BytesIO
-from os import stat_result
-from pathlib import Path
-from tarfile import TarInfo
-from typing import cast
-from zipfile import ZipInfo
+from __future__ import annotations
 
-from py7zr.py7zr import FileInfo as SevenZipInfo
-from rarfile import RarInfo
+from io import BufferedReader, BytesIO
+from pathlib import Path
+from typing import TYPE_CHECKING, cast
 
 from picopt.archiveinfo import ArchiveInfo
-from picopt.config.settings import PicoptSettings
+
+if TYPE_CHECKING:
+    from os import stat_result
+    from tarfile import TarInfo
+    from zipfile import ZipInfo
+
+    from picopt.archive_libs import RarInfo, SevenZipInfo
+    from picopt.config.settings import PicoptSettings
 
 _CONTAINER_PATH_DELIMITER = ":"
 _LOWERCASE_TESTNAME = ".picopt_case_sensitive_test"
@@ -66,7 +69,7 @@ class PathInfo:
 
     def _copy_constructor(
         self,
-        path_info: "PathInfo | None" = None,
+        path_info: PathInfo | None = None,
         top_path: Path | None = None,
         container_parents: tuple[str, ...] | None = None,
         *,
@@ -105,7 +108,7 @@ class PathInfo:
 
     def __init__(  # noqa: PLR0913
         self,
-        path_info: "PathInfo | None" = None,
+        path_info: PathInfo | None = None,
         *,
         top_path: Path | None = None,
         convert: bool | None = None,
