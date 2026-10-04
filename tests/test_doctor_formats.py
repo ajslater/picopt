@@ -61,9 +61,11 @@ def test_pip_only_defaults_pass(
     code, out = run_doctor(capsys)
     assert code == 0, out
     assert find_row(out, "ok", "PNG") is not None
-    # Animated WebP has no Pillow route without -c WEBP: a gap, not a failure.
-    row = find_row(out, "WARN", "WEBP animated")
-    assert row == "WARN WEBP animated no available tool: webpmux"
+    # Without webpmux, Pillow optimizes animated WebP in its place.
+    row = find_row(out, "ok", "WEBP")
+    assert row is not None
+    assert "animated: PILPackWebPAnimatedLossless: pil2webp" in row
+    assert find_row(out, "WARN", "WEBP animated") is None
 
 
 def test_probe_error_is_named(
