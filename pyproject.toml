@@ -28,7 +28,7 @@ dependencies = [
   "rich-argparse~=1.8",
   "rich~=15.0",
   "ruamel-yaml>=0.18,<1.0",
-  "treestamps~=5.1.1",
+  "treestamps~=5.2.0",
   "typing-extensions~=4.13"
 ]
 description = "A multi format lossless image optimizer that uses external tools"
