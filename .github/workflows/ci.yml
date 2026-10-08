@@ -12,9 +12,12 @@ on:
   pull_request:
     branches: [main, develop]
 
+# A newer push cancels a pull request's run, but a started main run always
+# finishes: cancelling it could cut between the PyPI publish and the tag. A
+# main push waits for it instead, and only the newest waiting run starts.
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   # The required check is "CI / Lint, Test & Build Dist".
@@ -32,12 +35,13 @@ jobs:
     needs: ci
     if: ${{ !cancelled() && needs.ci.result == 'success' && needs.ci.outputs.deploy == 'true' }}
     runs-on: ubuntu-24.04
+    timeout-minutes: 10
     permissions:
       contents: read
       id-token: write
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
         with:
           sparse-checkout: .github/actions
 
