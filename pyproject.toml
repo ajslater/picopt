@@ -68,7 +68,6 @@ lint = [
   "codespell~=2.4",
   "complexipy~=8.0.1",
   "icecream~=2.1",
-  "mbake~=1.4.5",
   "pathspec~=1.1.0",
   "radon~=6.0",
   "ruff>=0.13,<1.0",
@@ -112,7 +111,6 @@ source-include = [
   "img/**",
   "mkdocs.yml",
   "mock_comics/**",
-  "package-lock.json",
   "package.json",
   "tests/**",
   "uv.lock",
@@ -153,7 +151,7 @@ reportImplicitStringConcatenation = false
 [tool.codespell]
 builtin = "clear,code,rare"
 ignore-words-list = "coverd,crate,deque,falsy,flate,iff,ro,searchd,thead,versio,wan,warmup,ws"
-skip = "*.pdf,*.svg,*~,./package-lock.json,./tasks,__pycache__,bun.lock,dist,htmlcov,node_modules,package.json,tasks,test-results,typings,uv.lock"
+skip = "*.pdf,*.svg,*~,./tasks,__pycache__,bun.lock,dist,htmlcov,node_modules,package.json,tasks,test-results,typings,uv.lock"
 
 [tool.complexipy]
 failed = true

@@ -1,6 +1,7 @@
 *.sh
 *Dockerfile
-.claude
+.claude/settings.local.json
+.claude/worktrees/
 .git
 __pycache__
 bun.lock
