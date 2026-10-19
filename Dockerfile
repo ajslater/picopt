@@ -8,6 +8,7 @@ COPY debian.sources /etc/apt/sources.list.d/
 RUN apt-get update \
     && apt-get upgrade -y \
     && apt-get install -y --no-install-recommends \
+        cmake \
         curl \
         gifsicle \
         jbig2dec \
