@@ -64,15 +64,15 @@ conversion to JXL, PNG or WebP explicitly.
 ## 🖼️ Formats
 
 - By default picopt will optimize GIF, JPEG, JXL, PNG, and WEBP images.
-- Picopt can optionally optimize SVG images, ZIP, ePub, and CBZ containers.
+- Picopt can optionally optimize MPO and SVG images, ZIP, ePub, and CBZ
+  containers.
 - Picopt can convert many lossless images such as BMP, CBR, CUR, DIB, FITS, GIF,
   IMT, PCX, PIXAR, PNG, PPM, PSD, QOI, SGI, SPIDER, SUN, TGA, TIFF, XBM, and XPM
   into JXL, PNG and WEBP.
 - Picopt can convert Animated GIF, TIFF, and FLI into Animated PNG or WebP
   files.
 - Picopt can convert Animated GIF, TIFF, FLI, and PNG into Animated WebP files.
-- Picopt can convert MPO to JPEG by stripping secondary images (often thumbnails
-  created by cameras) if a primary image exists. (Experimental).
+- Picopt can convert MPO to JPEG by keeping only the primary image.
 - Picopt can convert RAR files into Zipfiles and CBR files into CBZ files.
 
 Because picopt supports so many lossless image formats, to avoid surprises if
@@ -160,16 +160,26 @@ it is available, falling back to picopt's internal algorithm using PIL & cwebp.
 Picopt can only optimize SVGs if [svgo](https://github.com/svg/svgo) is on the
 path.
 
-### MPO (Experimental)
+### MPO
 
-Picopt can extract the primary image from a multi JPEG MPO that also contains
-thumbnails and convert the file to an ordinary JPEG. Picopt will also optimize
-this image if it can. To enable this you must run with `-x MPO -c JPEG`
-Steroscopic MPOs should have no primary image tagged in the MPO directory and be
-unaffected.
+An MPO is a multi-picture JPEG: a primary image followed by more JPEG images,
+listed in an index inside the primary. Cameras add large thumbnails and iPhones
+add an HDR gain map. Most MPOs are named `.jpg` or `.jpeg`, so when picopt skips
+one because MPO isn't enabled, it warns and names the options that would take
+it.
 
-This feature has not been tested with a large variety of MPOs and should be
-considered experimental.
+- `-x MPO` optimizes every image losslessly with mozjpeg and rewrites the index,
+  so the file stays an MPO under its own name. Metadata is kept even with `-M`,
+  because the index and the gain map's XMP are part of the image. When the
+  primary's XMP has a GContainer directory, which records the byte length of
+  each appended image, only the primary is optimized.
+- `-x MPO -c JPEG` keeps only the primary image, as an ordinary JPEG, and
+  optimizes it. The other images are discarded. When no image is tagged as the
+  primary, as in stereoscopic MPOs, the first image is kept. The file keeps its
+  name, even `.mpo`, so it can't overwrite a JPEG saved beside it.
+
+With timestamps on, picopt skips files older than its last run before reading
+them, so the warning appears only on runs that look at the file.
 
 ### EPub
 
