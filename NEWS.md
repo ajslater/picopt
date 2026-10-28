@@ -1,5 +1,13 @@
 # 📰 Picopt News
 
+## v6.10.2
+
+- Fixes
+    - Optimizing a JPEG no longer deletes the data appended after its image,
+      like the gain map of an Android Ultra HDR photo or the video of a Google
+      Motion Photo. An Ultra HDR photo's MP Index is rewritten to match, and a
+      JPEG whose MP Index doesn't match its appended data is left unchanged.
+
 ## v6.10.1
 
 - Dep

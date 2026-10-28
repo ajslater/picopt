@@ -17,6 +17,7 @@ from PIL.JpegImagePlugin import JpegImageFile
 from PIL.MpoImagePlugin import MpoImageFile
 from typing_extensions import override
 
+from picopt.pillow import jpeg_trailer
 from picopt.plugins.base import (
     Handler,
     ImageHandler,
@@ -66,7 +67,15 @@ def set_jpeg_xmp(jpeg_data: bytes, xmp: str) -> bytes:
 
 
 class MozJpegTool(InternalTool):
-    """Lossless mozjpeg recompression."""
+    """
+    Lossless mozjpeg recompression.
+
+    mozjpeg reads only the first image and drops whatever follows its EOI:
+    the gain map of an Ultra HDR photo, the video of a Motion Photo. A JPEG
+    keeps that data, unchanged, after its recompressed image. Stripping
+    metadata drops it with the XMP and MP Index that point to it, and
+    converting an MPO keeps only its first image.
+    """
 
     name = "mozjpeg"
     module_name = "mozjpeg_lossless_optimization"
@@ -76,8 +85,21 @@ class MozJpegTool(InternalTool):
         import mozjpeg_lossless_optimization
         from mozjpeg_lossless_optimization import COPY_MARKERS
 
-        copy = COPY_MARKERS.ALL if handler.config.keep_metadata else COPY_MARKERS.NONE
-        return BytesIO(mozjpeg_lossless_optimization.optimize(buf.read(), copy=copy))
+        keep_metadata = handler.config.keep_metadata
+        copy = COPY_MARKERS.ALL if keep_metadata else COPY_MARKERS.NONE
+        data = buf.read()
+        end = None
+        if keep_metadata and handler.input_file_format == Jpeg.OUTPUT_FILE_FORMAT:
+            end = jpeg_trailer.image_end(data)
+        image = mozjpeg_lossless_optimization.optimize(data[:end], copy=copy)
+        if end is None or end == len(data):
+            return BytesIO(image)
+        try:
+            return BytesIO(jpeg_trailer.rejoin(data, end, image))
+        except jpeg_trailer.JpegTrailerError as exc:
+            name = handler.path_info.full_output_name()
+            logger.warning(f"{name}: {exc}; leaving it unchanged.")
+            return BytesIO(data)
 
 
 class MpoExtractTool(InternalTool):
