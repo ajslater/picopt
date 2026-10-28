@@ -226,29 +226,17 @@ def routes_by_format() -> dict[
 
 @cache
 def suffix_format_strs() -> Mapping[str, frozenset[str]]:
-    """Map each suffix a handler claims to the formats of the handlers claiming it."""
+    """
+    Map each suffix a handler claims to the formats of the handlers claiming it.
+
+    A handler's ``KEEP_SUFFIXES`` don't count: they keep a file's name
+    without saying what format it is.
+    """
     claims: dict[str, set[str]] = {}
     for handler_cls in all_handlers():
         for suffix in handler_cls.SUFFIXES:
             claims.setdefault(suffix.lower(), set()).add(handler_cls.OUTPUT_FORMAT_STR)
     return MappingProxyType({key: frozenset(val) for key, val in claims.items()})
-
-
-@cache
-def canonical_suffixes() -> Mapping[str, frozenset[str]]:
-    """
-    Map each format to the canonical (first) suffix of each handler writing it.
-
-    A handler's other suffixes only keep a file's name when it's optimized:
-    the MPO handler lists ``.jpg`` so that an MPO saved as ``IMG.jpg`` stays
-    ``IMG.jpg``, not because ``.jpg`` names an MPO.
-    """
-    canonical: dict[str, set[str]] = {}
-    for handler_cls in all_handlers():
-        if handler_cls.SUFFIXES:
-            suffixes = canonical.setdefault(handler_cls.OUTPUT_FORMAT_STR, set())
-            suffixes.add(handler_cls.SUFFIXES[0].lower())
-    return MappingProxyType({key: frozenset(val) for key, val in canonical.items()})
 
 
 @cache

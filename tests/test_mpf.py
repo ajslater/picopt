@@ -94,6 +94,17 @@ class TestSplit:
         with pytest.raises(mpf.MpfError, match="image 2 of 2 isn't where"):
             mpf.split(shifted, _index(shifted))
 
+    def test_stale_primary_size(self) -> None:
+        """
+        Software that doesn't know MPF grew a segment before the index.
+
+        Offsets count from the index, so only the primary's size went stale.
+        Cutting the primary there would lose the bottom of the photo.
+        """
+        edited = _with_segment(build_mpo([_PRIMARY, _SECONDARY]), 0xFE, b"edit")
+        with pytest.raises(mpf.MpfError, match="image 1 of 2 isn't where"):
+            mpf.split(edited, _index(edited))
+
 
 class TestRebuild:
     @pytest.mark.parametrize("byte_order", ["<", ">"])
@@ -168,8 +179,21 @@ class TestPrimary:
     def test_truncated(self) -> None:
         data = build_mpo([_PRIMARY, _SECONDARY])
         truncated = data[: len(_PRIMARY) // 2]
-        with pytest.raises(mpf.MpfError, match="primary image runs past the end"):
+        with pytest.raises(mpf.MpfError, match="primary image isn't where"):
             mpf.primary(truncated, _index(truncated))
+
+    def test_stale_size(self) -> None:
+        """A size gone stale under an edit by other software isn't trusted."""
+        edited = _with_segment(build_mpo([_PRIMARY, _SECONDARY]), 0xFE, b"edit")
+        with pytest.raises(mpf.MpfError, match="primary image isn't where"):
+            mpf.primary(edited, _index(edited))
+
+    def test_alone_and_longer_than_declared(self) -> None:
+        """Older picopt could also write a primary bigger than its index says."""
+        data = build_mpo([_PRIMARY, _SECONDARY])
+        primary = mpf.split(data, _index(data))[0]
+        grown = _with_segment(primary, 0xFE, b"a JFIF segment, say")
+        assert mpf.primary(grown, _index(grown)) == grown
 
 
 class TestStrip:

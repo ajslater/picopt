@@ -170,8 +170,21 @@ def parse(data: bytes) -> MpIndex | None:
     )
 
 
+def _is_complete(image: bytes) -> bool:
+    """
+    Report whether bytes hold one whole JPEG: headers through SOS, then EOI.
+
+    A size in the MP Index goes stale when software that doesn't know the
+    format grows a segment in front of it. A short slice still decodes, the
+    missing rows filled with gray, so it has to be caught here.
+    """
+    return image.endswith(_EOI) and any(
+        marker == _SOS for marker, _, _ in iter_segments(image)
+    )
+
+
 def _spans(data: bytes, index: MpIndex) -> tuple[tuple[int, int], ...]:
-    """Return each image's ``(start, end)``; they must be in order and in bounds."""
+    """Return each image's ``(start, end)``: in order, in bounds, and whole."""
     spans: list[tuple[int, int]] = []
     previous_end = 0
     total = len(index.entries)
@@ -181,7 +194,7 @@ def _spans(data: bytes, index: MpIndex) -> tuple[tuple[int, int], ...]:
         if end > len(data):
             msg = f"image {number + 1} of {total} runs past the end of the file"
             raise MpfError(msg)
-        if start < previous_end or not data.startswith(_SOI, start):
+        if start < previous_end or not _is_complete(data[start:end]):
             msg = f"image {number + 1} of {total} isn't where the MP Index says"
             raise MpfError(msg)
         spans.append((start, end))
@@ -229,29 +242,34 @@ def rebuild(data: bytes, index: MpIndex, images: Sequence[bytes]) -> bytes:
     return bytes(output)
 
 
+def _others_missing(data: bytes, index: MpIndex, number: int) -> bool:
+    """Report whether every image but one is gone from where the index says."""
+    return not any(
+        data.startswith(_SOI, index.absolute(other))
+        for other in range(len(index.entries))
+        if other != number
+    )
+
+
 def primary(data: bytes, index: MpIndex) -> bytes:
     """
     Return the primary image: the one typed primary, else the first.
 
-    A primary whose declared size runs past the end of the file is accepted
-    when the file still ends in a complete JPEG. Older picopt wrote exactly
-    that: the primary alone, still carrying an index of the images it
-    dropped.
+    When every other image is gone, the primary runs to the end of the file,
+    whatever size the index gives it. Older picopt wrote exactly that: the
+    primary alone, still carrying the index of the images it dropped.
     """
     number = next(
         (number for number, entry in enumerate(index.entries) if entry.is_primary), 0
     )
     start = index.absolute(number)
-    end = start + index.entries[number].size
-    if end > len(data):
-        if not data.endswith(_EOI):
-            msg = "primary image runs past the end of the file"
-            raise MpfError(msg)
-        end = len(data)
-    if not data.startswith(_SOI, start):
-        msg = "primary image isn't where the MP Index says"
-        raise MpfError(msg)
-    return data[start:end]
+    image = data[start : start + index.entries[number].size]
+    if _is_complete(image):
+        return image
+    if _others_missing(data, index, number) and _is_complete(data[start:]):
+        return data[start:]
+    msg = "primary image isn't where the MP Index says"
+    raise MpfError(msg)
 
 
 def strip(jpeg: bytes) -> bytes:

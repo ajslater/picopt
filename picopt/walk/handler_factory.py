@@ -75,12 +75,12 @@ def _build_archive_stamps(
 def _claimed_format_str(
     config: PicoptSettings, path_info: PathInfo, format_str: str
 ) -> str | None:
-    """Return the enabled format a file's suffix claims it is, if not its own."""
+    """Return the enabled format a file's suffix claims, unless its own claims it."""
     suffix = path_info.suffix().lower()
-    if suffix in registry.canonical_suffixes().get(format_str, frozenset()):
-        return None
     claimed = registry.suffix_format_strs().get(suffix, frozenset())
-    candidates = sorted((claimed & frozenset(config.formats)) - {format_str})
+    if format_str in claimed:
+        return None
+    candidates = sorted(claimed & frozenset(config.formats))
     return candidates[0] if candidates else None
 
 

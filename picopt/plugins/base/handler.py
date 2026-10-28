@@ -53,6 +53,9 @@ class Handler(ABC):
     - ``INPUT_FILE_FORMATS``: which FileFormats can be fed to this handler
       without an intermediate PIL conversion.
     - ``SUFFIXES``: file extensions this handler claims (first is canonical).
+    - ``KEEP_SUFFIXES``: other extensions a file keeps when this handler
+      writes it, without the handler claiming them: an MPO saved as
+      ``IMG.jpg`` stays ``IMG.jpg``, though ``.jpg`` names a JPEG.
     - ``PIPELINE``: tuple-of-tuples of :class:`Tool` instances. The outer
       tuple is sequential pipeline tiers; each inner tuple is alternatives
       for that tier. This replaces the old ``PROGRAMS`` mechanism.
@@ -64,6 +67,7 @@ class Handler(ABC):
     """
 
     SUFFIXES: tuple[str, ...] = ()
+    KEEP_SUFFIXES: frozenset[str] = frozenset()
     OUTPUT_FORMAT_STR: str = "UNIMPLEMENTED"
     OUTPUT_FILE_FORMAT: FileFormat = FileFormat(
         "UNIMPLEMENTED", lossless=False, animated=False
@@ -93,9 +97,8 @@ class Handler(ABC):
             self.SUFFIXES[0] if self.SUFFIXES else "." + self.OUTPUT_FORMAT_STR.lower()
         )
         suffix = path_info.suffix()
-        self.output_suffix: str = (
-            suffix if suffix.lower() in self.SUFFIXES else default_suffix
-        )
+        kept = suffix.lower() in self.SUFFIXES or suffix.lower() in self.KEEP_SUFFIXES
+        self.output_suffix: str = suffix if kept else default_suffix
         self.final_path: Path = self._compute_final_path()
 
         if self.config.preserve:

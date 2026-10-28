@@ -53,9 +53,13 @@ def _optimize(image: bytes) -> bytes:
     import mozjpeg_lossless_optimization
     from mozjpeg_lossless_optimization import COPY_MARKERS
 
-    # Always copy every marker: the MPF index and a gain map's own XMP are
-    # structure, not removable metadata.
-    optimized = mozjpeg_lossless_optimization.optimize(image, copy=COPY_MARKERS.ALL)
+    try:
+        # Always copy every marker: the MPF index and a gain map's own XMP
+        # are structure, not removable metadata.
+        optimized = mozjpeg_lossless_optimization.optimize(image, copy=COPY_MARKERS.ALL)
+    except ValueError:
+        # One image mozjpeg can't read leaves the rest still worth optimizing.
+        return image
     return optimized if len(optimized) < len(image) else image
 
 
@@ -119,8 +123,9 @@ class Mpo(ImageHandler):
     OUTPUT_FORMAT_STR = MPO_FILE_FORMAT.format_str
     OUTPUT_FILE_FORMAT = MPO_FILE_FORMAT
     INPUT_FILE_FORMATS = frozenset({MPO_FILE_FORMAT})
-    # The JPEG suffixes are listed so an MPO saved as IMG.jpeg keeps its name.
-    SUFFIXES: tuple[str, ...] = (".mpo", ".jpg", ".jpeg")
+    SUFFIXES: tuple[str, ...] = (".mpo",)
+    # Most MPOs are saved as JPEGs, and keep those names.
+    KEEP_SUFFIXES: frozenset[str] = frozenset({".jpg", ".jpeg"})
     PIPELINE: tuple[tuple[Tool, ...], ...] = ((MozJpegMpoTool(),),)
 
 

@@ -1,5 +1,6 @@
 """Test MPO detection, optimization and conversion."""
 
+import struct
 import zipfile
 from functools import cache
 from io import BytesIO
@@ -17,9 +18,15 @@ from picopt.log.summary import Stats
 from picopt.pillow import mpf
 from picopt.plugins.mpo import MPO_FILE_FORMAT, JpegFromMpo, Mpo
 from picopt.walk.walk import Walk
-from tests import assert_size_close
+from tests import IMAGES_DIR, assert_size_close
 from tests.doctor_util import find_row, isolate_config, run_doctor
-from tests.mpo_util import CAMERA_MPO, CONTAINER_XMP, make_mpo, xmp_segment_count
+from tests.mpo_util import (
+    CAMERA_MPO,
+    CONTAINER_XMP,
+    build_mpo,
+    make_mpo,
+    xmp_segment_count,
+)
 
 __all__ = ()
 
@@ -117,6 +124,17 @@ class TestNotEnabled:
         assert not stats.warnings
         assert path.read_bytes() == _phone()
 
+    def test_plain_jpeg_is_silent(
+        self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+    ) -> None:
+        """MPO keeps .jpg names without claiming them, so -f MPO skips JPEGs quietly."""
+        jpeg_bytes = (IMAGES_DIR / "test_jpg.jpg").read_bytes()
+        names = ("plain.jpg", "plain.jpeg", "converted.mpo")
+        paths = [_write(tmp_path, name, jpeg_bytes) for name in names]
+        stats = _run(monkeypatch, tmp_path, "-f", "MPO", "-r", str(paths[0].parent))
+        assert stats.skipped == len(names)
+        assert not stats.warnings
+
     def test_archive_member(
         self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
     ) -> None:
@@ -186,6 +204,40 @@ class TestOptimize:
         original_primary, original_gain_map = _split(original)
         assert gain_map == original_gain_map
         assert len(primary) < len(original_primary)
+
+    def test_undecodable_image_is_kept(
+        self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+    ) -> None:
+        """An image mozjpeg can't read is copied, and the rest optimized."""
+        primary = _split(_phone())[0]
+        # Segments through SOS and an EOI, but no frame header to decode.
+        undecodable = b"\xff\xd8\xff\xda\x00\x02" + b"\x00" * 64 + b"\xff\xd9"
+        original = build_mpo([mpf.strip(primary), undecodable])
+        path = _write(tmp_path, "IMG.jpeg", original)
+        stats = _run(monkeypatch, tmp_path, "-x", "MPO", str(path))
+        assert not stats.errors
+        optimized_primary, kept = _split(path.read_bytes())
+        assert kept == undecodable
+        assert len(optimized_primary) < len(_split(original)[0])
+
+    def test_stale_primary_size_is_an_error(
+        self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+    ) -> None:
+        """
+        Software that doesn't know MPF grew a segment ahead of the index.
+
+        The primary's declared size is now short. Cutting it there would lose
+        the bottom of the photo in either mode, so the file is left alone.
+        """
+        phone = _phone()
+        comment = b"\xff\xfe" + struct.pack(">H", 2 + 40) + b"x" * 40
+        edited = phone[:2] + comment + phone[2:]
+        path = _write(tmp_path, "IMG.jpeg", edited)
+        for args in (("-x", "MPO"), ("-x", "MPO", "-c", "JPEG")):
+            stats = _run(monkeypatch, tmp_path, *args, str(path))
+            [(_, message)] = stats.errors
+            assert "isn't where the MP Index says" in message
+            assert path.read_bytes() == edited
 
     def test_malformed_is_an_error(
         self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
