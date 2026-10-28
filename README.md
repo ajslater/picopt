@@ -91,6 +91,11 @@ picopt -x BMP -c WEBP big_old.bmp
 
 Picopt uses an internal mozjpeg python module to optimize JPEG images.
 
+Data appended after a JPEG's image, like the gain map of an Android Ultra HDR
+photo or the video of a Google Motion Photo, is kept as it is, and an MP Index
+that points to it is updated. `--strip-metadata` drops that data along with the
+XMP and MP Index that point to it.
+
 ### JPEG XL
 
 Picopt reads and writes JPEG XL with the internal

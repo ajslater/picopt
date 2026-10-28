@@ -272,6 +272,11 @@ def primary(data: bytes, index: MpIndex) -> bytes:
     raise MpfError(msg)
 
 
+def has_index(jpeg: bytes) -> bool:
+    """Report whether a JPEG has an MPF segment, readable or not."""
+    return _find_mpf_segment(jpeg) is not None
+
+
 def strip(jpeg: bytes) -> bytes:
     """Remove the MPF segment from a JPEG, if it has one."""
     found = _find_mpf_segment(jpeg)

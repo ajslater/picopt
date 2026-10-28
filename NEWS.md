@@ -12,6 +12,10 @@
       some readers failed on them and picopt converted them again on every run.
       Running it again repairs those files.
     - `-x MPO -c JPEG -D mozjpeg` no longer adds a second XMP block.
+    - Optimizing a JPEG no longer deletes the data appended after its image,
+      like the gain map of an Android Ultra HDR photo or the video of a Google
+      Motion Photo. An Ultra HDR photo's MP Index is rewritten to match, and a
+      JPEG whose MP Index doesn't match its appended data is left unchanged.
 - Changes
     - `-x MPO -c JPEG` keeps the first image of an MPO that tags no image as its
       primary, such as a stereoscopic MPO.
