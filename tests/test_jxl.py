@@ -4,10 +4,9 @@ import shutil
 from pathlib import Path
 from types import MappingProxyType
 
-import piexif
 import pillow_jxl
 import pytest
-from PIL import Image
+from PIL import ExifTags, Image
 
 from picopt import PROGRAM_NAME, cli
 from tests import IMAGES_DIR, assert_size_close, get_test_dir
@@ -201,10 +200,13 @@ class TestJxlMetadata:
 
     @classmethod
     def _write_jxl_with_exif(cls, name: str) -> Path:
-        exif = piexif.dump({"0th": {piexif.ImageIFD.Artist: b"picopt-test"}})
+        exif = Image.Exif()
+        exif[ExifTags.Base.Artist] = "picopt-test"
         path = cls.TMP_ROOT / name
         with Image.open(IMAGES_DIR / "test_png.png") as image:
-            image.convert("RGB").save(path, "JXL", lossless=True, effort=7, exif=exif)
+            image.convert("RGB").save(
+                path, "JXL", lossless=True, effort=7, exif=exif.tobytes()
+            )
         return path
 
     def setup_method(self: "TestJxlMetadata") -> None:
