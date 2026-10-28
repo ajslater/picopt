@@ -2,7 +2,7 @@
 
 import shutil
 import struct
-from collections.abc import Iterator, Sequence
+from collections.abc import Iterator
 from functools import cache
 from io import BytesIO
 from pathlib import Path
@@ -18,9 +18,10 @@ from PIL.MpoImagePlugin import MpoImageFile
 from picopt import PROGRAM_NAME, cli
 from picopt.config import PicoptConfig
 from picopt.path import PathInfo
-from picopt.pillow import jpeg_trailer
+from picopt.pillow import jpeg_trailer, mpf
 from picopt.plugins.jpeg import Jpeg, MozJpegTool
 from tests import IMAGES_DIR, get_test_dir
+from tests.mpo_util import build_mpo
 
 __all__ = ()
 
@@ -51,9 +52,9 @@ _MOTION_PHOTO_ATTRS = (
 # The start of an MP4: an ftyp box, then a free box.
 _FTYP = b"\x00\x00\x00\x18ftypmp42\x00\x00\x00\x00mp42isom"
 _MP4 = _FTYP + b"\x00\x00\x01\x08free" + bytes(range(256))
-# MP type codes in the low 24 bits of an MPEntry attribute.
-_PRIMARY_ATTRIBUTE = 0x030000
-_GAIN_MAP_ATTRIBUTE = 0x000000
+# An MPEntry, and where its size and offset fields start.
+_MP_ENTRY_LEN = 16
+_MP_ENTRY_SIZE_POS = 4
 # An offset in the primary's scan data, where no gain map can be.
 _INSIDE_PRIMARY = 2000
 
@@ -99,47 +100,31 @@ def _gain_map() -> bytes:
     return _jpeg(Image.linear_gradient("L").resize((64, 48)))
 
 
-def _mpf_segment(byte_order: str, entries: Sequence[tuple[int, int, int]]) -> bytes:
-    """Return an APP2 MPF segment indexing ``(attribute, size, offset)`` entries."""
-    header = b"II*\x00" if byte_order == "<" else b"MM\x00*"
-    tag_count = 3
-    ifd_offset = 8
-    table_offset = ifd_offset + 2 + tag_count * 12 + 4
-    ifd = struct.pack(byte_order + "H", tag_count)
-    ifd += struct.pack(byte_order + "HHI4s", 0xB000, 7, 4, b"0100")
-    ifd += struct.pack(byte_order + "HHII", 0xB001, 4, 1, len(entries))
-    ifd += struct.pack(byte_order + "HHII", 0xB002, 7, 16 * len(entries), table_offset)
-    ifd += struct.pack(byte_order + "I", 0)
-    table = b"".join(
-        struct.pack(byte_order + "IIIHH", attribute, size, offset, 0, 0)
-        for attribute, size, offset in entries
-    )
-    payload = b"MPF\x00" + header + struct.pack(byte_order + "I", ifd_offset)
-    return _segment(0xE2, payload + ifd + table)
-
-
-def _ultra_hdr(*, byte_order: str = "<", gain_map_offset: int | None = None) -> bytes:
+def _ultra_hdr(*, byte_order: str = "<") -> bytes:
     """
     Build an Android Ultra HDR photo.
 
     The primary carries the gain map XMP and an MP Index, and the gain map
-    JPEG follows its EOI. ``gain_map_offset`` overrides where the index says
-    the gain map starts, counted from the start of the file.
+    JPEG follows its EOI.
     """
     photo, gain_map = _photo(), _gain_map()
     xmp = _xmp(_ULTRA_HDR_ATTRS, _item(b"GainMap", b"image/jpeg", len(gain_map)))
-    mpf_len = len(_mpf_segment(byte_order, ((0, 0, 0),) * 2))
-    primary_size = len(photo) + len(xmp) + mpf_len
-    # SOI, the XMP, then the APP2 marker and length and "MPF\0".
-    tiff_start = 2 + len(xmp) + 4 + 4
-    if gain_map_offset is None:
-        gain_map_offset = primary_size
-    entries = (
-        (_PRIMARY_ATTRIBUTE, primary_size, 0),
-        (_GAIN_MAP_ATTRIBUTE, len(gain_map), gain_map_offset - tiff_start),
-    )
-    primary = photo[:2] + xmp + _mpf_segment(byte_order, entries) + photo[2:]
-    return primary + gain_map
+    return build_mpo((photo[:2] + xmp + photo[2:], gain_map), byte_order=byte_order)
+
+
+def _set_entry(data: bytes, number: int, *, size: int, offset: int) -> bytes:
+    """Overwrite one image's size and offset in the MP Index."""
+    index = mpf.parse(data)
+    assert index is not None
+    output = bytearray(data)
+    pos = index.entries_start + number * _MP_ENTRY_LEN + _MP_ENTRY_SIZE_POS
+    struct.pack_into(index.byte_order + "II", output, pos, size, offset)
+    return bytes(output)
+
+
+def _misplaced_gain_map() -> bytes:
+    """Build an Ultra HDR photo whose MP Index puts the gain map in the primary."""
+    return _set_entry(_ultra_hdr(), 1, size=len(_gain_map()), offset=_INSIDE_PRIMARY)
 
 
 def _motion_photo() -> bytes:
@@ -252,39 +237,32 @@ class TestRejoin:
     def test_index_lost(self) -> None:
         data = _ultra_hdr()
         end, _ = self._recompress(data)
-        with pytest.raises(jpeg_trailer.JpegTrailerError, match="lost its MP Index"):
+        with pytest.raises(mpf.MpfError, match="lost its MP Index"):
             jpeg_trailer.rejoin(data, end, _photo())
 
     def test_image_outside_trailer(self) -> None:
-        data = _ultra_hdr(gain_map_offset=_INSIDE_PRIMARY)
+        data = _misplaced_gain_map()
         end, image = self._recompress(data)
-        with pytest.raises(jpeg_trailer.JpegTrailerError, match="image 2 of 2"):
+        with pytest.raises(mpf.MpfError, match="image 2 of 2"):
+            jpeg_trailer.rejoin(data, end, image)
+
+    def test_primary_size_includes_trailer(self) -> None:
+        # The index's only entry spans the appended JPEG too.
+        data = build_mpo((_photo(),), trailer=_gain_map())
+        data = _set_entry(data, 0, size=len(data), offset=0)
+        end, image = self._recompress(data)
+        with pytest.raises(mpf.MpfError, match="first image's size"):
             jpeg_trailer.rejoin(data, end, image)
 
     @pytest.mark.parametrize(
-        ("payload", "match"),
-        [
-            (b"MPF\x00XX*\x00", "no TIFF header"),
-            (b"MPF\x00II*\x00" + struct.pack("<I", 8), "truncated"),
-            (
-                b"MPF\x00II*\x00"
-                + struct.pack("<IH", 8, 1)
-                + struct.pack("<HHII", 0xB000, 7, 4, 0),
-                "no MPEntry tag",
-            ),
-            (
-                b"MPF\x00II*\x00"
-                + struct.pack("<IH", 8, 1)
-                + struct.pack("<HHII", 0xB002, 7, 15, 0),
-                "MPEntry table is 15 bytes",
-            ),
-        ],
-        ids=["no_tiff_header", "truncated", "no_mp_entry", "short_mp_entry"],
+        "payload",
+        [b"MPF\x00XX*\x00", b"MPF\x00II*\x00" + struct.pack("<I", 8)],
+        ids=["no_tiff_header", "truncated"],
     )
-    def test_malformed_index(self, payload: bytes, match: str) -> None:
+    def test_unreadable_index(self, payload: bytes) -> None:
         photo = _photo()
         data = photo[:2] + _segment(0xE2, payload) + photo[2:]
-        with pytest.raises(jpeg_trailer.JpegTrailerError, match=match):
+        with pytest.raises(mpf.MpfError, match="unreadable"):
             jpeg_trailer.rejoin(data + _MP4, len(data), photo)
 
 
@@ -325,13 +303,13 @@ class TestOptimize:
         assert b"http://ns.google.com/photos/1.0/container/" not in optimized
 
     def test_mismatched_index_left_unchanged(self) -> None:
-        data = _ultra_hdr(gain_map_offset=_INSIDE_PRIMARY)
+        data = _misplaced_gain_map()
         assert self._run("PXL_ultra_hdr.jpg", data) == data
 
 
 def test_mismatched_index_warns(tmp_path: Path) -> None:
     """The tool says why it left a file unchanged."""
-    data = _ultra_hdr(gain_map_offset=_INSIDE_PRIMARY)
+    data = _misplaced_gain_map()
     path = tmp_path / "PXL_ultra_hdr.jpg"
     path.write_bytes(data)
     config = PicoptConfig().get_config(cli.get_arguments((PROGRAM_NAME, str(path))))

@@ -10,10 +10,11 @@ from __future__ import annotations
 from io import BytesIO
 from typing import BinaryIO
 
+from loguru import logger
 from PIL.JpegImagePlugin import JpegImageFile
 from typing_extensions import override
 
-from picopt.pillow import jpeg_trailer
+from picopt.pillow import jpeg_trailer, mpf
 from picopt.plugins.base import (
     Handler,
     ImageHandler,
@@ -59,7 +60,7 @@ class MozJpegTool(InternalTool):
             return BytesIO(image)
         try:
             return BytesIO(jpeg_trailer.rejoin(data, end, image))
-        except jpeg_trailer.JpegTrailerError as exc:
+        except mpf.MpfError as exc:
             name = handler.path_info.full_output_name()
             logger.warning(f"{name}: {exc}; leaving it unchanged.")
             return BytesIO(data)
