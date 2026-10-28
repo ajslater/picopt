@@ -19,7 +19,6 @@ dependencies = [
   "mozjpeg-lossless-optimization~=1.3",
   "oxipng-pybind~=10.2",
   "packaging>=24.0",
-  "piexif~=1.1",
   "pikepdf>=10.5.1",
   "pillow-jxl-plugin~=1.3",
   "Pillow>=12.0",
@@ -38,7 +37,7 @@ readme = "README.md"
 requires-python = ">=3.11"
 license = { text = "GPL-3.0-only" }
 name = "picopt"
-version = "6.10.1"
+version = "6.11.0"
 
 [[project.authors]]
 name = "AJ Slater"

@@ -1,12 +1,27 @@
 # 📰 Picopt News
 
-## v6.10.2
+## v6.11.0
 
+- Features
+    - `-x MPO` optimizes every image in an MPO losslessly and keeps the file an
+      MPO. iPhone photos are MPOs that carry an HDR gain map.
+    - A skipped image whose suffix names an enabled format it isn't, like an MPO
+      named `.jpeg`, gets a warning that names the options that would take it.
 - Fixes
+    - `-x MPO -c JPEG` wrote JPEGs that still indexed the images it dropped, so
+      some readers failed on them and picopt converted them again on every run.
+      Running it again repairs those files.
+    - `-x MPO -c JPEG -D mozjpeg` no longer adds a second XMP block.
     - Optimizing a JPEG no longer deletes the data appended after its image,
       like the gain map of an Android Ultra HDR photo or the video of a Google
       Motion Photo. An Ultra HDR photo's MP Index is rewritten to match, and a
       JPEG whose MP Index doesn't match its appended data is left unchanged.
+- Changes
+    - `-x MPO -c JPEG` keeps the first image of an MPO that tags no image as its
+      primary, such as a stereoscopic MPO.
+    - `-D mozjpeg` skips JPEGs instead of passing them through unchanged.
+- Dep
+    - Remove piexif.
 
 ## v6.10.1
 

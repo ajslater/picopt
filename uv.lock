@@ -1,5 +1,5 @@
 version = 1
-revision = 5
+revision = 3
 requires-python = ">=3.11"
 resolution-markers = [
     "python_full_version >= '3.13'",
@@ -1709,7 +1709,7 @@ wheels = [
 
 [[package]]
 name = "picopt"
-version = "6.10.1"
+version = "6.11.0"
 source = { editable = "." }
 dependencies = [
     { name = "confuse" },
@@ -1720,7 +1720,6 @@ dependencies = [
     { name = "mozjpeg-lossless-optimization" },
     { name = "oxipng-pybind" },
     { name = "packaging" },
-    { name = "piexif" },
     { name = "pikepdf" },
     { name = "pillow" },
     { name = "pillow-jxl-plugin" },
@@ -1778,7 +1777,6 @@ requires-dist = [
     { name = "mozjpeg-lossless-optimization", specifier = "~=1.3" },
     { name = "oxipng-pybind", specifier = "~=10.2" },
     { name = "packaging", specifier = ">=24.0" },
-    { name = "piexif", specifier = "~=1.1" },
     { name = "pikepdf", specifier = ">=10.5.1" },
     { name = "pillow", specifier = ">=12.0" },
     { name = "pillow-jxl-plugin", specifier = "~=1.3" },
@@ -1823,15 +1821,6 @@ test = [
     { name = "coverage", specifier = "~=7.0" },
     { name = "pytest-asyncio", specifier = "~=1.0" },
     { name = "pytest-cov", specifier = "~=7.0" },
-]
-
-[[package]]
-name = "piexif"
-version = "1.1.3"
-source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/fa/84/a3f25cec7d0922bf60be8000c9739d28d24b6896717f44cc4cfb843b1487/piexif-1.1.3.zip", hash = "sha256:83cb35c606bf3a1ea1a8f0a25cb42cf17e24353fd82e87ae3884e74a302a5f1b", size = 1011134, upload-time = "2019-07-01T15:29:23.045Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/2c/d8/6f63147dd73373d051c5eb049ecd841207f898f50a5a1d4378594178f6cf/piexif-1.1.3-py2.py3-none-any.whl", hash = "sha256:3bc435d171720150b81b15d27e05e54b8abbde7b4242cddd81ef160d283108b6", size = 20691, upload-time = "2019-07-01T15:43:20.907Z" },
 ]
 
 [[package]]

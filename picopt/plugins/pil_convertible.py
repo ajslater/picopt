@@ -100,8 +100,7 @@ def is_tiff_lossless(info: dict[str, Any]) -> bool:
 # ---------------------------------------------------------------------------
 
 # Still images: PIL formats that picopt can convert to PNG or WebPLossless.
-# Excludes MpoImageFile because the JPEG plugin already owns the MPO route
-# (MPO is conceptually a JPEG container).
+# Excludes MpoImageFile because the MPO plugin owns the MPO routes.
 _STILL_PIL_FORMATS: tuple[type[Image], ...] = (
     # Read/write losslessly:
     BmpImageFile,

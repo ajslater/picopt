@@ -23,6 +23,7 @@ import importlib
 import pkgutil
 from dataclasses import dataclass
 from functools import cache
+from types import MappingProxyType
 from typing import TYPE_CHECKING
 
 from picopt import PROGRAM_NAME
@@ -221,6 +222,21 @@ def routes_by_format() -> dict[
                     convert_list.append(convert_handler)
     all_keys = set(natives) | set(converts)
     return {ff: (natives.get(ff), tuple(converts.get(ff, ()))) for ff in all_keys}
+
+
+@cache
+def suffix_format_strs() -> Mapping[str, frozenset[str]]:
+    """
+    Map each suffix a handler claims to the formats of the handlers claiming it.
+
+    A handler's ``KEEP_SUFFIXES`` don't count: they keep a file's name
+    without saying what format it is.
+    """
+    claims: dict[str, set[str]] = {}
+    for handler_cls in all_handlers():
+        for suffix in handler_cls.SUFFIXES:
+            claims.setdefault(suffix.lower(), set()).add(handler_cls.OUTPUT_FORMAT_STR)
+    return MappingProxyType({key: frozenset(val) for key, val in claims.items()})
 
 
 @cache
