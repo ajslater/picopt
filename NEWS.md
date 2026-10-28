@@ -1,5 +1,11 @@
 # 📰 Picopt News
 
+## v6.10.1
+
+- Dep
+    - Require oxipng-pybind 10.2.
+    - Require python-dateutil 3.0.
+
 ## v6.10.0
 
 - Features

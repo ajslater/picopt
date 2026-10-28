@@ -1,6 +1,5 @@
 SHELL := /usr/bin/env bash
 DEVENV_SRC ?= ../devenv
-# export DEVENV_SRC
 DEVENV_COMMON := 1
 export DEVENV_COMMON
 
@@ -8,13 +7,26 @@ export DEVENV_COMMON
 ## Clean caches
 ## @category Clean
 clean::
-	 rm -rf .*cache
+	rm -rf .*cache
 
+## Flags for prune-branches: -n only lists, -f deletes unmerged branches too
+## @category Clean
+PRUNE_BRANCHES_FLAGS :=
+.PHONY: prune-branches
+## Delete local branches but main, master, develop, pre-release, those in
+## .keep-branches and those checked out in a worktree
+## @category Clean
+prune-branches:
+	./bin/prune-branches.sh $(PRUNE_BRANCHES_FLAGS)
+
+## Flags for update-devenv, such as --no-update-deps
+## @category Update
+UPDATE_DEVENV_FLAGS :=
 .PHONY: update-devenv
 ## Update development environment
 ## @category Update
 update-devenv:
-	uv run $(DEVENV_SRC)/scripts/update_devenv.py
+	uv run $(DEVENV_SRC)/scripts/update_devenv.py $(UPDATE_DEVENV_FLAGS)
 
 .PHONY: fix
 ## Fix lint errors
@@ -26,7 +38,7 @@ fix::
 ## Fix shell script formatting
 ## @category Fix
 fix-sh:
-	./bin/fix-sh.sh
+	./bin/sh-tools.sh --fix
 
 .PHONY: lint
 ## Lint
@@ -38,7 +50,11 @@ lint::
 ## Lint shell scripts
 ## @category Lint
 lint-sh:
-	./bin/lint-sh.sh
+	./bin/sh-tools.sh --lint
+
+## Version to set. Leave empty to show the version
+## @category Update
+V :=
 
 .PHONY: news
 ## Show recent NEWS

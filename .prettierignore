@@ -1,12 +1,12 @@
-__pycache__
-.claude
-.git
 *.sh
 *Dockerfile
+.claude/settings.local.json
+.claude/worktrees/
+.git
+__pycache__
 bun.lock
 dist
 node_modules
-package-lock.json
 tasks
 test-results
 tests/**/*.json

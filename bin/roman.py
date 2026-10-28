@@ -1,4 +1,9 @@
 #!/usr/bin/env python3
+# uv run reads this block, so pathspec arrives without the lint group.
+# /// script
+# requires-python = ">=3.10"
+# dependencies = ["pathspec~=1.1"]
+# ///
 """
 Check shell scripts recursively for a descriptive comment on line 2.
 
@@ -24,7 +29,11 @@ if TYPE_CHECKING:
 # Constants
 # ---------------------------------------------------------------------------
 
-SHELL_SHEBANG_PATTERN: re.Pattern[str] = re.compile(r"^#!.*sh")
+# The interpreter, or the command after env and its options, is a shell like
+# sh, bash or zsh. Matching "sh" anywhere would catch paths like .local/share.
+SHELL_SHEBANG_PATTERN: re.Pattern[str] = re.compile(
+    r"^#!\s*(?:\S*/)?(?:env\s+(?:-\S+\s+)*(?:\S*/)?)?[a-z]*sh(?:\s|$)"
+)
 
 # Patterns that are always excluded regardless of an ignore file.
 DEFAULT_EXCLUDE_PATTERNS: list[str] = [
