@@ -72,6 +72,33 @@ def _build_archive_stamps(
     return ArchiveStamps(tree._config, tree.dump_dict())  # noqa: SLF001
 
 
+def _claimed_format_str(
+    config: PicoptSettings, path_info: PathInfo, format_str: str
+) -> str | None:
+    """Return the enabled format a file's suffix claims it is, if not its own."""
+    suffix = path_info.suffix().lower()
+    if suffix in registry.canonical_suffixes().get(format_str, frozenset()):
+        return None
+    claimed = registry.suffix_format_strs().get(suffix, frozenset())
+    candidates = sorted((claimed & frozenset(config.formats)) - {format_str})
+    return candidates[0] if candidates else None
+
+
+def _misnamed_message(file_format: FileFormat, claimed: str) -> str:
+    """Say why a misnamed file was skipped and which options would take it."""
+    format_str = file_format.format_str
+    native, convert_chain = registry.routes_by_format().get(file_format, (None, ()))
+    hints: list[str] = []
+    if native is not None:
+        hints.append(f"-x {format_str} to optimize it")
+    if any(claimed == handler.OUTPUT_FORMAT_STR for handler in convert_chain):
+        hints.append(f"-x {format_str} -c {claimed} to convert it to {claimed}")
+    message = f"skipped because its format is {format_str}, not {claimed}."
+    if hints:
+        message += f" Add {', or '.join(hints)}."
+    return message
+
+
 class HandlerFactory:
     """Handler factory for creating format-appropriate handlers."""
 
@@ -154,6 +181,29 @@ class HandlerFactory:
 
         return repack_handler_class
 
+    def _warn_if_misnamed(
+        self, config: PicoptSettings, path_info: PathInfo, file_format: FileFormat
+    ) -> None:
+        """
+        Warn about a skipped image whose suffix claims an enabled format.
+
+        An MPO saved as ``IMG.jpeg`` would otherwise be skipped silently,
+        though its name says it's a JPEG and JPEG is enabled.
+        """
+        if file_format.archive or file_format.format_str in config.formats:
+            return
+        claimed = _claimed_format_str(config, path_info, file_format.format_str)
+        if claimed is None:
+            return
+        name = path_info.full_output_name()
+        message = _misnamed_message(file_format, claimed)
+        logger.warning(f"{name}: {message}")
+        # The summary prints only the message for an archive member.
+        if path_info.path is None:
+            message = f"{name}: {message}"
+        self._reporter.stats.record_warning(path_info.path, message)
+        self._reporter.progress.mark_warning()
+
     def _create_handler_get_class_and_format(
         self, config: PicoptSettings, path_info: PathInfo
     ) -> tuple[FileFormat | None, type[Handler] | None, Mapping[str, Any]]:
@@ -176,6 +226,8 @@ class HandlerFactory:
             print_exc_unless_expected(exc)
             file_format = None
             info = {}
+        if handler_cls is None and file_format is not None:
+            self._warn_if_misnamed(config, path_info, file_format)
         return file_format, handler_cls, info
 
     def create_handler(

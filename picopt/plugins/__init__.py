@@ -23,6 +23,7 @@ import importlib
 import pkgutil
 from dataclasses import dataclass
 from functools import cache
+from types import MappingProxyType
 from typing import TYPE_CHECKING
 
 from picopt import PROGRAM_NAME
@@ -221,6 +222,33 @@ def routes_by_format() -> dict[
                     convert_list.append(convert_handler)
     all_keys = set(natives) | set(converts)
     return {ff: (natives.get(ff), tuple(converts.get(ff, ()))) for ff in all_keys}
+
+
+@cache
+def suffix_format_strs() -> Mapping[str, frozenset[str]]:
+    """Map each suffix a handler claims to the formats of the handlers claiming it."""
+    claims: dict[str, set[str]] = {}
+    for handler_cls in all_handlers():
+        for suffix in handler_cls.SUFFIXES:
+            claims.setdefault(suffix.lower(), set()).add(handler_cls.OUTPUT_FORMAT_STR)
+    return MappingProxyType({key: frozenset(val) for key, val in claims.items()})
+
+
+@cache
+def canonical_suffixes() -> Mapping[str, frozenset[str]]:
+    """
+    Map each format to the canonical (first) suffix of each handler writing it.
+
+    A handler's other suffixes only keep a file's name when it's optimized:
+    the MPO handler lists ``.jpg`` so that an MPO saved as ``IMG.jpg`` stays
+    ``IMG.jpg``, not because ``.jpg`` names an MPO.
+    """
+    canonical: dict[str, set[str]] = {}
+    for handler_cls in all_handlers():
+        if handler_cls.SUFFIXES:
+            suffixes = canonical.setdefault(handler_cls.OUTPUT_FORMAT_STR, set())
+            suffixes.add(handler_cls.SUFFIXES[0].lower())
+    return MappingProxyType({key: frozenset(val) for key, val in canonical.items()})
 
 
 @cache
