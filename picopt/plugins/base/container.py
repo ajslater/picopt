@@ -27,8 +27,8 @@ from copy import copy
 from typing import TYPE_CHECKING, Any, BinaryIO
 
 from loguru import logger
-from typing_extensions import override
 
+from picopt.compat import override
 from picopt.log.reporter import Reporter
 from picopt.plugins.base.handler import Handler
 

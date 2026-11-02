@@ -1,5 +1,12 @@
 # 📰 Picopt News
 
+## v6.11.1
+
+### 🧑‍💻 Developer
+
+- Require python-dateutil 4.0 and treestamps 5.2.1.
+- Require typing-extensions only on Python 3.11.
+
 ## v6.11.0
 
 ### ✨ Added

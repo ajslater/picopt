@@ -12,8 +12,7 @@ from types import MappingProxyType
 from typing import TYPE_CHECKING
 from zipfile import ZIP_DEFLATED, ZIP_STORED, ZipFile, is_zipfile
 
-from typing_extensions import override
-
+from picopt.compat import override
 from picopt.plugins.base import (
     ArchiveHandler,
     Detector,

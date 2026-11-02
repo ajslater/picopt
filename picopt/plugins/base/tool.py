@@ -36,7 +36,7 @@ from pathlib import Path
 from platform import python_version
 from typing import TYPE_CHECKING, BinaryIO
 
-from typing_extensions import override
+from picopt.compat import override
 
 if TYPE_CHECKING:
     from types import ModuleType

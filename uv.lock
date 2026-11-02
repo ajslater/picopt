@@ -1709,7 +1709,7 @@ wheels = [
 
 [[package]]
 name = "picopt"
-version = "6.11.0"
+version = "6.11.1"
 source = { editable = "." }
 dependencies = [
     { name = "confuse" },
@@ -1730,7 +1730,7 @@ dependencies = [
     { name = "rich-argparse" },
     { name = "ruamel-yaml" },
     { name = "treestamps" },
-    { name = "typing-extensions" },
+    { name = "typing-extensions", marker = "python_full_version < '3.12'" },
 ]
 
 [package.dev-dependencies]
@@ -1786,8 +1786,8 @@ requires-dist = [
     { name = "rich", specifier = "~=15.0" },
     { name = "rich-argparse", specifier = "~=1.8" },
     { name = "ruamel-yaml", specifier = ">=0.18,<1.0" },
-    { name = "treestamps", specifier = "~=5.2.0" },
-    { name = "typing-extensions", specifier = "~=4.13" },
+    { name = "treestamps", specifier = "~=5.2.1" },
+    { name = "typing-extensions", marker = "python_full_version < '3.12'", specifier = "~=4.13" },
 ]
 
 [package.metadata.requires-dev]
@@ -2711,15 +2711,15 @@ wheels = [
 
 [[package]]
 name = "treestamps"
-version = "5.2.0"
+version = "5.2.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "ruamel-yaml" },
-    { name = "typing-extensions" },
+    { name = "typing-extensions", marker = "python_full_version < '3.12'" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/7c/2b/3412a1a5c6c139e4dfe22df90d2ff3da2cd94a5a84802a521ad97aa9d2a3/treestamps-5.2.0.tar.gz", hash = "sha256:bde9985bab868357ee40cd2cee113f64a44fb432502e973204378794ba569dca", size = 237689, upload-time = "2026-10-04T01:36:24.191Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/d4/d1/914d76e5742c41f8996e71457f5aaa5ba1246e919240b07f9831aa724908/treestamps-5.2.1.tar.gz", hash = "sha256:f91aa250cadfaeb9aa7adab7f26b9e948015a2e8db94cbe3956066f8860fa6bd", size = 248983, upload-time = "2026-11-02T00:53:57.649Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/63/50/29863334991592e2da1d3ac08f60c8dfda3ff9cba4032d7a26a2233c5cce/treestamps-5.2.0-py3-none-any.whl", hash = "sha256:97a967f9fbbfee6b5c51ca782f4412941769b7cc02a1bfeb9d19935530eb027d", size = 40900, upload-time = "2026-10-04T01:36:23.265Z" },
+    { url = "https://files.pythonhosted.org/packages/cb/f2/e5b8893f766b1b65a66fec6a4fb36bcab585c742235fdffde3fe9178fcf4/treestamps-5.2.1-py3-none-any.whl", hash = "sha256:d0400aef9bf0f40f7176f67da30a4ba4ca7d09e97588907458a6da06e64b09ab", size = 41036, upload-time = "2026-11-02T00:53:56.488Z" },
 ]
 
 [[package]]

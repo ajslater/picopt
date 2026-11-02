@@ -7,9 +7,9 @@ from subprocess import CalledProcessError
 from typing import BinaryIO
 
 import pytest
-from typing_extensions import override
 
 from picopt import WORKING_SUFFIX
+from picopt.compat import override
 from picopt.config.settings import ComputedSettings, IgnorePatterns, PicoptSettings
 from picopt.path import PathInfo
 from picopt.plugins.base.format import FileFormat

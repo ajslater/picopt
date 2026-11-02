@@ -13,8 +13,8 @@ from types import MappingProxyType
 from typing import TYPE_CHECKING, Any, BinaryIO
 
 from loguru import logger
-from typing_extensions import override
 
+from picopt.compat import override
 from picopt.path import PathInfo
 from picopt.plugins.base import ImageAnimated, ImageHandler, PILSaveTool, Tool
 from picopt.plugins.base.format import FileFormat

@@ -29,7 +29,7 @@ dependencies = [
   "rich~=15.0",
   "ruamel-yaml>=0.18,<1.0",
   "treestamps~=5.2.1",
-  "typing-extensions~=4.13",
+  "typing-extensions~=4.13; python_version < '3.12'",
 ]
 description = "A multi format lossless image optimizer that uses external tools"
 keywords = ["cbr", "cbz", "image", "jpg", "jxl", "png"]
@@ -37,7 +37,7 @@ readme = "README.md"
 requires-python = ">=3.11"
 license = { text = "GPL-3.0-only" }
 name = "picopt"
-version = "6.11.0"
+version = "6.11.1"
 
 [[project.authors]]
 name = "AJ Slater"
@@ -287,6 +287,7 @@ extend-select = [
 ]
 external = ["V101"]
 task-tags = ["FIXME", "HACK", "TODO", "XXX", "http"]
+typing-modules = ["picopt.compat"]
 
 [tool.ruff.lint.flake8-self]
 ignore-names = ["_meta"]

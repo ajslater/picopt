@@ -10,8 +10,8 @@ from types import MappingProxyType
 from typing import TYPE_CHECKING, Any, BinaryIO
 
 from PIL.GifImagePlugin import GifImageFile
-from typing_extensions import override
 
+from picopt.compat import override
 from picopt.plugins.base import (
     ExternalTool,
     Handler,

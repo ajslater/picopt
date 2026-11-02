@@ -19,9 +19,9 @@ from typing import TYPE_CHECKING, Any
 from py7zr import SevenZipFile, is_7zfile
 from py7zr.helpers import ArchiveTimestamp
 from py7zr.io import BytesIOFactory
-from typing_extensions import override
 
 from picopt.archiveinfo import SevenZipMemberInfo
+from picopt.compat import override
 from picopt.plugins.base import (
     ArchiveHandler,
     Detector,

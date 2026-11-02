@@ -18,8 +18,8 @@ from typing import TYPE_CHECKING, Any, Final
 
 import rarfile
 from rarfile import RarFile, is_rarfile
-from typing_extensions import override
 
+from picopt.compat import override
 from picopt.plugins.base import (
     ArchiveHandler,
     Detector,

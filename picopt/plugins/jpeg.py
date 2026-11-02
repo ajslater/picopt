@@ -12,8 +12,8 @@ from typing import BinaryIO
 
 from loguru import logger
 from PIL.JpegImagePlugin import JpegImageFile
-from typing_extensions import override
 
+from picopt.compat import override
 from picopt.pillow import jpeg_trailer, mpf
 from picopt.plugins.base import (
     Handler,

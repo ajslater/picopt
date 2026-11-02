@@ -9,9 +9,9 @@ from tarfile import DIRTYPE, LNKTYPE, SYMTYPE, TarFile, TarInfo
 from zipfile import ZIP_DEFLATED, ZIP_STORED, ZipFile, ZipInfo
 
 import pytest
-from typing_extensions import override
 
 from picopt import PROGRAM_NAME, cli
+from picopt.compat import override
 from tests import IMAGES_DIR, get_test_dir
 
 __all__ = ()

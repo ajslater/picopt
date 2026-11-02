@@ -17,8 +17,8 @@ from loguru import logger
 from PIL import Image
 from PIL.PngImagePlugin import PngImageFile, PngInfo
 from PIL.WebPImagePlugin import WebPImageFile
-from typing_extensions import override
 
+from picopt.compat import override
 from picopt.plugins.base.format import PNGINFO_XMP_KEY, FileFormat
 from picopt.plugins.base.handler import Handler
 

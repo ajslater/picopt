@@ -9,8 +9,8 @@ from typing import TYPE_CHECKING, Final
 from loguru import logger
 from rich.console import Console
 from rich.markup import escape
-from typing_extensions import override
 
+from picopt.compat import override
 from picopt.log.styles import LEVEL_STYLES
 
 if TYPE_CHECKING:
