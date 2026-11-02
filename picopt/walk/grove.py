@@ -15,9 +15,9 @@ from treestamps import (
     TreestampsReport,
     dir_config_fingerprint,
 )
-from typing_extensions import override
 
 from picopt import PROGRAM_NAME
+from picopt.compat import override
 from picopt.config.consts import (
     DIR_CONFIG_FILENAME,
     RETIRED_TIMESTAMPS_CONFIG_DEFAULTS,

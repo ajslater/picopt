@@ -16,8 +16,8 @@ from typing import TYPE_CHECKING, Any, BinaryIO
 from loguru import logger
 from PIL import Image, ImageSequence
 from PIL.PngImagePlugin import PngImageFile
-from typing_extensions import override
 
+from picopt.compat import override
 from picopt.path import PathInfo
 from picopt.plugins.base.container import ContainerHandler
 from picopt.plugins.base.image import ImageHandler

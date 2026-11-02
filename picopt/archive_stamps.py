@@ -6,7 +6,8 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
 from treestamps import Treestamps
-from typing_extensions import override
+
+from picopt.compat import override
 
 if TYPE_CHECKING:
     from treestamps.tree.config import TreestampsConfig

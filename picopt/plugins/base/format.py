@@ -8,7 +8,7 @@ and is exposed via the plugin registry.
 
 from dataclasses import dataclass
 
-from typing_extensions import override
+from picopt.compat import override
 
 
 @dataclass(eq=True, frozen=True)

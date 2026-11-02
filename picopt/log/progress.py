@@ -16,8 +16,8 @@ from rich.progress import (
     TimeElapsedColumn,
 )
 from rich.text import Text
-from typing_extensions import override
 
+from picopt.compat import override
 from picopt.log.styles import MARKS, MarkKind
 
 if TYPE_CHECKING:

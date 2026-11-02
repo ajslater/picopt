@@ -23,13 +23,13 @@ dependencies = [
   "pillow-jxl-plugin~=1.3",
   "Pillow>=12.0",
   "py7zr~=1.1",
-  "python-dateutil~=3.0",
+  "python-dateutil~=4.0",
   "rarfile~=4.0",
   "rich-argparse~=1.8",
   "rich~=15.0",
   "ruamel-yaml>=0.18,<1.0",
-  "treestamps~=5.2.0",
-  "typing-extensions~=4.13",
+  "treestamps~=5.2.1",
+  "typing-extensions~=4.13; python_version < '3.12'",
 ]
 description = "A multi format lossless image optimizer that uses external tools"
 keywords = ["cbr", "cbz", "image", "jpg", "jxl", "png"]
@@ -37,7 +37,7 @@ readme = "README.md"
 requires-python = ">=3.11"
 license = { text = "GPL-3.0-only" }
 name = "picopt"
-version = "6.11.0"
+version = "6.11.1"
 
 [[project.authors]]
 name = "AJ Slater"
@@ -71,7 +71,7 @@ lint = [
   "radon~=6.0",
   "ruff>=0.13,<1.0",
   "ty>=0.0.4,<1.0",
-  # "types-python-dateutil~=2.9",
+  # "types-python-dateutil~=4.0",
   "vulture~=2.3",
 ]
 test = ["coverage~=7.0", "pytest-asyncio~=1.0", "pytest-cov~=7.0"]
@@ -287,6 +287,7 @@ extend-select = [
 ]
 external = ["V101"]
 task-tags = ["FIXME", "HACK", "TODO", "XXX", "http"]
+typing-modules = ["picopt.compat"]
 
 [tool.ruff.lint.flake8-self]
 ignore-names = ["_meta"]

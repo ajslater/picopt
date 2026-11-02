@@ -67,8 +67,8 @@ from zipfile import ZipInfo
 
 from loguru import logger
 from pikepdf.exceptions import PasswordError
-from typing_extensions import override
 
+from picopt.compat import override
 from picopt.path import PathInfo
 from picopt.plugins.base import (
     ContainerHandler,

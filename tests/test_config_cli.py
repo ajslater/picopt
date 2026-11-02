@@ -5,9 +5,9 @@ from typing import Any
 
 import pytest
 from confuse.exceptions import ConfigError
-from typing_extensions import override
 
 from picopt import cli
+from picopt.compat import override
 from picopt.config import PicoptConfig
 from picopt.doctor.tools import ToolTree
 from picopt.plugins.base.tool import Tool, ToolStatus

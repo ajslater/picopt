@@ -20,8 +20,7 @@ from pathlib import Path
 from tempfile import mkstemp
 from typing import BinaryIO
 
-from typing_extensions import override
-
+from picopt.compat import override
 from picopt.plugins.base import ExternalTool, Handler, ToolStatus
 
 

@@ -24,8 +24,8 @@ from types import MappingProxyType
 from typing import TYPE_CHECKING, Any
 
 import filetype
-from typing_extensions import override
 
+from picopt.compat import override
 from picopt.plugins.base import (
     ArchiveHandler,
     Detector,

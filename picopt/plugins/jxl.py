@@ -35,8 +35,8 @@ from typing import TYPE_CHECKING, Any, Final
 
 from loguru import logger
 from PIL import Image
-from typing_extensions import override
 
+from picopt.compat import override
 from picopt.pillow.jxl import JXL_FORMAT_STR, PILLOW_JXL_IMPORT_ERROR
 from picopt.plugins.base import (
     Handler,

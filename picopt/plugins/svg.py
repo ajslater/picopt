@@ -10,8 +10,7 @@ from pathlib import Path
 from tempfile import NamedTemporaryFile
 from typing import TYPE_CHECKING, BinaryIO
 
-from typing_extensions import override
-
+from picopt.compat import override
 from picopt.plugins.base import (
     BunxTool,
     Detector,

@@ -20,8 +20,8 @@ from io import BytesIO
 from typing import TYPE_CHECKING
 
 from PIL.MpoImagePlugin import MpoImageFile
-from typing_extensions import override
 
+from picopt.compat import override
 from picopt.exceptions import UnreadableImageError
 from picopt.pillow import mpf
 from picopt.plugins.base import ImageHandler, Plugin, Route

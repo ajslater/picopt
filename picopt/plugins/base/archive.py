@@ -8,9 +8,9 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
 from loguru import logger
-from typing_extensions import override
 
 from picopt.archiveinfo import ArchiveInfo
+from picopt.compat import override
 from picopt.path import PathInfo
 from picopt.plugins.base.container import ContainerHandler
 from picopt.plugins.base.handler import Handler

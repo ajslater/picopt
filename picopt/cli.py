@@ -12,10 +12,10 @@ from typing import TYPE_CHECKING, Any, ClassVar
 from confuse.exceptions import ConfigError
 from loguru import logger
 from rich_argparse import RawDescriptionRichHelpFormatter
-from typing_extensions import override
 
 from picopt import PROGRAM_NAME, get_version
 from picopt import plugins as registry
+from picopt.compat import override
 from picopt.config import PicoptConfig
 from picopt.exceptions import PicoptError
 from picopt.log import setup as setup_logging

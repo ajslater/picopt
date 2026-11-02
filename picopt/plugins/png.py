@@ -14,8 +14,8 @@ from typing import TYPE_CHECKING, Any
 
 from loguru import logger
 from PIL.PngImagePlugin import PngImageFile
-from typing_extensions import override
 
+from picopt.compat import override
 from picopt.pillow.png_bit_depth import png_bit_depth
 from picopt.plugins.base import (
     ExternalTool,
