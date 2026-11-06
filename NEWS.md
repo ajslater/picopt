@@ -87,7 +87,9 @@
 
 ### 💥 Breaking Changes
 
-- Require Python 3.11.
+> [!WARNING]
+>
+> - Require Python 3.11.
 
 ### 🐛 Fixed
 
@@ -175,10 +177,12 @@
 
 ### 💥 Breaking Changes
 
-- Existing timestamp files will mismatch once after this upgrade because the
-  stored config changed shape. Either let the first timestamped run re-examine
-  each tree once, or run once with `-N` (`--timestamps-no-check-config`) to keep
-  the old stamps.
+> [!WARNING]
+>
+> - Existing timestamp files will mismatch once after this upgrade because the
+>   stored config changed shape. Either let the first timestamped run re-examine
+>   each tree once, or run once with `-N` (`--timestamps-no-check-config`) to
+>   keep the old stamps.
 
 ### 🐛 Fixed
 
@@ -209,9 +213,11 @@
 
 ### 💥 Breaking Changes
 
-- Existing timestamps are invalidated once after upgrading because the timestamp
-  config check gained new keys; the first `-t` run re-examines already-optimized
-  trees.
+> [!WARNING]
+>
+> - Existing timestamps are invalidated once after upgrading because the
+>   timestamp config check gained new keys; the first `-t` run re-examines
+>   already-optimized trees.
 
 ### ✨ Added
 
@@ -459,10 +465,12 @@
 
 ### 💥 Breaking Changes
 
-- Timestamps options changed, invalidating old timestamps. On your first run in
-  a path with picopt 5.0 you may use the `-N` option to ignore the old
-  timestamp's config differences.
-- -T --test option becomes -d --dry-run
+> [!WARNING]
+>
+> - Timestamps options changed, invalidating old timestamps. On your first run
+>   in a path with picopt 5.0 you may use the `-N` option to ignore the old
+>   timestamp's config differences.
+> - -T --test option becomes -d --dry-run
 
 ### ✨ Added
 
@@ -504,6 +512,10 @@
 
 ## v4.0.3 - Bad release
 
+> [!CAUTION]
+>
+> Shipped a bad `pillow-jxl-plugin` dependency; use v4.0.4.
+
 ## v4.0.2
 
 ### 🐛 Fixed
@@ -520,9 +532,11 @@
 
 ### 💥 Breaking Changes
 
-- Timestamps options changed, invalidating old timestamps. On your first run in
-  a path with picopt 4.0 use the `-N` option to ignoring the old timestamp.
-- `--destroy-metadata` option becomes `--strip-metadata`
+> [!WARNING]
+>
+> - Timestamps options changed, invalidating old timestamps. On your first run
+>   in a path with picopt 4.0 use the `-N` option to ignoring the old timestamp.
+> - `--destroy-metadata` option becomes `--strip-metadata`
 
 ### ✨ Added
 
@@ -758,7 +772,9 @@
 
 ### 💥 Breaking Changes
 
-- Changed cli option names.
+> [!WARNING]
+>
+> - Changed cli option names.
 
 ### ✨ Added
 
@@ -837,7 +853,9 @@
 
 ### 💥 Breaking Changes
 
-- Stop supporting python 2
+> [!WARNING]
+>
+> - Stop supporting python 2
 
 ### 🧑‍💻 Developer
 
@@ -1053,7 +1071,9 @@
 
 ### 💥 Breaking Changes
 
-- CHANGED COMMAND LINE ARGUMENT LETTERS.
+> [!WARNING]
+>
+> - CHANGED COMMAND LINE ARGUMENT LETTERS.
 
 ### ✨ Added
 
