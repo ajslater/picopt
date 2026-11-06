@@ -44,7 +44,7 @@ name = "AJ Slater"
 email = "aj@slater.net"
 
 [project.urls]
-News = "https://picopt.readthedocs.io/news/"
+News = "https://picopt.readthedocs.io/NEWS/"
 Documentation = "https://picopt.readthedocs.io"
 Issues = "https://github.com/ajslater/picopt/issues"
 Source = "https://github.com/ajslater/picopt"
@@ -75,7 +75,7 @@ lint = [
   "vulture~=2.3",
 ]
 test = ["coverage~=7.0", "pytest-asyncio~=1.0", "pytest-cov~=7.0"]
-docs = ["mkapi~=4.4", "zensical~=0.1"]
+docs = ["zensical~=0.1"]
 ci = ["requests~=2.32"]
 
 [build-system]
