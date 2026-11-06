@@ -95,11 +95,7 @@ source-include = [
   "bin/**",
   "bun.lock",
   "compose.yaml",
-  "docs/DOCKER.md",
-  "docs/NEWS",
-  "docs/NEWS.md",
-  "docs/README.md",
-  "docs/WINDOWS.md",
+  "docs/**",
   "eslint.config.js",
   "frontend/**",
   "img/**",
@@ -108,7 +104,6 @@ source-include = [
   "tests/**",
   "uv.lock",
   "vulture_ignorelist.py",
-  "docs/**",
   "zensical.toml",
 ]
 source-exclude = ["**/*\\~", "**/.DS_Store", "frontend/node_modules"]
@@ -146,7 +141,7 @@ reportImplicitStringConcatenation = false
 [tool.codespell]
 builtin = "clear,code,rare"
 ignore-words-list = "coverd,crate,deque,falsy,flate,iff,ro,searchd,thead,versio,wan,warmup,ws"
-skip = "*.pdf,*.svg,*~,./tasks,__pycache__,bun.lock,dist,htmlcov,node_modules,package.json,tasks,test-results,typings,uv.lock,site"
+skip = "*.pdf,*.svg,*~,./tasks,__pycache__,bun.lock,dist,htmlcov,node_modules,package.json,site,tasks,test-results,typings,uv.lock"
 
 [tool.complexipy]
 failed = true
