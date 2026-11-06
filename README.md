@@ -17,11 +17,11 @@ users.
 
 ## 💭 Conversion Philosophy
 
-### Warning
-
-Picopt transforms images in place and throws out the old image. Always have a
-backup of images before running picopt in case you are not satisfied with the
-results.
+> [!WARNING]
+>
+> Picopt transforms images in place and throws out the old image. Always have a
+> backup of images before running picopt in case you are not satisfied with the
+> results.
 
 ### Lossy Images
 
@@ -93,8 +93,12 @@ Picopt uses an internal mozjpeg python module to optimize JPEG images.
 
 Data appended after a JPEG's image, like the gain map of an Android Ultra HDR
 photo or the video of a Google Motion Photo, is kept as it is, and an MP Index
-that points to it is updated. `--strip-metadata` drops that data along with the
-XMP and MP Index that point to it.
+that points to it is updated.
+
+> [!WARNING]
+>
+> `--strip-metadata` drops that data along with the XMP and MP Index that point
+> to it.
 
 ### JPEG XL
 
@@ -122,10 +126,13 @@ WebP, and converting away from a format every browser reads should be a
 deliberate act. Without them, `-c JXL` converts only GIF and PNG, plus whatever
 else you name with `-x`.
 
-Two caveats on the JPEG conversion. `--strip-metadata` cannot apply to it, since
-keeping the JPEG restorable means keeping all of its bytes. And picopt will not
-re-optimize a JXL that carries JPEG reconstruction data, because re-encoding it
-would silently discard the ability to restore the original JPEG.
+> [!NOTE]
+>
+> Two caveats on the JPEG conversion. `--strip-metadata` cannot apply to it,
+> since keeping the JPEG restorable means keeping all of its bytes. And picopt
+> will not re-optimize a JXL that carries JPEG reconstruction data, because
+> re-encoding it would silently discard the ability to restore the original
+> JPEG.
 
 Animated JPEG XL is not supported in either direction; the encoder cannot read
 or write it.
@@ -317,7 +324,9 @@ timestamps file, and `-w`, `-W` and `--write-config-file` are ignored.
 `picopt doctor -q` shows only the problems. The doctor exits 1 when the run
 would fail, skip an enabled format, or find a `PATH` missing, and 0 otherwise.
 
-A target named `doctor` must be passed as `./doctor`.
+> [!NOTE]
+>
+> A target named `doctor` must be passed as `./doctor`.
 
 ## ⚙️ Configuration
 
