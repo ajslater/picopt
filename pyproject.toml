@@ -44,7 +44,7 @@ name = "AJ Slater"
 email = "aj@slater.net"
 
 [project.urls]
-News = "https://picopt.readthedocs.io/news/"
+News = "https://picopt.readthedocs.io/NEWS/"
 Documentation = "https://picopt.readthedocs.io"
 Issues = "https://github.com/ajslater/picopt/issues"
 Source = "https://github.com/ajslater/picopt"
@@ -75,7 +75,7 @@ lint = [
   "vulture~=2.3",
 ]
 test = ["coverage~=7.0", "pytest-asyncio~=1.0", "pytest-cov~=7.0"]
-docs = ["mkapi~=4.4", "mkdocs-minify-plugin~=0.8", "mkdocs~=1.6"]
+docs = ["zensical~=0.1"]
 ci = ["requests~=2.32"]
 
 [build-system]
@@ -95,25 +95,16 @@ source-include = [
   "bin/**",
   "bun.lock",
   "compose.yaml",
-  "docs/DOCKER.md",
-  "docs/NEWS",
-  "docs/NEWS.md",
-  "docs/README.md",
-  "docs/WINDOWS.md",
-  "docs/requirements.txt",
-  "docs/style.css",
-  "docs/style.material.css",
-  "docs/style.mkdocs.css",
-  "docs/style.readthedocs.css",
+  "docs/**",
   "eslint.config.js",
   "frontend/**",
   "img/**",
-  "mkdocs.yml",
   "mock_comics/**",
   "package.json",
   "tests/**",
   "uv.lock",
   "vulture_ignorelist.py",
+  "zensical.toml",
 ]
 source-exclude = ["**/*\\~", "**/.DS_Store", "frontend/node_modules"]
 wheel-exclude = ["**/*\\~", "**/.DS_Store"]
@@ -150,7 +141,7 @@ reportImplicitStringConcatenation = false
 [tool.codespell]
 builtin = "clear,code,rare"
 ignore-words-list = "coverd,crate,deque,falsy,flate,iff,ro,searchd,thead,versio,wan,warmup,ws"
-skip = "*.pdf,*.svg,*~,./tasks,__pycache__,bun.lock,dist,htmlcov,node_modules,package.json,tasks,test-results,typings,uv.lock"
+skip = "*.pdf,*.svg,*~,./tasks,__pycache__,bun.lock,dist,htmlcov,node_modules,package.json,site,tasks,test-results,typings,uv.lock"
 
 [tool.complexipy]
 failed = true
