@@ -1,5 +1,11 @@
 # 📰 Picopt News
 
+## v6.11.2
+
+### ♻️ Changed
+
+- Change docs to use Zensical instead of mkDocs.
+
 ## v6.11.1
 
 ### 🧑‍💻 Developer
