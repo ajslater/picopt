@@ -74,6 +74,7 @@ pip-wheel-metadata/
 profile_default/
 sdist/
 share/python-wheels/
+site/
 target/
 tasks/
 test-results

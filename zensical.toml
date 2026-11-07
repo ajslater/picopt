@@ -1,0 +1,33 @@
+[project]
+site_name = "Picopt"
+site_url = "https://picopt.readthedocs.io/"
+site_author = "AJ"
+site_description = "Lossless Image Optimizer"
+docs_dir = "docs"
+nav = ["NEWS.md"]
+
+[project.theme]
+variant = "modern"
+features = ["content.code.copy", "navigation.footer", "search.highlight"]
+
+[project.theme.font]
+text = "Inter"
+code = "JetBrains Mono"
+
+[project.theme.palette]
+scheme = "slate"
+primary = "indigo"
+accent = "orange"
+
+[project.markdown_extensions]
+smarty = {}
+toc.permalink = true
+admonition = {}
+pymdownx.details = {}
+pymdownx.superfences = {}
+pymdownx.quotes.callouts = true
+
+[project.plugins.minify]
+minify_html = true
+minify_inline_js = true
+minify_inline_css = true
