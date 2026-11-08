@@ -436,10 +436,12 @@
 
 ## v5.2.1
 
-### ♻️ Changed
+### 💥 Breaking Changes
 
-- The confuse library dependency doesn't support Python 3.14. So neither does
-  picopt :(
+> [!WARNING]
+>
+> - The confuse library dependency doesn't support Python 3.14. So neither does
+>   picopt :(
 
 ## v5.2.0
 
