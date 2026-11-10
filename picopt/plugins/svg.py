@@ -83,7 +83,7 @@ class _SvgoMixin:
         config_path = _svgo_config_path(keep_metadata=handler.config.keep_metadata)
         return Handler.run_ext(
             (
-                *self.exec_args(),  # pyright:ignore[reportAttributeAccessIssue], # ty: ignore[unresolved-attribute]
+                *self.exec_args(),  # pyright:ignore[reportAttributeAccessIssue], # ty: ignore[missing-attribute]
                 "--config",
                 str(config_path),
                 *_SVGO_ARGS,

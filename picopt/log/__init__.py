@@ -68,7 +68,7 @@ def _verbose_to_level(verbose: int) -> str:
 
 def _sink(message: object) -> None:
     """Write a loguru record to the shared Rich console."""
-    record: Record = message.record  # pyright: ignore[reportAttributeAccessIssue],# ty: ignore[unresolved-attribute]
+    record: Record = message.record  # pyright: ignore[reportAttributeAccessIssue],# ty: ignore[missing-attribute]
     level = record["level"].name
     style = LEVEL_STYLES.get(level, "white")
     # Escape so bracketed path segments (comics: "Title [en]") aren't

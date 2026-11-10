@@ -75,7 +75,7 @@ def _extract_image_info_from_image(
     if animated and (n_frames := getattr(image, "n_frames", 0)):
         info["n_frames"] = n_frames
     with suppress(AttributeError):
-        info["mpinfo"] = image.mpinfo  # pyright: ignore[reportAttributeAccessIssue]  # ty: ignore[unresolved-attribute]
+        info["mpinfo"] = image.mpinfo  # pyright: ignore[reportAttributeAccessIssue]  # ty: ignore[missing-attribute]
 
 
 def _extract_image_info(

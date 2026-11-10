@@ -33,8 +33,8 @@ class TestParse:
         data = CAMERA_MPO.read_bytes()
         index = _index(data)
         with Image.open(CAMERA_MPO) as image:
-            entries = image.mpinfo[0xB002]  # pyright: ignore[reportAttributeAccessIssue]  # ty: ignore[unresolved-attribute]
-            offsets = image._MpoImageFile__mpoffsets  # pyright: ignore[reportAttributeAccessIssue]  # ty: ignore[unresolved-attribute]
+            entries = image.mpinfo[0xB002]  # pyright: ignore[reportAttributeAccessIssue]  # ty: ignore[missing-attribute]
+            offsets = image._MpoImageFile__mpoffsets  # pyright: ignore[reportAttributeAccessIssue]  # ty: ignore[missing-attribute]
         assert index.byte_order == "<"
         assert [entry.size for entry in index.entries] == [e["Size"] for e in entries]
         assert [index.absolute(n) for n in range(len(entries))] == offsets
@@ -123,7 +123,7 @@ class TestRebuild:
         with Image.open(BytesIO(rebuilt)) as image:
             assert image.format == "MPO"
             sizes = []
-            for frame in range(image.n_frames):  # pyright: ignore[reportAttributeAccessIssue]  # ty: ignore[unresolved-attribute]
+            for frame in range(image.n_frames):  # pyright: ignore[reportAttributeAccessIssue]  # ty: ignore[missing-attribute]
                 image.seek(frame)
                 image.load()
                 sizes.append(image.size)
