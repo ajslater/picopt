@@ -251,7 +251,7 @@ class ExternalTool(Tool):
         if self._cached_path is _UNSET:
             found = shutil.which(self.binary or self.name)
             self._cached_path = Path(found) if found else None
-        return self._cached_path  # pyright: ignore[reportReturnType], # ty: ignore[invalid-return-type]
+        return self._cached_path  # pyright: ignore[reportReturnType], # ty: ignore[invalid-explicit-return]
 
     @override
     def parse_version(self, version: str) -> str:
@@ -312,7 +312,7 @@ class NpxTool(ExternalTool):
     @override
     def _path(self) -> Path | None:
         if self._cached_path is not _UNSET:
-            return self._cached_path  # pyright: ignore[reportReturnType], # ty: ignore[invalid-return-type]
+            return self._cached_path  # pyright: ignore[reportReturnType], # ty: ignore[invalid-explicit-return]
         npx = shutil.which("npx")
         if not npx:
             self._cached_path = None
@@ -351,7 +351,7 @@ class BunxTool(ExternalTool):
     @override
     def _path(self) -> Path | None:
         if self._cached_path is not _UNSET:
-            return self._cached_path  # pyright: ignore[reportReturnType], # ty: ignore[invalid-return-type]
+            return self._cached_path  # pyright: ignore[reportReturnType], # ty: ignore[invalid-explicit-return]
         bunx = shutil.which("bunx")
         if not bunx:
             self._cached_path = None
