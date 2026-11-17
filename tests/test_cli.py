@@ -9,6 +9,8 @@ import shutil
 import sys
 from pathlib import Path
 
+import pytest
+
 from picopt import cli
 from picopt.config import PicoptConfig
 from picopt.config.consts import TIMESTAMPS_CONFIG_KEYS
@@ -62,18 +64,18 @@ class TestCLI:
         assert arguments.symlinks is None
         self._test_get_arguments_aux(arguments)
 
-    def test_main(self: Any) -> None:
+    def test_main(self: Any, monkeypatch: pytest.MonkeyPatch) -> None:
         """Test main method."""
         shutil.copy(JPEG_SRC, self.OLD_PATH)
         old_size = self.OLD_PATH.stat().st_size
-        sys.argv = ["picopt", str(self.OLD_PATH)]
+        monkeypatch.setattr(sys, "argv", ["picopt", str(self.OLD_PATH)])
         cli.main()
         assert self.OLD_PATH.is_file()
         assert self.OLD_PATH.stat().st_size < old_size
 
-    def test_main_err(self: Any) -> None:
+    def test_main_err(self: Any, monkeypatch: pytest.MonkeyPatch) -> None:
         """Test main errs."""
-        sys.argv = ["picopt", "XXX"]
+        monkeypatch.setattr(sys, "argv", ["picopt", "XXX"])
         try:
             cli.main()
         except SystemExit as exc:

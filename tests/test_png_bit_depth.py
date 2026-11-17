@@ -2,6 +2,8 @@
 
 import sys
 
+import pytest
+
 from picopt.pillow.png_bit_depth import main, png_bit_depth
 from tests import IMAGES_DIR
 
@@ -35,7 +37,10 @@ def test_png_bit_depth_invalid() -> None:
     assert res is None
 
 
-def test_main() -> None:
+def test_main(
+    monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
     """Test main."""
-    sys.argv[1] = str(TEST_SRC_PATH)
+    monkeypatch.setattr(sys, "argv", ["png_bit_depth", str(TEST_SRC_PATH)])
     main()
+    assert capsys.readouterr().out == "8\n"
